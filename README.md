@@ -2,6 +2,8 @@
 
 App web para organizar tu grupo de predicciones del Mundial FIFA 2026.
 
+🌐 **Live:** https://worldcup2026-8f27b.web.app
+
 ## Stack
 - **Frontend**: HTML + CSS (Bootstrap 5) + Vanilla JS
 - **Auth**: Firebase Authentication (email/password)
@@ -33,14 +35,6 @@ worldcup2026/
 └── .github/
     └── workflows/
         └── firebase-deploy.yml
-```
-
-## Setup local
-```bash
-npm install -g firebase-tools
-firebase login
-firebase use --add   # selecciona tu proyecto
-firebase serve       # preview local en localhost:5000
 ```
 
 ## Deploy
