@@ -110,7 +110,7 @@ document.getElementById('resetResultBtn')?.addEventListener('click', async () =>
   const mid = document.getElementById('matchSelectDone').value;
   const msg = document.getElementById('resetMsg');
   if (!mid) return;
-  if (!confirm('\u00bfResetear resultado de este partido? Se revertirán los puntos.')) return;
+  if (!confirm('¿Resetear resultado de este partido? Se revertirán los puntos.')) return;
 
   const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id','==',mid)));
   const matchSnap = await getDoc(doc(db, 'matches', mid));
@@ -210,45 +210,40 @@ document.getElementById('addMatchBtn')?.addEventListener('click', async () => {
 });
 
 // =============================================
-// BORRAR TODOS LOS PARTIDOS
+// BORRAR TODOS LOS PARTIDOS — confirm() nativo
 // =============================================
-let _deleteAllModal = null;
+document.getElementById('deleteAllMatchesBtn')?.addEventListener('click', async () => {
+  if (!confirm('⚠️ ¿Borrar TODOS los partidos y sus pronósticos? Esta acción es irreversible.')) return;
 
-document.getElementById('deleteAllMatchesBtn')?.addEventListener('click', () => {
-  if (!_deleteAllModal) _deleteAllModal = new bootstrap.Modal(document.getElementById('deleteAllModal'));
-  _deleteAllModal.show();
-});
-
-document.getElementById('confirmDeleteAllBtn')?.addEventListener('click', async () => {
-  const btn = document.getElementById('confirmDeleteAllBtn');
+  const btn = document.getElementById('deleteAllMatchesBtn');
   btn.disabled = true;
-  btn.textContent = 'Borrando...';
+  btn.textContent = '🗑️ Borrando...';
 
   const matchesSnap = await getDocs(collection(db, 'matches'));
-  const CHUNK = 400;
   let batch = writeBatch(db);
   let count = 0;
 
   for (const mDoc of matchesSnap.docs) {
-    // Borrar pronósticos del partido
     const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id','==', mDoc.id)));
     predsSnap.forEach(p => {
       batch.delete(p.ref);
       count++;
-      if (count % CHUNK === 0) { batch.commit(); batch = writeBatch(db); }
     });
     batch.delete(mDoc.ref);
     count++;
-    if (count % CHUNK === 0) { batch.commit(); batch = writeBatch(db); }
+    // Firestore limita 500 ops por batch
+    if (count >= 400) {
+      await batch.commit();
+      batch = writeBatch(db);
+      count = 0;
+    }
   }
   await batch.commit();
 
-  _deleteAllModal.hide();
   btn.disabled = false;
-  btn.textContent = '🗑️ Borrar todos definitivamente';
-
+  btn.textContent = '🗑️ Borrar todos los partidos';
   document.getElementById('allMatchesList').innerHTML =
-    '<p style="color:var(--green-light)">✅ Todos los partidos eliminados. Ahora ve a load-matches.html para recargarlos.</p>';
+    '<p style="color:var(--green-light)">✅ Todos los partidos eliminados. Ahora ve a <a href="load-matches.html" style="color:var(--gold)">load-matches.html</a> para recargarlos.</p>';
   await loadMatchesAdmin();
   await loadMatchesDone();
 });
