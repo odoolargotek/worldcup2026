@@ -2,11 +2,11 @@
 .conti-banner {
   background: linear-gradient(135deg, #0d1f2d 0%, #1a3a4a 40%, #1D90C6 100%);
   border-bottom: 3px solid #C9344B;
-  padding: 8px 20px;
+  padding: 10px 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 14px;
+  gap: 16px;
   position: relative;
   overflow: hidden;
   z-index: 2;
@@ -41,7 +41,7 @@
 }
 
 .conti-banner img {
-  height: 32px;
+  height: 48px;
   object-fit: contain;
   filter: brightness(1.1);
   flex-shrink: 0;
@@ -58,14 +58,16 @@
 }
 
 .conti-banner-label {
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #fff;
-  letter-spacing: 1px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
 }
 
 @media (min-width: 480px) {
-  .conti-banner img { height: 38px; }
+  .conti-banner img { height: 56px; }
+  .conti-banner-label { font-size: 1.1rem; }
 }
 
 [data-theme="light"] .conti-banner {

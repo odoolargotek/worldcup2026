@@ -28,7 +28,6 @@ function genCode(len = 6) {
   return Math.random().toString(36).toUpperCase().slice(2, 2 + len);
 }
 
-// ── Overlay helpers (sin Bootstrap.Modal) ──────────────────────────
 function showOverlay(id) {
   document.getElementById(id)?.classList.add('show');
 }
@@ -86,9 +85,10 @@ function renderGroupCard(gSnap, memberData, container, user) {
   const code = g.code || '';
   const isAdmin = (memberData.role === 'admin') || (g.owner_uid === user.uid);
 
+  // Badge tipo — solo azul Conti o rojo Conti
   const typeBadge = g.type === 'closed'
-    ? `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.3)">${g.is_open === false ? '🔴 Cerrada' : '🔒 Cupo lim.'}</span>`
-    : `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(34,197,94,0.1);color:var(--green-light);border:1px solid rgba(34,197,94,0.25)">🌐 Abierta</span>`;
+    ? `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(201,52,75,0.15);color:#f5a0ac;border:1px solid rgba(201,52,75,0.3)">${g.is_open === false ? '🔴 Cerrada' : '🔒 Cupo lim.'}</span>`
+    : `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(29,144,198,0.15);color:#4aafd4;border:1px solid rgba(29,144,198,0.3)">🌐 Abierta</span>`;
 
   const appUrl    = `${location.origin}/dashboard.html?join=${code}`;
   const waMessage = encodeURIComponent(
@@ -103,8 +103,8 @@ function renderGroupCard(gSnap, memberData, container, user) {
     ? `<div style="font-size:11px;color:var(--gold);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">${g.stage}</div>`
     : '';
   const fav = memberData.favorite
-    ? `<div style="font-size:12px;color:var(--green-light);margin-top:4px">⚽ ${memberData.favorite}</div>`
-    : '<div style="font-size:12px;color:var(--danger);margin-top:4px">⚠ Sin favorito</div>';
+    ? `<div style="font-size:12px;color:var(--primary-light);margin-top:4px">⚽ ${memberData.favorite}</div>`
+    : '<div style="font-size:12px;color:var(--accent);margin-top:4px">⚠ Sin favorito</div>';
 
   col.innerHTML = `
     <div class="group-card" style="cursor:default">
@@ -114,7 +114,7 @@ function renderGroupCard(gSnap, memberData, container, user) {
       </div>
       <div style="cursor:pointer" onclick="window.location='group.html?gid=${gid}'">
         <h6 style="margin-bottom:2px">${g.name}</h6>
-        <small style="color:var(--green-light)">${g.prize ? '🏆 $'+g.prize : g.fee ? '💰 Cuota $'+g.fee : ''}</small>
+        <small style="color:var(--primary-light)">${g.prize ? '🏆 $'+g.prize : g.fee ? '💰 Cuota $'+g.fee : ''}</small>
         ${fav}
         <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Código: <strong style="color:var(--gold);letter-spacing:2px">${code}</strong></div>
       </div>
@@ -123,15 +123,15 @@ function renderGroupCard(gSnap, memberData, container, user) {
           onclick="event.stopPropagation();window.location='group.html?gid=${gid}'">🏆 Ver</button>
         <a href="${waLink}" target="_blank" rel="noopener"
           class="btn btn-sm"
-          style="flex:1;font-size:12px;font-weight:700;background:#25D366;color:#fff;border:none">
+          style="flex:1;font-size:12px;font-weight:700;background:#1D90C6;color:#fff;border:none;border-radius:8px">
           💬 Invitar</a>
         <button class="btn btn-outline-light btn-sm" style="font-size:12px;padding:4px 10px"
           onclick="event.stopPropagation();copyInviteLink('${appUrl}',this)" title="Copiar link">📋</button>
       </div>
       ${isAdmin ? `
-      <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(239,68,68,0.15)">
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(201,52,75,0.15)">
         <button class="del-btn" style="width:100%;padding:7px 12px;font-size:12px;font-weight:600;
-          background:rgba(239,68,68,0.1);color:#fca5a5;border:1px solid rgba(239,68,68,0.35);
+          background:rgba(201,52,75,0.1);color:#f5a0ac;border:1px solid rgba(201,52,75,0.35);
           border-radius:8px;cursor:pointer">
           🗑️ Eliminar comparsa
         </button>
@@ -152,7 +152,7 @@ window.copyInviteLink = function(url, btn) {
   navigator.clipboard.writeText(url).then(() => {
     const orig = btn.textContent;
     btn.textContent = '✅';
-    btn.style.color = 'var(--green-light)';
+    btn.style.color = '#4aafd4';
     setTimeout(() => { btn.textContent = orig; btn.style = ''; }, 2000);
   });
 };
@@ -285,7 +285,7 @@ function renderTeams(filter, grid) {
       grid.querySelectorAll('.team-btn').forEach(b => {
         b.style.cssText = 'background:var(--bg-card2);color:var(--text);border:1px solid var(--border);font-size:0.85rem;padding:8px 4px';
       });
-      div.querySelector('button').style.cssText = 'background:rgba(22,163,74,0.2);color:var(--green-light);border:1px solid var(--green);font-size:0.85rem;padding:8px 4px;font-weight:700';
+      div.querySelector('button').style.cssText = 'background:rgba(29,144,198,0.2);color:#4aafd4;border:1px solid #1D90C6;font-size:0.85rem;padding:8px 4px;font-weight:700';
       hidden.value = team;
       if (saveBtn) saveBtn.disabled = false;
     });
@@ -374,7 +374,7 @@ function setupDeleteOverlay(user) {
 }
 
 function showMsg(id, text, type) {
-  const colors = { success: 'var(--green-light)', danger: '#fca5a5', warning: 'var(--gold)' };
+  const colors = { success: '#4aafd4', danger: '#f5a0ac', warning: 'var(--gold)' };
   const el = document.getElementById(id);
   if (el) el.innerHTML = `<span style="color:${colors[type]||'#fff'};font-size:0.85rem">${text}</span>`;
   if (el) setTimeout(() => { el.innerHTML = ''; }, 4000);
