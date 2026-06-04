@@ -22,6 +22,12 @@
     </div>
   </nav>
 
+  <!-- Disclaimer bar -->
+  <div style="background:rgba(239,68,68,0.07);border-bottom:1px solid rgba(239,68,68,0.2);padding:6px 16px;text-align:center;font-size:11px;color:#fca5a5">
+    ⚠️ Juego de entretenimiento privado. No es un sitio de apuestas. Largotek no administra ni garantiza premios.
+    <a href="legal.html" target="_blank" style="color:#fca5a5;text-decoration:underline;margin-left:6px">Aviso legal completo</a>
+  </div>
+
   <div class="container py-4">
 
     <!-- Info de la comparsa -->
@@ -56,6 +62,7 @@
       <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="groups">🏥 Grupos</button></li>
       <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="news">📰 Noticias</button></li>
       <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="rules">ℹ️ Cómo jugar</button></li>
+      <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="disclaimer">⚖️ Aviso Legal</button></li>
     </ul>
 
     <div id="rankingTab"></div>
@@ -63,6 +70,7 @@
     <div id="groupsTab" class="d-none"></div>
     <div id="newsTab" class="d-none"></div>
     <div id="rulesTab" class="d-none"></div>
+    <div id="disclaimerTab" class="d-none"></div>
 
   </div>
 
@@ -93,7 +101,7 @@
         </div>
         <div class="modal-body">
           <div id="pickPenaltyWarn" class="d-none mb-3 p-3 rounded" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;font-size:0.85rem">
-            ⚠️ Cambiar equipo favorito aplica una penalidad de <strong>-6 puntos</strong>.
+            ⚠️ Cambiar equipo favorito aplica una penalidad de <strong>-3 puntos</strong>.
           </div>
           <div id="pickFirstInfo" class="mb-3 p-3 rounded" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--gold);font-size:0.85rem">
             💡 <strong>+3 pts</strong> por victoria · <strong>+1 pt</strong> por empate de tu favorito
@@ -124,11 +132,15 @@
     <div class="footer-links">
       <a href="https://www.largotek.com" target="_blank">🌐 largotek.com</a>
       <a href="mailto:info@largotek.com">📧 info@largotek.com</a>
-      <a href="https://wa.me/59169224352" target="_blank">💬 WhatsApp +591 692 24352</a>
-      <a href="tel:+59169224352">📞 +591 692 24352</a>
+      <a href="https://wa.me/59169224352" target="_blank">💬 +591 692 24352</a>
+      <a href="legal.html" target="_blank">⚖️ Aviso Legal</a>
     </div>
     <div style="margin-top:8px;font-size:11px;color:var(--text-muted)">
       Odoo ERP &nbsp;·&nbsp; Sistemas Contables &nbsp;·&nbsp; Agentes de IA &nbsp;·&nbsp; Automatización &nbsp;·&nbsp; CRM
+    </div>
+    <div style="margin-top:6px;font-size:10px;color:rgba(148,163,184,0.5)">
+      Juego de entretenimiento privado — No es un sitio de apuestas —
+      <a href="legal.html" target="_blank" style="color:rgba(148,163,184,0.5);text-decoration:underline">Términos de uso</a>
     </div>
   </div>
 
@@ -142,12 +154,14 @@
     import { renderGroupsTables } from './js/groups-table.js';
     import { renderNews }         from './js/news.js';
     import { renderRules }        from './js/rules.js';
+    import { renderDisclaimer }   from './js/disclaimer.js';
 
-    let groupsLoaded = false;
-    let newsLoaded   = false;
-    let rulesLoaded  = false;
+    let groupsLoaded     = false;
+    let newsLoaded       = false;
+    let rulesLoaded      = false;
+    let disclaimerLoaded = false;
 
-    const TABS = ['ranking','matches','groups','news','rules'];
+    const TABS = ['ranking','matches','groups','news','rules','disclaimer'];
 
     document.querySelectorAll('[data-tab]').forEach(btn => {
       btn.addEventListener('click', async () => {
@@ -156,9 +170,10 @@
         TABS.forEach(t => {
           document.getElementById(t+'Tab')?.classList.toggle('d-none', btn.dataset.tab !== t);
         });
-        if (btn.dataset.tab === 'groups' && !groupsLoaded) { groupsLoaded = true; await renderGroupsTables(); }
-        if (btn.dataset.tab === 'news'   && !newsLoaded)   { newsLoaded   = true; renderNews(); }
-        if (btn.dataset.tab === 'rules'  && !rulesLoaded)  { rulesLoaded  = true; renderRules(); }
+        if (btn.dataset.tab === 'groups'     && !groupsLoaded)     { groupsLoaded     = true; await renderGroupsTables(); }
+        if (btn.dataset.tab === 'news'       && !newsLoaded)       { newsLoaded       = true; renderNews(); }
+        if (btn.dataset.tab === 'rules'      && !rulesLoaded)      { rulesLoaded      = true; renderRules(); }
+        if (btn.dataset.tab === 'disclaimer' && !disclaimerLoaded) { disclaimerLoaded = true; renderDisclaimer(); }
       });
     });
   </script>

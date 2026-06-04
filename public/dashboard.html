@@ -19,6 +19,12 @@
     <button id="logoutBtn" class="btn btn-outline-light btn-sm">Salir</button>
   </nav>
 
+  <!-- Disclaimer bar -->
+  <div style="background:rgba(239,68,68,0.07);border-bottom:1px solid rgba(239,68,68,0.2);padding:6px 16px;text-align:center;font-size:11px;color:#fca5a5">
+    ⚠️ Juego de entretenimiento privado. No es un sitio de apuestas. Largotek no administra ni garantiza premios.
+    <a href="legal.html" target="_blank" style="color:#fca5a5;text-decoration:underline;margin-left:6px">Aviso legal completo</a>
+  </div>
+
   <div class="container py-4">
 
     <a href="https://www.largotek.com" target="_blank" class="largotek-banner mb-4 d-flex">
@@ -39,13 +45,10 @@
     <div id="groupList" class="row g-3 mb-4"></div>
 
     <div class="row g-3">
-      <!-- Crear comparsa -->
       <div class="col-md-6">
         <div class="card p-4">
           <h6 style="color:var(--green-light);font-weight:700" class="mb-3">➕ Crear comparsa</h6>
-
           <input type="text" id="newGroupName" class="form-control mb-2" placeholder="Nombre de la comparsa">
-
           <select id="newGroupStage" class="form-select mb-2">
             <option value="">-- Etapa de inicio --</option>
             <option value="Grupos">Fase de Grupos</option>
@@ -54,59 +57,40 @@
             <option value="Semifinal">Desde Semifinal</option>
             <option value="Final">Solo Final</option>
           </select>
-
-          <!-- Tipo de comparsa -->
           <select id="newGroupType" class="form-select mb-2">
-            <option value="open">🌐 Abierta — Pozo acumulable (cuota × participantes)</option>
-            <option value="closed">🔒 Cerrada — Premio fijo con límite de participantes</option>
+            <option value="open">🌐 Abierta — Pozo acumulable</option>
+            <option value="closed">🔒 Cerrada — Premio fijo</option>
           </select>
-
-          <!-- Campos según tipo -->
           <div id="openFields">
-            <input type="number" id="newGroupFeeOpen" class="form-control mb-2" placeholder="Cuota por participante ($) — el pozo crece con cada miembro">
+            <input type="number" id="newGroupFeeOpen" class="form-control mb-2" placeholder="Cuota por participante ($)">
           </div>
           <div id="closedFields" class="d-none">
             <input type="number" id="newGroupPrizeClosed" class="form-control mb-2" placeholder="Premio total fijo ($)">
             <input type="number" id="newGroupFee" class="form-control mb-2" placeholder="Cuota por participante (opcional, $)">
-            <input type="number" id="newGroupMax" class="form-control mb-2" placeholder="Máx. participantes" min="2" max="500">
+            <input type="number" id="newGroupMax" class="form-control mb-2" placeholder="Máx. participantes" min="2">
           </div>
-
-          <!-- Distribución del premio -->
           <select id="newGroupDist" class="form-select mb-2">
             <option value="winner">🥇 Todo al 1° lugar (100%)</option>
             <option value="top2">🥇🥈 Top 2: 70% / 30%</option>
             <option value="top3">🥇🥈🥉 Top 3: 60% / 30% / 10%</option>
             <option value="custom">⚙️ Personalizado</option>
           </select>
-
           <div id="customDistFields" class="d-none mb-2">
             <div class="d-flex gap-2">
-              <div class="flex-fill">
-                <label style="font-size:11px;color:var(--text-muted)">🥇 1° lugar %</label>
-                <input type="number" id="distP1" class="form-control" placeholder="60" min="1" max="100">
-              </div>
-              <div class="flex-fill">
-                <label style="font-size:11px;color:var(--text-muted)">🥈 2° lugar %</label>
-                <input type="number" id="distP2" class="form-control" placeholder="30" min="0" max="99">
-              </div>
-              <div class="flex-fill">
-                <label style="font-size:11px;color:var(--text-muted)">🥉 3° lugar %</label>
-                <input type="number" id="distP3" class="form-control" placeholder="10" min="0" max="99">
-              </div>
+              <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥇 1° %</label><input type="number" id="distP1" class="form-control" placeholder="60"></div>
+              <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥈 2° %</label><input type="number" id="distP2" class="form-control" placeholder="30"></div>
+              <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥉 3° %</label><input type="number" id="distP3" class="form-control" placeholder="10"></div>
             </div>
             <div id="distError" style="font-size:11px;color:var(--danger);margin-top:4px"></div>
           </div>
-
           <button id="createGroupBtn" class="btn btn-success w-100 mt-1">⚽ Crear comparsa</button>
           <div id="createMsg" class="mt-2"></div>
         </div>
       </div>
-
-      <!-- Unirse a comparsa -->
       <div class="col-md-6">
         <div class="card p-4">
           <h6 style="color:var(--gold);font-weight:700" class="mb-3">🔗 Unirse a comparsa</h6>
-          <p style="font-size:0.83rem;color:var(--text-muted)">Pide el código de 6 letras al dueño de la comparsa e ingrésalo aquí.</p>
+          <p style="font-size:0.83rem;color:var(--text-muted)">Pide el código de 6 letras al dueño e ingrésalo aquí.</p>
           <input type="text" id="joinCode" class="form-control mb-3" placeholder="Código (ej: AB3X7Z)" style="letter-spacing:3px;font-weight:700;text-transform:uppercase">
           <button id="joinGroupBtn" class="btn btn-warning w-100">🔗 Unirse</button>
           <div id="joinMsg" class="mt-2"></div>
@@ -116,7 +100,7 @@
 
   </div>
 
-  <!-- Modal elegir equipo favorito al crear/unirse -->
+  <!-- Modal favorito -->
   <div class="modal fade" id="favoriteModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text)">
@@ -146,11 +130,15 @@
     <div class="footer-links">
       <a href="https://www.largotek.com" target="_blank">🌐 largotek.com</a>
       <a href="mailto:info@largotek.com">📧 info@largotek.com</a>
-      <a href="https://wa.me/59169224352" target="_blank">💬 WhatsApp +591 692 24352</a>
-      <a href="tel:+59169224352">📞 +591 692 24352</a>
+      <a href="https://wa.me/59169224352" target="_blank">💬 +591 692 24352</a>
+      <a href="legal.html" target="_blank">⚖️ Aviso Legal</a>
     </div>
     <div style="margin-top:8px;font-size:11px;color:var(--text-muted)">
       Odoo ERP &nbsp;·&nbsp; Sistemas Contables &nbsp;·&nbsp; Agentes de IA &nbsp;·&nbsp; Automatización &nbsp;·&nbsp; CRM
+    </div>
+    <div style="margin-top:6px;font-size:10px;color:rgba(148,163,184,0.5)">
+      Juego de entretenimiento privado — No es un sitio de apuestas —
+      <a href="legal.html" target="_blank" style="color:rgba(148,163,184,0.5);text-decoration:underline">Términos de uso</a>
     </div>
   </div>
 
@@ -159,13 +147,11 @@
   <script type="module" src="js/auth.js"></script>
   <script type="module" src="js/groups.js"></script>
   <script>
-    // Toggle campos según tipo
     document.getElementById('newGroupType').addEventListener('change', function(){
       const isClosed = this.value === 'closed';
       document.getElementById('openFields').classList.toggle('d-none', isClosed);
       document.getElementById('closedFields').classList.toggle('d-none', !isClosed);
     });
-    // Toggle campos personalizados
     document.getElementById('newGroupDist').addEventListener('change', function(){
       document.getElementById('customDistFields').classList.toggle('d-none', this.value !== 'custom');
     });
