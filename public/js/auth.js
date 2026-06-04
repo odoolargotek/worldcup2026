@@ -11,18 +11,27 @@ import {
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import { doc, setDoc } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
-const PAGE = window.location.pathname.split('/').pop();
+const PAGE = window.location.pathname.split('/').pop() || 'index.html';
+
+const PUBLIC_PAGES    = ['index.html', ''];
+const PROTECTED_PAGES = ['admin.html', 'load-matches.html', 'dashboard.html', 'matches.html',
+                         'standings.html', 'groups.html', 'predict.html',
+                         'group-detail.html', 'rules.html', 'news.html', 'profile.html'];
 
 // --- Guard de ruta ---
 onAuthStateChanged(auth, (user) => {
-  const publicPages = ['index.html', ''];
-  const isPublic = publicPages.includes(PAGE);
-  if (!user && !isPublic) {
+  const isPublic    = PUBLIC_PAGES.includes(PAGE);
+  const isProtected = PROTECTED_PAGES.includes(PAGE);
+
+  if (!user && isProtected) {
     window.location.href = 'index.html';
+    return;
   }
   if (user && isPublic) {
     window.location.href = 'dashboard.html';
+    return;
   }
+
   // Mostrar nombre en navbar
   const nameEl = document.getElementById('userDisplayName');
   if (nameEl && user) nameEl.textContent = user.displayName || user.email;
@@ -61,7 +70,6 @@ document.getElementById('registerForm')?.addEventListener('submit', async (e) =>
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(cred.user, { displayName: name });
-    // Guardar perfil en Firestore
     await setDoc(doc(db, 'users', cred.user.uid), {
       uid: cred.user.uid,
       display_name: name,
