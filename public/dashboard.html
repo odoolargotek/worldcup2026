@@ -10,11 +10,16 @@
   <link rel="stylesheet" href="css/conti-sponsor.css">
 </head>
 <body>
+  <div class="field-pattern"></div>
+
   <nav class="navbar">
     <div class="navbar-brand">
-      <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
+      <!-- Logo Conti prominente en navbar -->
+      <img class="navbar-conti-logo"
+        src="https://www.largotek.com/web/image/12870-1cdfd1c0/conti-zero-logo-png_seeklogo-381873.webp"
+        alt="Conti Zero">
       <div>
-        <div>⚽ WC2026 — Mis Comparsas</div>
+        <div style="font-weight:800;letter-spacing:0.5px">⚽ WC2026 — Mis Comparsas</div>
         <div class="navbar-powered">by Largotek</div>
       </div>
     </div>
@@ -29,12 +34,15 @@
     <a href="legal.html" target="_blank" style="color:#f5a0ac;text-decoration:underline;margin-left:6px">Aviso legal completo</a>
   </div>
 
-  <!-- BANNER CONTI -->
+  <!-- HERO BANNER CONTI -->
   <div class="conti-banner">
-    <img src="https://www.largotek.com/web/image/12870-1cdfd1c0/conti-zero-logo-png_seeklogo-381873.webp" alt="Conti Cerveza">
-    <div class="conti-banner-text">
+    <div class="conti-banner-accent"></div>
+    <img src="https://www.largotek.com/web/image/12870-1cdfd1c0/conti-zero-logo-png_seeklogo-381873.webp" alt="Conti Zero">
+    <div class="conti-banner-body">
       <span class="conti-banner-label">Zero Grau</span>
+      <span class="conti-banner-sub">Cerveza Oficial del Mundial</span>
     </div>
+    <div class="conti-banner-dot"></div>
   </div>
 
   <div class="container py-4">
@@ -148,13 +156,9 @@
             <li>No se puede recuperar después</li>
           </ul>
         </div>
-        <div style="margin-bottom:12px;font-size:0.9rem">
-          Vas a eliminar la comparsa:<br>
-          <strong id="deleteGroupName" style="color:var(--gold);font-size:1rem"></strong>
-        </div>
-        <label style="font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;display:block">
-          Para confirmar, escribe exactamente el nombre de la comparsa:
-        </label>
+        <div style="margin-bottom:12px;font-size:0.9rem">Vas a eliminar la comparsa:<br>
+          <strong id="deleteGroupName" style="color:var(--gold);font-size:1rem"></strong></div>
+        <label style="font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;display:block">Para confirmar, escribe exactamente el nombre:</label>
         <input type="text" id="deleteConfirmInput" class="form-control"
           placeholder="Escribe el nombre aquí..." autocomplete="off" autocorrect="off" spellcheck="false">
       </div>
@@ -178,11 +182,8 @@
       <a href="https://wa.me/59169224352" target="_blank">💬 +591 692 24352</a>
       <a href="legal.html" target="_blank">⚖️ Aviso Legal</a>
     </div>
-    <div style="margin-top:8px;font-size:11px;color:var(--text-muted)">
-      Odoo ERP &nbsp;·&nbsp; Sistemas Contables &nbsp;·&nbsp; Agentes de IA &nbsp;·&nbsp; Automatización &nbsp;·&nbsp; CRM
-    </div>
-    <div style="margin-top:6px;font-size:10px;color:rgba(148,163,184,0.5)">
-      Juego de entretenimiento privado — No es un sitio de apuestas —
+    <div style="margin-top:8px;font-size:11px;color:var(--text-muted)">Odoo ERP &nbsp;·&nbsp; Sistemas Contables &nbsp;·&nbsp; Agentes de IA &nbsp;·&nbsp; Automatización &nbsp;·&nbsp; CRM</div>
+    <div style="margin-top:6px;font-size:10px;color:rgba(148,163,184,0.5)">Juego de entretenimiento privado — No es un sitio de apuestas —
       <a href="legal.html" target="_blank" style="color:rgba(148,163,184,0.5);text-decoration:underline">Términos de uso</a>
     </div>
   </div>

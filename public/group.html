@@ -10,11 +10,15 @@
   <link rel="stylesheet" href="css/conti-sponsor.css">
 </head>
 <body class="has-strip">
+  <div class="field-pattern"></div>
+
   <nav class="navbar">
     <div class="navbar-brand">
-      <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
+      <img class="navbar-conti-logo"
+        src="https://www.largotek.com/web/image/12870-1cdfd1c0/conti-zero-logo-png_seeklogo-381873.webp"
+        alt="Conti Zero">
       <div>
-        <div>⚽ <span id="groupNameNav">Comparsa</span></div>
+        <div style="font-weight:800">⚽ <span id="groupNameNav">Comparsa</span></div>
         <div class="navbar-powered">by Largotek</div>
       </div>
     </div>
@@ -30,16 +34,18 @@
     <a href="legal.html" target="_blank" style="color:#f5a0ac;text-decoration:underline;margin-left:6px">Aviso legal completo</a>
   </div>
 
-  <!-- BANNER CONTI -->
+  <!-- HERO BANNER CONTI -->
   <div class="conti-banner">
-    <img src="https://www.largotek.com/web/image/12870-1cdfd1c0/conti-zero-logo-png_seeklogo-381873.webp" alt="Conti Cerveza">
-    <div class="conti-banner-text">
+    <div class="conti-banner-accent"></div>
+    <img src="https://www.largotek.com/web/image/12870-1cdfd1c0/conti-zero-logo-png_seeklogo-381873.webp" alt="Conti Zero">
+    <div class="conti-banner-body">
       <span class="conti-banner-label">Zero Grau</span>
+      <span class="conti-banner-sub">Cerveza Oficial del Mundial</span>
     </div>
+    <div class="conti-banner-dot"></div>
   </div>
 
   <div class="container py-4">
-
     <div class="row g-3 mb-4">
       <div class="col-6 col-md-4">
         <div class="p-3 rounded" style="background:var(--bg-card);border:1px solid var(--border)">
@@ -81,12 +87,11 @@
     <div id="newsTab" class="d-none"></div>
     <div id="rulesTab" class="d-none"></div>
     <div id="disclaimerTab" class="d-none"></div>
-
   </div>
 
   <div class="largotek-strip" id="largotekStrip">
     <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
-    <span class="largotek-strip-text"><strong>Largotek</strong> — Odoo ERP · IA · CRM · Automatización &nbsp;📞 +591 692 24352</span>
+    <span class="largotek-strip-text"><strong>Largotek</strong> — Odoo ERP · IA · CRM &nbsp;📞 +591 692 24352</span>
     <a href="https://wa.me/59169224352" target="_blank" style="font-size:11px;color:var(--primary-light);font-weight:700;margin-right:8px">WhatsApp →</a>
     <button class="largotek-strip-close" onclick="document.getElementById('largotekStrip').style.display='none';document.body.classList.remove('has-strip')" title="Cerrar">×</button>
   </div>
@@ -101,11 +106,8 @@
       <a href="https://wa.me/59169224352" target="_blank">💬 +591 692 24352</a>
       <a href="legal.html" target="_blank">⚖️ Aviso Legal</a>
     </div>
-    <div style="margin-top:8px;font-size:11px;color:var(--text-muted)">
-      Odoo ERP &nbsp;·&nbsp; Sistemas Contables &nbsp;·&nbsp; Agentes de IA &nbsp;·&nbsp; Automatización &nbsp;·&nbsp; CRM
-    </div>
-    <div style="margin-top:6px;font-size:10px;color:rgba(148,163,184,0.5)">
-      Juego de entretenimiento privado — No es un sitio de apuestas —
+    <div style="margin-top:8px;font-size:11px;color:var(--text-muted)">Odoo ERP &nbsp;·&nbsp; Sistemas Contables &nbsp;·&nbsp; Agentes de IA &nbsp;·&nbsp; Automatización &nbsp;·&nbsp; CRM</div>
+    <div style="margin-top:6px;font-size:10px;color:rgba(148,163,184,0.5)">Juego de entretenimiento privado — No es un sitio de apuestas —
       <a href="legal.html" target="_blank" style="color:rgba(148,163,184,0.5);text-decoration:underline">Términos de uso</a>
     </div>
   </div>
@@ -122,20 +124,14 @@
     import { renderRules }        from './js/rules.js';
     import { renderDisclaimer }   from './js/disclaimer.js';
 
-    let groupsLoaded     = false;
-    let newsLoaded       = false;
-    let rulesLoaded      = false;
-    let disclaimerLoaded = false;
-
+    let groupsLoaded = false, newsLoaded = false, rulesLoaded = false, disclaimerLoaded = false;
     const TABS = ['ranking','matches','groups','news','rules','disclaimer'];
 
     function activateTab(tabName) {
       document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
       const btn = document.querySelector(`[data-tab="${tabName}"]`);
       if (btn) btn.classList.add('active');
-      TABS.forEach(t => {
-        document.getElementById(t+'Tab')?.classList.toggle('d-none', t !== tabName);
-      });
+      TABS.forEach(t => document.getElementById(t+'Tab')?.classList.toggle('d-none', t !== tabName));
     }
 
     document.querySelectorAll('[data-tab]').forEach(btn => {
