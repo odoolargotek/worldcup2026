@@ -22,9 +22,7 @@ const DIST_PRESETS = {
   top3:   { p1:60,  p2:30, p3:10 },
 };
 
-let pendingGroupId    = null;
-let pendingDeleteGid  = null;
-let pendingDeleteName = '';
+let pendingGroupId = null;
 
 function genCode(len = 6) {
   return Math.random().toString(36).toUpperCase().slice(2, 2 + len);
@@ -45,128 +43,6 @@ function closeModal(modalId) {
   setTimeout(cleanModal, 350);
 }
 
-// ── Modal eliminar 100% manual (sin Bootstrap) ──────────────────────────────
-function openDeleteOverlay(gid, name) {
-  pendingDeleteGid  = gid;
-  pendingDeleteName = name;
-
-  let overlay = document.getElementById('deleteOverlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'deleteOverlay';
-    overlay.style.cssText = `
-      position:fixed;inset:0;z-index:9999;
-      background:rgba(0,0,0,0.75);
-      display:flex;align-items:center;justify-content:center;
-      padding:16px;box-sizing:border-box;
-    `;
-    overlay.innerHTML = `
-      <div style="background:#1e293b;border:1px solid rgba(239,68,68,0.4);border-radius:14px;
-                  width:100%;max-width:420px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.6)">
-        <!-- Header -->
-        <div style="background:rgba(239,68,68,0.08);border-bottom:1px solid rgba(239,68,68,0.3);
-                    padding:16px 20px;display:flex;justify-content:space-between;align-items:center">
-          <h5 style="margin:0;color:#fca5a5;font-size:1rem">🗑️ Eliminar comparsa</h5>
-          <button id="deleteOverlayClose"
-            style="background:none;border:none;color:#94a3b8;font-size:1.4rem;cursor:pointer;line-height:1;padding:0 4px"
-          >×</button>
-        </div>
-        <!-- Body -->
-        <div style="padding:20px">
-          <div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);
-                      border-radius:10px;padding:14px;margin-bottom:16px">
-            <div style="font-weight:700;color:#fca5a5;margin-bottom:6px">⚠️ Esta acción es irreversible</div>
-            <ul style="color:#fca5a5;font-size:0.83rem;margin:0;padding-left:18px">
-              <li>Se eliminarán todos los miembros y pronósticos</li>
-              <li>El código de invitación dejará de funcionar</li>
-              <li>No se puede recuperar después</li>
-            </ul>
-          </div>
-          <div style="margin-bottom:12px;font-size:0.9rem;color:#e2e8f0">
-            Vas a eliminar:<br>
-            <strong id="deleteOverlayName" style="color:#fbbf24;font-size:1rem"></strong>
-          </div>
-          <label style="font-size:0.83rem;color:#94a3b8;margin-bottom:6px;display:block">
-            Escribe el nombre exacto para confirmar:
-          </label>
-          <input id="deleteOverlayInput" type="text"
-            autocomplete="off" autocorrect="off" spellcheck="false"
-            placeholder="Nombre de la comparsa..."
-            style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid #334155;
-                   background:#0f172a;color:#f1f5f9;font-size:0.9rem;box-sizing:border-box;outline:none">
-        </div>
-        <!-- Footer -->
-        <div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:8px">
-          <button id="deleteOverlayConfirm" disabled
-            style="width:100%;padding:10px;font-size:13px;font-weight:700;border-radius:8px;
-                   background:rgba(239,68,68,0.15);color:#fca5a5;
-                   border:1px solid rgba(239,68,68,0.4);cursor:pointer;opacity:0.5">
-            🗑️ Sí, eliminar definitivamente
-          </button>
-          <button id="deleteOverlayCancel"
-            style="width:100%;padding:10px;font-size:13px;font-weight:600;border-radius:8px;
-                   background:transparent;color:#94a3b8;border:1px solid #334155;cursor:pointer">
-            Cancelar
-          </button>
-        </div>
-      </div>`;
-    document.body.appendChild(overlay);
-
-    // Eventos internos (solo se registran una vez)
-    document.getElementById('deleteOverlayInput').addEventListener('input', e => {
-      const match = e.target.value.trim() === pendingDeleteName;
-      const btn   = document.getElementById('deleteOverlayConfirm');
-      btn.disabled = !match;
-      btn.style.opacity = match ? '1' : '0.5';
-      btn.style.cursor  = match ? 'pointer' : 'default';
-    });
-    document.getElementById('deleteOverlayConfirm').addEventListener('click', doDeleteGroup);
-    document.getElementById('deleteOverlayClose').addEventListener('click', closeDeleteOverlay);
-    document.getElementById('deleteOverlayCancel').addEventListener('click', closeDeleteOverlay);
-    // Clic en fondo oscuro cierra
-    overlay.addEventListener('click', e => { if (e.target === overlay) closeDeleteOverlay(); });
-  }
-
-  // Rellenar nombre y limpiar input
-  document.getElementById('deleteOverlayName').textContent  = name;
-  document.getElementById('deleteOverlayInput').value       = '';
-  const btn = document.getElementById('deleteOverlayConfirm');
-  btn.disabled = true; btn.style.opacity = '0.5'; btn.textContent = '🗑️ Sí, eliminar definitivamente';
-
-  overlay.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-}
-
-function closeDeleteOverlay() {
-  const overlay = document.getElementById('deleteOverlay');
-  if (overlay) overlay.style.display = 'none';
-  document.body.style.overflow = '';
-}
-
-async function doDeleteGroup() {
-  const user = auth.currentUser;
-  if (!pendingDeleteGid || !user) return;
-  const btn = document.getElementById('deleteOverlayConfirm');
-  btn.disabled = true;
-  btn.textContent = 'Eliminando...';
-  try {
-    const membersSnap = await getDocs(
-      query(collection(db, 'group_members'), where('group_id', '==', pendingDeleteGid))
-    );
-    await Promise.all(membersSnap.docs.map(d => deleteDoc(d.ref)));
-    await deleteDoc(doc(db, 'groups', pendingDeleteGid));
-    closeDeleteOverlay();
-    pendingDeleteGid  = null;
-    pendingDeleteName = '';
-    await loadGroups(user);
-  } catch(err) {
-    btn.disabled = false;
-    btn.textContent = '🗑️ Sí, eliminar definitivamente';
-    alert('Error al eliminar: ' + err.message);
-  }
-}
-// ────────────────────────────────────────────────────────────────────────────
-
 const urlParams  = new URLSearchParams(window.location.search);
 const inviteCode = urlParams.get('join');
 if (inviteCode) {
@@ -179,10 +55,8 @@ if (inviteCode) {
   });
 }
 
-let currentUser = null;
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
-  currentUser = user;
   const emailEl = document.getElementById('userEmail');
   if (emailEl) emailEl.textContent = user.email;
   await loadGroups(user);
@@ -232,21 +106,6 @@ function renderGroupCard(gSnap, memberData, container, user) {
     ? `<div style="font-size:12px;color:var(--green-light);margin-top:4px">⚽ ${memberData.favorite}</div>`
     : '<div style="font-size:12px;color:var(--danger);margin-top:4px">⚠ Sin favorito</div>';
 
-  const safeGid  = gid;
-  const safeName = g.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
-
-  const deleteBtnRow = isAdmin ? `
-    <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(239,68,68,0.15)">
-      <button
-        style="width:100%;padding:7px 12px;font-size:12px;font-weight:600;
-               background:rgba(239,68,68,0.1);color:#fca5a5;
-               border:1px solid rgba(239,68,68,0.35);border-radius:8px;
-               cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"
-        data-gid="${safeGid}" data-name="${safeName}"
-        class="delete-group-btn"
-      >🗑️ Eliminar comparsa</button>
-    </div>` : '';
-
   col.innerHTML = `
     <div class="group-card" style="cursor:default">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
@@ -269,15 +128,35 @@ function renderGroupCard(gSnap, memberData, container, user) {
         <button class="btn btn-outline-light btn-sm" style="font-size:12px;padding:4px 10px"
           onclick="event.stopPropagation();copyInviteLink('${appUrl}',this)" title="Copiar link">📋</button>
       </div>
-      ${deleteBtnRow}
+      ${isAdmin ? `
+      <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(239,68,68,0.15)">
+        <button class="del-btn" style="width:100%;padding:7px 12px;font-size:12px;font-weight:600;
+          background:rgba(239,68,68,0.1);color:#fca5a5;border:1px solid rgba(239,68,68,0.35);
+          border-radius:8px;cursor:pointer">
+          🗑️ Eliminar comparsa
+        </button>
+      </div>` : ''}
     </div>`;
 
-  // Listener en el botón eliminar usando data-attributes (sin inline onclick)
-  const delBtn = col.querySelector('.delete-group-btn');
-  if (delBtn) {
-    delBtn.addEventListener('click', e => {
+  if (isAdmin) {
+    col.querySelector('.del-btn').addEventListener('click', async (e) => {
       e.stopPropagation();
-      openDeleteOverlay(delBtn.dataset.gid, delBtn.dataset.name);
+      if (!confirm('¿Eliminar "' + g.name + '"?\n\nEsta acción es irreversible.')) return;
+      const btn = e.currentTarget;
+      btn.disabled = true;
+      btn.textContent = 'Eliminando...';
+      try {
+        const membersSnap = await getDocs(
+          query(collection(db, 'group_members'), where('group_id', '==', gid))
+        );
+        await Promise.all(membersSnap.docs.map(d => deleteDoc(d.ref)));
+        await deleteDoc(doc(db, 'groups', gid));
+        await loadGroups(user);
+      } catch(err) {
+        btn.disabled = false;
+        btn.textContent = '🗑️ Eliminar comparsa';
+        alert('Error: ' + err.message);
+      }
     });
   }
 
