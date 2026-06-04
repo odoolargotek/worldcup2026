@@ -3,7 +3,7 @@ import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
   collection, doc, addDoc, getDoc, getDocs,
-  query, where, setDoc, serverTimestamp
+  query, where, setDoc, serverTimestamp, updateDoc
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
 const TEAMS = [
@@ -16,6 +16,12 @@ const TEAMS = [
   "Paraguay","Bolivia","Perú","Costa Rica","Panamá","Honduras","Jamaica",
 ];
 
+const DIST_PRESETS = {
+  winner: { p1:100, p2:0,  p3:0  },
+  top2:   { p1:70,  p2:30, p3:0  },
+  top3:   { p1:60,  p2:30, p3:10 },
+};
+
 let pendingGroupId = null;
 
 function genCode(len = 6) {
@@ -23,17 +29,15 @@ function genCode(len = 6) {
 }
 
 // Auto-rellenar código si vienen por link de invitación (?join=CODIGO)
-const urlParams = new URLSearchParams(window.location.search);
+const urlParams  = new URLSearchParams(window.location.search);
 const inviteCode = urlParams.get('join');
 if (inviteCode) {
   window.addEventListener('DOMContentLoaded', () => {
     const joinInput = document.getElementById('joinCode');
     if (joinInput) joinInput.value = inviteCode.toUpperCase();
-    // Scroll suave hasta la sección de unirse
     setTimeout(() => {
       const joinBtn = document.getElementById('joinGroupBtn');
       joinBtn?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      joinBtn?.classList.add('btn-pulse');
     }, 600);
   });
 }
@@ -47,7 +51,7 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 async function loadGroups(user) {
-  const q = query(collection(db, 'group_members'), where('user_uid', '==', user.uid));
+  const q    = query(collection(db, 'group_members'), where('user_uid', '==', user.uid));
   const snap = await getDocs(q);
   const container = document.getElementById('groupList');
   if (!container) return;
@@ -57,32 +61,42 @@ async function loadGroups(user) {
     return;
   }
   for (const memberDoc of snap.docs) {
-    const gid = memberDoc.data().group_id;
+    const gid   = memberDoc.data().group_id;
     const gSnap = await getDoc(doc(db, 'groups', gid));
-    if (gSnap.exists()) renderGroupCard(gSnap, memberDoc.data(), container);
+    if (gSnap.exists()) renderGroupCard(gSnap, memberDoc.data(), container, user);
   }
 }
 
-function renderGroupCard(gSnap, memberData, container) {
+function prizeLabel(g, memberCount) {
+  if (g.type === 'open') {
+    const fee  = g.fee || 0;
+    const pozo = fee * memberCount;
+    return pozo ? `💰 Pozo: $${pozo} ($${fee}/persona)` : 'Sin cuota definida';
+  }
+  return g.prize ? `🏆 Premio: $${g.prize}` : 'Sin definir';
+}
+
+function renderGroupCard(gSnap, memberData, container, user) {
   const g    = gSnap.data();
   const gid  = gSnap.id;
   const code = g.code || '';
 
-  // Link de invitación
+  // Badge tipo
+  const typeBadge = g.type === 'closed'
+    ? `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.3)">${g.is_open === false ? '🔴 Cerrada' : '🔒 Cupo lim.'}</span>`
+    : `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(34,197,94,0.1);color:var(--green-light);border:1px solid rgba(34,197,94,0.25)">🌐 Abierta</span>`;
+
+  // Link invitación WhatsApp
   const appUrl    = `${location.origin}/dashboard.html?join=${code}`;
   const waMessage = encodeURIComponent(
-    `⚽¡Únete a mi comparsa del Mundial 2026! 🏆\n` +
-    `*${g.name}*` +
-    (g.prize ? ` \n💰 Premio: $${g.prize}` : '') +
-    `\n\nEntra aquí y usa el código *${code}*:\n${appUrl}\n\n_Polla Mundialera WC2026 by Largotek_`
+    `⚽ ¡Únete a mi comparsa del Mundial 2026! 🏆\n*${g.name}*\n\nEntra aquí y usa el código *${code}*:\n${appUrl}\n\n_Polla Mundialera WC2026 by Largotek_`
   );
   const waLink = `https://wa.me/?text=${waMessage}`;
 
-  const col  = document.createElement('div');
+  // Obtener núm de miembros para pozo (aproximado con memberCount)
+  const col = document.createElement('div');
   col.className = 'col-md-4';
 
-  const prize = g.prize ? `<span style="color:var(--green-light)">🏆 $${g.prize}</span>` : '';
-  const fee   = g.fee   ? `<span style="color:var(--text-muted)"> &middot; Cuota $${g.fee}</span>` : '';
   const stage = g.stage ? `<div style="font-size:11px;color:var(--gold);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">${g.stage}</div>` : '';
   const fav   = memberData.favorite
     ? `<div style="font-size:12px;color:var(--green-light);margin-top:4px">⚽ ${memberData.favorite}</div>`
@@ -90,27 +104,28 @@ function renderGroupCard(gSnap, memberData, container) {
 
   col.innerHTML = `
     <div class="group-card" style="cursor:default">
-      ${stage}
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+        ${stage ? stage : '<div></div>'}
+        ${typeBadge}
+      </div>
       <div style="cursor:pointer" onclick="window.location='group.html?gid=${gid}'">
         <h6 style="margin-bottom:2px">${g.name}</h6>
-        <small>${prize}${fee}</small>
+        <small style="color:var(--green-light)">${g.prize ? '🏆 $'+g.prize : g.fee ? '💰 Cuota $'+g.fee : ''}</small>
         ${fav}
         <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Código: <strong style="color:var(--gold);letter-spacing:2px">${code}</strong></div>
       </div>
-      <!-- Botones de acción -->
       <div style="display:flex;gap:8px;margin-top:12px">
         <button class="btn btn-success btn-sm" style="flex:1;font-size:12px;font-weight:700"
           onclick="window.location='group.html?gid=${gid}'">
-          🏆 Ver comparsa
+          🏆 Ver
         </button>
         <a href="${waLink}" target="_blank" rel="noopener"
-          class="btn btn-sm" 
-          style="flex:1;font-size:12px;font-weight:700;background:#25D366;color:#fff;border:none"
-          title="Invitar por WhatsApp">
+          class="btn btn-sm"
+          style="flex:1;font-size:12px;font-weight:700;background:#25D366;color:#fff;border:none">
           💬 Invitar
         </a>
         <button class="btn btn-outline-light btn-sm" style="font-size:12px;padding:4px 10px"
-          onclick="copyInviteLink('${appUrl}','${code}',this)" title="Copiar link">
+          onclick="copyInviteLink('${appUrl}',this)" title="Copiar link">
           📋
         </button>
       </div>
@@ -118,12 +133,10 @@ function renderGroupCard(gSnap, memberData, container) {
   container.appendChild(col);
 }
 
-// Copiar link al portapapeles
-window.copyInviteLink = function(url, code, btn) {
+window.copyInviteLink = function(url, btn) {
   navigator.clipboard.writeText(url).then(() => {
     const orig = btn.textContent;
     btn.textContent = '✅';
-    btn.style.borderColor = 'var(--green)';
     btn.style.color = 'var(--green-light)';
     setTimeout(() => { btn.textContent = orig; btn.style = ''; }, 2000);
   });
@@ -134,24 +147,64 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
   const user  = auth.currentUser;
   const name  = document.getElementById('newGroupName').value.trim();
   const stage = document.getElementById('newGroupStage').value;
-  const prize = document.getElementById('newGroupPrize').value;
-  const fee   = document.getElementById('newGroupFee').value;
+  const type  = document.getElementById('newGroupType').value; // 'open' | 'closed'
+  const dist  = document.getElementById('newGroupDist').value;
+
   if (!name || !stage || !user) { showMsg('createMsg', 'Completa al menos el nombre y la etapa', 'danger'); return; }
+
+  // Premio / cuota según tipo
+  let prize = null, fee = null, max_members = null;
+  if (type === 'closed') {
+    prize       = parseFloat(document.getElementById('newGroupPrizeClosed').value) || null;
+    fee         = parseFloat(document.getElementById('newGroupFee').value)         || null;
+    max_members = parseInt(document.getElementById('newGroupMax').value)           || null;
+  } else {
+    fee = parseFloat(document.getElementById('newGroupFeeOpen').value) || null;
+  }
+
+  // Distribución del premio
+  let prize_pct;
+  if (dist === 'custom') {
+    const p1 = parseInt(document.getElementById('distP1').value) || 0;
+    const p2 = parseInt(document.getElementById('distP2').value) || 0;
+    const p3 = parseInt(document.getElementById('distP3').value) || 0;
+    if (p1 + p2 + p3 !== 100) {
+      document.getElementById('distError').textContent = '⚠️ Los porcentajes deben sumar 100%';
+      return;
+    }
+    document.getElementById('distError').textContent = '';
+    prize_pct = { p1, p2, p3 };
+  } else {
+    prize_pct = DIST_PRESETS[dist];
+  }
+
   const code = genCode();
-  const ref = await addDoc(collection(db, 'groups'), {
-    name, code, stage,
-    prize: prize ? parseFloat(prize) : null,
-    fee:   fee   ? parseFloat(fee)   : null,
+  const ref  = await addDoc(collection(db, 'groups'), {
+    name, code, stage, type,
+    prize, fee, max_members,
+    prize_distribution: dist,
+    prize_pct,
+    is_open: true,
     owner_uid: user.uid,
     created_at: serverTimestamp()
   });
+
   pendingGroupId = ref.id;
   await setDoc(doc(db, 'group_members', `${ref.id}_${user.uid}`), {
     group_id: ref.id, user_uid: user.uid, role: 'admin',
     favorite: null, penalty_pts: 0, favorite_pts: 0
   });
-  ['newGroupName','newGroupPrize','newGroupFee'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
+
+  // Limpiar form
+  ['newGroupName','newGroupPrizeClosed','newGroupFee','newGroupFeeOpen','newGroupMax','distP1','distP2','distP3']
+    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.getElementById('newGroupStage').value = '';
+  document.getElementById('newGroupType').value  = 'open';
+  document.getElementById('newGroupDist').value  = 'winner';
+  document.getElementById('openFields').classList.remove('d-none');
+  document.getElementById('closedFields').classList.add('d-none');
+  document.getElementById('customDistFields').classList.add('d-none');
+
   bootstrap.Modal.getOrCreateInstance(document.getElementById('favoriteModal')).show();
 });
 
@@ -159,22 +212,40 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
 document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
   const user = auth.currentUser;
   const code = document.getElementById('joinCode').value.trim().toUpperCase();
-  const msg  = document.getElementById('joinMsg');
   if (!code || !user) return;
+
   const q    = query(collection(db, 'groups'), where('code', '==', code));
   const snap = await getDocs(q);
-  if (snap.empty) { showMsg('joinMsg', '❌ Código no encontrado. Verifica e intenta de nuevo.', 'danger'); return; }
-  const gSnap   = snap.docs[0];
-  pendingGroupId = gSnap.id;
-  const memberId = `${gSnap.id}_${user.uid}`;
-  const existing = await getDoc(doc(db, 'group_members', memberId));
+  if (snap.empty) { showMsg('joinMsg', '❌ Código no encontrado.', 'danger'); return; }
+
+  const gSnap = snap.docs[0];
+  const g     = gSnap.data();
+
+  // Bloquear si comparsa cerrada
+  if (g.is_open === false) {
+    showMsg('joinMsg', '🔴 Esta comparsa ya está cerrada. El administrador cerró las inscripciones.', 'danger');
+    return;
+  }
+
+  pendingGroupId  = gSnap.id;
+  const memberId  = `${gSnap.id}_${user.uid}`;
+  const existing  = await getDoc(doc(db, 'group_members', memberId));
   if (existing.exists()) { showMsg('joinMsg', '⚠️ Ya eres miembro de esta comparsa.', 'warning'); return; }
+
+  // Verificar límite si es cerrada
+  if (g.type === 'closed' && g.max_members) {
+    const membersSnap = await getDocs(query(collection(db, 'group_members'), where('group_id', '==', gSnap.id)));
+    if (membersSnap.size >= g.max_members) {
+      showMsg('joinMsg', `🔴 La comparsa está llena (máx. ${g.max_members} participantes).`, 'danger');
+      return;
+    }
+  }
+
   await setDoc(doc(db, 'group_members', memberId), {
     group_id: gSnap.id, user_uid: user.uid, role: 'member',
     favorite: null, penalty_pts: 0, favorite_pts: 0
   });
   document.getElementById('joinCode').value = '';
-  // Limpiar param de URL
   window.history.replaceState({}, '', location.pathname);
   bootstrap.Modal.getOrCreateInstance(document.getElementById('favoriteModal')).show();
 });
