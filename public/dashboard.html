@@ -64,16 +64,23 @@
             <option value="Semifinal">Desde Semifinal</option>
             <option value="Final">Solo Final</option>
           </select>
+
+          <!-- MONEDA -->
+          <select id="newGroupCurrency" class="form-select mb-2">
+            <option value="USD">💵 USD — Dólares americanos ($)</option>
+            <option value="BOB">🇧🇴 BOB — Bolivianos (Bs.)</option>
+          </select>
+
           <select id="newGroupType" class="form-select mb-2">
             <option value="open">🌐 Abierta — Pozo acumulable</option>
             <option value="closed">🔒 Cerrada — Premio fijo</option>
           </select>
           <div id="openFields">
-            <input type="number" id="newGroupFeeOpen" class="form-control mb-2" placeholder="Cuota por participante ($)">
+            <input type="number" id="newGroupFeeOpen" class="form-control mb-2" placeholder="Cuota por participante">
           </div>
           <div id="closedFields" class="d-none">
-            <input type="number" id="newGroupPrizeClosed" class="form-control mb-2" placeholder="Premio total fijo ($)">
-            <input type="number" id="newGroupFee" class="form-control mb-2" placeholder="Cuota por participante (opcional, $)">
+            <input type="number" id="newGroupPrizeClosed" class="form-control mb-2" placeholder="Premio total fijo">
+            <input type="number" id="newGroupFee" class="form-control mb-2" placeholder="Cuota por participante (opcional)">
             <input type="number" id="newGroupMax" class="form-control mb-2" placeholder="Máx. participantes" min="2">
           </div>
           <select id="newGroupDist" class="form-select mb-2">

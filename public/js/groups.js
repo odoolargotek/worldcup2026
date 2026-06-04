@@ -22,18 +22,17 @@ const DIST_PRESETS = {
   top3:   { p1:60,  p2:30, p3:10 },
 };
 
+export function currencySymbol(g) {
+  return (g?.currency === 'BOB') ? 'Bs.' : '$';
+}
+
 let pendingGroupId = null;
 
 function genCode(len = 6) {
   return Math.random().toString(36).toUpperCase().slice(2, 2 + len);
 }
-
-function showOverlay(id) {
-  document.getElementById(id)?.classList.add('show');
-}
-function hideOverlay(id) {
-  document.getElementById(id)?.classList.remove('show');
-}
+function showOverlay(id) { document.getElementById(id)?.classList.add('show'); }
+function hideOverlay(id)  { document.getElementById(id)?.classList.remove('show'); }
 
 const urlParams  = new URLSearchParams(window.location.search);
 const inviteCode = urlParams.get('join');
@@ -83,9 +82,9 @@ function renderGroupCard(gSnap, memberData, container, user) {
   const g    = gSnap.data();
   const gid  = gSnap.id;
   const code = g.code || '';
+  const sym  = currencySymbol(g);
   const isAdmin = (memberData.role === 'admin') || (g.owner_uid === user.uid);
 
-  // Badge tipo — solo azul Conti o rojo Conti
   const typeBadge = g.type === 'closed'
     ? `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(201,52,75,0.15);color:#f5a0ac;border:1px solid rgba(201,52,75,0.3)">${g.is_open === false ? '🔴 Cerrada' : '🔒 Cupo lim.'}</span>`
     : `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(29,144,198,0.15);color:#4aafd4;border:1px solid rgba(29,144,198,0.3)">🌐 Abierta</span>`;
@@ -106,15 +105,21 @@ function renderGroupCard(gSnap, memberData, container, user) {
     ? `<div style="font-size:12px;color:var(--primary-light);margin-top:4px">⚽ ${memberData.favorite}</div>`
     : '<div style="font-size:12px;color:var(--accent);margin-top:4px">⚠ Sin favorito</div>';
 
+  // Mostrar moneda en la card
+  const prizeText = g.prize ? `🏆 ${sym}${g.prize}` : g.fee ? `💰 Cuota ${sym}${g.fee}` : '';
+  const currencyBadge = g.currency
+    ? `<span style="font-size:10px;padding:2px 6px;border-radius:20px;background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.25);margin-left:4px">${g.currency}</span>`
+    : '';
+
   col.innerHTML = `
     <div class="group-card" style="cursor:default">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
         ${stage || '<div></div>'}
-        ${typeBadge}
+        <div style="display:flex;gap:4px;align-items:center">${typeBadge}${currencyBadge}</div>
       </div>
       <div style="cursor:pointer" onclick="window.location='group.html?gid=${gid}'">
         <h6 style="margin-bottom:2px">${g.name}</h6>
-        <small style="color:var(--primary-light)">${g.prize ? '🏆 $'+g.prize : g.fee ? '💰 Cuota $'+g.fee : ''}</small>
+        <small style="color:var(--primary-light)">${prizeText}</small>
         ${fav}
         <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Código: <strong style="color:var(--gold);letter-spacing:2px">${code}</strong></div>
       </div>
@@ -144,7 +149,6 @@ function renderGroupCard(gSnap, memberData, container, user) {
       openDeleteOverlay(gid, g.name, user);
     });
   }
-
   container.appendChild(col);
 }
 
@@ -159,11 +163,12 @@ window.copyInviteLink = function(url, btn) {
 
 // ── Crear comparsa ─────────────────────────────────────────────────
 document.getElementById('createGroupBtn')?.addEventListener('click', async () => {
-  const user  = auth.currentUser;
-  const name  = document.getElementById('newGroupName').value.trim();
-  const stage = document.getElementById('newGroupStage').value;
-  const type  = document.getElementById('newGroupType').value;
-  const dist  = document.getElementById('newGroupDist').value;
+  const user     = auth.currentUser;
+  const name     = document.getElementById('newGroupName').value.trim();
+  const stage    = document.getElementById('newGroupStage').value;
+  const type     = document.getElementById('newGroupType').value;
+  const dist     = document.getElementById('newGroupDist').value;
+  const currency = document.getElementById('newGroupCurrency')?.value || 'USD';
 
   if (!name || !stage || !user) { showMsg('createMsg', 'Completa al menos el nombre y la etapa', 'danger'); return; }
 
@@ -199,7 +204,7 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
     const code = genCode();
     const ref  = await addDoc(collection(db, 'groups'), {
       name, code, stage, type, prize, fee, max_members,
-      prize_distribution: dist, prize_pct,
+      prize_distribution: dist, prize_pct, currency,
       is_open: true, owner_uid: user.uid, created_at: serverTimestamp()
     });
     pendingGroupId = ref.id;
@@ -209,9 +214,10 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
     });
     ['newGroupName','newGroupPrizeClosed','newGroupFee','newGroupFeeOpen','newGroupMax','distP1','distP2','distP3']
       .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-    document.getElementById('newGroupStage').value = '';
-    document.getElementById('newGroupType').value  = 'open';
-    document.getElementById('newGroupDist').value  = 'winner';
+    document.getElementById('newGroupStage').value    = '';
+    document.getElementById('newGroupType').value     = 'open';
+    document.getElementById('newGroupDist').value     = 'winner';
+    document.getElementById('newGroupCurrency').value = 'USD';
     document.getElementById('openFields').classList.remove('d-none');
     document.getElementById('closedFields').classList.add('d-none');
     document.getElementById('customDistFields').classList.add('d-none');
@@ -237,7 +243,6 @@ document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
 
   const gSnap = snap.docs[0];
   const g     = gSnap.data();
-
   if (g.is_open === false) { showMsg('joinMsg', '🔴 Esta comparsa ya está cerrada.', 'danger'); return; }
 
   const memberId = `${gSnap.id}_${user.uid}`;
@@ -300,10 +305,8 @@ function setupFavoriteOverlay(user) {
   const saveBtn = document.getElementById('saveFavoriteBtn');
   const skipBtn = document.getElementById('skipFavoriteBtn');
   if (!grid) return;
-
   renderTeams('', grid);
   search?.addEventListener('input', e => renderTeams(e.target.value, grid));
-
   saveBtn?.addEventListener('click', async () => {
     const team = hidden.value;
     if (!team || !pendingGroupId || !user) return;
@@ -320,7 +323,6 @@ function setupFavoriteOverlay(user) {
       saveBtn.textContent = '✅ Confirmar favorito';
     }
   });
-
   skipBtn?.addEventListener('click', async () => {
     hideOverlay('favoriteOverlay');
     pendingGroupId = null;
@@ -345,12 +347,10 @@ function setupDeleteOverlay(user) {
   const input = document.getElementById('deleteConfirmInput');
   const btn   = document.getElementById('confirmDeleteBtn');
   if (!input || !btn) return;
-
   input.addEventListener('input', () => {
     const expected = document.getElementById('deleteGroupName').textContent;
     btn.disabled = input.value.trim() !== expected;
   });
-
   btn.addEventListener('click', async () => {
     if (!_deleteGid || !_deleteUser) return;
     btn.disabled = true;
