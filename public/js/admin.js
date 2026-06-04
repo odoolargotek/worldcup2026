@@ -210,40 +210,38 @@ document.getElementById('addMatchBtn')?.addEventListener('click', async () => {
 });
 
 // =============================================
-// BORRAR TODOS LOS PARTIDOS — confirm() nativo
+// BORRAR TODOS — loop individual (evita limite batch)
 // =============================================
 document.getElementById('deleteAllMatchesBtn')?.addEventListener('click', async () => {
   if (!confirm('⚠️ ¿Borrar TODOS los partidos y sus pronósticos? Esta acción es irreversible.')) return;
 
   const btn = document.getElementById('deleteAllMatchesBtn');
+  const list = document.getElementById('allMatchesList');
   btn.disabled = true;
-  btn.textContent = '🗑️ Borrando...';
+  btn.textContent = '⏳ Borrando...';
 
   const matchesSnap = await getDocs(collection(db, 'matches'));
-  let batch = writeBatch(db);
-  let count = 0;
+  let total = matchesSnap.size;
+  let done  = 0;
 
   for (const mDoc of matchesSnap.docs) {
-    const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id','==', mDoc.id)));
-    predsSnap.forEach(p => {
-      batch.delete(p.ref);
-      count++;
-    });
-    batch.delete(mDoc.ref);
-    count++;
-    // Firestore limita 500 ops por batch
-    if (count >= 400) {
-      await batch.commit();
-      batch = writeBatch(db);
-      count = 0;
+    // borrar pronósticos del partido
+    const predsSnap = await getDocs(
+      query(collection(db, 'predictions'), where('match_id','==', mDoc.id))
+    );
+    for (const p of predsSnap.docs) {
+      await deleteDoc(p.ref);
     }
+    // borrar el partido
+    await deleteDoc(mDoc.ref);
+    done++;
+    list.innerHTML = `<p style="color:var(--text-muted)">⏳ Borrando ${done}/${total}...</p>`;
   }
-  await batch.commit();
 
   btn.disabled = false;
   btn.textContent = '🗑️ Borrar todos los partidos';
-  document.getElementById('allMatchesList').innerHTML =
-    '<p style="color:var(--green-light)">✅ Todos los partidos eliminados. Ahora ve a <a href="load-matches.html" style="color:var(--gold)">load-matches.html</a> para recargarlos.</p>';
+  list.innerHTML = `<p style="color:var(--green-light)">✅ ${total} partidos eliminados. 
+    <a href="load-matches.html" style="color:var(--gold)">Ir a cargar partidos →</a></p>`;
   await loadMatchesAdmin();
   await loadMatchesDone();
 });
