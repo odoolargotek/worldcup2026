@@ -45,23 +45,42 @@
   </div>
 
   <div class="container py-4">
+
+    <!-- FILA DE STATS: Código / Premio / Mis Puntos / Mis Favoritos -->
     <div class="row g-3 mb-4">
-      <div class="col-6 col-md-4">
-        <div class="p-3 rounded" style="background:var(--bg-card);border:1px solid var(--border)">
+
+      <!-- Código -->
+      <div class="col-6 col-md-3">
+        <div class="p-3 h-100 rounded" style="background:var(--bg-card);border:1px solid var(--border)">
           <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Código</div>
           <div style="font-size:1.4rem;font-weight:800;color:var(--gold);letter-spacing:4px" id="groupCodeDisplay"></div>
           <button id="copyCodeBtn" class="btn btn-outline-light btn-sm mt-2 w-100">📋 Copiar</button>
         </div>
       </div>
-      <div class="col-6 col-md-4">
-        <div class="p-3 rounded" style="background:var(--bg-card);border:1px solid var(--border)">
+
+      <!-- Premio -->
+      <div class="col-6 col-md-3">
+        <div class="p-3 h-100 rounded" style="background:var(--bg-card);border:1px solid var(--border)">
           <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Premio</div>
           <div style="font-size:1.4rem;font-weight:800;color:var(--primary-light)" id="groupPrize">—</div>
           <div style="font-size:12px;color:var(--text-muted)" id="groupFee"></div>
         </div>
       </div>
-      <div class="col-12 col-md-4">
-        <div class="p-3 rounded" style="background:var(--bg-card);border:1px solid var(--border)">
+
+      <!-- Mis Puntos -->
+      <div class="col-6 col-md-3">
+        <div class="p-3 h-100 rounded" style="background:var(--bg-card);border:1px solid var(--border)">
+          <div id="myPointsCard">
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Mis puntos</div>
+            <div style="font-size:1.4rem;font-weight:800;color:var(--text-muted);margin-top:4px">—</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px">Cargando...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mis Favoritos -->
+      <div class="col-6 col-md-3">
+        <div class="p-3 h-100 rounded" style="background:var(--bg-card);border:1px solid var(--border)">
           <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Mis favoritos</div>
           <div id="myFavsSummary" style="font-size:0.82rem;color:var(--text-muted)">Cargando...</div>
           <button id="manageFavsBtn" class="btn btn-sm mt-2 w-100"
@@ -70,7 +89,9 @@
           </button>
         </div>
       </div>
+
     </div>
+    <!-- /FILA DE STATS -->
 
     <div id="favsInlineSection"></div>
 
