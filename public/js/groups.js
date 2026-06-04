@@ -89,7 +89,6 @@ function renderGroupCard(gSnap, memberData, container, user) {
   const g    = gSnap.data();
   const gid  = gSnap.id;
   const code = g.code || '';
-  // isAdmin: por rol O por ser el owner del grupo
   const isAdmin = (memberData.role === 'admin') || (g.owner_uid === user.uid);
 
   const typeBadge = g.type === 'closed'
@@ -112,7 +111,8 @@ function renderGroupCard(gSnap, memberData, container, user) {
     ? `<div style="font-size:12px;color:var(--green-light);margin-top:4px">⚽ ${memberData.favorite}</div>`
     : '<div style="font-size:12px;color:var(--danger);margin-top:4px">⚠ Sin favorito</div>';
 
-  // Botón eliminar: fila completa al fondo, solo visible para admin
+  // Botón eliminar: fila completa al fondo, solo para admin
+  // IMPORTANTE: usa event.stopPropagation() para no propagar el click al card
   const deleteBtnRow = isAdmin ? `
     <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(239,68,68,0.15)">
       <button
@@ -120,7 +120,7 @@ function renderGroupCard(gSnap, memberData, container, user) {
                background:rgba(239,68,68,0.1);color:#fca5a5;
                border:1px solid rgba(239,68,68,0.35);border-radius:8px;
                cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"
-        onclick="window._askDeleteGroup('${gid}','${g.name.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')"
+        onclick="event.stopPropagation();window._askDeleteGroup('${gid}','${g.name.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')"
       >
         🗑️ Eliminar comparsa
       </button>
@@ -138,15 +138,15 @@ function renderGroupCard(gSnap, memberData, container, user) {
         ${fav}
         <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Código: <strong style="color:var(--gold);letter-spacing:2px">${code}</strong></div>
       </div>
-      <div style="display:flex;gap:8px;margin-top:12px">
+      <div style="display:flex;gap:8px;margin-top:12px" onclick="event.stopPropagation()">
         <button class="btn btn-success btn-sm" style="flex:1;font-size:12px;font-weight:700"
-          onclick="window.location='group.html?gid=${gid}'">🏆 Ver</button>
+          onclick="event.stopPropagation();window.location='group.html?gid=${gid}'">🏆 Ver</button>
         <a href="${waLink}" target="_blank" rel="noopener"
           class="btn btn-sm"
           style="flex:1;font-size:12px;font-weight:700;background:#25D366;color:#fff;border:none">
           💬 Invitar</a>
         <button class="btn btn-outline-light btn-sm" style="font-size:12px;padding:4px 10px"
-          onclick="copyInviteLink('${appUrl}',this)" title="Copiar link">📋</button>
+          onclick="event.stopPropagation();copyInviteLink('${appUrl}',this)" title="Copiar link">📋</button>
       </div>
       ${deleteBtnRow}
     </div>`;
@@ -163,6 +163,7 @@ window.copyInviteLink = function(url, btn) {
 };
 
 // --- Lanzar modal de confirmación de borrado ---
+// Usa setTimeout para abrir DESPUÉS de que el evento click termine
 window._askDeleteGroup = function(gid, name) {
   pendingDeleteGid  = gid;
   pendingDeleteName = name;
@@ -172,8 +173,14 @@ window._askDeleteGroup = function(gid, name) {
   if (nameEl)       nameEl.textContent = name;
   if (confirmInput) confirmInput.value = '';
   if (confirmBtn)   confirmBtn.disabled = true;
+
+  // Limpiar primero, luego abrir en siguiente tick
   cleanModal();
-  bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteModal')).show();
+  setTimeout(() => {
+    const modalEl = document.getElementById('deleteModal');
+    if (!modalEl) return;
+    bootstrap.Modal.getOrCreateInstance(modalEl, { backdrop: true, keyboard: true }).show();
+  }, 80);
 };
 
 // --- Setup modal borrar ---
@@ -330,7 +337,9 @@ function openFavoriteModal() {
   document.getElementById('favoriteSearch').value = '';
   const grid = document.getElementById('teamGrid');
   if (grid) renderTeams('', grid);
-  bootstrap.Modal.getOrCreateInstance(el, { backdrop: true, keyboard: true }).show();
+  setTimeout(() => {
+    bootstrap.Modal.getOrCreateInstance(el, { backdrop: true, keyboard: true }).show();
+  }, 80);
 }
 
 function renderTeams(filter, grid) {
