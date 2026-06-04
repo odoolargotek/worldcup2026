@@ -50,15 +50,20 @@
     </div>
 
     <!-- TABS -->
-    <ul class="nav nav-tabs mb-4" id="mainTabs">
-      <li class="nav-item"><button class="nav-link active" data-tab="ranking">🏆 Ranking</button></li>
-      <li class="nav-item"><button class="nav-link" data-tab="matches">📅 Partidos</button></li>
-      <li class="nav-item"><button class="nav-link" data-tab="groups">🏥 Grupos</button></li>
+    <ul class="nav nav-tabs mb-4" id="mainTabs" style="flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch">
+      <li class="nav-item" style="white-space:nowrap"><button class="nav-link active" data-tab="ranking">🏆 Ranking</button></li>
+      <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="matches">📅 Partidos</button></li>
+      <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="groups">🏥 Grupos</button></li>
+      <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="news">📰 Noticias</button></li>
+      <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="rules">ℹ️ Cómo jugar</button></li>
     </ul>
 
     <div id="rankingTab"></div>
     <div id="matchesTab" class="d-none"><div id="matchList"><div class="text-center py-4" style="color:var(--text-muted)">Cargando partidos...</div></div></div>
-    <div id="groupsTab" class="d-none"><div class="text-center py-4" style="color:var(--text-muted)">Cargando grupos...</div></div>
+    <div id="groupsTab" class="d-none"></div>
+    <div id="newsTab" class="d-none"></div>
+    <div id="rulesTab" class="d-none"></div>
+
   </div>
 
   <!-- Modals favoritos -->
@@ -104,7 +109,7 @@
     </div>
   </div>
 
-  <!-- Strip Largotek (mobile) -->
+  <!-- Strip Largotek -->
   <div class="largotek-strip" id="largotekStrip">
     <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
     <span class="largotek-strip-text"><strong>Largotek</strong> — Transformación Digital para tu empresa</span>
@@ -130,18 +135,25 @@
   <script type="module" src="js/favorite.js"></script>
   <script type="module">
     import { renderGroupsTables } from './js/groups-table.js';
+    import { renderNews }         from './js/news.js';
+    import { renderRules }        from './js/rules.js';
+
     let groupsLoaded = false;
+    let newsLoaded   = false;
+    let rulesLoaded  = false;
+
+    const TABS = ['ranking','matches','groups','news','rules'];
+
     document.querySelectorAll('[data-tab]').forEach(btn => {
       btn.addEventListener('click', async () => {
         document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        document.getElementById('rankingTab')?.classList.toggle('d-none', btn.dataset.tab !== 'ranking');
-        document.getElementById('matchesTab')?.classList.toggle('d-none', btn.dataset.tab !== 'matches');
-        document.getElementById('groupsTab')?.classList.toggle('d-none',  btn.dataset.tab !== 'groups');
-        if (btn.dataset.tab === 'groups' && !groupsLoaded) {
-          groupsLoaded = true;
-          await renderGroupsTables();
-        }
+        TABS.forEach(t => {
+          document.getElementById(t+'Tab')?.classList.toggle('d-none', btn.dataset.tab !== t);
+        });
+        if (btn.dataset.tab === 'groups' && !groupsLoaded) { groupsLoaded = true; await renderGroupsTables(); }
+        if (btn.dataset.tab === 'news'   && !newsLoaded)   { newsLoaded   = true; renderNews(); }
+        if (btn.dataset.tab === 'rules'  && !rulesLoaded)  { rulesLoaded  = true; renderRules(); }
       });
     });
   </script>
