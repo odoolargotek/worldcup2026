@@ -26,7 +26,6 @@ const TEAMS_BY_PHASE = {
 
 const PENALTY_PTS = 3;
 let memberRef, memberData;
-// Mapa phase -> valor seleccionado en el select (pendiente de guardar)
 const pendingSelects = {};
 
 onAuthStateChanged(auth, async (user) => {
@@ -73,7 +72,6 @@ function renderFavsInline() {
   const favPts = getFavPts();
   const pens   = getPenalties();
 
-  // Limpiar selecciones pendientes al redibujar
   PHASES.forEach(p => delete pendingSelects[p]);
 
   section.innerHTML = `
@@ -85,16 +83,16 @@ function renderFavsInline() {
       </p>
       <div id="favsRows"></div>
       <div id="favsWarning" style="display:none;margin-top:12px;padding:10px 12px;border-radius:8px;
-        background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;font-size:0.82rem">
-      </div>
+        background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;font-size:0.82rem"></div>
       <button id="saveAllFavsBtn" style="display:none;margin-top:14px;width:100%;padding:12px;
         border-radius:10px;border:none;font-size:0.9rem;font-weight:700;cursor:pointer;
         background:var(--gold);color:#000">
         💾 Guardar favoritos
       </button>
-      <div id="favsSavedMsg" style="display:none;margin-top:10px;text-align:center;
-        color:var(--green-light);font-size:0.85rem;font-weight:600">
-        ✅ ¡Guardado correctamente!
+      <div id="favsSavedMsg" style="display:none;margin-top:10px;padding:12px;border-radius:10px;
+        background:rgba(22,163,74,0.15);border:1px solid rgba(22,163,74,0.3);
+        text-align:center;color:var(--green-light);font-size:0.9rem;font-weight:600">
+        ✅ ¡Favoritos guardados! Redirigiendo a partidos...
       </div>
     </div>`;
 
@@ -113,12 +111,10 @@ function renderFavsInline() {
     const row = document.createElement('div');
     row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap';
 
-    // Fase
     const phaseCol = document.createElement('div');
     phaseCol.style.cssText = 'min-width:68px;font-weight:700;color:var(--gold);font-size:0.82rem';
     phaseCol.textContent = phase;
 
-    // Equipo actual
     const currentCol = document.createElement('div');
     currentCol.style.cssText = 'flex:1;min-width:90px;display:flex;align-items:center;gap:6px';
     if (fav) {
@@ -135,7 +131,6 @@ function renderFavsInline() {
       currentCol.innerHTML = `<span style="color:var(--text-muted);font-size:0.82rem;font-style:italic">Sin elegir</span>`;
     }
 
-    // Select
     const sel = document.createElement('select');
     sel.style.cssText = `padding:6px 10px;border-radius:8px;
       border:1px solid ${fav ? 'var(--danger)' : 'var(--gold)'};
@@ -160,7 +155,6 @@ function renderFavsInline() {
     container.appendChild(row);
   });
 
-  // Botón guardar todo
   saveBtn.addEventListener('click', async () => {
     const phases = Object.keys(pendingSelects);
     if (phases.length === 0) return;
@@ -170,33 +164,33 @@ function renderFavsInline() {
 
     const updates = {};
     phases.forEach(phase => {
-      const newTeam  = pendingSelects[phase];
-      const hadFav   = !!favs[phase];
+      const newTeam = pendingSelects[phase];
+      const hadFav  = !!favs[phase];
       updates[`favorites.${phase}`] = newTeam;
-      if (hadFav && newTeam !== favs[phase]) {
+      if (hadFav && newTeam !== favs[phase])
         updates[`penalties.${phase}`] = (pens[phase] || 0) + PENALTY_PTS;
-      }
     });
 
     try {
       await updateDoc(memberRef, updates);
-      // Actualizar memberData local
       if (!memberData.favorites) memberData.favorites = {};
       if (!memberData.penalties) memberData.penalties = {};
       phases.forEach(phase => {
         const hadFav  = !!favs[phase];
         const newTeam = pendingSelects[phase];
         memberData.favorites[phase] = newTeam;
-        if (hadFav && newTeam !== favs[phase]) {
+        if (hadFav && newTeam !== favs[phase])
           memberData.penalties[phase] = (memberData.penalties[phase] || 0) + PENALTY_PTS;
-        }
       });
+
+      // Mostrar mensaje y redirigir a partidos
+      saveBtn.style.display  = 'none';
+      warning.style.display  = 'none';
       savedMsg.style.display = 'block';
       setTimeout(() => {
-        savedMsg.style.display = 'none';
-        renderFavsSummary();
-        renderFavsInline();
-      }, 1200);
+        window.location.href = `group.html?gid=${GROUP_ID}&tab=matches`;
+      }, 1400);
+
     } catch(err) {
       alert('Error: ' + err.message);
       saveBtn.disabled    = false;
@@ -208,18 +202,17 @@ function renderFavsInline() {
 function updateSaveBtn(favs, pens, saveBtn, warning) {
   const phases = Object.keys(pendingSelects);
   if (phases.length === 0) {
-    saveBtn.style.display   = 'none';
-    warning.style.display   = 'none';
+    saveBtn.style.display  = 'none';
+    warning.style.display  = 'none';
     return;
   }
   saveBtn.style.display = 'block';
   saveBtn.textContent   = `💾 Guardar favoritos (${phases.length} cambio${phases.length > 1 ? 's' : ''})`;
 
-  // Calcular penalidades pendientes
   const penalties = phases.filter(p => !!favs[p] && pendingSelects[p] !== favs[p]);
   if (penalties.length > 0) {
     warning.style.display = 'block';
-    warning.innerHTML = `⚠️ <strong>${penalties.length} grupo${penalties.length>1?'s':''} con favorito ya elegido</strong> — 
+    warning.innerHTML = `⚠️ <strong>${penalties.length} grupo${penalties.length>1?'s':''} con favorito ya elegido</strong> —
       cambiarlos aplicará <strong>-${penalties.length * PENALTY_PTS} pts</strong> en total.
       <div style="margin-top:4px;font-size:11px">${penalties.map(p=>`${p} → ${pendingSelects[p]}`).join(' · ')}</div>`;
   } else {
