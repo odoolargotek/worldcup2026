@@ -63,26 +63,30 @@
       </div>
       <div class="col-12 col-md-4">
         <div class="p-3 rounded" style="background:var(--bg-card);border:1px solid var(--border)">
-          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Mis favoritos por grupo</div>
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Mis favoritos</div>
           <div id="myFavsSummary" style="font-size:0.82rem;color:var(--text-muted)">Cargando...</div>
-          <button id="manageFavsBtn" class="btn btn-warning btn-sm mt-2 w-100" style="font-size:12px;font-weight:700">🏆 Ver / gestionar favoritos</button>
+          <button id="manageFavsBtn" class="btn btn-sm mt-2 w-100"
+            style="font-size:12px;font-weight:700;background:rgba(29,144,198,0.15);color:#4aafd4;border:1px solid rgba(29,144,198,0.3);border-radius:8px">
+            🏆 Ver / cambiar favoritos
+          </button>
         </div>
       </div>
     </div>
 
     <div id="favsInlineSection"></div>
 
+    <!-- TABS: Partidos primero -->
     <ul class="nav nav-tabs mb-4" id="mainTabs" style="flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch">
-      <li class="nav-item" style="white-space:nowrap"><button class="nav-link active" data-tab="ranking">🏆 Ranking</button></li>
-      <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="matches">📅 Partidos</button></li>
+      <li class="nav-item" style="white-space:nowrap"><button class="nav-link active" data-tab="matches">📅 Partidos</button></li>
+      <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="ranking">🏆 Ranking</button></li>
       <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="groups">🏙️ Fase de Grupos</button></li>
       <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="news">📰 Noticias</button></li>
       <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="rules">&#x2139;&#xfe0f; Cómo jugar</button></li>
       <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="disclaimer">⚖️ Aviso Legal</button></li>
     </ul>
 
-    <div id="rankingTab"></div>
-    <div id="matchesTab" class="d-none"><div id="matchList"><div class="text-center py-4" style="color:var(--text-muted)">Cargando partidos...</div></div></div>
+    <div id="matchesTab"><div id="matchList"><div class="text-center py-4" style="color:var(--text-muted)">Cargando partidos...</div></div></div>
+    <div id="rankingTab" class="d-none"></div>
     <div id="groupsTab" class="d-none"></div>
     <div id="newsTab" class="d-none"></div>
     <div id="rulesTab" class="d-none"></div>
@@ -106,7 +110,7 @@
       <a href="https://wa.me/59169224352" target="_blank">💬 +591 692 24352</a>
       <a href="legal.html" target="_blank">⚖️ Aviso Legal</a>
     </div>
-    <div style="margin-top:8px;font-size:11px;color:var(--text-muted)">Odoo ERP &nbsp;·&nbsp; Sistemas Contables &nbsp;·&nbsp; Agentes de IA &nbsp;·&nbsp; Automatización &nbsp;·&nbsp; CRM</div>
+    <div style="margin-top:8px;font-size:11px;color:var(--text-muted)">Odoo ERP · Sistemas Contables · Agentes de IA · Automatización · CRM</div>
     <div style="margin-top:6px;font-size:10px;color:rgba(148,163,184,0.5)">Juego de entretenimiento privado — No es un sitio de apuestas —
       <a href="legal.html" target="_blank" style="color:rgba(148,163,184,0.5);text-decoration:underline">Términos de uso</a>
     </div>
@@ -125,7 +129,10 @@
     import { renderDisclaimer }   from './js/disclaimer.js';
 
     let groupsLoaded = false, newsLoaded = false, rulesLoaded = false, disclaimerLoaded = false;
-    const TABS = ['ranking','matches','groups','news','rules','disclaimer'];
+    // Matches se carga por defecto al iniciar (ya visible)
+    let matchesLoaded = true;
+
+    const TABS = ['matches','ranking','groups','news','rules','disclaimer'];
 
     function activateTab(tabName) {
       document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));

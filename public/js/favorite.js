@@ -1,4 +1,4 @@
-// favorite.js — Un solo botón Guardar para todos los grupos
+// favorite.js
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import { doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
@@ -37,7 +37,10 @@ onAuthStateChanged(auth, async (user) => {
   renderFavsSummary();
   renderFavsInline();
   document.getElementById('manageFavsBtn')?.addEventListener('click', () => {
-    document.getElementById('favsInlineSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    expandFavsSection();
+    setTimeout(() => {
+      document.getElementById('favsInlineSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
   });
 });
 
@@ -59,8 +62,18 @@ function renderFavsSummary() {
       return `<span style="font-size:1.3rem">${t?.flag||''}</span>`;
     }).join(' ');
     el.innerHTML = `<div style="margin-bottom:4px">${flags}</div>`
-      + `<span style="color:var(--green-light);font-size:12px">✅ ${chosen.length}/12 elegidos</span>`
+      + `<span style="color:var(--primary-light);font-size:12px">✅ ${chosen.length}/12 elegidos</span>`
       + (missing ? `<span style="color:var(--gold);font-size:12px"> · ⚠️ ${missing} pendientes</span>` : ' <span>🎉</span>');
+  }
+}
+
+// ─ Expande la sección de favoritos si está colapsada
+function expandFavsSection() {
+  const body = document.getElementById('favsBody');
+  const tog  = document.getElementById('favsToggleBtn');
+  if (body && body.style.display === 'none') {
+    body.style.display = 'block';
+    if (tog) tog.textContent = '▲ Ocultar favoritos';
   }
 }
 
@@ -71,30 +84,75 @@ function renderFavsInline() {
   const favs   = getFavorites();
   const favPts = getFavPts();
   const pens   = getPenalties();
+  const chosen  = PHASES.filter(p => favs[p]);
+  const missing = PHASES.length - chosen.length;
+
+  // Si todos elegidos → colapsado por defecto; si hay pendientes → expandido
+  const startCollapsed = missing === 0;
 
   PHASES.forEach(p => delete pendingSelects[p]);
 
   section.innerHTML = `
-    <div style="margin:24px 0 8px;padding:16px;background:var(--bg-card2);border-radius:14px;border:1px solid var(--border)">
-      <h6 style="color:var(--gold);margin-bottom:6px">🏆 Mis equipos favoritos por grupo</h6>
-      <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:14px">
-        Elige tus equipos y pulsa <strong style="color:var(--green-light)">Guardar favoritos</strong> al final.
-        Cambiar uno ya guardado aplica <strong style="color:var(--danger)">-${PENALTY_PTS} pts</strong> de penalidad.
-      </p>
-      <div id="favsRows"></div>
-      <div id="favsWarning" style="display:none;margin-top:12px;padding:10px 12px;border-radius:8px;
-        background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;font-size:0.82rem"></div>
-      <button id="saveAllFavsBtn" style="display:none;margin-top:14px;width:100%;padding:12px;
-        border-radius:10px;border:none;font-size:0.9rem;font-weight:700;cursor:pointer;
-        background:var(--gold);color:#000">
-        💾 Guardar favoritos
-      </button>
-      <div id="favsSavedMsg" style="display:none;margin-top:10px;padding:12px;border-radius:10px;
-        background:rgba(22,163,74,0.15);border:1px solid rgba(22,163,74,0.3);
-        text-align:center;color:var(--green-light);font-size:0.9rem;font-weight:600">
-        ✅ ¡Favoritos guardados! Redirigiendo a partidos...
+    <div style="margin:16px 0 8px;border-radius:14px;border:1px solid var(--border);overflow:hidden">
+
+      <!-- CABECERA siempre visible -->
+      <div id="favsHeader" style="
+        display:flex;align-items:center;justify-content:space-between;
+        padding:12px 16px;
+        background:var(--bg-card2);
+        cursor:pointer;
+        user-select:none;
+      ">
+        <div style="display:flex;align-items:center;gap:10px">
+          <span style="font-size:1rem">🏆</span>
+          <div>
+            <div style="font-weight:700;font-size:0.9rem;color:var(--gold)">Favoritos por grupo</div>
+            <div id="favsHeaderSub" style="font-size:11px;color:var(--text-muted);margin-top:1px">
+              ${missing === 0
+                ? `<span style="color:var(--primary-light)">✅ Todos elegidos</span>`
+                : `<span style="color:var(--gold)">⚠️ ${missing} grupo${missing>1?'s':''} sin elegir</span>`
+              }
+            </div>
+          </div>
+        </div>
+        <button id="favsToggleBtn" style="
+          background:none;border:1px solid var(--border);color:var(--text-muted);
+          border-radius:20px;padding:3px 12px;font-size:12px;cursor:pointer;
+          white-space:nowrap;
+        ">${startCollapsed ? '▼ Ver / cambiar' : '▲ Ocultar'}</button>
+      </div>
+
+      <!-- CUERPO colapsable -->
+      <div id="favsBody" style="display:${startCollapsed ? 'none' : 'block'};padding:16px;background:var(--bg-card)">
+        <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:14px">
+          Elige tus equipos y pulsa <strong style="color:var(--primary-light)">Guardar</strong> al final.
+          Cambiar uno ya guardado aplica <strong style="color:var(--accent)">-${PENALTY_PTS} pts</strong>.
+        </p>
+        <div id="favsRows"></div>
+        <div id="favsWarning" style="display:none;margin-top:12px;padding:10px 12px;border-radius:8px;
+          background:rgba(201,52,75,0.12);border:1px solid rgba(201,52,75,0.3);
+          color:#f5a0ac;font-size:0.82rem"></div>
+        <button id="saveAllFavsBtn" style="display:none;margin-top:14px;width:100%;padding:12px;
+          border-radius:10px;border:none;font-size:0.9rem;font-weight:700;cursor:pointer;
+          background:var(--gold);color:#000">
+          💾 Guardar favoritos
+        </button>
+        <div id="favsSavedMsg" style="display:none;margin-top:10px;padding:12px;border-radius:10px;
+          background:rgba(29,144,198,0.15);border:1px solid rgba(29,144,198,0.3);
+          text-align:center;color:var(--primary-light);font-size:0.9rem;font-weight:600">
+          ✅ ¡Favoritos guardados! Redirigiendo a partidos...
+        </div>
       </div>
     </div>`;
+
+  // Toggle click
+  document.getElementById('favsHeader').addEventListener('click', () => {
+    const body = document.getElementById('favsBody');
+    const tog  = document.getElementById('favsToggleBtn');
+    const open = body.style.display !== 'none';
+    body.style.display = open ? 'none' : 'block';
+    tog.textContent    = open ? '▼ Ver / cambiar' : '▲ Ocultar';
+  });
 
   const container = document.getElementById('favsRows');
   const saveBtn   = document.getElementById('saveAllFavsBtn');
@@ -123,8 +181,8 @@ function renderFavsInline() {
         <div>
           <div style="font-size:0.85rem;font-weight:600">${fav}</div>
           <div style="font-size:11px">
-            <span style="color:var(--green-light)">+${pts} pts</span>
-            ${pen ? `<span style="color:var(--danger)"> · -${pen} pen</span>` : ''}
+            <span style="color:var(--primary-light)">+${pts} pts</span>
+            ${pen ? `<span style="color:var(--accent)"> · -${pen} pen</span>` : ''}
           </div>
         </div>`;
     } else {
@@ -133,7 +191,7 @@ function renderFavsInline() {
 
     const sel = document.createElement('select');
     sel.style.cssText = `padding:6px 10px;border-radius:8px;
-      border:1px solid ${fav ? 'var(--danger)' : 'var(--gold)'};
+      border:1px solid ${fav ? 'var(--accent)' : 'var(--gold)'};
       background:var(--bg-card);color:var(--text);font-size:0.82rem;cursor:pointer;max-width:155px`;
     sel.innerHTML = `<option value="">${fav ? '⚠ Cambiar...' : '⚽ Elegir...'}</option>`
       + teams.map(t => `<option value="${t.name}">${t.flag} ${t.name}</option>`).join('');
@@ -141,10 +199,10 @@ function renderFavsInline() {
     sel.addEventListener('change', () => {
       if (sel.value) {
         pendingSelects[phase] = sel.value;
-        sel.style.borderColor = 'var(--green-light)';
+        sel.style.borderColor = 'var(--primary-light)';
       } else {
         delete pendingSelects[phase];
-        sel.style.borderColor = fav ? 'var(--danger)' : 'var(--gold)';
+        sel.style.borderColor = fav ? 'var(--accent)' : 'var(--gold)';
       }
       updateSaveBtn(favs, pens, saveBtn, warning);
     });
@@ -158,10 +216,8 @@ function renderFavsInline() {
   saveBtn.addEventListener('click', async () => {
     const phases = Object.keys(pendingSelects);
     if (phases.length === 0) return;
-
     saveBtn.disabled    = true;
     saveBtn.textContent = 'Guardando...';
-
     const updates = {};
     phases.forEach(phase => {
       const newTeam = pendingSelects[phase];
@@ -170,7 +226,6 @@ function renderFavsInline() {
       if (hadFav && newTeam !== favs[phase])
         updates[`penalties.${phase}`] = (pens[phase] || 0) + PENALTY_PTS;
     });
-
     try {
       await updateDoc(memberRef, updates);
       if (!memberData.favorites) memberData.favorites = {};
@@ -182,15 +237,12 @@ function renderFavsInline() {
         if (hadFav && newTeam !== favs[phase])
           memberData.penalties[phase] = (memberData.penalties[phase] || 0) + PENALTY_PTS;
       });
-
-      // Mostrar mensaje y redirigir a partidos
       saveBtn.style.display  = 'none';
       warning.style.display  = 'none';
       savedMsg.style.display = 'block';
       setTimeout(() => {
         window.location.href = `group.html?gid=${GROUP_ID}&tab=matches`;
       }, 1400);
-
     } catch(err) {
       alert('Error: ' + err.message);
       saveBtn.disabled    = false;
@@ -201,14 +253,9 @@ function renderFavsInline() {
 
 function updateSaveBtn(favs, pens, saveBtn, warning) {
   const phases = Object.keys(pendingSelects);
-  if (phases.length === 0) {
-    saveBtn.style.display  = 'none';
-    warning.style.display  = 'none';
-    return;
-  }
+  if (phases.length === 0) { saveBtn.style.display = 'none'; warning.style.display = 'none'; return; }
   saveBtn.style.display = 'block';
   saveBtn.textContent   = `💾 Guardar favoritos (${phases.length} cambio${phases.length > 1 ? 's' : ''})`;
-
   const penalties = phases.filter(p => !!favs[p] && pendingSelects[p] !== favs[p]);
   if (penalties.length > 0) {
     warning.style.display = 'block';
