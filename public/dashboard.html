@@ -101,23 +101,24 @@
   </div>
 
   <!-- Modal favorito -->
-  <div class="modal fade" id="favoriteModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
+  <div class="modal fade" id="favoriteModal" tabindex="-1" data-bs-backdrop="true" data-bs-keyboard="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text)">
         <div class="modal-header" style="border-color:var(--border)">
           <div>
             <h5 class="modal-title mb-0">🏆 Elige tu equipo favorito</h5>
             <div style="font-size:12px;color:var(--text-muted)">Puedes cambiarlo luego (con penalidad de -3 pts)</div>
           </div>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
         <div class="modal-body">
-          <input type="text" id="favoriteSearch" class="form-control mb-3" placeholder="🔍 Buscar equipo...">
+          <input type="text" id="favoriteSearch" class="form-control mb-3" placeholder="🔍 Buscar equipo..." autocomplete="off">
           <div id="teamGrid" class="row g-2" style="max-height:300px;overflow-y:auto"></div>
           <input type="hidden" id="selectedTeam">
         </div>
-        <div class="modal-footer" style="border-color:var(--border)">
+        <div class="modal-footer" style="border-color:var(--border);flex-direction:column;gap:8px">
           <button id="saveFavoriteBtn" class="btn btn-warning w-100" disabled style="font-weight:700">✅ Confirmar favorito</button>
+          <button id="skipFavoriteBtn" class="btn btn-outline-light w-100" style="font-size:13px;font-weight:500">⏩ Saltar por ahora — elegir después</button>
         </div>
       </div>
     </div>

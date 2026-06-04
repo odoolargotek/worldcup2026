@@ -3,7 +3,7 @@ import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
   collection, doc, addDoc, getDoc, getDocs,
-  query, where, setDoc, serverTimestamp, updateDoc
+  query, where, setDoc, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
 const TEAMS = [
@@ -28,6 +28,23 @@ function genCode(len = 6) {
   return Math.random().toString(36).toUpperCase().slice(2, 2 + len);
 }
 
+// Limpia cualquier backdrop colgado de Bootstrap (bug móvil)
+function cleanModal() {
+  document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+  document.body.classList.remove('modal-open');
+  document.body.style.overflow = '';
+  document.body.style.paddingRight = '';
+}
+
+function closeModal(modalId) {
+  const el = document.getElementById(modalId);
+  if (!el) return;
+  const instance = bootstrap.Modal.getInstance(el);
+  if (instance) instance.hide();
+  // Forzar limpieza después de la animación
+  setTimeout(cleanModal, 350);
+}
+
 // Auto-rellenar código si vienen por link de invitación (?join=CODIGO)
 const urlParams  = new URLSearchParams(window.location.search);
 const inviteCode = urlParams.get('join');
@@ -36,8 +53,7 @@ if (inviteCode) {
     const joinInput = document.getElementById('joinCode');
     if (joinInput) joinInput.value = inviteCode.toUpperCase();
     setTimeout(() => {
-      const joinBtn = document.getElementById('joinGroupBtn');
-      joinBtn?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById('joinGroupBtn')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }, 600);
   });
 }
@@ -67,33 +83,21 @@ async function loadGroups(user) {
   }
 }
 
-function prizeLabel(g, memberCount) {
-  if (g.type === 'open') {
-    const fee  = g.fee || 0;
-    const pozo = fee * memberCount;
-    return pozo ? `💰 Pozo: $${pozo} ($${fee}/persona)` : 'Sin cuota definida';
-  }
-  return g.prize ? `🏆 Premio: $${g.prize}` : 'Sin definir';
-}
-
 function renderGroupCard(gSnap, memberData, container, user) {
   const g    = gSnap.data();
   const gid  = gSnap.id;
   const code = g.code || '';
 
-  // Badge tipo
   const typeBadge = g.type === 'closed'
     ? `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.3)">${g.is_open === false ? '🔴 Cerrada' : '🔒 Cupo lim.'}</span>`
     : `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(34,197,94,0.1);color:var(--green-light);border:1px solid rgba(34,197,94,0.25)">🌐 Abierta</span>`;
 
-  // Link invitación WhatsApp
   const appUrl    = `${location.origin}/dashboard.html?join=${code}`;
   const waMessage = encodeURIComponent(
     `⚽ ¡Únete a mi comparsa del Mundial 2026! 🏆\n*${g.name}*\n\nEntra aquí y usa el código *${code}*:\n${appUrl}\n\n_Polla Mundialera WC2026 by Largotek_`
   );
   const waLink = `https://wa.me/?text=${waMessage}`;
 
-  // Obtener núm de miembros para pozo (aproximado con memberCount)
   const col = document.createElement('div');
   col.className = 'col-md-4';
 
@@ -105,7 +109,7 @@ function renderGroupCard(gSnap, memberData, container, user) {
   col.innerHTML = `
     <div class="group-card" style="cursor:default">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
-        ${stage ? stage : '<div></div>'}
+        ${stage || '<div></div>'}
         ${typeBadge}
       </div>
       <div style="cursor:pointer" onclick="window.location='group.html?gid=${gid}'">
@@ -116,18 +120,13 @@ function renderGroupCard(gSnap, memberData, container, user) {
       </div>
       <div style="display:flex;gap:8px;margin-top:12px">
         <button class="btn btn-success btn-sm" style="flex:1;font-size:12px;font-weight:700"
-          onclick="window.location='group.html?gid=${gid}'">
-          🏆 Ver
-        </button>
+          onclick="window.location='group.html?gid=${gid}'"> 🏆 Ver</button>
         <a href="${waLink}" target="_blank" rel="noopener"
           class="btn btn-sm"
           style="flex:1;font-size:12px;font-weight:700;background:#25D366;color:#fff;border:none">
-          💬 Invitar
-        </a>
+          💬 Invitar</a>
         <button class="btn btn-outline-light btn-sm" style="font-size:12px;padding:4px 10px"
-          onclick="copyInviteLink('${appUrl}',this)" title="Copiar link">
-          📋
-        </button>
+          onclick="copyInviteLink('${appUrl}',this)" title="Copiar link">📋</button>
       </div>
     </div>`;
   container.appendChild(col);
@@ -147,12 +146,11 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
   const user  = auth.currentUser;
   const name  = document.getElementById('newGroupName').value.trim();
   const stage = document.getElementById('newGroupStage').value;
-  const type  = document.getElementById('newGroupType').value; // 'open' | 'closed'
+  const type  = document.getElementById('newGroupType').value;
   const dist  = document.getElementById('newGroupDist').value;
 
   if (!name || !stage || !user) { showMsg('createMsg', 'Completa al menos el nombre y la etapa', 'danger'); return; }
 
-  // Premio / cuota según tipo
   let prize = null, fee = null, max_members = null;
   if (type === 'closed') {
     prize       = parseFloat(document.getElementById('newGroupPrizeClosed').value) || null;
@@ -162,7 +160,6 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
     fee = parseFloat(document.getElementById('newGroupFeeOpen').value) || null;
   }
 
-  // Distribución del premio
   let prize_pct;
   if (dist === 'custom') {
     const p1 = parseInt(document.getElementById('distP1').value) || 0;
@@ -178,34 +175,42 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
     prize_pct = DIST_PRESETS[dist];
   }
 
-  const code = genCode();
-  const ref  = await addDoc(collection(db, 'groups'), {
-    name, code, stage, type,
-    prize, fee, max_members,
-    prize_distribution: dist,
-    prize_pct,
-    is_open: true,
-    owner_uid: user.uid,
-    created_at: serverTimestamp()
-  });
+  const btn = document.getElementById('createGroupBtn');
+  btn.disabled = true;
+  btn.textContent = 'Creando...';
 
-  pendingGroupId = ref.id;
-  await setDoc(doc(db, 'group_members', `${ref.id}_${user.uid}`), {
-    group_id: ref.id, user_uid: user.uid, role: 'admin',
-    favorite: null, penalty_pts: 0, favorite_pts: 0
-  });
+  try {
+    const code = genCode();
+    const ref  = await addDoc(collection(db, 'groups'), {
+      name, code, stage, type, prize, fee, max_members,
+      prize_distribution: dist, prize_pct,
+      is_open: true, owner_uid: user.uid, created_at: serverTimestamp()
+    });
 
-  // Limpiar form
-  ['newGroupName','newGroupPrizeClosed','newGroupFee','newGroupFeeOpen','newGroupMax','distP1','distP2','distP3']
-    .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
-  document.getElementById('newGroupStage').value = '';
-  document.getElementById('newGroupType').value  = 'open';
-  document.getElementById('newGroupDist').value  = 'winner';
-  document.getElementById('openFields').classList.remove('d-none');
-  document.getElementById('closedFields').classList.add('d-none');
-  document.getElementById('customDistFields').classList.add('d-none');
+    pendingGroupId = ref.id;
+    await setDoc(doc(db, 'group_members', `${ref.id}_${user.uid}`), {
+      group_id: ref.id, user_uid: user.uid, role: 'admin',
+      favorite: null, penalty_pts: 0, favorite_pts: 0
+    });
 
-  bootstrap.Modal.getOrCreateInstance(document.getElementById('favoriteModal')).show();
+    // Limpiar form
+    ['newGroupName','newGroupPrizeClosed','newGroupFee','newGroupFeeOpen','newGroupMax','distP1','distP2','distP3']
+      .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+    document.getElementById('newGroupStage').value = '';
+    document.getElementById('newGroupType').value  = 'open';
+    document.getElementById('newGroupDist').value  = 'winner';
+    document.getElementById('openFields').classList.remove('d-none');
+    document.getElementById('closedFields').classList.add('d-none');
+    document.getElementById('customDistFields').classList.add('d-none');
+
+    showMsg('createMsg', '✅ ¡Comparsa creada!', 'success');
+    openFavoriteModal();
+  } catch(err) {
+    showMsg('createMsg', '❌ Error: ' + err.message, 'danger');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '⚽ Crear comparsa';
+  }
 });
 
 // --- Unirse a comparsa ---
@@ -221,22 +226,19 @@ document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
   const gSnap = snap.docs[0];
   const g     = gSnap.data();
 
-  // Bloquear si comparsa cerrada
   if (g.is_open === false) {
-    showMsg('joinMsg', '🔴 Esta comparsa ya está cerrada. El administrador cerró las inscripciones.', 'danger');
+    showMsg('joinMsg', '🔴 Esta comparsa ya está cerrada.', 'danger');
     return;
   }
 
-  pendingGroupId  = gSnap.id;
-  const memberId  = `${gSnap.id}_${user.uid}`;
-  const existing  = await getDoc(doc(db, 'group_members', memberId));
+  const memberId = `${gSnap.id}_${user.uid}`;
+  const existing = await getDoc(doc(db, 'group_members', memberId));
   if (existing.exists()) { showMsg('joinMsg', '⚠️ Ya eres miembro de esta comparsa.', 'warning'); return; }
 
-  // Verificar límite si es cerrada
   if (g.type === 'closed' && g.max_members) {
     const membersSnap = await getDocs(query(collection(db, 'group_members'), where('group_id', '==', gSnap.id)));
     if (membersSnap.size >= g.max_members) {
-      showMsg('joinMsg', `🔴 La comparsa está llena (máx. ${g.max_members} participantes).`, 'danger');
+      showMsg('joinMsg', `🔴 La comparsa está llena (máx. ${g.max_members}).`, 'danger');
       return;
     }
   }
@@ -245,10 +247,54 @@ document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
     group_id: gSnap.id, user_uid: user.uid, role: 'member',
     favorite: null, penalty_pts: 0, favorite_pts: 0
   });
+
+  pendingGroupId = gSnap.id;
   document.getElementById('joinCode').value = '';
   window.history.replaceState({}, '', location.pathname);
-  bootstrap.Modal.getOrCreateInstance(document.getElementById('favoriteModal')).show();
+  showMsg('joinMsg', '✅ ¡Te uniste!', 'success');
+  openFavoriteModal();
 });
+
+// --- Abrir modal favorito de forma segura ---
+function openFavoriteModal() {
+  cleanModal(); // limpiar cualquier backdrop anterior
+  const el = document.getElementById('favoriteModal');
+  if (!el) return;
+  // Resetear estado del modal
+  document.getElementById('selectedTeam').value = '';
+  document.getElementById('saveFavoriteBtn').disabled = true;
+  document.getElementById('favoriteSearch').value = '';
+  const grid = document.getElementById('teamGrid');
+  if (grid) renderTeams('', grid);
+
+  const modal = bootstrap.Modal.getOrCreateInstance(el, {
+    backdrop: true,
+    keyboard: true
+  });
+  modal.show();
+}
+
+// --- Render equipos (reutilizable) ---
+function renderTeams(filter, grid) {
+  if (!grid) return;
+  grid.innerHTML = '';
+  const saveBtn = document.getElementById('saveFavoriteBtn');
+  const hidden  = document.getElementById('selectedTeam');
+  TEAMS.filter(t => t.toLowerCase().includes(filter.toLowerCase())).forEach(team => {
+    const div = document.createElement('div');
+    div.className = 'col-6';
+    div.innerHTML = `<button class="btn w-100 team-btn" style="background:var(--bg-card2);color:var(--text);border:1px solid var(--border);font-size:0.85rem;padding:8px 4px">⚽ ${team}</button>`;
+    div.querySelector('button').addEventListener('click', () => {
+      grid.querySelectorAll('.team-btn').forEach(b => {
+        b.style.cssText = 'background:var(--bg-card2);color:var(--text);border:1px solid var(--border);font-size:0.85rem;padding:8px 4px';
+      });
+      div.querySelector('button').style.cssText = 'background:rgba(22,163,74,0.2);color:var(--green-light);border:1px solid var(--green);font-size:0.85rem;padding:8px 4px;font-weight:700';
+      hidden.value     = team;
+      if (saveBtn) saveBtn.disabled = false;
+    });
+    grid.appendChild(div);
+  });
+}
 
 // --- Modal elegir favorito ---
 function setupFavoriteModal(user) {
@@ -256,37 +302,44 @@ function setupFavoriteModal(user) {
   const search  = document.getElementById('favoriteSearch');
   const hidden  = document.getElementById('selectedTeam');
   const saveBtn = document.getElementById('saveFavoriteBtn');
-  if (!grid) return;
+  const skipBtn = document.getElementById('skipFavoriteBtn');
+  const modalEl = document.getElementById('favoriteModal');
+  if (!grid || !modalEl) return;
 
-  function renderTeams(filter = '') {
-    grid.innerHTML = '';
-    TEAMS.filter(t => t.toLowerCase().includes(filter.toLowerCase())).forEach(team => {
-      const div = document.createElement('div');
-      div.className = 'col-6';
-      div.innerHTML = `<button class="btn w-100 team-btn" style="background:var(--bg-card2);color:var(--text);border:1px solid var(--border);font-size:0.85rem;padding:8px 4px">⚽ ${team}</button>`;
-      div.querySelector('button').addEventListener('click', () => {
-        grid.querySelectorAll('.team-btn').forEach(b => {
-          b.style.cssText = 'background:var(--bg-card2);color:var(--text);border:1px solid var(--border);font-size:0.85rem;padding:8px 4px';
-        });
-        div.querySelector('button').style.cssText = 'background:rgba(22,163,74,0.2);color:var(--green-light);border:1px solid var(--green);font-size:0.85rem;padding:8px 4px;font-weight:700';
-        hidden.value     = team;
-        saveBtn.disabled = false;
-      });
-      grid.appendChild(div);
-    });
-  }
+  renderTeams('', grid);
+  search?.addEventListener('input', e => renderTeams(e.target.value, grid));
 
-  renderTeams();
-  search?.addEventListener('input', e => renderTeams(e.target.value));
-
+  // Confirmar favorito
   saveBtn?.addEventListener('click', async () => {
     const team = hidden.value;
     if (!team || !pendingGroupId || !user) return;
-    await setDoc(doc(db, 'group_members', `${pendingGroupId}_${user.uid}`),
-      { favorite: team }, { merge: true });
-    bootstrap.Modal.getInstance(document.getElementById('favoriteModal')).hide();
+    saveBtn.disabled = true;
+    saveBtn.textContent = 'Guardando...';
+    try {
+      await setDoc(doc(db, 'group_members', `${pendingGroupId}_${user.uid}`),
+        { favorite: team }, { merge: true });
+      closeModal('favoriteModal');
+      pendingGroupId = null;
+      await loadGroups(user);
+    } catch(e) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '✅ Confirmar favorito';
+    }
+  });
+
+  // Saltar (sin elegir favorito)
+  skipBtn?.addEventListener('click', async () => {
+    closeModal('favoriteModal');
     pendingGroupId = null;
     await loadGroups(user);
+  });
+
+  // Limpiar backdrop si el usuario cierra con X o tocando fuera
+  modalEl.addEventListener('hidden.bs.modal', () => {
+    cleanModal();
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '✅ Confirmar favorito'; }
+    if (hidden)  hidden.value = '';
+    if (search)  search.value = '';
   });
 }
 
@@ -294,4 +347,6 @@ function showMsg(id, text, type) {
   const colors = { success: 'var(--green-light)', danger: '#fca5a5', warning: 'var(--gold)' };
   const el = document.getElementById(id);
   if (el) el.innerHTML = `<span style="color:${colors[type]||'#fff'};font-size:0.85rem">${text}</span>`;
+  // Auto-limpiar mensaje en 4s
+  if (el) setTimeout(() => { el.innerHTML = ''; }, 4000);
 }
