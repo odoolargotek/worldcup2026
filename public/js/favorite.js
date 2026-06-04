@@ -26,6 +26,8 @@ const TEAMS_BY_PHASE = {
   'Grupo L': [{name:'Italia',flag:'🇮🇹'},{name:'Irán',flag:'🇮🇷'},{name:"C\u00f4te d'Ivoire",flag:'🇨🇮'},{name:'Nueva Zelanda',flag:'🇳🇿'}],
 };
 
+const PENALTY_PTS = 3; // Penalidad por cambiar favorito
+
 let favsModal, pickModal;
 let currentPhase = null;
 let memberRef, memberData;
@@ -62,7 +64,6 @@ function renderFavsSummary() {
   if (chosen.length === 0) {
     el.innerHTML = `<span style="color:var(--gold)">⚠️ Aún no elegiste ningún favorito</span>`;
   } else {
-    // Mostrar hasta 4 banderas de favoritos elegidos
     const flags = chosen.slice(0,4).map(p => {
       const t = TEAMS_BY_PHASE[p]?.find(t => t.name === favs[p]);
       return `<span style="font-size:1.4rem">${t?.flag||''}</span>`;
@@ -126,7 +127,7 @@ function openPickModal(phase, isChange) {
   document.getElementById('pickFirstInfo')?.classList.toggle('d-none',  isChange);
 
   const confirmBtn = document.getElementById('confirmPickBtn');
-  confirmBtn.textContent = isChange ? '⚠️ Confirmar cambio (-6 pts)' : '🏆 Confirmar favorito';
+  confirmBtn.textContent = isChange ? `⚠️ Confirmar cambio (-${PENALTY_PTS} pts)` : '🏆 Confirmar favorito';
   confirmBtn.className   = isChange ? 'btn btn-danger w-100' : 'btn btn-warning w-100';
   confirmBtn.disabled    = true;
 
@@ -144,13 +145,13 @@ function openPickModal(phase, isChange) {
     if (!team || !currentPhase) return;
     const penalties = getPenalties();
     const updates   = { [`favorites.${currentPhase}`]: team };
-    if (isChange) updates[`penalties.${currentPhase}`] = (penalties[currentPhase] || 0) + 6;
+    if (isChange) updates[`penalties.${currentPhase}`] = (penalties[currentPhase] || 0) + PENALTY_PTS;
     await updateDoc(memberRef, updates);
     if (!memberData.favorites) memberData.favorites = {};
     memberData.favorites[currentPhase] = team;
     if (isChange) {
       if (!memberData.penalties) memberData.penalties = {};
-      memberData.penalties[currentPhase] = (memberData.penalties[currentPhase] || 0) + 6;
+      memberData.penalties[currentPhase] = (memberData.penalties[currentPhase] || 0) + PENALTY_PTS;
     }
     pickModal.hide();
     renderFavsSummary();
@@ -164,7 +165,6 @@ function renderPickGrid(teams) {
   const grid = document.getElementById('pickGrid');
   if (!grid) return;
   grid.innerHTML = '';
-  // Solo 4 equipos por grupo — tarjetas grandes
   teams.forEach(team => {
     const col = document.createElement('div');
     col.className = 'col-6';

@@ -62,7 +62,7 @@ export function renderRules() {
           </div>
         </div>
         <div style="background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:8px;padding:12px;font-size:0.82rem;color:#fca5a5">
-          <strong>⚠️ Cambio de favorito:</strong> Puedes cambiarlo en cualquier momento, pero cada cambio aplica una penalidad de <strong>-6 puntos</strong> en ese grupo.
+          <strong>⚠️ Cambio de favorito:</strong> Puedes cambiarlo en cualquier momento, pero cada cambio aplica una penalidad de <strong>-3 puntos</strong> en ese grupo.
         </div>
       </div>
     </div>
@@ -100,6 +100,7 @@ export function renderRules() {
           ['¿El favorito vale en toda la fase de grupos?','Sí, tu favorito por grupo aplica a todos los partidos de ese grupo.'],
           ['¿Cuándo se calculan los puntos?','El administrador carga el resultado y el sistema calcula automáticamente todos los puntos.'],
           ['¿Puedo estar en varias comparsas?','¡Sí! Puedes unirte a tantas comparsas como quieras desde el Dashboard.'],
+          ['¿Cuánto cuesta cambiar de favorito?','Cada cambio de favorito cuesta -3 puntos en ese grupo. ¡Piénsalo bien antes de cambiar!'],
         ].map(([q,a],i) => `
           <details style="${i>0?'border-top:1px solid var(--border)':''}">
             <summary style="padding:12px 0;cursor:pointer;font-weight:600;font-size:0.88rem;list-style:none;display:flex;justify-content:space-between;align-items:center">
