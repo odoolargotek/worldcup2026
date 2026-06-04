@@ -1,16 +1,12 @@
-// time.js — Los kickoffs en Firestore están en hora local de la sede (guardados como UTC)
-// Forzamos UTC+0 para mostrar el valor exacto sin ningún offset
+// time.js — Helper central de zona horaria Bolivia (La Paz, UTC-4)
+// Los kickoffs en Firestore están en UTC real → se convierten a America/La_Paz
+export const TZ     = 'America/La_Paz';
 export const LOCALE = 'es-BO';
 
-const BASE = { timeZone: 'UTC', hour12: false };
+const BASE = { timeZone: TZ };
 
-/**
- * Formatea una fecha forzando UTC (sin conversión de zona).
- * @param {Date} date
- * @param {Intl.DateTimeFormatOptions} opts
- */
 export function formatLP(date, opts) {
-  return date.toLocaleString(LOCALE, { timeZone: 'UTC', ...opts });
+  return date.toLocaleString(LOCALE, { ...BASE, ...opts });
 }
 
 /** Fecha corta: "jue, 11 jun" */
