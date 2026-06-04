@@ -69,14 +69,21 @@ async function loadGroups(user) {
   const container = document.getElementById('groupList');
   if (!container) return;
   container.innerHTML = '';
-  if (snap.empty) {
-    container.innerHTML = '<div class="col-12"><p style="color:var(--text-muted)">¡Aún no perteneces a ninguna comparsa! Crea una o únete con un código.</p></div>';
-    return;
-  }
+
+  const validDocs = [];
   for (const memberDoc of snap.docs) {
     const gid   = memberDoc.data().group_id;
     const gSnap = await getDoc(doc(db, 'groups', gid));
-    if (gSnap.exists()) renderGroupCard(gSnap, memberDoc.data(), container, user);
+    // Si el grupo ya no existe, ignorar (puede quedar huérfano tras borrado)
+    if (gSnap.exists()) validDocs.push({ gSnap, memberData: memberDoc.data() });
+  }
+
+  if (validDocs.length === 0) {
+    container.innerHTML = '<div class="col-12"><p style="color:var(--text-muted)">¡Aún no perteneces a ninguna comparsa! Crea una o únete con un código.</p></div>';
+    return;
+  }
+  for (const { gSnap, memberData } of validDocs) {
+    renderGroupCard(gSnap, memberData, container, user);
   }
 }
 
@@ -146,11 +153,11 @@ function renderGroupCard(gSnap, memberData, container, user) {
       btn.disabled = true;
       btn.textContent = 'Eliminando...';
       try {
-        const membersSnap = await getDocs(
-          query(collection(db, 'group_members'), where('group_id', '==', gid))
-        );
-        await Promise.all(membersSnap.docs.map(d => deleteDoc(d.ref)));
+        // Solo borrar el grupo — los group_members quedan huérfanos pero
+        // loadGroups los ignora automáticamente al no encontrar el grupo
         await deleteDoc(doc(db, 'groups', gid));
+        // Borrar solo el propio memberDoc (tenemos permiso sobre el nuestro)
+        await deleteDoc(doc(db, 'group_members', gid + '_' + user.uid));
         await loadGroups(user);
       } catch(err) {
         btn.disabled = false;
