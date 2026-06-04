@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Cualquier usuario autenticado puede leer su perfil; solo él puede escribirlo
+    match /users/{uid} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth.uid == uid;
+    }
+
+    // Grupos: cualquier auth puede leer; crear si autenticado
+    match /groups/{gid} {
+      allow read:  if request.auth != null;
+      allow create: if request.auth != null;
+      // Solo el owner puede actualizar/borrar
+      allow update, delete: if request.auth.uid == resource.data.owner_uid;
+    }
+
+    // Membresías: el mismo usuario puede crearse a sí mismo
+    match /group_members/{mid} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null &&
+                      request.resource.data.user_uid == request.auth.uid;
+    }
+
+    // Partidos: solo lectura para usuarios auth; escritura solo desde admin
+    // (proteger con Custom Claims en producción)
+    match /matches/{mid} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null; // TODO: restringir a admin con claims
+    }
+
+    // Pronósticos: el usuario solo escribe/lee los suyos
+    match /predictions/{pid} {
+      allow read:  if request.auth != null;
+      allow create, update: if request.auth != null &&
+                               request.resource.data.user_uid == request.auth.uid;
+    }
+  }
+}

@@ -1,0 +1,50 @@
+/* ===== WC2026 — Estilos globales ===== */
+
+:root {
+  --wc-green: #1a7a3c;
+  --wc-gold: #FFD700;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* Navbar personalizada */
+.navbar-brand {
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+/* Cards de grupos */
+.group-card {
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.group-card:hover {
+  transform: translateY(-3px);
+}
+
+/* Tabla de ranking */
+.table th {
+  background-color: var(--wc-green);
+  color: white;
+}
+
+/* Badge de puntos */
+.badge-pts {
+  background: var(--wc-gold);
+  color: #000;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+/* Estado de partido */
+.match-open   { border-left: 4px solid #198754; }
+.match-closed { border-left: 4px solid #6c757d; }
+.match-done   { border-left: 4px solid #ffc107; }
+
+/* Input marcador */
+input[type=number]::-webkit-inner-spin-button {
+  opacity: 1;
+}
