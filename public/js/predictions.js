@@ -2,8 +2,9 @@
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
-  doc, getDoc, setDoc, collection, query, where, getDocs
+  doc, getDoc, setDoc
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+import { fmtLong } from './time.js';
 
 const params   = new URLSearchParams(window.location.search);
 const MATCH_ID = params.get('mid');
@@ -17,35 +18,28 @@ let countdownInterval = null;
 onAuthStateChanged(auth, async (user) => {
   if (!user || !MATCH_ID) return;
 
-  // Cargar datos del partido
   const mSnap = await getDoc(doc(db, 'matches', MATCH_ID));
   if (!mSnap.exists()) return;
   const m = mSnap.data();
   kickoffDate = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
 
-  // UI partido
-  document.getElementById('matchPhase').textContent  = m.phase || '';
-  document.getElementById('homeFlag').textContent    = m.home_flag || '⚽';
-  document.getElementById('awayFlag').textContent    = m.away_flag || '⚽';
-  document.getElementById('homeName').textContent    = m.home_team;
-  document.getElementById('awayName').textContent    = m.away_team;
-  document.getElementById('matchKickoff').textContent =
-    kickoffDate.toLocaleDateString('es-BO',{weekday:'long',day:'2-digit',month:'long',year:'numeric'})
-    + ' · ' +
-    kickoffDate.toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('matchPhase').textContent   = m.phase || '';
+  document.getElementById('homeFlag').textContent     = m.home_flag || '⚽';
+  document.getElementById('awayFlag').textContent     = m.away_flag || '⚽';
+  document.getElementById('homeName').textContent     = m.home_team;
+  document.getElementById('awayName').textContent     = m.away_team;
+  // ⭐ Siempre en hora Bolivia
+  document.getElementById('matchKickoff').textContent = fmtLong(kickoffDate);
   if (m.city) document.getElementById('matchCity').textContent = '📍 ' + m.city;
 
-  // Iniciar countdown
   startCountdown(kickoffDate);
 
-  // Bloquear si ya cerró
   const now = new Date();
   if (kickoffDate <= now || m.home_score !== undefined) {
     lockForm('Este partido ya no acepta pronósticos.');
     return;
   }
 
-  // Cargar pronóstico previo
   const predId   = `${GROUP_ID}_${MATCH_ID}_${user.uid}`;
   const predSnap = await getDoc(doc(db, 'predictions', predId));
   if (predSnap.exists()) {
@@ -55,7 +49,6 @@ onAuthStateChanged(auth, async (user) => {
     document.getElementById('submitPrediction').textContent = '✏️ Actualizar pronóstico';
   }
 
-  // Guardar pronóstico
   document.getElementById('predictForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const hs = parseInt(document.getElementById('homeScore').value);
@@ -89,19 +82,18 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 function startCountdown(kickoff) {
-  const el = document.getElementById('deadlineCountdown');
+  const el     = document.getElementById('deadlineCountdown');
   const banner = document.getElementById('deadlineBanner');
   if (!el) return;
 
   function tick() {
-    const now    = new Date();
-    const diffMs = kickoff - now;
-    const diffSec= Math.floor(diffMs / 1000);
-    const diffMin= Math.floor(diffMs / 60000);
-    const diffHrs= diffMs / 36e5;
+    const now     = new Date();
+    const diffMs  = kickoff - now;
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffMs / 60000);
+    const diffHrs = diffMs / 36e5;
 
     if (diffMs <= 0) {
-      // Cerrado
       el.innerHTML = `<div style="background:rgba(100,100,100,0.2);border:1px solid #475569;border-radius:10px;padding:10px 16px;font-size:0.9rem;color:#94a3b8">
         🔒 El plazo para pronosticar ha vencido
       </div>`;
@@ -111,16 +103,14 @@ function startCountdown(kickoff) {
       return;
     }
 
-    // Calcular tiempo restante
-    const days  = Math.floor(diffHrs / 24);
-    const hrs   = Math.floor(diffHrs % 24);
-    const mins  = Math.floor(diffMin % 60);
-    const secs  = diffSec % 60;
+    const days = Math.floor(diffHrs / 24);
+    const hrs  = Math.floor(diffHrs % 24);
+    const mins = Math.floor(diffMin % 60);
+    const secs = diffSec % 60;
 
     let bgColor, borderColor, textColor, icon, urgencyLabel;
-
     if (diffMin < 60) {
-      bgColor = 'rgba(239,68,68,0.15)'; borderColor='rgba(239,68,68,0.5)';
+      bgColor='rgba(239,68,68,0.15)'; borderColor='rgba(239,68,68,0.5)';
       textColor='#fca5a5'; icon='🚨'; urgencyLabel='¡Cierra muy pronto!';
     } else if (diffHrs < 3) {
       bgColor='rgba(239,68,68,0.1)'; borderColor='rgba(239,68,68,0.4)';
@@ -136,7 +126,6 @@ function startCountdown(kickoff) {
       textColor='var(--text-muted)'; icon='⏳'; urgencyLabel='Tiempo restante';
     }
 
-    // Mostrar banner superior si quedan menos de 24h
     if (diffHrs < 24 && banner) {
       banner.classList.remove('d-none');
       banner.innerHTML = `
@@ -145,7 +134,6 @@ function startCountdown(kickoff) {
         </div>`;
     }
 
-    // Countdown principal dentro de la card
     const timeStr = days > 0
       ? `${days}d ${hrs}h ${mins}m`
       : hrs > 0

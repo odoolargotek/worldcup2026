@@ -4,6 +4,7 @@ import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/fi
 import {
   collection, getDocs, query, orderBy, where
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+import { fmtDate, fmtTime } from './time.js';
 
 const params   = new URLSearchParams(window.location.search);
 const GROUP_ID = params.get('gid');
@@ -13,7 +14,6 @@ onAuthStateChanged(auth, async (user) => {
   await renderMatches(user);
 });
 
-// Devuelve badge HTML según urgencia del plazo
 function deadlineBadge(kickoff, isDone, hasMyPred) {
   if (isDone) return '';
   const now      = new Date();
@@ -22,31 +22,26 @@ function deadlineBadge(kickoff, isDone, hasMyPred) {
   const diffMins = diffMs / 60000;
 
   if (diffMs <= 0) {
-    // Ya cerrado
     return `<span style="background:rgba(100,100,100,0.3);color:#94a3b8;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap">🔒 Cerrado</span>`;
   } else if (diffMins <= 60) {
-    // Menos de 1 hora — urgente
     const mins = Math.floor(diffMins);
     return `<span style="background:rgba(239,68,68,0.2);color:#fca5a5;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;animation:pulse 1s infinite">⏰ ¡${mins} min!</span>`;
   } else if (diffHrs <= 3) {
-    // Menos de 3 horas — muy urgente
-    const hrs = Math.floor(diffHrs);
+    const hrs  = Math.floor(diffHrs);
     const mins = Math.floor((diffHrs - hrs) * 60);
     return `<span style="background:rgba(239,68,68,0.2);color:#fca5a5;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap">🔴 ${hrs}h ${mins}m restantes</span>`;
   } else if (diffHrs <= 24) {
-    // Hoy vence
     const hrs = Math.floor(diffHrs);
-    const color = hasMyPred ? 'rgba(34,197,94,0.15)' : 'rgba(245,158,11,0.2)';
+    const color     = hasMyPred ? 'rgba(34,197,94,0.15)' : 'rgba(245,158,11,0.2)';
     const textColor = hasMyPred ? 'var(--green-light)' : 'var(--gold)';
-    const icon = hasMyPred ? '✅' : '⚠️';
+    const icon      = hasMyPred ? '✅' : '⚠️';
     return `<span style="background:${color};color:${textColor};font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap">${icon} Hoy vence · ${hrs}h</span>`;
   } else {
-    // Más de 24h — mostrar días
     const days = Math.floor(diffHrs / 24);
     if (days <= 3) {
       return `<span style="background:rgba(59,130,246,0.15);color:#93c5fd;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap">📅 ${days}d restantes</span>`;
     }
-    return ''; // más de 3 días: sin badge
+    return '';
   }
 }
 
@@ -66,7 +61,6 @@ async function renderMatches(user) {
   );
   predsSnap.forEach(d => { myPreds[d.data().match_id] = d.data(); });
 
-  // Agrupar por fase
   const groups = {};
   snap.forEach(d => {
     const m = d.data();
@@ -78,7 +72,6 @@ async function renderMatches(user) {
   container.innerHTML = '';
 
   Object.keys(groups).sort().forEach(phase => {
-    // Separador de fase
     const header = document.createElement('div');
     header.className = 'mb-2 mt-4';
     header.innerHTML = `
@@ -95,10 +88,8 @@ async function renderMatches(user) {
       const isOpen  = !isDone && kickoff > now;
       const myPred  = myPreds[m.id];
 
-      // Badge de plazo
       const badge = deadlineBadge(kickoff, isDone, !!myPred);
 
-      // Mi pronóstico
       let predBadge = '';
       if (myPred) {
         const pts = myPred.points !== undefined
@@ -108,7 +99,6 @@ async function renderMatches(user) {
         predBadge = `<div style="font-size:11px;color:var(--text-muted);margin-top:5px;font-style:italic">Sin pronóstico aún</div>`;
       }
 
-      // Resultado o acción
       let actionArea = '';
       if (isDone) {
         actionArea = `
@@ -128,44 +118,33 @@ async function renderMatches(user) {
 
       const borderColor = isDone ? 'var(--gold)' : isOpen ? 'var(--green-light)' : '#475569';
 
+      // ⭐ Usar fmtDate y fmtTime — siempre en hora Bolivia (America/La_Paz)
       const card = document.createElement('div');
       card.className = 'mb-2';
       card.innerHTML = `
         <div style="background:var(--bg-card);border:1px solid var(--border);border-left:4px solid ${borderColor};border-radius:10px;padding:14px 14px 10px">
-
-          <!-- Fila equipos -->
           <div style="display:flex;align-items:center;gap:8px">
-
-            <!-- Local -->
             <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:64px">
               <span style="font-size:2.2rem;line-height:1">${m.home_flag || '⚽'}</span>
               <span style="font-size:0.78rem;color:var(--text);font-weight:600;text-align:center;line-height:1.2">${m.home_team}</span>
             </div>
-
-            <!-- Centro -->
             <div style="flex:1;text-align:center">
               <div style="font-size:0.95rem;font-weight:700;color:var(--text-muted)">vs</div>
               <div style="font-size:0.88rem;color:var(--text);font-weight:600;margin-top:4px">
-                ${kickoff.toLocaleDateString('es-BO',{weekday:'short',day:'2-digit',month:'short'}).replace(/\./g,'')}
+                ${fmtDate(kickoff)}
               </div>
               <div style="font-size:1rem;font-weight:700;color:var(--gold);margin-top:1px">
-                ${kickoff.toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit'})}
+                ${fmtTime(kickoff)}
               </div>
               ${m.city ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px">📍 ${m.city}</div>` : ''}
               ${predBadge}
             </div>
-
-            <!-- Visitante -->
             <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:64px">
               <span style="font-size:2.2rem;line-height:1">${m.away_flag || '⚽'}</span>
               <span style="font-size:0.78rem;color:var(--text);font-weight:600;text-align:center;line-height:1.2">${m.away_team}</span>
             </div>
-
-            <!-- Acción -->
             <div style="min-width:72px;text-align:right">${actionArea}</div>
           </div>
-
-          <!-- Fila de badge de plazo -->
           ${badge ? `<div style="margin-top:8px;text-align:center">${badge}</div>` : ''}
         </div>`;
       container.appendChild(card);
