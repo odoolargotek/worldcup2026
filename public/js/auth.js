@@ -35,38 +35,41 @@ onAuthStateChanged(auth, (user) => {
   // Mostrar nombre en navbar
   const nameEl = document.getElementById('userDisplayName');
   if (nameEl && user) nameEl.textContent = user.displayName || user.email;
+
+  // Mostrar/ocultar botones navbar en index
+  const dashLink  = document.getElementById('dashboardLink');
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (dashLink)  dashLink.classList.toggle('d-none', !user);
+  if (logoutBtn) logoutBtn.classList.toggle('d-none', !user);
 });
 
-// --- Tabs Login / Registro ---
-document.querySelectorAll('[data-tab]').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const tab = btn.dataset.tab;
-    document.getElementById('loginForm')?.classList.toggle('d-none', tab !== 'login');
-    document.getElementById('registerForm')?.classList.toggle('d-none', tab !== 'register');
-  });
-});
-
-// --- Login ---
-document.getElementById('loginForm')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass  = document.getElementById('loginPassword').value;
+// --- Login (botones sueltos en index.html) ---
+document.getElementById('loginBtn')?.addEventListener('click', async () => {
+  const email = document.getElementById('loginEmail')?.value.trim();
+  const pass  = document.getElementById('loginPass')?.value;
+  const msg   = document.getElementById('loginMsg');
+  if (!email || !pass) { if (msg) msg.innerHTML = err('Completa todos los campos'); return; }
   try {
     await signInWithEmailAndPassword(auth, email, pass);
     window.location.href = 'dashboard.html';
-  } catch (err) {
-    showError(err.message);
+  } catch (e) {
+    if (msg) msg.innerHTML = err(friendlyError(e.code));
   }
 });
 
+// Permitir Enter en el campo password del login
+document.getElementById('loginPass')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('loginBtn')?.click();
+});
+
 // --- Registro ---
-document.getElementById('registerForm')?.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const name  = document.getElementById('regName').value.trim();
-  const email = document.getElementById('regEmail').value.trim();
-  const pass  = document.getElementById('regPassword').value;
+document.getElementById('registerBtn')?.addEventListener('click', async () => {
+  const name  = document.getElementById('regName')?.value.trim();
+  const email = document.getElementById('regEmail')?.value.trim();
+  const pass  = document.getElementById('regPass')?.value;
+  const msg   = document.getElementById('registerMsg');
+  if (!name || !email || !pass) { if (msg) msg.innerHTML = err('Completa todos los campos'); return; }
+  if (pass.length < 6) { if (msg) msg.innerHTML = err('La contraseña debe tener mínimo 6 caracteres'); return; }
   try {
     const cred = await createUserWithEmailAndPassword(auth, email, pass);
     await updateProfile(cred.user, { displayName: name });
@@ -77,8 +80,8 @@ document.getElementById('registerForm')?.addEventListener('submit', async (e) =>
       created_at: new Date()
     });
     window.location.href = 'dashboard.html';
-  } catch (err) {
-    showError(err.message);
+  } catch (e) {
+    if (msg) msg.innerHTML = err(friendlyError(e.code));
   }
 });
 
@@ -88,7 +91,20 @@ document.getElementById('logoutBtn')?.addEventListener('click', async () => {
   window.location.href = 'index.html';
 });
 
-function showError(msg) {
-  const el = document.getElementById('authError');
-  if (el) { el.textContent = msg; el.classList.remove('d-none'); }
+// --- Mensajes de error amigables ---
+function friendlyError(code) {
+  const map = {
+    'auth/user-not-found':      'No existe una cuenta con ese correo',
+    'auth/wrong-password':      'Contraseña incorrecta',
+    'auth/invalid-credential':  'Correo o contraseña incorrectos',
+    'auth/email-already-in-use':'Ya existe una cuenta con ese correo',
+    'auth/weak-password':       'La contraseña debe tener mínimo 6 caracteres',
+    'auth/invalid-email':       'El correo no es válido',
+    'auth/too-many-requests':   'Demasiados intentos. Espera un momento.',
+  };
+  return map[code] || 'Error. Inténtalo de nuevo.';
+}
+
+function err(msg) {
+  return `<span style="color:var(--danger);font-weight:600">⚠️ ${msg}</span>`;
 }
