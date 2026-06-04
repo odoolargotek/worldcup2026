@@ -1,0 +1,92 @@
+/* ===== SPONSOR CONTI CERVEZA ===== */
+.conti-banner {
+  background: linear-gradient(135deg, #0d1f2d 0%, #1a3a4a 40%, #1D90C6 100%);
+  border-bottom: 3px solid #C9344B;
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.conti-banner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 18px,
+    rgba(201,52,75,0.06) 18px,
+    rgba(201,52,75,0.06) 20px
+  );
+  pointer-events: none;
+}
+
+.conti-banner::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -80%;
+  width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent);
+  animation: contiShimmer 4s infinite;
+}
+
+@keyframes contiShimmer {
+  0%   { left: -80%; }
+  100% { left: 120%; }
+}
+
+.conti-banner img {
+  height: 32px;
+  object-fit: contain;
+  filter: brightness(1.1);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.conti-banner-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 1;
+}
+
+.conti-banner-tag {
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: #C9344B;
+  border: 1px solid rgba(201,52,75,0.5);
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+.conti-banner-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: 0.3px;
+}
+
+.conti-banner-sub {
+  font-size: 11px;
+  color: rgba(255,255,255,0.65);
+  display: none;
+}
+
+@media (min-width: 480px) {
+  .conti-banner-sub { display: inline; }
+  .conti-banner img { height: 38px; }
+}
+
+[data-theme="light"] .conti-banner {
+  background: linear-gradient(135deg, #1D90C6 0%, #0f6a99 60%, #0d5a85 100%);
+}
