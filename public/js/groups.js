@@ -1,5 +1,5 @@
 // ====================================================
-// groups.js — Crear grupo, unirse, listar grupos
+// groups.js — Crear comparsa, unirse, listar comparsas
 // ====================================================
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
@@ -23,6 +23,10 @@ async function loadGroups(user) {
   const container = document.getElementById('groupList');
   if (!container) return;
   container.innerHTML = '';
+  if (snap.empty) {
+    container.innerHTML = '<div class="col-12"><p style="color:var(--text-muted)">Todavía no perteneces a ninguna comparsa. ¡Crea una o únete con un código!</p></div>';
+    return;
+  }
   snap.forEach(async (memberDoc) => {
     const gid = memberDoc.data().group_id;
     const gSnap = await getDoc(doc(db, 'groups', gid));
@@ -35,15 +39,14 @@ function renderGroupCard(gSnap, container) {
   const col = document.createElement('div');
   col.className = 'col-md-4';
   col.innerHTML = `
-    <div class="card bg-secondary text-light group-card p-3"
-         onclick="window.location='group.html?gid=${gSnap.id}'">
+    <div class="group-card" onclick="window.location='group.html?gid=${gSnap.id}'">
       <h6>🏆 ${g.name}</h6>
-      <small class="text-muted">Código: <strong>${g.code}</strong></small>
+      <small>Código: <strong style="color:var(--gold);letter-spacing:2px">${g.code}</strong></small>
     </div>`;
   container.appendChild(col);
 }
 
-// --- Crear grupo ---
+// --- Crear comparsa ---
 document.getElementById('createGroupBtn')?.addEventListener('click', async () => {
   const user = auth.currentUser;
   const name = document.getElementById('newGroupName').value.trim();
@@ -59,7 +62,7 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
   await loadGroups(user);
 });
 
-// --- Unirse a grupo ---
+// --- Unirse a comparsa ---
 document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
   const user = auth.currentUser;
   const code = document.getElementById('joinCode').value.trim().toUpperCase();
