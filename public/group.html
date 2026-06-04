@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-
   <nav class="navbar">
     <div class="navbar-brand">
       <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
@@ -24,32 +23,43 @@
   </nav>
 
   <div class="container py-4">
-
-    <div class="d-flex align-items-center gap-3 mb-4 p-3 rounded" style="background:var(--bg-card);border:1px solid var(--border)">
-      <div>
-        <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Código de invitación</div>
-        <div style="font-size:1.4rem;font-weight:800;color:var(--gold);letter-spacing:4px" id="groupCodeDisplay"></div>
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="p-3 rounded" style="background:var(--bg-card);border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Código de invitación</div>
+          <div style="font-size:1.4rem;font-weight:800;color:var(--gold);letter-spacing:4px" id="groupCodeDisplay"></div>
+          <button id="copyCodeBtn" class="btn btn-outline-light btn-sm mt-2 w-100">📋 Copiar</button>
+        </div>
       </div>
-      <button id="copyCodeBtn" class="btn btn-outline-light btn-sm ms-auto">📋 Copiar y compartir</button>
+      <div class="col-md-4">
+        <div class="p-3 rounded" style="background:var(--bg-card);border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Premio total</div>
+          <div style="font-size:1.4rem;font-weight:800;color:var(--green-light)" id="groupPrize">—</div>
+          <div style="font-size:12px;color:var(--text-muted)" id="groupFee"></div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="p-3 rounded" style="background:var(--bg-card);border:1px solid var(--border)">
+          <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Mi equipo favorito</div>
+          <div style="font-size:1.1rem;font-weight:800;color:var(--text)" id="myFavoriteDisplay">—</div>
+          <button id="changeFavoriteBtn" class="btn btn-sm mt-2" style="background:transparent;color:var(--danger);border:1px solid var(--danger);font-size:11px">⚠ Cambiar (-6 pts)</button>
+        </div>
+      </div>
     </div>
 
     <ul class="nav nav-tabs mb-4">
-      <li class="nav-item">
-        <button class="nav-link active" data-tab="ranking">🏆 Ranking</button>
-      </li>
-      <li class="nav-item">
-        <button class="nav-link" data-tab="matches">📅 Partidos</button>
-      </li>
+      <li class="nav-item"><button class="nav-link active" data-tab="ranking">🏆 Ranking</button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="matches">📅 Partidos</button></li>
     </ul>
 
     <div id="rankingTab">
       <div class="table-responsive">
         <table class="table table-striped">
           <thead>
-            <tr><th>#</th><th>Apodo</th><th>Puntos</th><th>Exactos</th></tr>
+            <tr><th>#</th><th>Apodo</th><th>Favorito</th><th>Pts Favorito</th><th>Pts Pron.</th><th>Total</th></tr>
           </thead>
           <tbody id="rankingBody">
-            <tr><td colspan="4" class="text-center" style="color:var(--text-muted)">Sin pronósticos aún...</td></tr>
+            <tr><td colspan="6" class="text-center" style="color:var(--text-muted)">Sin datos aún...</td></tr>
           </tbody>
         </table>
       </div>
@@ -60,18 +70,41 @@
         <div class="text-center py-4" style="color:var(--text-muted)">Cargando partidos...</div>
       </div>
     </div>
+  </div>
 
+  <!-- Modal cambiar favorito -->
+  <div class="modal fade" id="changeFavModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text)">
+        <div class="modal-header" style="border-color:var(--border)">
+          <h5 class="modal-title">⚠️ Cambiar equipo favorito</h5>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3 p-3 rounded" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;font-size:0.9rem">
+            Cambiar de equipo favorito aplica una penalidad de <strong>-6 puntos</strong>. ¿Deseas continuar?
+          </div>
+          <input type="text" id="changeFavSearch" class="form-control mb-3" placeholder="Buscar equipo...">
+          <div id="changeFavGrid" class="row g-2" style="max-height:280px;overflow-y:auto"></div>
+          <input type="hidden" id="newFavoriteTeam">
+        </div>
+        <div class="modal-footer" style="border-color:var(--border)">
+          <button id="confirmChangeFav" class="btn btn-danger w-100" disabled>⚠️ Confirmar cambio (-6 pts)</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="footer-brand">
-    ⚽ WC2026 — Polla Mundialera &nbsp;|
+    ⚽ WC2026 |
     <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
     Largotek Transformación Digital
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module" src="js/firebase-config.js"></script>
   <script type="module" src="js/auth.js"></script>
   <script type="module" src="js/matches.js"></script>
   <script type="module" src="js/standings.js"></script>
+  <script type="module" src="js/favorite.js"></script>
 </body>
 </html>
