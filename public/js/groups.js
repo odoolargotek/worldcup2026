@@ -22,8 +22,8 @@ const DIST_PRESETS = {
   top3:   { p1:60,  p2:30, p3:10 },
 };
 
-let pendingGroupId   = null;
-let pendingDeleteGid = null;
+let pendingGroupId    = null;
+let pendingDeleteGid  = null;
 let pendingDeleteName = '';
 
 function genCode(len = 6) {
@@ -89,7 +89,8 @@ function renderGroupCard(gSnap, memberData, container, user) {
   const g    = gSnap.data();
   const gid  = gSnap.id;
   const code = g.code || '';
-  const isAdmin = memberData.role === 'admin' || g.owner_uid === user.uid;
+  // isAdmin: por rol O por ser el owner del grupo
+  const isAdmin = (memberData.role === 'admin') || (g.owner_uid === user.uid);
 
   const typeBadge = g.type === 'closed'
     ? `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.3)">${g.is_open === false ? '🔴 Cerrada' : '🔒 Cupo lim.'}</span>`
@@ -104,22 +105,32 @@ function renderGroupCard(gSnap, memberData, container, user) {
   const col = document.createElement('div');
   col.className = 'col-md-4';
 
-  const stage = g.stage ? `<div style="font-size:11px;color:var(--gold);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">${g.stage}</div>` : '';
-  const fav   = memberData.favorite
+  const stage = g.stage
+    ? `<div style="font-size:11px;color:var(--gold);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">${g.stage}</div>`
+    : '';
+  const fav = memberData.favorite
     ? `<div style="font-size:12px;color:var(--green-light);margin-top:4px">⚽ ${memberData.favorite}</div>`
     : '<div style="font-size:12px;color:var(--danger);margin-top:4px">⚠ Sin favorito</div>';
 
-  // Botón eliminar solo para admin
-  const deleteBtn = isAdmin ? `
-    <button class="btn btn-sm" title="Eliminar comparsa"
-      style="padding:4px 10px;font-size:12px;background:rgba(239,68,68,0.12);color:#fca5a5;border:1px solid rgba(239,68,68,0.3);border-radius:8px"
-      onclick="window._askDeleteGroup('${gid}','${g.name.replace(/'/g, "\\'")}')">🗑️</button>` : '';
+  // Botón eliminar: fila completa al fondo, solo visible para admin
+  const deleteBtnRow = isAdmin ? `
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(239,68,68,0.15)">
+      <button
+        style="width:100%;padding:7px 12px;font-size:12px;font-weight:600;
+               background:rgba(239,68,68,0.1);color:#fca5a5;
+               border:1px solid rgba(239,68,68,0.35);border-radius:8px;
+               cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px"
+        onclick="window._askDeleteGroup('${gid}','${g.name.replace(/'/g, "\\'").replace(/"/g, '&quot;')}')"
+      >
+        🗑️ Eliminar comparsa
+      </button>
+    </div>` : '';
 
   col.innerHTML = `
     <div class="group-card" style="cursor:default">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
         ${stage || '<div></div>'}
-        <div style="display:flex;gap:6px;align-items:center">${typeBadge}${deleteBtn}</div>
+        ${typeBadge}
       </div>
       <div style="cursor:pointer" onclick="window.location='group.html?gid=${gid}'">
         <h6 style="margin-bottom:2px">${g.name}</h6>
@@ -137,6 +148,7 @@ function renderGroupCard(gSnap, memberData, container, user) {
         <button class="btn btn-outline-light btn-sm" style="font-size:12px;padding:4px 10px"
           onclick="copyInviteLink('${appUrl}',this)" title="Copiar link">📋</button>
       </div>
+      ${deleteBtnRow}
     </div>`;
   container.appendChild(col);
 }
@@ -154,11 +166,11 @@ window.copyInviteLink = function(url, btn) {
 window._askDeleteGroup = function(gid, name) {
   pendingDeleteGid  = gid;
   pendingDeleteName = name;
-  const nameEl = document.getElementById('deleteGroupName');
+  const nameEl       = document.getElementById('deleteGroupName');
   const confirmInput = document.getElementById('deleteConfirmInput');
   const confirmBtn   = document.getElementById('confirmDeleteBtn');
-  if (nameEl) nameEl.textContent = name;
-  if (confirmInput) { confirmInput.value = ''; }
+  if (nameEl)       nameEl.textContent = name;
+  if (confirmInput) confirmInput.value = '';
   if (confirmBtn)   confirmBtn.disabled = true;
   cleanModal();
   bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteModal')).show();
@@ -171,7 +183,6 @@ function setupDeleteModal(user) {
   const confirmBtn   = document.getElementById('confirmDeleteBtn');
   if (!modalEl) return;
 
-  // Habilitar botón solo cuando escribe el nombre exacto
   confirmInput?.addEventListener('input', () => {
     confirmBtn.disabled = confirmInput.value.trim() !== pendingDeleteName;
   });
@@ -180,18 +191,12 @@ function setupDeleteModal(user) {
     if (!pendingDeleteGid || !user) return;
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Eliminando...';
-
     try {
-      // 1. Borrar todos los group_members de esta comparsa
       const membersSnap = await getDocs(
         query(collection(db, 'group_members'), where('group_id', '==', pendingDeleteGid))
       );
-      const delPromises = membersSnap.docs.map(d => deleteDoc(d.ref));
-      await Promise.all(delPromises);
-
-      // 2. Borrar el grupo
+      await Promise.all(membersSnap.docs.map(d => deleteDoc(d.ref)));
       await deleteDoc(doc(db, 'groups', pendingDeleteGid));
-
       closeModal('deleteModal');
       pendingDeleteGid  = null;
       pendingDeleteName = '';
@@ -255,13 +260,11 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
       prize_distribution: dist, prize_pct,
       is_open: true, owner_uid: user.uid, created_at: serverTimestamp()
     });
-
     pendingGroupId = ref.id;
     await setDoc(doc(db, 'group_members', `${ref.id}_${user.uid}`), {
       group_id: ref.id, user_uid: user.uid, role: 'admin',
       favorite: null, penalty_pts: 0, favorite_pts: 0
     });
-
     ['newGroupName','newGroupPrizeClosed','newGroupFee','newGroupFeeOpen','newGroupMax','distP1','distP2','distP3']
       .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     document.getElementById('newGroupStage').value = '';
@@ -270,7 +273,6 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
     document.getElementById('openFields').classList.remove('d-none');
     document.getElementById('closedFields').classList.add('d-none');
     document.getElementById('customDistFields').classList.add('d-none');
-
     showMsg('createMsg', '✅ ¡Comparsa creada!', 'success');
     openFavoriteModal();
   } catch(err) {
@@ -294,10 +296,7 @@ document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
   const gSnap = snap.docs[0];
   const g     = gSnap.data();
 
-  if (g.is_open === false) {
-    showMsg('joinMsg', '🔴 Esta comparsa ya está cerrada.', 'danger');
-    return;
-  }
+  if (g.is_open === false) { showMsg('joinMsg', '🔴 Esta comparsa ya está cerrada.', 'danger'); return; }
 
   const memberId = `${gSnap.id}_${user.uid}`;
   const existing = await getDoc(doc(db, 'group_members', memberId));
@@ -315,7 +314,6 @@ document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
     group_id: gSnap.id, user_uid: user.uid, role: 'member',
     favorite: null, penalty_pts: 0, favorite_pts: 0
   });
-
   pendingGroupId = gSnap.id;
   document.getElementById('joinCode').value = '';
   window.history.replaceState({}, '', location.pathname);
