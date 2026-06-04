@@ -28,19 +28,12 @@ function genCode(len = 6) {
   return Math.random().toString(36).toUpperCase().slice(2, 2 + len);
 }
 
-function cleanModal() {
-  document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
-  document.body.classList.remove('modal-open');
-  document.body.style.overflow = '';
-  document.body.style.paddingRight = '';
+// ── Overlay helpers (sin Bootstrap.Modal) ──────────────────────────
+function showOverlay(id) {
+  document.getElementById(id)?.classList.add('show');
 }
-
-function closeModal(modalId) {
-  const el = document.getElementById(modalId);
-  if (!el) return;
-  const instance = bootstrap.Modal.getInstance(el);
-  if (instance) instance.hide();
-  setTimeout(cleanModal, 350);
+function hideOverlay(id) {
+  document.getElementById(id)?.classList.remove('show');
 }
 
 const urlParams  = new URLSearchParams(window.location.search);
@@ -60,7 +53,8 @@ onAuthStateChanged(auth, async (user) => {
   const emailEl = document.getElementById('userEmail');
   if (emailEl) emailEl.textContent = user.email;
   await loadGroups(user);
-  setupFavoriteModal(user);
+  setupFavoriteOverlay(user);
+  setupDeleteOverlay(user);
 });
 
 async function loadGroups(user) {
@@ -145,29 +139,9 @@ function renderGroupCard(gSnap, memberData, container, user) {
     </div>`;
 
   if (isAdmin) {
-    col.querySelector('.del-btn').addEventListener('click', async (e) => {
+    col.querySelector('.del-btn').addEventListener('click', (e) => {
       e.stopPropagation();
-      if (!confirm('¿Eliminar "' + g.name + '"?\nEsta acción es irreversible.')) return;
-      const btn = e.currentTarget;
-      btn.disabled = true;
-      btn.textContent = 'Eliminando...';
-      try {
-        // 1. Borrar el grupo (tenemos permiso como owner)
-        await deleteDoc(doc(db, 'groups', gid));
-        // 2. Borrar nuestro propio member doc (tenemos permiso)
-        await deleteDoc(doc(db, 'group_members', gid + '_' + user.uid)).catch(() => {});
-      } catch(err) {
-        // Si el error NO es de permisos, mostrar alerta
-        if (!err.message?.includes('permission')) {
-          alert('Error: ' + err.message);
-          btn.disabled = false;
-          btn.textContent = '🗑️ Eliminar comparsa';
-          return;
-        }
-        // Si es error de permisos en docs secundarios, ignorar — el grupo ya fue borrado
-      }
-      // Siempre recargar la lista al final
-      await loadGroups(user);
+      openDeleteOverlay(gid, g.name, user);
     });
   }
 
@@ -183,7 +157,7 @@ window.copyInviteLink = function(url, btn) {
   });
 };
 
-// --- Crear comparsa ---
+// ── Crear comparsa ─────────────────────────────────────────────────
 document.getElementById('createGroupBtn')?.addEventListener('click', async () => {
   const user  = auth.currentUser;
   const name  = document.getElementById('newGroupName').value.trim();
@@ -242,7 +216,7 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
     document.getElementById('closedFields').classList.add('d-none');
     document.getElementById('customDistFields').classList.add('d-none');
     showMsg('createMsg', '✅ ¡Comparsa creada!', 'success');
-    openFavoriteModal();
+    openFavoriteOverlay();
   } catch(err) {
     showMsg('createMsg', '❌ Error: ' + err.message, 'danger');
   } finally {
@@ -251,7 +225,7 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
   }
 });
 
-// --- Unirse a comparsa ---
+// ── Unirse a comparsa ──────────────────────────────────────────────
 document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
   const user = auth.currentUser;
   const code = document.getElementById('joinCode').value.trim().toUpperCase();
@@ -286,21 +260,16 @@ document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
   document.getElementById('joinCode').value = '';
   window.history.replaceState({}, '', location.pathname);
   showMsg('joinMsg', '✅ ¡Te uniste!', 'success');
-  openFavoriteModal();
+  openFavoriteOverlay();
 });
 
-function openFavoriteModal() {
-  cleanModal();
-  const el = document.getElementById('favoriteModal');
-  if (!el) return;
+// ── Overlay favorito ───────────────────────────────────────────────
+function openFavoriteOverlay() {
   document.getElementById('selectedTeam').value = '';
   document.getElementById('saveFavoriteBtn').disabled = true;
   document.getElementById('favoriteSearch').value = '';
-  const grid = document.getElementById('teamGrid');
-  if (grid) renderTeams('', grid);
-  setTimeout(() => {
-    bootstrap.Modal.getOrCreateInstance(el, { backdrop: true, keyboard: true }).show();
-  }, 80);
+  renderTeams('', document.getElementById('teamGrid'));
+  showOverlay('favoriteOverlay');
 }
 
 function renderTeams(filter, grid) {
@@ -324,14 +293,13 @@ function renderTeams(filter, grid) {
   });
 }
 
-function setupFavoriteModal(user) {
+function setupFavoriteOverlay(user) {
   const grid    = document.getElementById('teamGrid');
   const search  = document.getElementById('favoriteSearch');
   const hidden  = document.getElementById('selectedTeam');
   const saveBtn = document.getElementById('saveFavoriteBtn');
   const skipBtn = document.getElementById('skipFavoriteBtn');
-  const modalEl = document.getElementById('favoriteModal');
-  if (!grid || !modalEl) return;
+  if (!grid) return;
 
   renderTeams('', grid);
   search?.addEventListener('input', e => renderTeams(e.target.value, grid));
@@ -344,7 +312,7 @@ function setupFavoriteModal(user) {
     try {
       await setDoc(doc(db, 'group_members', `${pendingGroupId}_${user.uid}`),
         { favorite: team }, { merge: true });
-      closeModal('favoriteModal');
+      hideOverlay('favoriteOverlay');
       pendingGroupId = null;
       await loadGroups(user);
     } catch(e) {
@@ -354,16 +322,54 @@ function setupFavoriteModal(user) {
   });
 
   skipBtn?.addEventListener('click', async () => {
-    closeModal('favoriteModal');
+    hideOverlay('favoriteOverlay');
     pendingGroupId = null;
     await loadGroups(user);
   });
+}
 
-  modalEl.addEventListener('hidden.bs.modal', () => {
-    cleanModal();
-    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '✅ Confirmar favorito'; }
-    if (hidden)  hidden.value = '';
-    if (search)  search.value = '';
+// ── Overlay eliminar ───────────────────────────────────────────────
+let _deleteGid = null;
+let _deleteUser = null;
+
+function openDeleteOverlay(gid, name, user) {
+  _deleteGid  = gid;
+  _deleteUser = user;
+  document.getElementById('deleteGroupName').textContent = name;
+  document.getElementById('deleteConfirmInput').value    = '';
+  document.getElementById('confirmDeleteBtn').disabled   = true;
+  showOverlay('deleteOverlay');
+}
+
+function setupDeleteOverlay(user) {
+  const input = document.getElementById('deleteConfirmInput');
+  const btn   = document.getElementById('confirmDeleteBtn');
+  if (!input || !btn) return;
+
+  input.addEventListener('input', () => {
+    const expected = document.getElementById('deleteGroupName').textContent;
+    btn.disabled = input.value.trim() !== expected;
+  });
+
+  btn.addEventListener('click', async () => {
+    if (!_deleteGid || !_deleteUser) return;
+    btn.disabled = true;
+    btn.textContent = 'Eliminando...';
+    try {
+      await deleteDoc(doc(db, 'groups', _deleteGid));
+      await deleteDoc(doc(db, 'group_members', _deleteGid + '_' + _deleteUser.uid)).catch(() => {});
+    } catch(err) {
+      if (!err.message?.includes('permission')) {
+        alert('Error: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = '🗑️ Sí, eliminar definitivamente';
+        return;
+      }
+    }
+    hideOverlay('deleteOverlay');
+    _deleteGid = null;
+    await loadGroups(_deleteUser);
+    btn.textContent = '🗑️ Sí, eliminar definitivamente';
   });
 }
 
