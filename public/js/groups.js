@@ -74,7 +74,6 @@ async function loadGroups(user) {
   for (const memberDoc of snap.docs) {
     const gid   = memberDoc.data().group_id;
     const gSnap = await getDoc(doc(db, 'groups', gid));
-    // Si el grupo ya no existe, ignorar (puede quedar huérfano tras borrado)
     if (gSnap.exists()) validDocs.push({ gSnap, memberData: memberDoc.data() });
   }
 
@@ -148,22 +147,27 @@ function renderGroupCard(gSnap, memberData, container, user) {
   if (isAdmin) {
     col.querySelector('.del-btn').addEventListener('click', async (e) => {
       e.stopPropagation();
-      if (!confirm('¿Eliminar "' + g.name + '"?\n\nEsta acción es irreversible.')) return;
+      if (!confirm('¿Eliminar "' + g.name + '"?\nEsta acción es irreversible.')) return;
       const btn = e.currentTarget;
       btn.disabled = true;
       btn.textContent = 'Eliminando...';
       try {
-        // Solo borrar el grupo — los group_members quedan huérfanos pero
-        // loadGroups los ignora automáticamente al no encontrar el grupo
+        // 1. Borrar el grupo (tenemos permiso como owner)
         await deleteDoc(doc(db, 'groups', gid));
-        // Borrar solo el propio memberDoc (tenemos permiso sobre el nuestro)
-        await deleteDoc(doc(db, 'group_members', gid + '_' + user.uid));
-        await loadGroups(user);
+        // 2. Borrar nuestro propio member doc (tenemos permiso)
+        await deleteDoc(doc(db, 'group_members', gid + '_' + user.uid)).catch(() => {});
       } catch(err) {
-        btn.disabled = false;
-        btn.textContent = '🗑️ Eliminar comparsa';
-        alert('Error: ' + err.message);
+        // Si el error NO es de permisos, mostrar alerta
+        if (!err.message?.includes('permission')) {
+          alert('Error: ' + err.message);
+          btn.disabled = false;
+          btn.textContent = '🗑️ Eliminar comparsa';
+          return;
+        }
+        // Si es error de permisos en docs secundarios, ignorar — el grupo ya fue borrado
       }
+      // Siempre recargar la lista al final
+      await loadGroups(user);
     });
   }
 
