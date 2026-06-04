@@ -69,7 +69,6 @@ document.getElementById('saveResultBtn')?.addEventListener('click', async () => 
 
   await updateDoc(matchRef, { home_score: hs, away_score: as_ });
 
-  // Pronósticos
   const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id','==',mid)));
   const batch = writeBatch(db);
   predsSnap.forEach(predDoc => {
@@ -82,7 +81,6 @@ document.getElementById('saveResultBtn')?.addEventListener('click', async () => 
   });
   await batch.commit();
 
-  // Favoritos por grupo
   const allMembersSnap = await getDocs(collection(db, 'group_members'));
   const favBatch = writeBatch(db);
   let favCount = 0;
@@ -108,25 +106,21 @@ document.getElementById('saveResultBtn')?.addEventListener('click', async () => 
   await loadMatchesDone();
 });
 
-// Reset resultado
 document.getElementById('resetResultBtn')?.addEventListener('click', async () => {
   const mid = document.getElementById('matchSelectDone').value;
   const msg = document.getElementById('resetMsg');
   if (!mid) return;
   if (!confirm('\u00bfResetear resultado de este partido? Se revertirán los puntos.')) return;
 
-  // Revertir puntos de pronósticos
   const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id','==',mid)));
   const matchSnap = await getDoc(doc(db, 'matches', mid));
   const matchData = matchSnap.data();
   const phase     = matchData.phase || '';
   const hs = matchData.home_score, as_ = matchData.away_score;
-  const outcome = hs > as_ ? 'H' : as_ > hs ? 'A' : 'D';
 
   const batch = writeBatch(db);
   predsSnap.forEach(predDoc => { batch.update(predDoc.ref, { points: 0 }); });
 
-  // Revertir puntos de favoritos
   const allMembersSnap = await getDocs(collection(db, 'group_members'));
   allMembersSnap.forEach(mDoc => {
     const m    = mDoc.data();
@@ -164,12 +158,17 @@ async function loadAllMatchesList() {
     const m = d.data();
     const kickoff = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
     const isDone  = m.home_score !== undefined;
+    const label   = kickoff.toLocaleString('es-BO', {
+      timeZone: 'America/La_Paz',
+      day:'2-digit', month:'short',
+      hour:'numeric', minute:'2-digit', hour12: true
+    });
     html += `
       <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">
         <span style="font-size:1.2rem">${m.home_flag||'⚽'}</span>
         <span style="flex:1;font-size:0.85rem;font-weight:600">${m.home_team} vs ${m.away_team} ${m.away_flag||''}</span>
         <span style="font-size:0.78rem;color:var(--text-muted)">${m.phase}</span>
-        <span style="font-size:0.78rem;color:var(--gold)">${kickoff.toLocaleDateString('es-BO',{day:'2-digit',month:'short'})} ${kickoff.toLocaleTimeString('es-BO',{hour:'2-digit',minute:'2-digit'})}</span>
+        <span style="font-size:0.78rem;color:var(--gold)">${label}</span>
         ${isDone ? `<span style="font-size:0.78rem;color:var(--green-light);font-weight:700">${m.home_score}-${m.away_score}</span>` : '<span style="font-size:0.78rem;color:var(--text-muted)">Pendiente</span>'}
         <button class="btn btn-sm btn-outline-danger" style="font-size:11px;padding:2px 10px" onclick="deleteMatchConfirm('${d.id}','${m.home_team} vs ${m.away_team}',${isDone})">🗑️</button>
       </div>`;
@@ -180,7 +179,6 @@ async function loadAllMatchesList() {
 window.deleteMatchConfirm = async function(mid, label, isDone) {
   const warn = isDone ? ' (tiene resultado cargado)' : '';
   if (!confirm(`¿Eliminar partido "${label}"${warn}? Se borrarán sus pronósticos.`)) return;
-  // Borrar pronósticos del partido
   const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id','==',mid)));
   const batch = writeBatch(db);
   predsSnap.forEach(d => batch.delete(d.ref));
@@ -212,6 +210,50 @@ document.getElementById('addMatchBtn')?.addEventListener('click', async () => {
 });
 
 // =============================================
+// BORRAR TODOS LOS PARTIDOS
+// =============================================
+let _deleteAllModal = null;
+
+document.getElementById('deleteAllMatchesBtn')?.addEventListener('click', () => {
+  if (!_deleteAllModal) _deleteAllModal = new bootstrap.Modal(document.getElementById('deleteAllModal'));
+  _deleteAllModal.show();
+});
+
+document.getElementById('confirmDeleteAllBtn')?.addEventListener('click', async () => {
+  const btn = document.getElementById('confirmDeleteAllBtn');
+  btn.disabled = true;
+  btn.textContent = 'Borrando...';
+
+  const matchesSnap = await getDocs(collection(db, 'matches'));
+  const CHUNK = 400;
+  let batch = writeBatch(db);
+  let count = 0;
+
+  for (const mDoc of matchesSnap.docs) {
+    // Borrar pronósticos del partido
+    const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id','==', mDoc.id)));
+    predsSnap.forEach(p => {
+      batch.delete(p.ref);
+      count++;
+      if (count % CHUNK === 0) { batch.commit(); batch = writeBatch(db); }
+    });
+    batch.delete(mDoc.ref);
+    count++;
+    if (count % CHUNK === 0) { batch.commit(); batch = writeBatch(db); }
+  }
+  await batch.commit();
+
+  _deleteAllModal.hide();
+  btn.disabled = false;
+  btn.textContent = '🗑️ Borrar todos definitivamente';
+
+  document.getElementById('allMatchesList').innerHTML =
+    '<p style="color:var(--green-light)">✅ Todos los partidos eliminados. Ahora ve a load-matches.html para recargarlos.</p>';
+  await loadMatchesAdmin();
+  await loadMatchesDone();
+});
+
+// =============================================
 // TAB COMPARSAS
 // =============================================
 async function loadGroupsMgr() {
@@ -222,7 +264,6 @@ async function loadGroupsMgr() {
   const snap = await getDocs(query(collection(db, 'groups'), orderBy('created_at','desc')));
   if (snap.empty) { container.innerHTML = '<p style="color:var(--text-muted)">Sin comparsas.</p>'; return; }
 
-  // Contar miembros por grupo
   const membersSnap = await getDocs(collection(db, 'group_members'));
   const memberCount = {};
   membersSnap.forEach(d => {
@@ -230,7 +271,6 @@ async function loadGroupsMgr() {
     memberCount[gid] = (memberCount[gid] || 0) + 1;
   });
 
-  // Contar pronósticos por grupo
   const predsSnap = await getDocs(collection(db, 'predictions'));
   const predCount = {};
   predsSnap.forEach(d => {
@@ -240,7 +280,6 @@ async function loadGroupsMgr() {
 
   container.innerHTML = '';
 
-  // Resumen global
   const totalGroups  = snap.size;
   const totalMembers = Object.values(memberCount).reduce((a,b)=>a+b,0);
   const totalPreds   = Object.values(predCount).reduce((a,b)=>a+b,0);
@@ -312,18 +351,11 @@ document.getElementById('confirmDeleteBtn')?.addEventListener('click', async () 
   btn.disabled = true; btn.textContent = 'Eliminando...';
 
   const batch = writeBatch(db);
-
-  // Borrar miembros
   const memSnap  = await getDocs(query(collection(db, 'group_members'), where('group_id','==',_deleteGroupId)));
   memSnap.forEach(d => batch.delete(d.ref));
-
-  // Borrar pronósticos
   const predSnap = await getDocs(query(collection(db, 'predictions'),   where('group_id','==',_deleteGroupId)));
   predSnap.forEach(d => batch.delete(d.ref));
-
-  // Borrar el grupo
   batch.delete(doc(db, 'groups', _deleteGroupId));
-
   await batch.commit();
 
   _deleteModal.hide();
@@ -332,7 +364,6 @@ document.getElementById('confirmDeleteBtn')?.addEventListener('click', async () 
   await loadGroupsMgr();
 });
 
-// Utilidad badge
 function badge(text, type) {
   const colors = { success:'var(--green)', danger:'var(--danger)', warning:'var(--gold)' };
   return `<span style="color:${colors[type]||'#fff'};font-size:0.85rem;font-weight:600">${text}</span>`;
