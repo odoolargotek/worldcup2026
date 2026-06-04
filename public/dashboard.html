@@ -21,7 +21,7 @@
 
   <div class="container py-4">
 
-    <!-- Banner Largotek #1: debajo del navbar, antes de las comparsas -->
+    <!-- Banner Largotek -->
     <a href="https://www.largotek.com" target="_blank" class="largotek-banner mb-4 d-flex">
       <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
       <div class="largotek-banner-text">
@@ -40,26 +40,60 @@
     <div id="groupList" class="row g-3 mb-4"></div>
 
     <div class="row g-3">
+      <!-- Crear comparsa -->
       <div class="col-md-6">
         <div class="card p-4">
           <h6 style="color:var(--green-light);font-weight:700" class="mb-3">➕ Crear comparsa</h6>
           <input type="text" id="newGroupName" class="form-control mb-2" placeholder="Nombre de la comparsa">
+          <select id="newGroupStage" class="form-select mb-2">
+            <option value="">-- Etapa de inicio --</option>
+            <option value="Grupos">Fase de Grupos</option>
+            <option value="Octavos">Desde Octavos</option>
+            <option value="Cuartos">Desde Cuartos</option>
+            <option value="Semifinal">Desde Semifinal</option>
+            <option value="Final">Solo Final</option>
+          </select>
           <input type="number" id="newGroupPrize" class="form-control mb-2" placeholder="Premio (opcional, en $)">
           <input type="number" id="newGroupFee" class="form-control mb-3" placeholder="Cuota por participante (opcional, en $)">
           <button id="createGroupBtn" class="btn btn-success w-100">⚽ Crear comparsa</button>
           <div id="createMsg" class="mt-2"></div>
         </div>
       </div>
+      <!-- Unirse a comparsa -->
       <div class="col-md-6">
         <div class="card p-4">
           <h6 style="color:var(--gold);font-weight:700" class="mb-3">🔗 Unirse a comparsa</h6>
-          <input type="text" id="joinCode" class="form-control mb-3" placeholder="Código de la comparsa">
+          <p style="font-size:0.83rem;color:var(--text-muted)">Pide el código de 6 letras al dueño de la comparsa e ingrésalo aquí.</p>
+          <input type="text" id="joinCode" class="form-control mb-3" placeholder="Código (ej: AB3X7Z)" style="letter-spacing:3px;font-weight:700;text-transform:uppercase">
           <button id="joinGroupBtn" class="btn btn-warning w-100">🔗 Unirse</button>
           <div id="joinMsg" class="mt-2"></div>
         </div>
       </div>
     </div>
 
+  </div>
+
+  <!-- Modal elegir equipo favorito al crear/unirse -->
+  <div class="modal fade" id="favoriteModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text)">
+        <div class="modal-header" style="border-color:var(--border)">
+          <div>
+            <h5 class="modal-title mb-0">🏆 Elige tu equipo favorito</h5>
+            <div style="font-size:12px;color:var(--text-muted)">Puedes cambiarlo luego (con penalidad de -6 pts)</div>
+          </div>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <input type="text" id="favoriteSearch" class="form-control mb-3" placeholder="🔍 Buscar equipo...">
+          <div id="teamGrid" class="row g-2" style="max-height:300px;overflow-y:auto"></div>
+          <input type="hidden" id="selectedTeam">
+        </div>
+        <div class="modal-footer" style="border-color:var(--border)">
+          <button id="saveFavoriteBtn" class="btn btn-warning w-100" disabled style="font-weight:700">✅ Confirmar favorito</button>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="footer-brand">
@@ -69,13 +103,12 @@
     <div class="footer-links">
       <a href="https://www.largotek.com" target="_blank">🌐 largotek.com</a>
       <a href="mailto:info@largotek.com">📧 info@largotek.com</a>
-      <a href="https://wa.me/59178888888" target="_blank">💬 WhatsApp</a>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module" src="js/firebase-config.js"></script>
   <script type="module" src="js/auth.js"></script>
-  <script type="module" src="js/dashboard.js"></script>
+  <script type="module" src="js/groups.js"></script>
 </body>
 </html>
