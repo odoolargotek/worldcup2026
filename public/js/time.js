@@ -1,22 +1,16 @@
-// time.js — Los kickoffs en Firestore están guardados en hora local de la sede
-// No aplicar conversión de zona para no sumar offset incorrecto
+// time.js — Los kickoffs en Firestore están en hora local de la sede (guardados como UTC)
+// Forzamos UTC+0 para mostrar el valor exacto sin ningún offset
 export const LOCALE = 'es-BO';
 
+const BASE = { timeZone: 'UTC', hour12: false };
+
 /**
- * Formatea una fecha en hora local del sistema (sin forzar zona).
+ * Formatea una fecha forzando UTC (sin conversión de zona).
  * @param {Date} date
  * @param {Intl.DateTimeFormatOptions} opts
  */
 export function formatLP(date, opts) {
-  // Extraer componentes UTC del timestamp (que representa la hora local de la sede)
-  const year   = date.getUTCFullYear();
-  const month  = date.getUTCMonth();
-  const day    = date.getUTCDate();
-  const hour   = date.getUTCHours();
-  const minute = date.getUTCMinutes();
-  // Crear una fecha local con esos mismos valores para que toLocaleString no aplique offset
-  const local  = new Date(year, month, day, hour, minute);
-  return local.toLocaleString(LOCALE, opts);
+  return date.toLocaleString(LOCALE, { timeZone: 'UTC', ...opts });
 }
 
 /** Fecha corta: "jue, 11 jun" */
