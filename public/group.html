@@ -49,9 +49,11 @@
       </div>
     </div>
 
-    <ul class="nav nav-tabs mb-4">
+    <!-- TABS -->
+    <ul class="nav nav-tabs mb-4" id="mainTabs">
       <li class="nav-item"><button class="nav-link active" data-tab="ranking">🏆 Ranking</button></li>
       <li class="nav-item"><button class="nav-link" data-tab="matches">📅 Partidos</button></li>
+      <li class="nav-item"><button class="nav-link" data-tab="groups">🏥 Grupos</button></li>
     </ul>
 
     <div id="rankingTab"></div>
@@ -61,6 +63,11 @@
         <div class="text-center py-4" style="color:var(--text-muted)">Cargando partidos...</div>
       </div>
     </div>
+
+    <div id="groupsTab" class="d-none">
+      <div class="text-center py-4" style="color:var(--text-muted)">Cargando grupos...</div>
+    </div>
+
   </div>
 
   <!-- Modal gestionar favoritos por grupo -->
@@ -119,5 +126,26 @@
   <script type="module" src="js/matches.js"></script>
   <script type="module" src="js/standings.js"></script>
   <script type="module" src="js/favorite.js"></script>
+  <script type="module">
+    import { renderGroupsTables } from './js/groups-table.js';
+
+    let groupsLoaded = false;
+
+    document.querySelectorAll('[data-tab]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('rankingTab')?.classList.toggle('d-none', btn.dataset.tab !== 'ranking');
+        document.getElementById('matchesTab')?.classList.toggle('d-none', btn.dataset.tab !== 'matches');
+        document.getElementById('groupsTab')?.classList.toggle('d-none',  btn.dataset.tab !== 'groups');
+
+        // Cargar tablas de grupos solo la primera vez
+        if (btn.dataset.tab === 'groups' && !groupsLoaded) {
+          groupsLoaded = true;
+          await renderGroupsTables();
+        }
+      });
+    });
+  </script>
 </body>
 </html>
