@@ -24,16 +24,16 @@
     </div>
   </nav>
 
-  <div style="background:rgba(239,68,68,0.07);border-bottom:1px solid rgba(239,68,68,0.2);padding:6px 16px;text-align:center;font-size:11px;color:#fca5a5">
+  <div style="background:rgba(201,52,75,0.07);border-bottom:1px solid rgba(201,52,75,0.2);padding:6px 16px;text-align:center;font-size:11px;color:#f5a0ac">
     ⚠️ Juego de entretenimiento privado. No es un sitio de apuestas. Largotek no administra ni garantiza premios.
-    <a href="legal.html" target="_blank" style="color:#fca5a5;text-decoration:underline;margin-left:6px">Aviso legal completo</a>
+    <a href="legal.html" target="_blank" style="color:#f5a0ac;text-decoration:underline;margin-left:6px">Aviso legal completo</a>
   </div>
 
   <!-- BANNER CONTI -->
   <div class="conti-banner">
     <img src="https://www.largotek.com/web/image/12870-1cdfd1c0/conti-zero-logo-png_seeklogo-381873.webp" alt="Conti Cerveza">
     <div class="conti-banner-text">
-      <span class="conti-banner-label">Zaro Grau</span>
+      <span class="conti-banner-label">Zero Grau</span>
     </div>
   </div>
 
@@ -58,7 +58,7 @@
     <div class="row g-3">
       <div class="col-md-6">
         <div class="card p-4">
-          <h6 style="color:var(--green-light);font-weight:700" class="mb-3">➕ Crear comparsa</h6>
+          <h6 style="color:var(--primary-light);font-weight:700" class="mb-3">➕ Crear comparsa</h6>
           <input type="text" id="newGroupName" class="form-control mb-2" placeholder="Nombre de la comparsa">
           <select id="newGroupStage" class="form-select mb-2">
             <option value="">-- Etapa de inicio --</option>
@@ -92,7 +92,7 @@
               <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥈 2° %</label><input type="number" id="distP2" class="form-control" placeholder="30"></div>
               <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥉 3° %</label><input type="number" id="distP3" class="form-control" placeholder="10"></div>
             </div>
-            <div id="distError" style="font-size:11px;color:var(--danger);margin-top:4px"></div>
+            <div id="distError" style="font-size:11px;color:var(--accent);margin-top:4px"></div>
           </div>
           <button id="createGroupBtn" class="btn btn-success w-100 mt-1">⚽ Crear comparsa</button>
           <div id="createMsg" class="mt-2"></div>
@@ -134,15 +134,15 @@
 
   <!-- OVERLAY ELIMINAR COMPARSA -->
   <div id="deleteOverlay" class="native-overlay">
-    <div class="ov-box" style="border-color:rgba(239,68,68,0.4)">
-      <div class="ov-header" style="border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.08)">
-        <h5 style="color:#fca5a5;margin:0">🗑️ Eliminar comparsa</h5>
+    <div class="ov-box" style="border-color:rgba(201,52,75,0.4)">
+      <div class="ov-header" style="border-color:rgba(201,52,75,0.3);background:rgba(201,52,75,0.08)">
+        <h5 style="color:#f5a0ac;margin:0">🗑️ Eliminar comparsa</h5>
         <button class="ov-close" id="closeDeleteOverlay">×</button>
       </div>
       <div class="ov-body">
-        <div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:14px;margin-bottom:16px">
-          <div style="font-weight:700;color:#fca5a5;margin-bottom:6px">⚠️ Esta acción es irreversible</div>
-          <ul style="color:#fca5a5;font-size:0.85rem;margin:0;padding-left:18px">
+        <div style="background:rgba(201,52,75,0.12);border:1px solid rgba(201,52,75,0.3);border-radius:10px;padding:14px;margin-bottom:16px">
+          <div style="font-weight:700;color:#f5a0ac;margin-bottom:6px">⚠️ Esta acción es irreversible</div>
+          <ul style="color:#f5a0ac;font-size:0.85rem;margin:0;padding-left:18px">
             <li>Se eliminarán todos los miembros y sus pronósticos</li>
             <li>El código de invitación dejará de funcionar</li>
             <li>No se puede recuperar después</li>
@@ -158,9 +158,9 @@
         <input type="text" id="deleteConfirmInput" class="form-control"
           placeholder="Escribe el nombre aquí..." autocomplete="off" autocorrect="off" spellcheck="false">
       </div>
-      <div class="ov-footer" style="border-color:rgba(239,68,68,0.3)">
+      <div class="ov-footer" style="border-color:rgba(201,52,75,0.3)">
         <button id="confirmDeleteBtn" class="btn w-100" disabled
-          style="background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid rgba(239,68,68,0.5);font-weight:700">
+          style="background:rgba(201,52,75,0.2);color:#f5a0ac;border:1px solid rgba(201,52,75,0.5);font-weight:700">
           🗑️ Sí, eliminar definitivamente
         </button>
         <button id="cancelDeleteBtn" class="btn btn-outline-light w-100" style="font-size:13px">Cancelar</button>
@@ -171,7 +171,7 @@
   <div class="footer-brand">
     ⚽ WC2026 — Polla Mundialera &nbsp;|
     <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
-    <strong style="color:#818cf8">Largotek</strong>
+    <strong style="color:var(--primary-light)">Largotek</strong>
     <div class="footer-links">
       <a href="https://www.largotek.com" target="_blank">🌐 largotek.com</a>
       <a href="mailto:info@largotek.com">📧 info@largotek.com</a>

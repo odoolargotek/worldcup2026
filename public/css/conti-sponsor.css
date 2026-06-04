@@ -20,8 +20,8 @@
     -45deg,
     transparent,
     transparent 18px,
-    rgba(201,52,75,0.06) 18px,
-    rgba(201,52,75,0.06) 20px
+    rgba(201,52,75,0.05) 18px,
+    rgba(201,52,75,0.05) 20px
   );
   pointer-events: none;
 }
@@ -57,33 +57,14 @@
   z-index: 1;
 }
 
-.conti-banner-tag {
-  font-size: 9px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-  color: #C9344B;
-  border: 1px solid rgba(201,52,75,0.5);
-  padding: 2px 8px;
-  border-radius: 10px;
-  white-space: nowrap;
-}
-
 .conti-banner-label {
-  font-size: 0.82rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #fff;
-  letter-spacing: 0.3px;
-}
-
-.conti-banner-sub {
-  font-size: 11px;
-  color: rgba(255,255,255,0.65);
-  display: none;
+  letter-spacing: 1px;
 }
 
 @media (min-width: 480px) {
-  .conti-banner-sub { display: inline; }
   .conti-banner img { height: 38px; }
 }
 
