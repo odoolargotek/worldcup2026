@@ -6,65 +6,207 @@
   <title>WC2026 — Polla Mundialera</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { min-height:100vh; background:var(--bg); }
+    .landing-wrap {
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 32px 16px 48px;
+    }
+    .hero-badge {
+      display:inline-block;
+      background:rgba(245,158,11,0.15);
+      color:var(--gold);
+      border:1px solid rgba(245,158,11,0.35);
+      border-radius:20px;
+      font-size:11px;
+      font-weight:700;
+      letter-spacing:1px;
+      padding:4px 12px;
+      margin-bottom:10px;
+      text-transform:uppercase;
+    }
+    .hero-title {
+      font-size:2rem;
+      font-weight:900;
+      color:var(--text);
+      line-height:1.1;
+      margin-bottom:6px;
+    }
+    .hero-sub {
+      color:var(--text-muted);
+      font-size:0.9rem;
+      margin-bottom:20px;
+    }
+    .feature-pills {
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-bottom:20px;
+    }
+    .feature-pill {
+      background:var(--bg-card2);
+      border:1px solid var(--border);
+      border-radius:20px;
+      padding:6px 14px;
+      font-size:0.8rem;
+      color:var(--text-muted);
+    }
+    .how-steps {
+      background:var(--bg-card);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:16px 18px;
+      margin-bottom:20px;
+    }
+    .how-steps h6 {
+      color:var(--gold);
+      font-weight:700;
+      font-size:0.85rem;
+      text-transform:uppercase;
+      letter-spacing:0.5px;
+      margin-bottom:12px;
+    }
+    .how-step {
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      margin-bottom:10px;
+      font-size:0.83rem;
+      color:var(--text-muted);
+    }
+    .how-step:last-child { margin-bottom:0; }
+    .step-num {
+      min-width:22px;
+      height:22px;
+      border-radius:50%;
+      background:rgba(245,158,11,0.2);
+      color:var(--gold);
+      font-size:11px;
+      font-weight:800;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      flex-shrink:0;
+    }
+    .rules-link {
+      display:block;
+      text-align:center;
+      color:var(--gold);
+      font-size:0.82rem;
+      margin-bottom:24px;
+      text-decoration:none;
+    }
+    .rules-link:hover { text-decoration:underline; color:var(--gold); }
+    .divider {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-bottom:20px;
+    }
+    .divider hr { flex:1; border-color:var(--border); margin:0; }
+    .divider span { color:var(--text-muted); font-size:11px; white-space:nowrap; }
+  </style>
 </head>
-<body style="display:flex;align-items:center;justify-content:center;min-height:100vh">
+<body>
 
-  <div class="login-card">
-    <div class="text-center mb-1">
+  <div class="landing-wrap">
+
+    <!-- Hero -->
+    <div class="text-center mb-3 mt-2">
       <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1"
-           alt="Largotek" class="login-logo">
+           alt="Largotek" class="login-logo" style="margin-bottom:12px">
+      <div class="hero-badge">🏆 FIFA World Cup 2026</div>
+      <div class="hero-title">⚽ WC2026<br>Polla Mundialera</div>
+      <div class="hero-sub">Compite con amigos, predice resultados y gana premios reales</div>
     </div>
-    <div class="text-center">
-      <div class="login-title">⚽ WC2026</div>
-      <div class="login-sub">Polla Mundialera &mdash; FIFA World Cup</div>
+
+    <!-- Pills -->
+    <div class="feature-pills justify-content-center">
+      <span class="feature-pill">🏙️ Comparsas privadas</span>
+      <span class="feature-pill">🔮 Pronósticos por partido</span>
+      <span class="feature-pill">🏆 Ranking en tiempo real</span>
+      <span class="feature-pill">⭐ Favoritos por grupo</span>
+      <span class="feature-pill">💰 Premio configurable</span>
     </div>
 
-    <ul class="nav nav-tabs mb-4" id="authTabs">
-      <li class="nav-item flex-fill">
-        <button class="nav-link active w-100" data-tab="login">Iniciar sesión</button>
-      </li>
-      <li class="nav-item flex-fill">
-        <button class="nav-link w-100" data-tab="register">Registrarse</button>
-      </li>
-    </ul>
-
-    <!-- Login -->
-    <form id="loginForm">
-      <div class="mb-3">
-        <label class="form-label">Correo electrónico</label>
-        <input type="email" id="loginEmail" class="form-control" placeholder="tu@correo.com" required>
+    <!-- Cómo se juega -->
+    <div class="how-steps">
+      <h6>ℹ️ Cómo se juega</h6>
+      <div class="how-step">
+        <div class="step-num">1</div>
+        <div><strong style="color:var(--text)">Crea o únete a una comparsa</strong> — Invita a amigos con un código de 6 letras.</div>
       </div>
-      <div class="mb-4">
-        <label class="form-label">Contraseña</label>
-        <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+      <div class="how-step">
+        <div class="step-num">2</div>
+        <div><strong style="color:var(--text)">Predice los resultados</strong> — Antes de cada partido elige quién gana, empata o pierde.</div>
       </div>
-      <button type="submit" class="btn btn-success w-100 py-2">Entrar →</button>
-    </form>
-
-    <!-- Registro -->
-    <form id="registerForm" class="d-none">
-      <div class="mb-3">
-        <label class="form-label">Apodo</label>
-        <input type="text" id="regName" class="form-control" placeholder="Tu apodo en la polla" required>
+      <div class="how-step">
+        <div class="step-num">3</div>
+        <div><strong style="color:var(--text)">Elige tu favorito por grupo</strong> — Gana puntos extra cada vez que tu equipo favorito juegue.</div>
       </div>
-      <div class="mb-3">
-        <label class="form-label">Correo electrónico</label>
-        <input type="email" id="regEmail" class="form-control" placeholder="tu@correo.com" required>
+      <div class="how-step">
+        <div class="step-num">4</div>
+        <div><strong style="color:var(--text)">Sube al ranking</strong> — El que acumule más puntos al final del torneo gana el premio.</div>
       </div>
-      <div class="mb-4">
-        <label class="form-label">Contraseña</label>
-        <input type="password" id="regPassword" class="form-control" placeholder="Mín. 6 caracteres" required>
-      </div>
-      <button type="submit" class="btn btn-success w-100 py-2">Crear cuenta →</button>
-    </form>
-
-    <div id="authError" class="alert alert-danger mt-3 d-none small"></div>
-
-    <div class="powered-by">
-      Desarrollado por
-      <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
-      Largotek — Transformación Digital
     </div>
+
+    <a href="rules.html" class="rules-link">📖 Ver reglas completas y sistema de puntos →</a>
+
+    <div class="divider">
+      <hr><span>Entra o créate una cuenta</span><hr>
+    </div>
+
+    <!-- Login card -->
+    <div class="login-card" style="margin:0">
+      <ul class="nav nav-tabs mb-4" id="authTabs">
+        <li class="nav-item flex-fill">
+          <button class="nav-link active w-100" data-tab="login">Iniciar sesión</button>
+        </li>
+        <li class="nav-item flex-fill">
+          <button class="nav-link w-100" data-tab="register">Registrarse</button>
+        </li>
+      </ul>
+
+      <!-- Login -->
+      <form id="loginForm">
+        <div class="mb-3">
+          <label class="form-label">Correo electrónico</label>
+          <input type="email" id="loginEmail" class="form-control" placeholder="tu@correo.com" required>
+        </div>
+        <div class="mb-4">
+          <label class="form-label">Contraseña</label>
+          <input type="password" id="loginPassword" class="form-control" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-success w-100 py-2">Entrar →</button>
+      </form>
+
+      <!-- Registro -->
+      <form id="registerForm" class="d-none">
+        <div class="mb-3">
+          <label class="form-label">Apodo</label>
+          <input type="text" id="regName" class="form-control" placeholder="Tu apodo en la polla" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Correo electrónico</label>
+          <input type="email" id="regEmail" class="form-control" placeholder="tu@correo.com" required>
+        </div>
+        <div class="mb-4">
+          <label class="form-label">Contraseña</label>
+          <input type="password" id="regPassword" class="form-control" placeholder="Mín. 6 caracteres" required>
+        </div>
+        <button type="submit" class="btn btn-success w-100 py-2">Crear cuenta →</button>
+      </form>
+
+      <div id="authError" class="alert alert-danger mt-3 d-none small"></div>
+
+      <div class="powered-by">
+        Desarrollado por
+        <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
+        Largotek — Transformación Digital
+      </div>
+    </div>
+
   </div>
 
   <script type="module" src="js/firebase-config.js"></script>
