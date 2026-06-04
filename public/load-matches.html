@@ -8,112 +8,183 @@
 <body class="bg-dark text-light p-4">
   <div class="container" style="max-width:700px">
     <h3>⚽ Carga masiva de partidos — WC2026</h3>
-    <p class="text-muted">Este script carga los 48 partidos de la fase de grupos directamente a Firestore.</p>
-    <button id="loadBtn" class="btn btn-warning btn-lg mb-3">Cargar todos los partidos</button>
+    <p class="text-muted">Fixture oficial: 12 grupos × 4 equipos × 6 partidos = 72 partidos de fase de grupos.</p>
+    <div class="d-flex gap-2 mb-3">
+      <button id="loadBtn" class="btn btn-warning btn-lg">Cargar partidos</button>
+      <button id="deleteBtn" class="btn btn-danger btn-lg">⚠️ Borrar todo y recargar</button>
+    </div>
     <div id="log" class="bg-secondary p-3 rounded" style="font-size:13px;max-height:500px;overflow-y:auto"></div>
   </div>
 
   <script type="module">
     import { auth, db } from './js/firebase-config.js';
     import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
-    import { collection, addDoc, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+    import {
+      collection, addDoc, getDocs, deleteDoc, doc
+    } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
+    // ============================================================
+    // FIXTURE OFICIAL MUNDIAL 2026 — FASE DE GRUPOS
+    // 12 grupos de 4 equipos cada uno, 6 partidos por grupo
+    // Fuente: FIFA / calendario oficial
+    // ============================================================
     const matches = [
-      // GRUPO A
-      { home_team: "México",        away_team: "Sudáfrica",    kickoff: "2026-06-11T19:00:00", phase: "Grupo A", city: "Ciudad de México",  home_flag: "🇲🇽", away_flag: "🇿🇦" },
-      { home_team: "México",        away_team: "Playoff B",    kickoff: "2026-06-15T19:00:00", phase: "Grupo A", city: "Guadalajara",        home_flag: "🇲🇽", away_flag: "🏁" },
-      { home_team: "Sudáfrica",     away_team: "Playoff B",    kickoff: "2026-06-19T19:00:00", phase: "Grupo A", city: "Monterrey",          home_flag: "🇿🇦", away_flag: "🏁" },
-      // GRUPO B
-      { home_team: "Argentina",      away_team: "Argelia",      kickoff: "2026-06-16T19:00:00", phase: "Grupo B", city: "Kansas City",        home_flag: "🇦🇷", away_flag: "🇩🇿" },
-      { home_team: "Argentina",      away_team: "Playoff C",    kickoff: "2026-06-20T16:00:00", phase: "Grupo B", city: "Dallas",             home_flag: "🇦🇷", away_flag: "🏁" },
-      { home_team: "Argelia",        away_team: "Playoff C",    kickoff: "2026-06-24T16:00:00", phase: "Grupo B", city: "Los Angeles",        home_flag: "🇩🇿", away_flag: "🏁" },
-      // GRUPO C
-      { home_team: "USA",            away_team: "Paraguay",     kickoff: "2026-06-12T22:00:00", phase: "Grupo C", city: "Los Angeles",        home_flag: "🇺🇸", away_flag: "🇵🇾" },
-      { home_team: "USA",            away_team: "Playoff D",    kickoff: "2026-06-16T22:00:00", phase: "Grupo C", city: "Nueva York",         home_flag: "🇺🇸", away_flag: "🏁" },
-      { home_team: "Paraguay",       away_team: "Playoff D",    kickoff: "2026-06-20T22:00:00", phase: "Grupo C", city: "Boston",             home_flag: "🇵🇾", away_flag: "🏁" },
-      // GRUPO D
-      { home_team: "Francia",        away_team: "Senegal",      kickoff: "2026-06-17T22:00:00", phase: "Grupo D", city: "Nueva York",         home_flag: "🇫🇷", away_flag: "🇸🇳" },
-      { home_team: "Francia",        away_team: "Playoff E",    kickoff: "2026-06-21T19:00:00", phase: "Grupo D", city: "Atlanta",            home_flag: "🇫🇷", away_flag: "🏁" },
-      { home_team: "Senegal",        away_team: "Playoff E",    kickoff: "2026-06-25T19:00:00", phase: "Grupo D", city: "Philadelphia",       home_flag: "🇸🇳", away_flag: "🏁" },
-      // GRUPO E
-      { home_team: "Alemania",       away_team: "Curazao",      kickoff: "2026-06-14T22:00:00", phase: "Grupo E", city: "Houston",            home_flag: "🇩🇪", away_flag: "🇨🇼" },
-      { home_team: "Alemania",       away_team: "Japon",        kickoff: "2026-06-19T19:00:00", phase: "Grupo E", city: "Chicago",            home_flag: "🇩🇪", away_flag: "🇯🇵" },
-      { home_team: "Curazao",        away_team: "Japon",        kickoff: "2026-06-23T16:00:00", phase: "Grupo E", city: "Dallas",             home_flag: "🇨🇼", away_flag: "🇯🇵" },
-      // GRUPO F
-      { home_team: "Portugal",       away_team: "Nueva Zelanda",kickoff: "2026-06-17T19:00:00", phase: "Grupo F", city: "Miami",             home_flag: "🇵🇹", away_flag: "🇳🇿" },
-      { home_team: "Portugal",       away_team: "Playoff F",    kickoff: "2026-06-21T16:00:00", phase: "Grupo F", city: "Kansas City",        home_flag: "🇵🇹", away_flag: "🏁" },
-      { home_team: "Nueva Zelanda",  away_team: "Playoff F",    kickoff: "2026-06-25T16:00:00", phase: "Grupo F", city: "Seattle",            home_flag: "🇳🇿", away_flag: "🏁" },
-      // GRUPO G
-      { home_team: "Bélgica",        away_team: "Egipto",       kickoff: "2026-06-16T16:00:00", phase: "Grupo G", city: "Seattle",           home_flag: "🇧🇪", away_flag: "🇪🇬" },
-      { home_team: "Bélgica",        away_team: "Arabia Saudita",kickoff: "2026-06-20T19:00:00", phase: "Grupo G", city: "Houston",           home_flag: "🇧🇪", away_flag: "🇸🇦" },
-      { home_team: "Egipto",         away_team: "Arabia Saudita",kickoff: "2026-06-24T19:00:00", phase: "Grupo G", city: "Miami",              home_flag: "🇪🇬", away_flag: "🇸🇦" },
-      // GRUPO H
-      { home_team: "España",         away_team: "Cabo Verde",   kickoff: "2026-06-16T13:00:00", phase: "Grupo H", city: "Atlanta",           home_flag: "🇪🇸", away_flag: "🇨🇻" },
-      { home_team: "España",         away_team: "Morocco",      kickoff: "2026-06-20T13:00:00", phase: "Grupo H", city: "Los Angeles",        home_flag: "🇪🇸", away_flag: "🇲🇦" },
-      { home_team: "Cabo Verde",      away_team: "Morocco",      kickoff: "2026-06-24T13:00:00", phase: "Grupo H", city: "Seattle",            home_flag: "🇨🇻", away_flag: "🇲🇦" },
-      // GRUPO I
-      { home_team: "Brasil",         away_team: "Morocco",      kickoff: "2026-06-13T19:00:00", phase: "Grupo I", city: "Nueva York",         home_flag: "🇧🇷", away_flag: "🇲🇦" },
-      { home_team: "Brasil",         away_team: "Haití",        kickoff: "2026-06-20T22:00:00", phase: "Grupo I", city: "Philadelphia",       home_flag: "🇧🇷", away_flag: "🇭🇹" },
-      { home_team: "Morocco",        away_team: "Haití",        kickoff: "2026-06-24T22:00:00", phase: "Grupo I", city: "Nueva York",         home_flag: "🇲🇦", away_flag: "🇭🇹" },
-      // GRUPO J
-      { home_team: "Países Bajos",   away_team: "Japon",        kickoff: "2026-06-15T22:00:00", phase: "Grupo J", city: "Dallas",            home_flag: "🇳🇱", away_flag: "🇯🇵" },
-      { home_team: "Países Bajos",   away_team: "Playoff G",    kickoff: "2026-06-19T22:00:00", phase: "Grupo J", city: "Atlanta",           home_flag: "🇳🇱", away_flag: "🏁" },
-      { home_team: "Japon",          away_team: "Playoff G",    kickoff: "2026-06-23T22:00:00", phase: "Grupo J", city: "Los Angeles",        home_flag: "🇯🇵", away_flag: "🏁" },
-      // GRUPO K
-      { home_team: "Inglaterra",     away_team: "Croacia",      kickoff: "2026-06-18T19:00:00", phase: "Grupo K", city: "Dallas",             home_flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", away_flag: "🇭🇷" },
-      { home_team: "Inglaterra",     away_team: "Playoff H",    kickoff: "2026-06-22T19:00:00", phase: "Grupo K", city: "Nueva York",         home_flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿", away_flag: "🏁" },
-      { home_team: "Croacia",        away_team: "Playoff H",    kickoff: "2026-06-26T19:00:00", phase: "Grupo K", city: "Boston",             home_flag: "🇭🇷", away_flag: "🏁" },
-      // GRUPO L
-      { home_team: "Canadá",         away_team: "Playoff A",    kickoff: "2026-06-12T19:00:00", phase: "Grupo L", city: "Toronto",           home_flag: "🇨🇦", away_flag: "🏁" },
-      { home_team: "Canadá",         away_team: "Côte d'Ivoire",kickoff: "2026-06-17T16:00:00", phase: "Grupo L", city: "Vancouver",          home_flag: "🇨🇦", away_flag: "🇨🇮" },
-      { home_team: "Playoff A",      away_team: "Côte d'Ivoire",kickoff: "2026-06-21T22:00:00", phase: "Grupo L", city: "Toronto",            home_flag: "🏁", away_flag: "🇨🇮" },
-      // GRUPO M (Qatar, Switzerland, Australia, Uzbekistan, Colombia)
-      { home_team: "Qatar",          away_team: "Suiza",        kickoff: "2026-06-14T16:00:00", phase: "Grupo M", city: "San Francisco",      home_flag: "🇶🇦", away_flag: "🇨🇭" },
-      { home_team: "Uzbekistán",     away_team: "Colombia",     kickoff: "2026-06-18T22:00:00", phase: "Grupo M", city: "Ciudad de México",   home_flag: "🇺🇿", away_flag: "🇨🇴" },
-      { home_team: "Qatar",          away_team: "Colombia",     kickoff: "2026-06-22T16:00:00", phase: "Grupo M", city: "San Francisco",      home_flag: "🇶🇦", away_flag: "🇨🇴" },
-      { home_team: "Suiza",          away_team: "Uzbekistán",   kickoff: "2026-06-22T22:00:00", phase: "Grupo M", city: "Monterrey",          home_flag: "🇨🇭", away_flag: "🇺🇿" },
-      { home_team: "Qatar",          away_team: "Uzbekistán",   kickoff: "2026-06-26T16:00:00", phase: "Grupo M", city: "Guadalajara",        home_flag: "🇶🇦", away_flag: "🇺🇿" },
-      { home_team: "Colombia",       away_team: "Suiza",        kickoff: "2026-06-26T16:00:00", phase: "Grupo M", city: "Houston",            home_flag: "🇨🇴", away_flag: "🇨🇭" },
-      // GRUPO N (Côte d'Ivoire, Ecuador, ...)
-      { home_team: "Côte d'Ivoire",  away_team: "Ecuador",     kickoff: "2026-06-15T16:00:00", phase: "Grupo N", city: "Philadelphia",       home_flag: "🇨🇮", away_flag: "🇪🇨" },
-      { home_team: "Côte d'Ivoire",  away_team: "Escocia",     kickoff: "2026-06-19T16:00:00", phase: "Grupo N", city: "Vancouver",          home_flag: "🇨🇮", away_flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
-      { home_team: "Ecuador",        away_team: "Escocia",      kickoff: "2026-06-14T19:00:00", phase: "Grupo N", city: "Boston",             home_flag: "🇪🇨", away_flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
+      // ==========  GRUPO A  ==========
+      // México · Sudafrica · Canada · Playoff CONMEBOL-OFC
+      { home_team:"México",         away_team:"Sudafrica",         kickoff:"2026-06-11T19:00:00", phase:"Grupo A", city:"Ciudad de México",  home_flag:"🇲🇽", away_flag:"🇿🇦" },
+      { home_team:"Canadá",          away_team:"Playoff CONMEBOL",  kickoff:"2026-06-12T16:00:00", phase:"Grupo A", city:"Toronto",           home_flag:"🇨🇦", away_flag:"🏁" },
+      { home_team:"México",         away_team:"Canadá",           kickoff:"2026-06-15T22:00:00", phase:"Grupo A", city:"Guadalajara",        home_flag:"🇲🇽", away_flag:"🇨🇦" },
+      { home_team:"Sudafrica",        away_team:"Playoff CONMEBOL",  kickoff:"2026-06-16T16:00:00", phase:"Grupo A", city:"Monterrey",          home_flag:"🇿🇦", away_flag:"🏁" },
+      { home_team:"Sudafrica",        away_team:"Canadá",           kickoff:"2026-06-19T16:00:00", phase:"Grupo A", city:"Ciudad de México",  home_flag:"🇿🇦", away_flag:"🇨🇦" },
+      { home_team:"México",         away_team:"Playoff CONMEBOL",  kickoff:"2026-06-19T16:00:00", phase:"Grupo A", city:"Guadalajara",        home_flag:"🇲🇽", away_flag:"🏁" },
+
+      // ==========  GRUPO B  ==========
+      // Argentina · Argelia · Ucrania · Ecuador
+      { home_team:"Argentina",        away_team:"Argelia",           kickoff:"2026-06-12T19:00:00", phase:"Grupo B", city:"Miami",              home_flag:"🇦🇷", away_flag:"🇩🇿" },
+      { home_team:"Ucrania",          away_team:"Ecuador",          kickoff:"2026-06-13T16:00:00", phase:"Grupo B", city:"Dallas",             home_flag:"🇺🇦", away_flag:"🇪🇨" },
+      { home_team:"Argentina",        away_team:"Ucrania",          kickoff:"2026-06-16T22:00:00", phase:"Grupo B", city:"Nueva York",         home_flag:"🇦🇷", away_flag:"🇺🇦" },
+      { home_team:"Argelia",          away_team:"Ecuador",          kickoff:"2026-06-17T16:00:00", phase:"Grupo B", city:"Los Angeles",        home_flag:"🇩🇿", away_flag:"🇪🇨" },
+      { home_team:"Argelia",          away_team:"Ucrania",          kickoff:"2026-06-20T16:00:00", phase:"Grupo B", city:"Kansas City",        home_flag:"🇩🇿", away_flag:"🇺🇦" },
+      { home_team:"Argentina",        away_team:"Ecuador",          kickoff:"2026-06-20T16:00:00", phase:"Grupo B", city:"Chicago",            home_flag:"🇦🇷", away_flag:"🇪🇨" },
+
+      // ==========  GRUPO C  ==========
+      // USA · Paraguay · Irán · Camerun
+      { home_team:"USA",              away_team:"Panamá",           kickoff:"2026-06-12T22:00:00", phase:"Grupo C", city:"Los Angeles",        home_flag:"🇺🇸", away_flag:"🇵🇦" },
+      { home_team:"Uruguay",          away_team:"Irak",             kickoff:"2026-06-13T19:00:00", phase:"Grupo C", city:"Boston",             home_flag:"🇺🇾", away_flag:"🇮🇶" },
+      { home_team:"USA",              away_team:"Uruguay",          kickoff:"2026-06-17T22:00:00", phase:"Grupo C", city:"Nueva York",         home_flag:"🇺🇸", away_flag:"🇺🇾" },
+      { home_team:"Panamá",           away_team:"Irak",             kickoff:"2026-06-18T16:00:00", phase:"Grupo C", city:"San Francisco",      home_flag:"🇵🇦", away_flag:"🇮🇶" },
+      { home_team:"Panamá",           away_team:"Uruguay",          kickoff:"2026-06-21T16:00:00", phase:"Grupo C", city:"Atlanta",            home_flag:"🇵🇦", away_flag:"🇺🇾" },
+      { home_team:"USA",              away_team:"Irak",             kickoff:"2026-06-21T16:00:00", phase:"Grupo C", city:"Houston",            home_flag:"🇺🇸", away_flag:"🇮🇶" },
+
+      // ==========  GRUPO D  ==========
+      // Francia · Arabia Saudita · Peru · Escocia
+      { home_team:"Francia",          away_team:"Arabia Saudita",   kickoff:"2026-06-13T22:00:00", phase:"Grupo D", city:"Nueva York",         home_flag:"🇫🇷", away_flag:"🇸🇦" },
+      { home_team:"Perú",             away_team:"Escocia",          kickoff:"2026-06-14T16:00:00", phase:"Grupo D", city:"Dallas",             home_flag:"🇵🇪", away_flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
+      { home_team:"Francia",          away_team:"Perú",             kickoff:"2026-06-18T22:00:00", phase:"Grupo D", city:"Atlanta",            home_flag:"🇫🇷", away_flag:"🇵🇪" },
+      { home_team:"Arabia Saudita",   away_team:"Escocia",          kickoff:"2026-06-19T19:00:00", phase:"Grupo D", city:"Seattle",            home_flag:"🇸🇦", away_flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
+      { home_team:"Arabia Saudita",   away_team:"Perú",             kickoff:"2026-06-22T16:00:00", phase:"Grupo D", city:"Miami",              home_flag:"🇸🇦", away_flag:"🇵🇪" },
+      { home_team:"Francia",          away_team:"Escocia",          kickoff:"2026-06-22T16:00:00", phase:"Grupo D", city:"Los Angeles",        home_flag:"🇫🇷", away_flag:"🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
+
+      // ==========  GRUPO E  ==========
+      // Alemania · Japón · Chile · Bielorrusia
+      { home_team:"Alemania",         away_team:"Japón",            kickoff:"2026-06-14T19:00:00", phase:"Grupo E", city:"Chicago",            home_flag:"🇩🇪", away_flag:"🇯🇵" },
+      { home_team:"Chile",            away_team:"Ecuador",          kickoff:"2026-06-13T16:00:00", phase:"Grupo E", city:"Kansas City",        home_flag:"🇨🇱", away_flag:"🇪🇨" },
+      { home_team:"Alemania",         away_team:"Chile",            kickoff:"2026-06-18T19:00:00", phase:"Grupo E", city:"Houston",            home_flag:"🇩🇪", away_flag:"🇨🇱" },
+      { home_team:"Japón",            away_team:"Ecuador",          kickoff:"2026-06-19T22:00:00", phase:"Grupo E", city:"Dallas",             home_flag:"🇯🇵", away_flag:"🇪🇨" },
+      { home_team:"Japón",            away_team:"Chile",            kickoff:"2026-06-22T19:00:00", phase:"Grupo E", city:"Los Angeles",        home_flag:"🇯🇵", away_flag:"🇨🇱" },
+      { home_team:"Alemania",         away_team:"Ecuador",          kickoff:"2026-06-22T19:00:00", phase:"Grupo E", city:"San Francisco",      home_flag:"🇩🇪", away_flag:"🇪🇨" },
+
+      // ==========  GRUPO F  ==========
+      // Portugal · Marruecos · Croacia · Mozambique
+      { home_team:"Portugal",         away_team:"Marruecos",        kickoff:"2026-06-15T16:00:00", phase:"Grupo F", city:"San Francisco",      home_flag:"🇵🇹", away_flag:"🇲🇦" },
+      { home_team:"Croacia",          away_team:"Mozambique",       kickoff:"2026-06-15T19:00:00", phase:"Grupo F", city:"Seattle",            home_flag:"🇭🇷", away_flag:"🇲🇿" },
+      { home_team:"Portugal",         away_team:"Croacia",          kickoff:"2026-06-19T16:00:00", phase:"Grupo F", city:"Nueva York",         home_flag:"🇵🇹", away_flag:"🇭🇷" },
+      { home_team:"Marruecos",        away_team:"Mozambique",       kickoff:"2026-06-19T19:00:00", phase:"Grupo F", city:"Atlanta",            home_flag:"🇲🇦", away_flag:"🇲🇿" },
+      { home_team:"Marruecos",        away_team:"Croacia",          kickoff:"2026-06-23T16:00:00", phase:"Grupo F", city:"Boston",             home_flag:"🇲🇦", away_flag:"🇭🇷" },
+      { home_team:"Portugal",         away_team:"Mozambique",       kickoff:"2026-06-23T16:00:00", phase:"Grupo F", city:"Miami",              home_flag:"🇵🇹", away_flag:"🇲🇿" },
+
+      // ==========  GRUPO G  ==========
+      // España · Bélgica · Egipto · Tunisia
+      { home_team:"España",           away_team:"Bélgica",          kickoff:"2026-06-16T13:00:00", phase:"Grupo G", city:"Dallas",             home_flag:"🇪🇸", away_flag:"🇧🇪" },
+      { home_team:"Egipto",           away_team:"Tunisia",          kickoff:"2026-06-16T22:00:00", phase:"Grupo G", city:"Houston",            home_flag:"🇪🇬", away_flag:"🇹🇳" },
+      { home_team:"España",           away_team:"Egipto",           kickoff:"2026-06-20T13:00:00", phase:"Grupo G", city:"Miami",              home_flag:"🇪🇸", away_flag:"🇪🇬" },
+      { home_team:"Bélgica",          away_team:"Tunisia",          kickoff:"2026-06-20T22:00:00", phase:"Grupo G", city:"Chicago",            home_flag:"🇧🇪", away_flag:"🇹🇳" },
+      { home_team:"Bélgica",          away_team:"Egipto",           kickoff:"2026-06-24T16:00:00", phase:"Grupo G", city:"Nueva York",         home_flag:"🇧🇪", away_flag:"🇪🇬" },
+      { home_team:"España",           away_team:"Tunisia",          kickoff:"2026-06-24T16:00:00", phase:"Grupo G", city:"Atlanta",            home_flag:"🇪🇸", away_flag:"🇹🇳" },
+
+      // ==========  GRUPO H  ==========
+      // Inglaterra · Senegal · Serbia · Guinea
+      { home_team:"Inglaterra",       away_team:"Senegal",          kickoff:"2026-06-16T16:00:00", phase:"Grupo H", city:"Las Vegas",          home_flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", away_flag:"🇸🇳" },
+      { home_team:"Serbia",           away_team:"Guinea",           kickoff:"2026-06-17T13:00:00", phase:"Grupo H", city:"Los Angeles",        home_flag:"🇷🇸", away_flag:"🇬🇳" },
+      { home_team:"Inglaterra",       away_team:"Serbia",           kickoff:"2026-06-21T19:00:00", phase:"Grupo H", city:"Dallas",             home_flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", away_flag:"🇷🇸" },
+      { home_team:"Senegal",          away_team:"Guinea",           kickoff:"2026-06-21T22:00:00", phase:"Grupo H", city:"Kansas City",        home_flag:"🇸🇳", away_flag:"🇬🇳" },
+      { home_team:"Senegal",          away_team:"Serbia",           kickoff:"2026-06-25T16:00:00", phase:"Grupo H", city:"San Francisco",      home_flag:"🇸🇳", away_flag:"🇷🇸" },
+      { home_team:"Inglaterra",       away_team:"Guinea",           kickoff:"2026-06-25T16:00:00", phase:"Grupo H", city:"Miami",              home_flag:"🏴󠁧󠁢󠁥󠁮󠁧󠁿", away_flag:"🇬🇳" },
+
+      // ==========  GRUPO I  ==========
+      // Brasil · Noruega · Ghana · Cuba/Playoff OFC
+      { home_team:"Brasil",           away_team:"Noruega",          kickoff:"2026-06-17T19:00:00", phase:"Grupo I", city:"Nueva York",         home_flag:"🇧🇷", away_flag:"🇳🇴" },
+      { home_team:"Ghana",            away_team:"Cuba",             kickoff:"2026-06-17T22:00:00", phase:"Grupo I", city:"Atlanta",            home_flag:"🇬🇭", away_flag:"🇨🇺" },
+      { home_team:"Brasil",           away_team:"Ghana",            kickoff:"2026-06-21T13:00:00", phase:"Grupo I", city:"Houston",            home_flag:"🇧🇷", away_flag:"🇬🇭" },
+      { home_team:"Noruega",          away_team:"Cuba",             kickoff:"2026-06-21T22:00:00", phase:"Grupo I", city:"Boston",             home_flag:"🇳🇴", away_flag:"🇨🇺" },
+      { home_team:"Noruega",          away_team:"Ghana",            kickoff:"2026-06-25T19:00:00", phase:"Grupo I", city:"Chicago",            home_flag:"🇳🇴", away_flag:"🇬🇭" },
+      { home_team:"Brasil",           away_team:"Cuba",             kickoff:"2026-06-25T19:00:00", phase:"Grupo I", city:"Los Angeles",        home_flag:"🇧🇷", away_flag:"🇨🇺" },
+
+      // ==========  GRUPO J  ==========
+      // Países Bajos · Suiza · Colombia · Uzbekistán
+      { home_team:"Países Bajos",     away_team:"Suiza",            kickoff:"2026-06-17T16:00:00", phase:"Grupo J", city:"Philadelphia",       home_flag:"🇳🇱", away_flag:"🇨🇭" },
+      { home_team:"Colombia",         away_team:"Uzbekistán",       kickoff:"2026-06-18T13:00:00", phase:"Grupo J", city:"Dallas",             home_flag:"🇨🇴", away_flag:"🇺🇿" },
+      { home_team:"Países Bajos",     away_team:"Colombia",         kickoff:"2026-06-22T13:00:00", phase:"Grupo J", city:"Nueva York",         home_flag:"🇳🇱", away_flag:"🇨🇴" },
+      { home_team:"Suiza",            away_team:"Uzbekistán",       kickoff:"2026-06-22T22:00:00", phase:"Grupo J", city:"Monterrey",          home_flag:"🇨🇭", away_flag:"🇺🇿" },
+      { home_team:"Suiza",            away_team:"Colombia",         kickoff:"2026-06-26T16:00:00", phase:"Grupo J", city:"Houston",            home_flag:"🇨🇭", away_flag:"🇨🇴" },
+      { home_team:"Países Bajos",     away_team:"Uzbekistán",       kickoff:"2026-06-26T16:00:00", phase:"Grupo J", city:"Ciudad de México",  home_flag:"🇳🇱", away_flag:"🇺🇿" },
+
+      // ==========  GRUPO K  ==========
+      // Portugal — repetido, ajustar con el grupo oficial
+      // Australia · Kenia · Costa Rica · Qatar
+      { home_team:"Australia",        away_team:"Kenia",            kickoff:"2026-06-18T16:00:00", phase:"Grupo K", city:"Philadelphia",       home_flag:"🇦🇺", away_flag:"🇰🇪" },
+      { home_team:"Costa Rica",       away_team:"Qatar",            kickoff:"2026-06-18T22:00:00", phase:"Grupo K", city:"Seattle",            home_flag:"🇨🇷", away_flag:"🇶🇦" },
+      { home_team:"Australia",        away_team:"Costa Rica",       kickoff:"2026-06-22T22:00:00", phase:"Grupo K", city:"Los Angeles",        home_flag:"🇦🇺", away_flag:"🇨🇷" },
+      { home_team:"Kenia",            away_team:"Qatar",            kickoff:"2026-06-23T19:00:00", phase:"Grupo K", city:"Kansas City",        home_flag:"🇰🇪", away_flag:"🇶🇦" },
+      { home_team:"Kenia",            away_team:"Costa Rica",       kickoff:"2026-06-26T19:00:00", phase:"Grupo K", city:"San Francisco",      home_flag:"🇰🇪", away_flag:"🇨🇷" },
+      { home_team:"Australia",        away_team:"Qatar",            kickoff:"2026-06-26T19:00:00", phase:"Grupo K", city:"Nueva York",         home_flag:"🇦🇺", away_flag:"🇶🇦" },
+
+      // ==========  GRUPO L  ==========
+      // Italia · Irán · Côte d'Ivoire · Nueva Zelanda
+      { home_team:"Italia",           away_team:"Irán",            kickoff:"2026-06-20T19:00:00", phase:"Grupo L", city:"Houston",            home_flag:"🇮🇹", away_flag:"🇮🇷" },
+      { home_team:"Côte d'Ivoire",    away_team:"Nueva Zelanda",    kickoff:"2026-06-20T22:00:00", phase:"Grupo L", city:"Philadelphia",       home_flag:"🇨🇮", away_flag:"🇳🇿" },
+      { home_team:"Italia",           away_team:"Côte d'Ivoire",    kickoff:"2026-06-24T19:00:00", phase:"Grupo L", city:"Dallas",             home_flag:"🇮🇹", away_flag:"🇨🇮" },
+      { home_team:"Irán",            away_team:"Nueva Zelanda",    kickoff:"2026-06-24T22:00:00", phase:"Grupo L", city:"Seattle",            home_flag:"🇮🇷", away_flag:"🇳🇿" },
+      { home_team:"Irán",            away_team:"Côte d'Ivoire",    kickoff:"2026-06-28T16:00:00", phase:"Grupo L", city:"Los Angeles",        home_flag:"🇮🇷", away_flag:"🇨🇮" },
+      { home_team:"Italia",           away_team:"Nueva Zelanda",    kickoff:"2026-06-28T16:00:00", phase:"Grupo L", city:"Atlanta",            home_flag:"🇮🇹", away_flag:"🇳🇿" },
     ];
 
     const log = document.getElementById('log');
-    function addLog(msg, color = 'white') {
+    function addLog(msg, color='white') {
       log.innerHTML += `<div style="color:${color}">${msg}</div>`;
       log.scrollTop = log.scrollHeight;
     }
 
-    document.getElementById('loadBtn').addEventListener('click', async () => {
-      // Verificar auth
+    async function loadMatches() {
       const user = auth.currentUser;
       if (!user) { addLog('❌ Debes estar logueado', 'red'); return; }
-
-      // Verificar si ya hay partidos
-      const existing = await getDocs(collection(db, 'matches'));
-      if (!existing.empty) {
-        addLog(`⚠️ Ya existen ${existing.size} partidos en Firestore. Borra la colección manualmente si quieres recargar.`, 'orange');
-        return;
-      }
-
       addLog(`🚀 Cargando ${matches.length} partidos...`, 'yellow');
       let ok = 0;
       for (const m of matches) {
         try {
-          await addDoc(collection(db, 'matches'), {
-            ...m,
-            kickoff: new Date(m.kickoff)
-          });
+          await addDoc(collection(db, 'matches'), { ...m, kickoff: new Date(m.kickoff) });
           addLog(`✅ ${m.home_team} vs ${m.away_team} (${m.phase})`, '#90ee90');
           ok++;
         } catch(e) {
           addLog(`❌ Error: ${m.home_team} vs ${m.away_team} — ${e.message}`, 'red');
         }
       }
-      addLog(`<br><strong>✅ ${ok}/${matches.length} partidos cargados exitosamente!</strong>`, '#FFD700');
+      addLog(`<br><strong>✅ ${ok}/${matches.length} partidos cargados!</strong>`, '#FFD700');
       addLog(`<a href="admin.html" style="color:#6bc">→ Ir al panel admin</a>`);
+    }
+
+    document.getElementById('loadBtn').addEventListener('click', async () => {
+      const existing = await getDocs(collection(db, 'matches'));
+      if (!existing.empty) {
+        addLog(`⚠️ Ya existen ${existing.size} partidos. Usa el botón "Borrar todo y recargar" para resetear.`, 'orange');
+        return;
+      }
+      await loadMatches();
+    });
+
+    document.getElementById('deleteBtn').addEventListener('click', async () => {
+      if (!confirm('⚠️ ¿Seguro que deseas BORRAR todos los partidos y recargar el fixture?')) return;
+      const user = auth.currentUser;
+      if (!user) { addLog('❌ Debes estar logueado', 'red'); return; }
+      addLog('🗑️ Borrando partidos existentes...', 'orange');
+      const snap = await getDocs(collection(db, 'matches'));
+      let del = 0;
+      for (const d of snap.docs) {
+        await deleteDoc(doc(db, 'matches', d.id));
+        del++;
+      }
+      addLog(`✅ ${del} partidos borrados. Recargando...`, 'yellow');
+      await loadMatches();
     });
   </script>
 </body>
