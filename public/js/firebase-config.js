@@ -1,18 +1,18 @@
 // ====================================================
-// firebase-config.js
-// Reemplaza los valores con tu proyecto de Firebase
+// firebase-config.js — worldcup2026-8f27b
 // ====================================================
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js';
 import { getAuth }        from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import { getFirestore }   from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
 const firebaseConfig = {
-  apiKey:            "TU_API_KEY",
-  authDomain:        "TU_PROJECT.firebaseapp.com",
-  projectId:         "TU_PROJECT",
-  storageBucket:     "TU_PROJECT.appspot.com",
-  messagingSenderId: "TU_SENDER_ID",
-  appId:             "TU_APP_ID"
+  apiKey:            "AIzaSyBqgyEIJHn6l572fYfHtBvIjua19PKpIa0",
+  authDomain:        "worldcup2026-8f27b.firebaseapp.com",
+  projectId:         "worldcup2026-8f27b",
+  storageBucket:     "worldcup2026-8f27b.firebasestorage.app",
+  messagingSenderId: "767785242897",
+  appId:             "1:767785242897:web:ab306ac8afd5ba7dae3cb0",
+  measurementId:     "G-6W7JNJCG36"
 };
 
 const app = initializeApp(firebaseConfig);
