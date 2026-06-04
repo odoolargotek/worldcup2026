@@ -2,7 +2,7 @@
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
-  collection, doc, addDoc, getDoc, getDocs,
+  collection, doc, addDoc, getDoc, getDocs, deleteDoc,
   query, where, setDoc, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
@@ -22,13 +22,14 @@ const DIST_PRESETS = {
   top3:   { p1:60,  p2:30, p3:10 },
 };
 
-let pendingGroupId = null;
+let pendingGroupId   = null;
+let pendingDeleteGid = null;
+let pendingDeleteName = '';
 
 function genCode(len = 6) {
   return Math.random().toString(36).toUpperCase().slice(2, 2 + len);
 }
 
-// Limpia cualquier backdrop colgado de Bootstrap (bug móvil)
 function cleanModal() {
   document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
   document.body.classList.remove('modal-open');
@@ -41,11 +42,9 @@ function closeModal(modalId) {
   if (!el) return;
   const instance = bootstrap.Modal.getInstance(el);
   if (instance) instance.hide();
-  // Forzar limpieza después de la animación
   setTimeout(cleanModal, 350);
 }
 
-// Auto-rellenar código si vienen por link de invitación (?join=CODIGO)
 const urlParams  = new URLSearchParams(window.location.search);
 const inviteCode = urlParams.get('join');
 if (inviteCode) {
@@ -58,12 +57,15 @@ if (inviteCode) {
   });
 }
 
+let currentUser = null;
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
+  currentUser = user;
   const emailEl = document.getElementById('userEmail');
   if (emailEl) emailEl.textContent = user.email;
   await loadGroups(user);
   setupFavoriteModal(user);
+  setupDeleteModal(user);
 });
 
 async function loadGroups(user) {
@@ -87,6 +89,7 @@ function renderGroupCard(gSnap, memberData, container, user) {
   const g    = gSnap.data();
   const gid  = gSnap.id;
   const code = g.code || '';
+  const isAdmin = memberData.role === 'admin' || g.owner_uid === user.uid;
 
   const typeBadge = g.type === 'closed'
     ? `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.3)">${g.is_open === false ? '🔴 Cerrada' : '🔒 Cupo lim.'}</span>`
@@ -106,11 +109,17 @@ function renderGroupCard(gSnap, memberData, container, user) {
     ? `<div style="font-size:12px;color:var(--green-light);margin-top:4px">⚽ ${memberData.favorite}</div>`
     : '<div style="font-size:12px;color:var(--danger);margin-top:4px">⚠ Sin favorito</div>';
 
+  // Botón eliminar solo para admin
+  const deleteBtn = isAdmin ? `
+    <button class="btn btn-sm" title="Eliminar comparsa"
+      style="padding:4px 10px;font-size:12px;background:rgba(239,68,68,0.12);color:#fca5a5;border:1px solid rgba(239,68,68,0.3);border-radius:8px"
+      onclick="window._askDeleteGroup('${gid}','${g.name.replace(/'/g, "\\'")}')">🗑️</button>` : '';
+
   col.innerHTML = `
     <div class="group-card" style="cursor:default">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
         ${stage || '<div></div>'}
-        ${typeBadge}
+        <div style="display:flex;gap:6px;align-items:center">${typeBadge}${deleteBtn}</div>
       </div>
       <div style="cursor:pointer" onclick="window.location='group.html?gid=${gid}'">
         <h6 style="margin-bottom:2px">${g.name}</h6>
@@ -120,7 +129,7 @@ function renderGroupCard(gSnap, memberData, container, user) {
       </div>
       <div style="display:flex;gap:8px;margin-top:12px">
         <button class="btn btn-success btn-sm" style="flex:1;font-size:12px;font-weight:700"
-          onclick="window.location='group.html?gid=${gid}'"> 🏆 Ver</button>
+          onclick="window.location='group.html?gid=${gid}'">🏆 Ver</button>
         <a href="${waLink}" target="_blank" rel="noopener"
           class="btn btn-sm"
           style="flex:1;font-size:12px;font-weight:700;background:#25D366;color:#fff;border:none">
@@ -140,6 +149,66 @@ window.copyInviteLink = function(url, btn) {
     setTimeout(() => { btn.textContent = orig; btn.style = ''; }, 2000);
   });
 };
+
+// --- Lanzar modal de confirmación de borrado ---
+window._askDeleteGroup = function(gid, name) {
+  pendingDeleteGid  = gid;
+  pendingDeleteName = name;
+  const nameEl = document.getElementById('deleteGroupName');
+  const confirmInput = document.getElementById('deleteConfirmInput');
+  const confirmBtn   = document.getElementById('confirmDeleteBtn');
+  if (nameEl) nameEl.textContent = name;
+  if (confirmInput) { confirmInput.value = ''; }
+  if (confirmBtn)   confirmBtn.disabled = true;
+  cleanModal();
+  bootstrap.Modal.getOrCreateInstance(document.getElementById('deleteModal')).show();
+};
+
+// --- Setup modal borrar ---
+function setupDeleteModal(user) {
+  const modalEl      = document.getElementById('deleteModal');
+  const confirmInput = document.getElementById('deleteConfirmInput');
+  const confirmBtn   = document.getElementById('confirmDeleteBtn');
+  if (!modalEl) return;
+
+  // Habilitar botón solo cuando escribe el nombre exacto
+  confirmInput?.addEventListener('input', () => {
+    confirmBtn.disabled = confirmInput.value.trim() !== pendingDeleteName;
+  });
+
+  confirmBtn?.addEventListener('click', async () => {
+    if (!pendingDeleteGid || !user) return;
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Eliminando...';
+
+    try {
+      // 1. Borrar todos los group_members de esta comparsa
+      const membersSnap = await getDocs(
+        query(collection(db, 'group_members'), where('group_id', '==', pendingDeleteGid))
+      );
+      const delPromises = membersSnap.docs.map(d => deleteDoc(d.ref));
+      await Promise.all(delPromises);
+
+      // 2. Borrar el grupo
+      await deleteDoc(doc(db, 'groups', pendingDeleteGid));
+
+      closeModal('deleteModal');
+      pendingDeleteGid  = null;
+      pendingDeleteName = '';
+      await loadGroups(user);
+    } catch(err) {
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = '🗑️ Sí, eliminar definitivamente';
+      alert('Error al eliminar: ' + err.message);
+    }
+  });
+
+  modalEl.addEventListener('hidden.bs.modal', () => {
+    cleanModal();
+    if (confirmInput) confirmInput.value = '';
+    if (confirmBtn)  { confirmBtn.disabled = true; confirmBtn.textContent = '🗑️ Sí, eliminar definitivamente'; }
+  });
+}
 
 // --- Crear comparsa ---
 document.getElementById('createGroupBtn')?.addEventListener('click', async () => {
@@ -193,7 +262,6 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
       favorite: null, penalty_pts: 0, favorite_pts: 0
     });
 
-    // Limpiar form
     ['newGroupName','newGroupPrizeClosed','newGroupFee','newGroupFeeOpen','newGroupMax','distP1','distP2','distP3']
       .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     document.getElementById('newGroupStage').value = '';
@@ -255,26 +323,18 @@ document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
   openFavoriteModal();
 });
 
-// --- Abrir modal favorito de forma segura ---
 function openFavoriteModal() {
-  cleanModal(); // limpiar cualquier backdrop anterior
+  cleanModal();
   const el = document.getElementById('favoriteModal');
   if (!el) return;
-  // Resetear estado del modal
   document.getElementById('selectedTeam').value = '';
   document.getElementById('saveFavoriteBtn').disabled = true;
   document.getElementById('favoriteSearch').value = '';
   const grid = document.getElementById('teamGrid');
   if (grid) renderTeams('', grid);
-
-  const modal = bootstrap.Modal.getOrCreateInstance(el, {
-    backdrop: true,
-    keyboard: true
-  });
-  modal.show();
+  bootstrap.Modal.getOrCreateInstance(el, { backdrop: true, keyboard: true }).show();
 }
 
-// --- Render equipos (reutilizable) ---
 function renderTeams(filter, grid) {
   if (!grid) return;
   grid.innerHTML = '';
@@ -289,14 +349,13 @@ function renderTeams(filter, grid) {
         b.style.cssText = 'background:var(--bg-card2);color:var(--text);border:1px solid var(--border);font-size:0.85rem;padding:8px 4px';
       });
       div.querySelector('button').style.cssText = 'background:rgba(22,163,74,0.2);color:var(--green-light);border:1px solid var(--green);font-size:0.85rem;padding:8px 4px;font-weight:700';
-      hidden.value     = team;
+      hidden.value = team;
       if (saveBtn) saveBtn.disabled = false;
     });
     grid.appendChild(div);
   });
 }
 
-// --- Modal elegir favorito ---
 function setupFavoriteModal(user) {
   const grid    = document.getElementById('teamGrid');
   const search  = document.getElementById('favoriteSearch');
@@ -309,7 +368,6 @@ function setupFavoriteModal(user) {
   renderTeams('', grid);
   search?.addEventListener('input', e => renderTeams(e.target.value, grid));
 
-  // Confirmar favorito
   saveBtn?.addEventListener('click', async () => {
     const team = hidden.value;
     if (!team || !pendingGroupId || !user) return;
@@ -327,14 +385,12 @@ function setupFavoriteModal(user) {
     }
   });
 
-  // Saltar (sin elegir favorito)
   skipBtn?.addEventListener('click', async () => {
     closeModal('favoriteModal');
     pendingGroupId = null;
     await loadGroups(user);
   });
 
-  // Limpiar backdrop si el usuario cierra con X o tocando fuera
   modalEl.addEventListener('hidden.bs.modal', () => {
     cleanModal();
     if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '✅ Confirmar favorito'; }
@@ -347,6 +403,5 @@ function showMsg(id, text, type) {
   const colors = { success: 'var(--green-light)', danger: '#fca5a5', warning: 'var(--gold)' };
   const el = document.getElementById(id);
   if (el) el.innerHTML = `<span style="color:${colors[type]||'#fff'};font-size:0.85rem">${text}</span>`;
-  // Auto-limpiar mensaje en 4s
   if (el) setTimeout(() => { el.innerHTML = ''; }, 4000);
 }

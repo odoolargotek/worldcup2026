@@ -19,7 +19,6 @@
     <button id="logoutBtn" class="btn btn-outline-light btn-sm">Salir</button>
   </nav>
 
-  <!-- Disclaimer bar -->
   <div style="background:rgba(239,68,68,0.07);border-bottom:1px solid rgba(239,68,68,0.2);padding:6px 16px;text-align:center;font-size:11px;color:#fca5a5">
     ⚠️ Juego de entretenimiento privado. No es un sitio de apuestas. Largotek no administra ni garantiza premios.
     <a href="legal.html" target="_blank" style="color:#fca5a5;text-decoration:underline;margin-left:6px">Aviso legal completo</a>
@@ -100,7 +99,7 @@
 
   </div>
 
-  <!-- Modal favorito -->
+  <!-- ===== MODAL FAVORITO ===== -->
   <div class="modal fade" id="favoriteModal" tabindex="-1" data-bs-backdrop="true" data-bs-keyboard="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text)">
@@ -109,7 +108,7 @@
             <h5 class="modal-title mb-0">🏆 Elige tu equipo favorito</h5>
             <div style="font-size:12px;color:var(--text-muted)">Puedes cambiarlo luego (con penalidad de -3 pts)</div>
           </div>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <input type="text" id="favoriteSearch" class="form-control mb-3" placeholder="🔍 Buscar equipo..." autocomplete="off">
@@ -118,7 +117,53 @@
         </div>
         <div class="modal-footer" style="border-color:var(--border);flex-direction:column;gap:8px">
           <button id="saveFavoriteBtn" class="btn btn-warning w-100" disabled style="font-weight:700">✅ Confirmar favorito</button>
-          <button id="skipFavoriteBtn" class="btn btn-outline-light w-100" style="font-size:13px;font-weight:500">⏩ Saltar por ahora — elegir después</button>
+          <button id="skipFavoriteBtn" class="btn btn-outline-light w-100" style="font-size:13px">⏩ Saltar por ahora — elegir después</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL ELIMINAR COMPARSA ===== -->
+  <div class="modal fade" id="deleteModal" tabindex="-1" data-bs-backdrop="true" data-bs-keyboard="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="background:var(--bg-card);border:1px solid rgba(239,68,68,0.4);color:var(--text)">
+        <div class="modal-header" style="border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.08)">
+          <h5 class="modal-title" style="color:#fca5a5">🗑️ Eliminar comparsa</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+
+          <!-- Advertencia roja -->
+          <div style="background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:14px;margin-bottom:16px">
+            <div style="font-weight:700;color:#fca5a5;margin-bottom:6px">⚠️ Esta acción es irreversible</div>
+            <ul style="color:#fca5a5;font-size:0.85rem;margin:0;padding-left:18px">
+              <li>Se eliminarán todos los miembros y sus pronósticos</li>
+              <li>El código de invitación dejará de funcionar</li>
+              <li>No se puede recuperar después</li>
+            </ul>
+          </div>
+
+          <div style="margin-bottom:12px;font-size:0.9rem">
+            Vas a eliminar la comparsa:<br>
+            <strong id="deleteGroupName" style="color:var(--gold);font-size:1rem"></strong>
+          </div>
+
+          <label style="font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;display:block">
+            Para confirmar, escribe exactamente el nombre de la comparsa:
+          </label>
+          <input type="text" id="deleteConfirmInput" class="form-control"
+            placeholder="Escribe el nombre aquí..."
+            autocomplete="off" autocorrect="off" spellcheck="false">
+
+        </div>
+        <div class="modal-footer" style="border-color:rgba(239,68,68,0.3);flex-direction:column;gap:8px">
+          <button id="confirmDeleteBtn" class="btn w-100" disabled
+            style="background:rgba(239,68,68,0.2);color:#fca5a5;border:1px solid rgba(239,68,68,0.5);font-weight:700">
+            🗑️ Sí, eliminar definitivamente
+          </button>
+          <button class="btn btn-outline-light w-100" data-bs-dismiss="modal" style="font-size:13px">
+            Cancelar
+          </button>
         </div>
       </div>
     </div>
