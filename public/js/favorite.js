@@ -1,4 +1,4 @@
-// favorite.js — Favorito por grupo, guarda solo al confirmar
+// favorite.js — Un solo botón Guardar para todos los grupos
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import { doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
@@ -26,6 +26,8 @@ const TEAMS_BY_PHASE = {
 
 const PENALTY_PTS = 3;
 let memberRef, memberData;
+// Mapa phase -> valor seleccionado en el select (pendiente de guardar)
+const pendingSelects = {};
 
 onAuthStateChanged(auth, async (user) => {
   if (!user || !GROUP_ID) return;
@@ -71,17 +73,35 @@ function renderFavsInline() {
   const favPts = getFavPts();
   const pens   = getPenalties();
 
+  // Limpiar selecciones pendientes al redibujar
+  PHASES.forEach(p => delete pendingSelects[p]);
+
   section.innerHTML = `
     <div style="margin:24px 0 8px;padding:16px;background:var(--bg-card2);border-radius:14px;border:1px solid var(--border)">
       <h6 style="color:var(--gold);margin-bottom:6px">🏆 Mis equipos favoritos por grupo</h6>
       <p style="color:var(--text-muted);font-size:0.82rem;margin-bottom:14px">
-        Elige un favorito por grupo y pulsa <strong style="color:var(--green-light)">Confirmar</strong>.
-        Cambiar uno ya guardado cuesta <strong style="color:var(--danger)">-${PENALTY_PTS} pts</strong> de penalidad.
+        Elige tus equipos y pulsa <strong style="color:var(--green-light)">Guardar favoritos</strong> al final.
+        Cambiar uno ya guardado aplica <strong style="color:var(--danger)">-${PENALTY_PTS} pts</strong> de penalidad.
       </p>
       <div id="favsRows"></div>
+      <div id="favsWarning" style="display:none;margin-top:12px;padding:10px 12px;border-radius:8px;
+        background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;font-size:0.82rem">
+      </div>
+      <button id="saveAllFavsBtn" style="display:none;margin-top:14px;width:100%;padding:12px;
+        border-radius:10px;border:none;font-size:0.9rem;font-weight:700;cursor:pointer;
+        background:var(--gold);color:#000">
+        💾 Guardar favoritos
+      </button>
+      <div id="favsSavedMsg" style="display:none;margin-top:10px;text-align:center;
+        color:var(--green-light);font-size:0.85rem;font-weight:600">
+        ✅ ¡Guardado correctamente!
+      </div>
     </div>`;
 
   const container = document.getElementById('favsRows');
+  const saveBtn   = document.getElementById('saveAllFavsBtn');
+  const warning   = document.getElementById('favsWarning');
+  const savedMsg  = document.getElementById('favsSavedMsg');
 
   PHASES.forEach(phase => {
     const fav     = favs[phase];
@@ -90,20 +110,15 @@ function renderFavsInline() {
     const teams   = TEAMS_BY_PHASE[phase] || [];
     const teamObj = fav ? teams.find(t => t.name === fav) : null;
 
-    // Wrapper de la fila
     const row = document.createElement('div');
-    row.style.cssText = 'padding:10px 0;border-bottom:1px solid var(--border)';
-
-    // Línea superior: fase | equipo actual | select
-    const top = document.createElement('div');
-    top.style.cssText = 'display:flex;align-items:center;gap:10px;flex-wrap:wrap';
+    row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap';
 
     // Fase
     const phaseCol = document.createElement('div');
     phaseCol.style.cssText = 'min-width:68px;font-weight:700;color:var(--gold);font-size:0.82rem';
     phaseCol.textContent = phase;
 
-    // Equipo actual guardado
+    // Equipo actual
     const currentCol = document.createElement('div');
     currentCol.style.cssText = 'flex:1;min-width:90px;display:flex;align-items:center;gap:6px';
     if (fav) {
@@ -128,68 +143,86 @@ function renderFavsInline() {
     sel.innerHTML = `<option value="">${fav ? '⚠ Cambiar...' : '⚽ Elegir...'}</option>`
       + teams.map(t => `<option value="${t.name}">${t.flag} ${t.name}</option>`).join('');
 
-    top.appendChild(phaseCol);
-    top.appendChild(currentCol);
-    top.appendChild(sel);
-    row.appendChild(top);
-
-    // Botón confirmar (oculto hasta que se elige algo)
-    const confirmBtn = document.createElement('button');
-    confirmBtn.style.cssText = `display:none;margin-top:8px;width:100%;padding:8px;
-      border-radius:8px;border:none;font-size:0.82rem;font-weight:700;cursor:pointer`;
-
-    row.appendChild(confirmBtn);
-    container.appendChild(row);
-
-    // Al cambiar el select → mostrar botón confirmar (sin guardar todavía)
     sel.addEventListener('change', () => {
-      const newTeam = sel.value;
-      if (!newTeam) {
-        confirmBtn.style.display = 'none';
-        return;
-      }
-      const isChange = !!fav;
-      confirmBtn.style.display = 'block';
-      if (isChange) {
-        confirmBtn.textContent = `⚠️ Confirmar cambio a "${newTeam}" (−${PENALTY_PTS} pts de penalidad)`;
-        confirmBtn.style.background = 'rgba(239,68,68,0.2)';
-        confirmBtn.style.color      = '#fca5a5';
-        confirmBtn.style.border     = '1px solid rgba(239,68,68,0.5)';
+      if (sel.value) {
+        pendingSelects[phase] = sel.value;
+        sel.style.borderColor = 'var(--green-light)';
       } else {
-        confirmBtn.textContent = `✅ Confirmar favorito: "${newTeam}"`;
-        confirmBtn.style.background = 'rgba(22,163,74,0.2)';
-        confirmBtn.style.color      = 'var(--green-light)';
-        confirmBtn.style.border     = '1px solid rgba(22,163,74,0.4)';
+        delete pendingSelects[phase];
+        sel.style.borderColor = fav ? 'var(--danger)' : 'var(--gold)';
+      }
+      updateSaveBtn(favs, pens, saveBtn, warning);
+    });
+
+    row.appendChild(phaseCol);
+    row.appendChild(currentCol);
+    row.appendChild(sel);
+    container.appendChild(row);
+  });
+
+  // Botón guardar todo
+  saveBtn.addEventListener('click', async () => {
+    const phases = Object.keys(pendingSelects);
+    if (phases.length === 0) return;
+
+    saveBtn.disabled    = true;
+    saveBtn.textContent = 'Guardando...';
+
+    const updates = {};
+    phases.forEach(phase => {
+      const newTeam  = pendingSelects[phase];
+      const hadFav   = !!favs[phase];
+      updates[`favorites.${phase}`] = newTeam;
+      if (hadFav && newTeam !== favs[phase]) {
+        updates[`penalties.${phase}`] = (pens[phase] || 0) + PENALTY_PTS;
       }
     });
 
-    // Al confirmar → guardar en Firestore
-    confirmBtn.addEventListener('click', async () => {
-      const newTeam  = sel.value;
-      if (!newTeam) return;
-      const isChange = !!fav;
-      confirmBtn.disabled    = true;
-      confirmBtn.textContent = 'Guardando...';
-      sel.disabled = true;
-
-      const updates = { [`favorites.${phase}`]: newTeam };
-      if (isChange) updates[`penalties.${phase}`] = (pens[phase] || 0) + PENALTY_PTS;
-
-      try {
-        await updateDoc(memberRef, updates);
-        if (!memberData.favorites) memberData.favorites = {};
+    try {
+      await updateDoc(memberRef, updates);
+      // Actualizar memberData local
+      if (!memberData.favorites) memberData.favorites = {};
+      if (!memberData.penalties) memberData.penalties = {};
+      phases.forEach(phase => {
+        const hadFav  = !!favs[phase];
+        const newTeam = pendingSelects[phase];
         memberData.favorites[phase] = newTeam;
-        if (isChange) {
-          if (!memberData.penalties) memberData.penalties = {};
+        if (hadFav && newTeam !== favs[phase]) {
           memberData.penalties[phase] = (memberData.penalties[phase] || 0) + PENALTY_PTS;
         }
+      });
+      savedMsg.style.display = 'block';
+      setTimeout(() => {
+        savedMsg.style.display = 'none';
         renderFavsSummary();
         renderFavsInline();
-      } catch(err) {
-        alert('Error: ' + err.message);
-        confirmBtn.disabled = false;
-        sel.disabled = false;
-      }
-    });
+      }, 1200);
+    } catch(err) {
+      alert('Error: ' + err.message);
+      saveBtn.disabled    = false;
+      saveBtn.textContent = '💾 Guardar favoritos';
+    }
   });
+}
+
+function updateSaveBtn(favs, pens, saveBtn, warning) {
+  const phases = Object.keys(pendingSelects);
+  if (phases.length === 0) {
+    saveBtn.style.display   = 'none';
+    warning.style.display   = 'none';
+    return;
+  }
+  saveBtn.style.display = 'block';
+  saveBtn.textContent   = `💾 Guardar favoritos (${phases.length} cambio${phases.length > 1 ? 's' : ''})`;
+
+  // Calcular penalidades pendientes
+  const penalties = phases.filter(p => !!favs[p] && pendingSelects[p] !== favs[p]);
+  if (penalties.length > 0) {
+    warning.style.display = 'block';
+    warning.innerHTML = `⚠️ <strong>${penalties.length} grupo${penalties.length>1?'s':''} con favorito ya elegido</strong> — 
+      cambiarlos aplicará <strong>-${penalties.length * PENALTY_PTS} pts</strong> en total.
+      <div style="margin-top:4px;font-size:11px">${penalties.map(p=>`${p} → ${pendingSelects[p]}`).join(' · ')}</div>`;
+  } else {
+    warning.style.display = 'none';
+  }
 }
