@@ -7,42 +7,58 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="bg-dark text-light">
+<body>
 
-  <nav class="navbar navbar-dark bg-success px-3">
-    <span class="navbar-brand">⚽ WC2026</span>
-    <div class="d-flex align-items-center gap-2">
-      <span id="userDisplayName" class="small"></span>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
+      <div>
+        <div>⚽ WC2026 — Polla Mundialera</div>
+        <div class="navbar-powered">by Largotek Transformación Digital</div>
+      </div>
+    </div>
+    <div class="d-flex align-items-center gap-3">
+      <span id="userDisplayName" class="small" style="color:var(--text-muted)"></span>
       <button id="logoutBtn" class="btn btn-outline-light btn-sm">Salir</button>
     </div>
   </nav>
 
   <div class="container py-4">
-    <h4>Mis Grupos</h4>
 
-    <!-- Crear grupo -->
-    <div class="card bg-secondary p-3 mb-3">
-      <h6>Crear nuevo grupo</h6>
-      <div class="input-group">
-        <input type="text" id="newGroupName" class="form-control" placeholder="Nombre del grupo">
-        <button id="createGroupBtn" class="btn btn-success">Crear</button>
+    <div class="row g-3 mb-4">
+      <!-- Crear grupo -->
+      <div class="col-md-6">
+        <div class="card p-3">
+          <h6 style="color:var(--green-light);font-weight:700">➕ Crear nuevo grupo</h6>
+          <div class="input-group mt-2">
+            <input type="text" id="newGroupName" class="form-control" placeholder="Nombre del grupo">
+            <button id="createGroupBtn" class="btn btn-success px-3">Crear</button>
+          </div>
+        </div>
+      </div>
+      <!-- Unirse -->
+      <div class="col-md-6">
+        <div class="card p-3">
+          <h6 style="color:var(--gold);font-weight:700">🔗 Unirse con código</h6>
+          <div class="input-group mt-2">
+            <input type="text" id="joinCode" class="form-control" placeholder="Código de invitación" style="text-transform:uppercase">
+            <button id="joinGroupBtn" class="btn btn-warning px-3">Unirse</button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Unirse a grupo -->
-    <div class="card bg-secondary p-3 mb-3">
-      <h6>Unirse con código</h6>
-      <div class="input-group">
-        <input type="text" id="joinCode" class="form-control" placeholder="Código de invitación">
-        <button id="joinGroupBtn" class="btn btn-primary">Unirse</button>
-      </div>
-    </div>
-
-    <!-- Lista de grupos -->
-    <h5>Grupos activos</h5>
+    <h5 style="color:var(--text-muted);font-size:0.85rem;text-transform:uppercase;letter-spacing:1px" class="mb-3">🏆 Mis Grupos</h5>
     <div id="groupList" class="row g-3">
-      <!-- Cards generadas dinámicamente por groups.js -->
+      <!-- renderizado por groups.js -->
     </div>
+
+  </div>
+
+  <div class="footer-brand">
+    ⚽ WC2026 — Polla Mundialera &nbsp;|
+    <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
+    Largotek Transformación Digital
   </div>
 
   <script type="module" src="js/firebase-config.js"></script>
