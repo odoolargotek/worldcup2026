@@ -23,6 +23,19 @@
   </nav>
 
   <div class="container py-4">
+
+    <!-- Banner: sin favorito elegido -->
+    <div id="noFavBanner" class="d-none mb-4">
+      <div style="background:linear-gradient(135deg,rgba(245,158,11,0.15),rgba(245,158,11,0.05));border:1px solid var(--gold);border-radius:12px;padding:16px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+        <div style="font-size:2rem">🎯</div>
+        <div style="flex:1">
+          <div style="font-weight:700;color:var(--gold);margin-bottom:2px">¡Aún no tienes equipo favorito en esta comparsa!</div>
+          <div style="font-size:0.85rem;color:var(--text-muted)">Elige tu equipo favorito para ganar puntos bonus cada vez que juegue y gane.</div>
+        </div>
+        <button id="chooseFavBtn" class="btn btn-warning px-4" style="font-weight:700">🏆 Elegir favorito</button>
+      </div>
+    </div>
+
     <div class="row g-3 mb-4">
       <div class="col-md-4">
         <div class="p-3 rounded" style="background:var(--bg-card);border:1px solid var(--border)">
@@ -42,7 +55,7 @@
         <div class="p-3 rounded" style="background:var(--bg-card);border:1px solid var(--border)">
           <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Mi equipo favorito</div>
           <div style="font-size:1.1rem;font-weight:800;color:var(--text)" id="myFavoriteDisplay">—</div>
-          <button id="changeFavoriteBtn" class="btn btn-sm mt-2" style="background:transparent;color:var(--danger);border:1px solid var(--danger);font-size:11px">⚠ Cambiar (-6 pts)</button>
+          <button id="changeFavoriteBtn" class="btn btn-sm mt-2 d-none" style="background:transparent;color:var(--danger);border:1px solid var(--danger);font-size:11px">⚠ Cambiar (-6 pts)</button>
         </div>
       </div>
     </div>
@@ -52,18 +65,7 @@
       <li class="nav-item"><button class="nav-link" data-tab="matches">📅 Partidos</button></li>
     </ul>
 
-    <div id="rankingTab">
-      <div class="table-responsive">
-        <table class="table table-striped">
-          <thead>
-            <tr><th>#</th><th>Apodo</th><th>Favorito</th><th>Pts Favorito</th><th>Pts Pron.</th><th>Total</th></tr>
-          </thead>
-          <tbody id="rankingBody">
-            <tr><td colspan="6" class="text-center" style="color:var(--text-muted)">Sin datos aún...</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
+    <div id="rankingTab"></div>
 
     <div id="matchesTab" class="d-none">
       <div id="matchList">
@@ -72,23 +74,29 @@
     </div>
   </div>
 
-  <!-- Modal cambiar favorito -->
-  <div class="modal fade" id="changeFavModal" tabindex="-1">
+  <!-- Modal elegir/cambiar favorito -->
+  <div class="modal fade" id="favModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text)">
         <div class="modal-header" style="border-color:var(--border)">
-          <h5 class="modal-title">⚠️ Cambiar equipo favorito</h5>
+          <h5 class="modal-title" id="favModalTitle">🏆 Elige tu equipo favorito</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <div class="mb-3 p-3 rounded" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;font-size:0.9rem">
+          <!-- Advertencia solo en cambio -->
+          <div id="favPenaltyWarning" class="d-none mb-3 p-3 rounded" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#fca5a5;font-size:0.9rem">
             Cambiar de equipo favorito aplica una penalidad de <strong>-6 puntos</strong>. ¿Deseas continuar?
           </div>
-          <input type="text" id="changeFavSearch" class="form-control mb-3" placeholder="Buscar equipo...">
-          <div id="changeFavGrid" class="row g-2" style="max-height:280px;overflow-y:auto"></div>
-          <input type="hidden" id="newFavoriteTeam">
+          <!-- Info primera vez -->
+          <div id="favFirstInfo" class="mb-3 p-3 rounded" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:var(--gold);font-size:0.85rem">
+            💡 Tu equipo favorito gana puntos bonus cada vez que juega: <strong>+3 pts victoria, +1 pt empate</strong>.
+          </div>
+          <input type="text" id="favSearch" class="form-control mb-3" placeholder="🔍 Buscar equipo...">
+          <div id="favGrid" class="row g-2" style="max-height:300px;overflow-y:auto"></div>
+          <input type="hidden" id="favSelectedTeam">
         </div>
         <div class="modal-footer" style="border-color:var(--border)">
-          <button id="confirmChangeFav" class="btn btn-danger w-100" disabled>⚠️ Confirmar cambio (-6 pts)</button>
+          <button id="confirmFavBtn" class="btn btn-warning w-100" disabled style="font-weight:700">🏆 Confirmar equipo favorito</button>
         </div>
       </div>
     </div>
