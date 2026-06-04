@@ -9,7 +9,7 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/conti-sponsor.css">
 </head>
-<body class="has-strip">
+<body>
   <div class="field-pattern"></div>
 
   <nav class="navbar">
@@ -30,7 +30,7 @@
   </nav>
 
   <div style="background:rgba(201,52,75,0.07);border-bottom:1px solid rgba(201,52,75,0.2);padding:6px 16px;text-align:center;font-size:11px;color:#f5a0ac">
-    ⚠️ Juego de entretenimiento privado. No es un sitio de apuestas. Largotek no administra ni garantiza premios.
+    ⚠️ Juego de entretenimiento privado. No es un sitio de apuestas. No se administra ni garantiza premios.
     <a href="legal.html" target="_blank" style="color:#f5a0ac;text-decoration:underline;margin-left:6px">Aviso legal completo</a>
   </div>
 
@@ -40,7 +40,6 @@
     <img src="https://www.largotek.com/web/image/12870-1cdfd1c0/conti-zero-logo-png_seeklogo-381873.webp" alt="Conti Zero">
     <div class="conti-banner-body">
       <span class="conti-banner-label">Zero Grau</span>
-      <span class="conti-banner-sub">Cerveza Oficial del Mundial</span>
     </div>
     <div class="conti-banner-dot"></div>
   </div>
@@ -75,7 +74,6 @@
 
     <div id="favsInlineSection"></div>
 
-    <!-- TABS: Partidos primero -->
     <ul class="nav nav-tabs mb-4" id="mainTabs" style="flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch">
       <li class="nav-item" style="white-space:nowrap"><button class="nav-link active" data-tab="matches">📅 Partidos</button></li>
       <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="ranking">🏆 Ranking</button></li>
@@ -93,26 +91,12 @@
     <div id="disclaimerTab" class="d-none"></div>
   </div>
 
-  <div class="largotek-strip" id="largotekStrip">
-    <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
-    <span class="largotek-strip-text"><strong>Largotek</strong> — Odoo ERP · IA · CRM &nbsp;📞 +591 692 24352</span>
-    <a href="https://wa.me/59169224352" target="_blank" style="font-size:11px;color:var(--primary-light);font-weight:700;margin-right:8px">WhatsApp →</a>
-    <button class="largotek-strip-close" onclick="document.getElementById('largotekStrip').style.display='none';document.body.classList.remove('has-strip')" title="Cerrar">×</button>
-  </div>
-
   <div class="footer-brand">
-    ⚽ WC2026 &nbsp;|
-    <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
+    ⚽ WC2026 &nbsp;— Desarrollado por
     <strong style="color:var(--primary-light)">Largotek</strong>
-    <div class="footer-links">
-      <a href="https://www.largotek.com" target="_blank">🌐 largotek.com</a>
-      <a href="mailto:info@largotek.com">📧 info@largotek.com</a>
-      <a href="https://wa.me/59169224352" target="_blank">💬 +591 692 24352</a>
-      <a href="legal.html" target="_blank">⚖️ Aviso Legal</a>
-    </div>
-    <div style="margin-top:8px;font-size:11px;color:var(--text-muted)">Odoo ERP · Sistemas Contables · Agentes de IA · Automatización · CRM</div>
-    <div style="margin-top:6px;font-size:10px;color:rgba(148,163,184,0.5)">Juego de entretenimiento privado — No es un sitio de apuestas —
-      <a href="legal.html" target="_blank" style="color:rgba(148,163,184,0.5);text-decoration:underline">Términos de uso</a>
+    <div style="margin-top:6px;font-size:10px;color:rgba(148,163,184,0.4)">
+      Juego de entretenimiento privado — No es un sitio de apuestas —
+      <a href="legal.html" target="_blank" style="color:rgba(148,163,184,0.4);text-decoration:underline">Términos de uso</a>
     </div>
   </div>
 
@@ -129,9 +113,6 @@
     import { renderDisclaimer }   from './js/disclaimer.js';
 
     let groupsLoaded = false, newsLoaded = false, rulesLoaded = false, disclaimerLoaded = false;
-    // Matches se carga por defecto al iniciar (ya visible)
-    let matchesLoaded = true;
-
     const TABS = ['matches','ranking','groups','news','rules','disclaimer'];
 
     function activateTab(tabName) {
