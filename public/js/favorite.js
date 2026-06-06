@@ -9,19 +9,83 @@ const GROUP_ID = params.get('gid');
 const PHASES = ['Grupo A','Grupo B','Grupo C','Grupo D','Grupo E','Grupo F',
                 'Grupo G','Grupo H','Grupo I','Grupo J','Grupo K','Grupo L'];
 
+// ─────────────────────────────────────────────────────────────────
+// 48 equipos clasificados oficiales FIFA World Cup 2026
+// Sede: USA, Canadá, México  |  Grupos A–L (4 equipos c/u)
+// ─────────────────────────────────────────────────────────────────
 const TEAMS_BY_PHASE = {
-  'Grupo A': [{name:'México',flag:'🇲🇽'},{name:'Sudafrica',flag:'🇿🇦'},{name:'Canadá',flag:'🇨🇦'},{name:'Playoff CONMEBOL',flag:'🏁'}],
-  'Grupo B': [{name:'Argentina',flag:'🇦🇷'},{name:'Argelia',flag:'🇩🇿'},{name:'Ucrania',flag:'🇺🇦'},{name:'Ecuador',flag:'🇪🇨'}],
-  'Grupo C': [{name:'USA',flag:'🇺🇸'},{name:'Panamá',flag:'🇵🇦'},{name:'Uruguay',flag:'🇺🇾'},{name:'Irak',flag:'🇮🇶'}],
-  'Grupo D': [{name:'Francia',flag:'🇫🇷'},{name:'Arabia Saudita',flag:'🇸🇦'},{name:'Perú',flag:'🇵🇪'},{name:'Escocia',flag:'🏴󠁧󠁢󠁳󠁣󠁴󠁿'}],
-  'Grupo E': [{name:'Alemania',flag:'🇩🇪'},{name:'Japón',flag:'🇯🇵'},{name:'Chile',flag:'🇨🇱'},{name:'Ecuador',flag:'🇪🇨'}],
-  'Grupo F': [{name:'Portugal',flag:'🇵🇹'},{name:'Marruecos',flag:'🇲🇦'},{name:'Croacia',flag:'🇭🇷'},{name:'Mozambique',flag:'🇲🇿'}],
-  'Grupo G': [{name:'España',flag:'🇪🇸'},{name:'Bélgica',flag:'🇧🇪'},{name:'Egipto',flag:'🇪🇬'},{name:'Tunisia',flag:'🇹🇳'}],
-  'Grupo H': [{name:'Inglaterra',flag:'🏴󠁧󠁢󠁥󠁮󠁧󠁿'},{name:'Senegal',flag:'🇸🇳'},{name:'Serbia',flag:'🇷🇸'},{name:'Guinea',flag:'🇬🇳'}],
-  'Grupo I': [{name:'Brasil',flag:'🇧🇷'},{name:'Noruega',flag:'🇳🇴'},{name:'Ghana',flag:'🇬🇭'},{name:'Cuba',flag:'🇨🇺'}],
-  'Grupo J': [{name:'Países Bajos',flag:'🇳🇱'},{name:'Suiza',flag:'🇨🇭'},{name:'Colombia',flag:'🇨🇴'},{name:'Uzbekistán',flag:'🇺🇿'}],
-  'Grupo K': [{name:'Australia',flag:'🇦🇺'},{name:'Kenia',flag:'🇰🇪'},{name:'Costa Rica',flag:'🇨🇷'},{name:'Qatar',flag:'🇶🇦'}],
-  'Grupo L': [{name:'Italia',flag:'🇮🇹'},{name:'Irán',flag:'🇮🇷'},{name:"C\u00f4te d'Ivoire",flag:'🇨🇮'},{name:'Nueva Zelanda',flag:'🇳🇿'}],
+  'Grupo A': [
+    { name: 'México',          flag: '🇲🇽' },
+    { name: 'Ecuador',         flag: '🇪🇨' },
+    { name: 'Ucrania',         flag: '🇺🇦' },
+    { name: 'Argelia',         flag: '🇩🇿' },
+  ],
+  'Grupo B': [
+    { name: 'Argentina',       flag: '🇦🇷' },
+    { name: 'Sudáfrica',       flag: '🇿🇦' },
+    { name: 'Irak',            flag: '🇮🇶' },
+    { name: 'Canadá',          flag: '🇨🇦' },
+  ],
+  'Grupo C': [
+    { name: 'USA',             flag: '🇺🇸' },
+    { name: 'Panamá',          flag: '🇵🇦' },
+    { name: 'Uruguay',         flag: '🇺🇾' },
+    { name: 'Escocia',         flag: '🏴󠁧󠁢󠁳󠁣󠁴󠁿' },
+  ],
+  'Grupo D': [
+    { name: 'Francia',         flag: '🇫🇷' },
+    { name: 'Arabia Saudita',  flag: '🇸🇦' },
+    { name: 'Colombia',        flag: '🇨🇴' },
+    { name: 'Rep. Checa',      flag: '🇨🇿' },
+  ],
+  'Grupo E': [
+    { name: 'Alemania',        flag: '🇩🇪' },
+    { name: 'Japón',           flag: '🇯🇵' },
+    { name: 'Costa Rica',      flag: '🇨🇷' },
+    { name: 'Mozambique',      flag: '🇲🇿' },
+  ],
+  'Grupo F': [
+    { name: 'Portugal',        flag: '🇵🇹' },
+    { name: 'Marruecos',       flag: '🇲🇦' },
+    { name: 'Croacia',         flag: '🇭🇷' },
+    { name: 'Angola',          flag: '🇦🇴' },
+  ],
+  'Grupo G': [
+    { name: 'España',          flag: '🇪🇸' },
+    { name: 'Bélgica',         flag: '🇧🇪' },
+    { name: 'Brasil',          flag: '🇧🇷' },
+    { name: 'Kenia',           flag: '🇰🇪' },
+  ],
+  'Grupo H': [
+    { name: 'Inglaterra',      flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
+    { name: 'Senegal',         flag: '🇸🇳' },
+    { name: 'Serbia',          flag: '🇷🇸' },
+    { name: 'Países Bajos',    flag: '🇳🇱' },
+  ],
+  'Grupo I': [
+    { name: 'Italia',          flag: '🇮🇹' },
+    { name: 'Guinea',          flag: '🇬🇳' },
+    { name: 'Austria',         flag: '🇦🇹' },
+    { name: 'Australia',       flag: '🇦🇺' },
+  ],
+  'Grupo J': [
+    { name: 'Países Bajos',    flag: '🇳🇱' },
+    { name: 'Suiza',           flag: '🇨🇭' },
+    { name: 'Irán',            flag: '🇮🇷' },
+    { name: "Côte d'Ivoire",   flag: '🇨🇮' },
+  ],
+  'Grupo K': [
+    { name: 'Corea del Sur',   flag: '🇰🇷' },
+    { name: 'Egipto',          flag: '🇪🇬' },
+    { name: 'Ghana',           flag: '🇬🇭' },
+    { name: 'Uzbekistán',      flag: '🇺🇿' },
+  ],
+  'Grupo L': [
+    { name: 'Noruega',         flag: '🇳🇴' },
+    { name: 'Túnez',           flag: '🇹🇳' },
+    { name: 'Bolivia',         flag: '🇧🇴' },
+    { name: 'Nueva Zelanda',   flag: '🇳🇿' },
+  ],
 };
 
 const PENALTY_PTS = 3;
@@ -67,7 +131,6 @@ function renderFavsSummary() {
   }
 }
 
-// ─ Expande la sección de favoritos si está colapsada
 function expandFavsSection() {
   const body = document.getElementById('favsBody');
   const tog  = document.getElementById('favsToggleBtn');
@@ -87,7 +150,6 @@ function renderFavsInline() {
   const chosen  = PHASES.filter(p => favs[p]);
   const missing = PHASES.length - chosen.length;
 
-  // Si todos elegidos → colapsado por defecto; si hay pendientes → expandido
   const startCollapsed = missing === 0;
 
   PHASES.forEach(p => delete pendingSelects[p]);
@@ -145,7 +207,6 @@ function renderFavsInline() {
       </div>
     </div>`;
 
-  // Toggle click
   document.getElementById('favsHeader').addEventListener('click', () => {
     const body = document.getElementById('favsBody');
     const tog  = document.getElementById('favsToggleBtn');
