@@ -9,11 +9,12 @@ import {
 const TEAMS = [
   "Argentina","Francia","Brasil","Inglaterra","España","Portugal","Alemania",
   "Países Bajos","Croacia","Marruecos","Senegal","México","USA","Canadá",
-  "Colombia","Ecuador","Uruguay","Chile","Japón","Corea del Sur","Australia",
-  "Arabia Saudita","Irán","Qatar","Suiza","Bélgica","Dinamarca","Polonia",
-  "Serbia","Ucrania","Türkiye","Rumania","Austria","Escocia","Hungría",
-  "Rep. Checa","Albania","Eslovenia","Eslovaquia","Georgia","Venezuela",
-  "Paraguay","Bolivia","Perú","Costa Rica","Panamá","Honduras","Jamaica",
+  "Colombia","Ecuador","Uruguay","Japón","Corea del Sur","Australia",
+  "Arabia Saudita","Irán","Suiza","Bélgica","Serbia","Ucrania",
+  "Austria","Escocia","Rep. Checa","Bolivia","Costa Rica","Panamá",
+  "Argelia","Kenia","Mozambique","Angola","Guinea","Senegal",
+  "Egipto","Ghana","Sudáfrica","Irak","Uzbekistán","Noruega",
+  "Túnez","Nueva Zelanda","Côte d'Ivoire","Kenia",
 ];
 
 const DIST_PRESETS = {
@@ -70,15 +71,20 @@ async function loadGroups(user) {
   }
 
   if (validDocs.length === 0) {
-    container.innerHTML = '<div class="col-12"><p style="color:var(--text-muted)">¡Aún no perteneces a ninguna comparsa! Crea una o únete con un código.</p></div>';
+    container.innerHTML = '<div class="col-12"><p style="color:var(--text-muted)">\u00a1Aún no perteneces a ninguna comparsa! Crea una o únete con un código.</p></div>';
     return;
   }
   for (const { gSnap, memberData } of validDocs) {
-    renderGroupCard(gSnap, memberData, container, user);
+    // Consultar cuántos miembros tiene la comparsa
+    const membersSnap = await getDocs(
+      query(collection(db, 'group_members'), where('group_id', '==', gSnap.id))
+    );
+    const memberCount = membersSnap.size;
+    renderGroupCard(gSnap, memberData, container, user, memberCount);
   }
 }
 
-function renderGroupCard(gSnap, memberData, container, user) {
+function renderGroupCard(gSnap, memberData, container, user, memberCount) {
   const g    = gSnap.data();
   const gid  = gSnap.id;
   const code = g.code || '';
@@ -86,12 +92,12 @@ function renderGroupCard(gSnap, memberData, container, user) {
   const isAdmin = (memberData.role === 'admin') || (g.owner_uid === user.uid);
 
   const typeBadge = g.type === 'closed'
-    ? `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(201,52,75,0.15);color:#f5a0ac;border:1px solid rgba(201,52,75,0.3)">${g.is_open === false ? '🔴 Cerrada' : '🔒 Cupo lim.'}</span>`
-    : `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(29,144,198,0.15);color:#4aafd4;border:1px solid rgba(29,144,198,0.3)">🌐 Abierta</span>`;
+    ? `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(201,52,75,0.15);color:#f5a0ac;border:1px solid rgba(201,52,75,0.3)">${g.is_open === false ? '\ud83d\udd34 Cerrada' : '\ud83d\udd12 Cupo lim.'}</span>`
+    : `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(29,144,198,0.15);color:#4aafd4;border:1px solid rgba(29,144,198,0.3)">\ud83c\udf10 Abierta</span>`;
 
   const appUrl    = `${location.origin}/dashboard.html?join=${code}`;
   const waMessage = encodeURIComponent(
-    `⚽ ¡Únete a mi comparsa del Mundial 2026! 🏆\n*${g.name}*\n\nEntra aquí y usa el código *${code}*:\n${appUrl}\n\n_Polla Mundialera WC2026 by Largotek_`
+    `\u26bd \u00a1\u00danete a mi comparsa del Mundial 2026! \ud83c\udfc6\n*${g.name}*\n\nEntra aqu\u00ed y usa el c\u00f3digo *${code}*:\n${appUrl}\n\n_Polla Mundialera WC2026 by Largotek_`
   );
   const waLink = `https://wa.me/?text=${waMessage}`;
 
@@ -102,26 +108,36 @@ function renderGroupCard(gSnap, memberData, container, user) {
     ? `<div style="font-size:11px;color:var(--gold);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">${g.stage}</div>`
     : '';
   const fav = memberData.favorite
-    ? `<div style="font-size:12px;color:var(--primary-light);margin-top:4px">⚽ ${memberData.favorite}</div>`
-    : '<div style="font-size:12px;color:var(--accent);margin-top:4px">⚠ Sin favorito</div>';
+    ? `<div style="font-size:12px;color:var(--primary-light);margin-top:4px">\u26bd ${memberData.favorite}</div>`
+    : '<div style="font-size:12px;color:var(--accent);margin-top:4px">\u26a0 Sin favorito</div>';
 
-  // Mostrar moneda en la card
-  const prizeText = g.prize ? `🏆 ${sym}${g.prize}` : g.fee ? `💰 Cuota ${sym}${g.fee}` : '';
+  const prizeText = g.prize ? `\ud83c\udfc6 ${sym}${g.prize}` : g.fee ? `\ud83d\udcb0 Cuota ${sym}${g.fee}` : '';
   const currencyBadge = g.currency
     ? `<span style="font-size:10px;padding:2px 6px;border-radius:20px;background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.25);margin-left:4px">${g.currency}</span>`
     : '';
+
+  // Badge de participantes
+  const maxLabel  = (g.type === 'closed' && g.max_members) ? `/${g.max_members}` : '';
+  const isFull    = g.type === 'closed' && g.max_members && memberCount >= g.max_members;
+  const membColor = isFull ? '#f5a0ac' : '#34d399';
+  const memberBadge = `<span style="font-size:11px;padding:2px 8px;border-radius:20px;
+    background:rgba(52,211,153,0.1);color:${membColor};
+    border:1px solid rgba(52,211,153,0.25);display:inline-flex;align-items:center;gap:3px">
+    \ud83d\udc65 ${memberCount}${maxLabel} participante${memberCount !== 1 ? 's' : ''}
+  </span>`;
 
   col.innerHTML = `
     <div class="group-card" style="cursor:default">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
         ${stage || '<div></div>'}
-        <div style="display:flex;gap:4px;align-items:center">${typeBadge}${currencyBadge}</div>
+        <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">${typeBadge}${currencyBadge}</div>
       </div>
       <div style="cursor:pointer" onclick="window.location='group.html?gid=${gid}'">
         <h6 style="margin-bottom:2px">${g.name}</h6>
         <small style="color:var(--primary-light)">${prizeText}</small>
+        <div style="margin-top:6px">${memberBadge}</div>
         ${fav}
-        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Código: <strong style="color:var(--gold);letter-spacing:2px">${code}</strong></div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">C\u00f3digo: <strong style="color:var(--gold);letter-spacing:2px">${code}</strong></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:12px">
         <button class="btn btn-success btn-sm" style="flex:1;font-size:12px;font-weight:700"
@@ -129,16 +145,16 @@ function renderGroupCard(gSnap, memberData, container, user) {
         <a href="${waLink}" target="_blank" rel="noopener"
           class="btn btn-sm"
           style="flex:1;font-size:12px;font-weight:700;background:#1D90C6;color:#fff;border:none;border-radius:8px">
-          💬 Invitar</a>
+          \ud83d� Invitar</a>
         <button class="btn btn-outline-light btn-sm" style="font-size:12px;padding:4px 10px"
-          onclick="event.stopPropagation();copyInviteLink('${appUrl}',this)" title="Copiar link">📋</button>
+          onclick="event.stopPropagation();copyInviteLink('${appUrl}',this)" title="Copiar link">\ud83d\udccb</button>
       </div>
       ${isAdmin ? `
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(201,52,75,0.15)">
         <button class="del-btn" style="width:100%;padding:7px 12px;font-size:12px;font-weight:600;
           background:rgba(201,52,75,0.1);color:#f5a0ac;border:1px solid rgba(201,52,75,0.35);
           border-radius:8px;cursor:pointer">
-          🗑️ Eliminar comparsa
+          \ud83d\uddd1\ufe0f Eliminar comparsa
         </button>
       </div>` : ''}
     </div>`;
@@ -155,13 +171,13 @@ function renderGroupCard(gSnap, memberData, container, user) {
 window.copyInviteLink = function(url, btn) {
   navigator.clipboard.writeText(url).then(() => {
     const orig = btn.textContent;
-    btn.textContent = '✅';
+    btn.textContent = '\u2705';
     btn.style.color = '#4aafd4';
     setTimeout(() => { btn.textContent = orig; btn.style = ''; }, 2000);
   });
 };
 
-// ── Crear comparsa ─────────────────────────────────────────────────
+// \u2500\u2500 Crear comparsa \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 document.getElementById('createGroupBtn')?.addEventListener('click', async () => {
   const user     = auth.currentUser;
   const name     = document.getElementById('newGroupName').value.trim();
@@ -187,7 +203,7 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
     const p2 = parseInt(document.getElementById('distP2').value) || 0;
     const p3 = parseInt(document.getElementById('distP3').value) || 0;
     if (p1 + p2 + p3 !== 100) {
-      document.getElementById('distError').textContent = '⚠️ Los porcentajes deben sumar 100%';
+      document.getElementById('distError').textContent = '\u26a0\ufe0f Los porcentajes deben sumar 100%';
       return;
     }
     document.getElementById('distError').textContent = '';
@@ -221,17 +237,17 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
     document.getElementById('openFields').classList.remove('d-none');
     document.getElementById('closedFields').classList.add('d-none');
     document.getElementById('customDistFields').classList.add('d-none');
-    showMsg('createMsg', '✅ ¡Comparsa creada!', 'success');
+    showMsg('createMsg', '\u2705 \u00a1Comparsa creada!', 'success');
     openFavoriteOverlay();
   } catch(err) {
-    showMsg('createMsg', '❌ Error: ' + err.message, 'danger');
+    showMsg('createMsg', '\u274c Error: ' + err.message, 'danger');
   } finally {
     btn.disabled = false;
-    btn.textContent = '⚽ Crear comparsa';
+    btn.textContent = '\u26bd Crear comparsa';
   }
 });
 
-// ── Unirse a comparsa ──────────────────────────────────────────────
+// \u2500\u2500 Unirse a comparsa \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
   const user = auth.currentUser;
   const code = document.getElementById('joinCode').value.trim().toUpperCase();
@@ -239,20 +255,20 @@ document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
 
   const q    = query(collection(db, 'groups'), where('code', '==', code));
   const snap = await getDocs(q);
-  if (snap.empty) { showMsg('joinMsg', '❌ Código no encontrado.', 'danger'); return; }
+  if (snap.empty) { showMsg('joinMsg', '\u274c C\u00f3digo no encontrado.', 'danger'); return; }
 
   const gSnap = snap.docs[0];
   const g     = gSnap.data();
-  if (g.is_open === false) { showMsg('joinMsg', '🔴 Esta comparsa ya está cerrada.', 'danger'); return; }
+  if (g.is_open === false) { showMsg('joinMsg', '\ud83d\udd34 Esta comparsa ya est\u00e1 cerrada.', 'danger'); return; }
 
   const memberId = `${gSnap.id}_${user.uid}`;
   const existing = await getDoc(doc(db, 'group_members', memberId));
-  if (existing.exists()) { showMsg('joinMsg', '⚠️ Ya eres miembro de esta comparsa.', 'warning'); return; }
+  if (existing.exists()) { showMsg('joinMsg', '\u26a0\ufe0f Ya eres miembro de esta comparsa.', 'warning'); return; }
 
   if (g.type === 'closed' && g.max_members) {
     const membersSnap = await getDocs(query(collection(db, 'group_members'), where('group_id', '==', gSnap.id)));
     if (membersSnap.size >= g.max_members) {
-      showMsg('joinMsg', `🔴 La comparsa está llena (máx. ${g.max_members}).`, 'danger');
+      showMsg('joinMsg', `\ud83d\udd34 La comparsa est\u00e1 llena (m\u00e1x. ${g.max_members}).`, 'danger');
       return;
     }
   }
@@ -264,11 +280,11 @@ document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
   pendingGroupId = gSnap.id;
   document.getElementById('joinCode').value = '';
   window.history.replaceState({}, '', location.pathname);
-  showMsg('joinMsg', '✅ ¡Te uniste!', 'success');
+  showMsg('joinMsg', '\u2705 \u00a1Te uniste!', 'success');
   openFavoriteOverlay();
 });
 
-// ── Overlay favorito ───────────────────────────────────────────────
+// \u2500\u2500 Overlay favorito \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function openFavoriteOverlay() {
   document.getElementById('selectedTeam').value = '';
   document.getElementById('saveFavoriteBtn').disabled = true;
@@ -285,7 +301,7 @@ function renderTeams(filter, grid) {
   TEAMS.filter(t => t.toLowerCase().includes(filter.toLowerCase())).forEach(team => {
     const div = document.createElement('div');
     div.className = 'col-6';
-    div.innerHTML = `<button class="btn w-100 team-btn" style="background:var(--bg-card2);color:var(--text);border:1px solid var(--border);font-size:0.85rem;padding:8px 4px">⚽ ${team}</button>`;
+    div.innerHTML = `<button class="btn w-100 team-btn" style="background:var(--bg-card2);color:var(--text);border:1px solid var(--border);font-size:0.85rem;padding:8px 4px">\u26bd ${team}</button>`;
     div.querySelector('button').addEventListener('click', () => {
       grid.querySelectorAll('.team-btn').forEach(b => {
         b.style.cssText = 'background:var(--bg-card2);color:var(--text);border:1px solid var(--border);font-size:0.85rem;padding:8px 4px';
@@ -320,7 +336,7 @@ function setupFavoriteOverlay(user) {
       await loadGroups(user);
     } catch(e) {
       saveBtn.disabled = false;
-      saveBtn.textContent = '✅ Confirmar favorito';
+      saveBtn.textContent = '\u2705 Confirmar favorito';
     }
   });
   skipBtn?.addEventListener('click', async () => {
@@ -330,7 +346,7 @@ function setupFavoriteOverlay(user) {
   });
 }
 
-// ── Overlay eliminar ───────────────────────────────────────────────
+// \u2500\u2500 Overlay eliminar \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 let _deleteGid = null;
 let _deleteUser = null;
 
@@ -362,14 +378,14 @@ function setupDeleteOverlay(user) {
       if (!err.message?.includes('permission')) {
         alert('Error: ' + err.message);
         btn.disabled = false;
-        btn.textContent = '🗑️ Sí, eliminar definitivamente';
+        btn.textContent = '\ud83d\uddd1\ufe0f S\u00ed, eliminar definitivamente';
         return;
       }
     }
     hideOverlay('deleteOverlay');
     _deleteGid = null;
     await loadGroups(_deleteUser);
-    btn.textContent = '🗑️ Sí, eliminar definitivamente';
+    btn.textContent = '\ud83d\uddd1\ufe0f S\u00ed, eliminar definitivamente';
   });
 }
 
