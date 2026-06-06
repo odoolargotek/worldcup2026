@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin — WC2026</title>
-  <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-6W7JNJCG36"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -72,6 +71,21 @@
     </div>
 
     <div id="atab-matches" class="d-none">
+
+      <!-- BULK LOAD BUTTON -->
+      <div class="card p-4 mb-4" style="border-color:rgba(29,144,198,0.4);background:rgba(29,144,198,0.05)">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+          <div>
+            <h6 style="color:#4aafd4;font-weight:700;margin:0">⚡ Cargar calendario completo</h6>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin:4px 0 0">Inserta los 72 partidos de fase de grupos del Mundial 2026. Los partidos ya existentes no se duplican.</p>
+          </div>
+          <button id="bulkLoadBtn" class="btn" style="background:#1D90C6;color:#fff;font-weight:700;white-space:nowrap">
+            ⚡ Cargar todos los partidos
+          </button>
+        </div>
+        <div id="bulkMsg" class="mt-3"></div>
+      </div>
+
       <div class="card p-4 mb-4">
         <h6 style="color:var(--green-light);font-weight:700" class="mb-3">➕ Agregar Partido</h6>
         <div class="row g-2">
@@ -116,6 +130,7 @@
         </div>
         <div id="addMatchMsg" class="mt-2"></div>
       </div>
+
       <div class="card p-4">
         <div class="d-flex align-items-center justify-content-between mb-3">
           <h6 style="color:var(--gold);font-weight:700;margin:0">📋 Todos los partidos</h6>
@@ -182,5 +197,26 @@
   <script type="module" src="js/firebase-config.js"></script>
   <script type="module" src="js/auth.js"></script>
   <script type="module" src="js/admin.js"></script>
+  <script type="module">
+    import { bulkLoadMatches } from './js/bulk-matches.js';
+    document.getElementById('bulkLoadBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('bulkLoadBtn');
+      const msg = document.getElementById('bulkMsg');
+      btn.disabled = true;
+      btn.textContent = '⏳ Cargando...';
+      msg.innerHTML = '<span style="color:#4aafd4">Insertando partidos en Firestore...</span>';
+      try {
+        const { inserted, skipped } = await bulkLoadMatches((done, total) => {
+          msg.innerHTML = `<span style="color:#4aafd4">⏳ ${done}/${total} partidos insertados...</span>`;
+        });
+        msg.innerHTML = `<span style="color:#34d399">✅ ¡Listo! ${inserted} partidos nuevos agregados. ${skipped} ya existían y fueron omitidos.</span>`;
+        btn.textContent = '✅ Cargado';
+      } catch(e) {
+        msg.innerHTML = `<span style="color:#f5a0ac">❌ Error: ${e.message}</span>`;
+        btn.disabled = false;
+        btn.textContent = '⚡ Cargar todos los partidos';
+      }
+    });
+  </script>
 </body>
 </html>
