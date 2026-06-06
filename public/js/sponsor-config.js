@@ -3,14 +3,7 @@
  * ================================================================
  * Para cambiar de patrocinador solo edita este archivo.
  * Se replica automáticamente en todas las páginas.
- *
- * Campos:
- *   name        — Nombre del patrocinador
- *   tagline     — Slogan o texto secundario
- *   logoUrl     — URL del logo (externa o ruta /img/...)
- *   linkUrl     — URL al hacer clic en el banner ('' para sin link)
- *   accentColor — Color de acento del banner (hex)
- *   active      — false = ocultar todos los bloques de patrocinador
+ * v3 — 2026-06-06
  */
 export const SPONSOR = {
   name:        'Largotek',
@@ -21,19 +14,8 @@ export const SPONSOR = {
   active:      true,
 };
 
-/**
- * injectSponsor()
- * Inyecta automáticamente navbar logo + hero banner en la página.
- * Llámalo desde cualquier HTML así:
- *
- *   <script type="module">
- *     import { injectSponsor } from './js/sponsor-config.js';
- *     injectSponsor();
- *   </script>
- */
 export function injectSponsor() {
   if (!SPONSOR.active) {
-    // Ocultar cualquier bloque existente
     document.querySelectorAll('.sponsor-banner, .sponsor-navbar-logo').forEach(el => el.remove());
     return;
   }
@@ -41,7 +23,6 @@ export function injectSponsor() {
   // ── 1. NAVBAR LOGO ───────────────────────────────────────────
   const navbarBrand = document.querySelector('.navbar-brand');
   if (navbarBrand) {
-    // Quitar logo anterior si existe
     const oldLogo = navbarBrand.querySelector('.sponsor-navbar-logo');
     if (oldLogo) oldLogo.remove();
 
@@ -75,7 +56,6 @@ export function injectSponsor() {
     banner.addEventListener('click', () => window.open(SPONSOR.linkUrl, '_blank'));
   }
 
-  // Insertar después del navbar (o al inicio del body)
   const navbar = document.querySelector('nav.navbar');
   const legalBar = navbar?.nextElementSibling;
   if (legalBar) {
