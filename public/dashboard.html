@@ -14,7 +14,7 @@
   <script src="js/theme.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/sponsor.css">
+  <link rel="stylesheet" href="css/sponsor.css?v=2">
 </head>
 <body>
   <div class="field-pattern"></div>
@@ -23,26 +23,26 @@
     <div class="navbar-brand">
       <!-- Logo patrocinador inyectado por sponsor-config.js -->
       <div>
-        <div style="font-weight:800">⚽ WC2026 — Mis Comparsas</div>
+        <div style="font-weight:800">&#x26BD; WC2026 &mdash; Mis Comparsas</div>
         <div class="navbar-powered">by Largotek</div>
       </div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
-      <button id="themeToggleBtn">☀️ Claro</button>
+      <button id="themeToggleBtn">&#x2600;&#xFE0F; Claro</button>
       <button id="logoutBtn" class="btn btn-outline-light btn-sm">Salir</button>
     </div>
   </nav>
 
   <div style="background:rgba(201,52,75,0.07);border-bottom:1px solid rgba(201,52,75,0.2);padding:6px 16px;text-align:center;font-size:11px;color:#f5a0ac">
-    ⚠️ Juego de entretenimiento privado. No es un sitio de apuestas. No se administra ni garantiza premios.
+    &#x26A0;&#xFE0F; Juego de entretenimiento privado. No es un sitio de apuestas. No se administra ni garantiza premios.
     <a href="legal.html" target="_blank" style="color:#f5a0ac;text-decoration:underline;margin-left:6px">Aviso legal completo</a>
   </div>
 
-  <!-- Banner patrocinador inyectado automáticamente -->
+  <!-- Banner patrocinador inyectado autom&#xE1;ticamente -->
 
   <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h5 class="mb-0" style="font-weight:800">🏆 Mis comparsas</h5>
+      <h5 class="mb-0" style="font-weight:800">&#x1F3C6; Mis comparsas</h5>
       <span id="userEmail" style="color:var(--text-muted);font-size:0.85rem"></span>
     </div>
 
@@ -51,7 +51,7 @@
     <div class="row g-3">
       <div class="col-md-6">
         <div class="card p-4">
-          <h6 style="color:var(--primary-light);font-weight:700" class="mb-3">➕ Crear comparsa</h6>
+          <h6 style="color:var(--primary-light);font-weight:700" class="mb-3">&#x2795; Crear comparsa</h6>
           <input type="text" id="newGroupName" class="form-control mb-2" placeholder="Nombre de la comparsa">
           <select id="newGroupStage" class="form-select mb-2">
             <option value="">-- Etapa de inicio --</option>
@@ -62,12 +62,12 @@
             <option value="Final">Solo Final</option>
           </select>
           <select id="newGroupCurrency" class="form-select mb-2">
-            <option value="USD">💵 USD — Dólares americanos ($)</option>
-            <option value="BOB">🇧🇴 BOB — Bolivianos (Bs.)</option>
+            <option value="USD">&#x1F4B5; USD &mdash; D&oacute;lares americanos ($)</option>
+            <option value="BOB">&#x1F1E7;&#x1F1F4; BOB &mdash; Bolivianos (Bs.)</option>
           </select>
           <select id="newGroupType" class="form-select mb-2">
-            <option value="open">🌐 Abierta — Pozo acumulable</option>
-            <option value="closed">🔒 Cerrada — Premio fijo</option>
+            <option value="open">&#x1F310; Abierta &mdash; Pozo acumulable</option>
+            <option value="closed">&#x1F512; Cerrada &mdash; Premio fijo</option>
           </select>
           <div id="openFields">
             <input type="number" id="newGroupFeeOpen" class="form-control mb-2" placeholder="Cuota por participante">
@@ -75,32 +75,32 @@
           <div id="closedFields" class="d-none">
             <input type="number" id="newGroupPrizeClosed" class="form-control mb-2" placeholder="Premio total fijo">
             <input type="number" id="newGroupFee" class="form-control mb-2" placeholder="Cuota por participante (opcional)">
-            <input type="number" id="newGroupMax" class="form-control mb-2" placeholder="Máx. participantes" min="2">
+            <input type="number" id="newGroupMax" class="form-control mb-2" placeholder="M&aacute;x. participantes" min="2">
           </div>
           <select id="newGroupDist" class="form-select mb-2">
-            <option value="winner">🥇 Todo al 1° lugar (100%)</option>
-            <option value="top2">🥇🥈 Top 2: 70% / 30%</option>
-            <option value="top3">🥇🥈🥉 Top 3: 60% / 30% / 10%</option>
-            <option value="custom">⚙️ Personalizado</option>
+            <option value="winner">&#x1F947; Todo al 1&deg; lugar (100%)</option>
+            <option value="top2">&#x1F947;&#x1F948; Top 2: 70% / 30%</option>
+            <option value="top3">&#x1F947;&#x1F948;&#x1F949; Top 3: 60% / 30% / 10%</option>
+            <option value="custom">&#x2699;&#xFE0F; Personalizado</option>
           </select>
           <div id="customDistFields" class="d-none mb-2">
             <div class="d-flex gap-2">
-              <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥇 1° %</label><input type="number" id="distP1" class="form-control" placeholder="60"></div>
-              <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥈 2° %</label><input type="number" id="distP2" class="form-control" placeholder="30"></div>
-              <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥉 3° %</label><input type="number" id="distP3" class="form-control" placeholder="10"></div>
+              <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">&#x1F947; 1&deg; %</label><input type="number" id="distP1" class="form-control" placeholder="60"></div>
+              <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">&#x1F948; 2&deg; %</label><input type="number" id="distP2" class="form-control" placeholder="30"></div>
+              <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">&#x1F949; 3&deg; %</label><input type="number" id="distP3" class="form-control" placeholder="10"></div>
             </div>
             <div id="distError" style="font-size:11px;color:var(--accent);margin-top:4px"></div>
           </div>
-          <button id="createGroupBtn" class="btn btn-success w-100 mt-1">⚽ Crear comparsa</button>
+          <button id="createGroupBtn" class="btn btn-success w-100 mt-1">&#x26BD; Crear comparsa</button>
           <div id="createMsg" class="mt-2"></div>
         </div>
       </div>
       <div class="col-md-6">
         <div class="card p-4">
-          <h6 style="color:var(--gold);font-weight:700" class="mb-3">🔗 Unirse a comparsa</h6>
-          <p style="font-size:0.83rem;color:var(--text-muted)">Pide el código de 6 letras al dueño e ingrésalo aquí.</p>
-          <input type="text" id="joinCode" class="form-control mb-3" placeholder="Código (ej: AB3X7Z)" style="letter-spacing:3px;font-weight:700;text-transform:uppercase">
-          <button id="joinGroupBtn" class="btn btn-warning w-100">🔗 Unirse</button>
+          <h6 style="color:var(--gold);font-weight:700" class="mb-3">&#x1F517; Unirse a comparsa</h6>
+          <p style="font-size:0.83rem;color:var(--text-muted)">Pide el c&oacute;digo de 6 letras al due&ntilde;o e ingr&eacute;salo aqu&iacute;.</p>
+          <input type="text" id="joinCode" class="form-control mb-3" placeholder="C&oacute;digo (ej: AB3X7Z)" style="letter-spacing:3px;font-weight:700;text-transform:uppercase">
+          <button id="joinGroupBtn" class="btn btn-warning w-100">&#x1F517; Unirse</button>
           <div id="joinMsg" class="mt-2"></div>
         </div>
       </div>
@@ -112,19 +112,19 @@
     <div class="ov-box">
       <div class="ov-header">
         <div>
-          <div style="font-weight:700;font-size:1.05rem">🏆 Elige tu equipo favorito</div>
+          <div style="font-weight:700;font-size:1.05rem">&#x1F3C6; Elige tu equipo favorito</div>
           <div style="font-size:12px;color:var(--text-muted)">Puedes cambiarlo luego (con penalidad de -3 pts)</div>
         </div>
-        <button class="ov-close" id="closeFavoriteOverlay">×</button>
+        <button class="ov-close" id="closeFavoriteOverlay">&times;</button>
       </div>
       <div class="ov-body">
-        <input type="text" id="favoriteSearch" class="form-control mb-3" placeholder="🔍 Buscar equipo..." autocomplete="off">
+        <input type="text" id="favoriteSearch" class="form-control mb-3" placeholder="&#x1F50D; Buscar equipo..." autocomplete="off">
         <div id="teamGrid" class="row g-2" style="max-height:300px;overflow-y:auto"></div>
         <input type="hidden" id="selectedTeam">
       </div>
       <div class="ov-footer">
-        <button id="saveFavoriteBtn" class="btn btn-warning w-100" disabled style="font-weight:700">✅ Confirmar favorito</button>
-        <button id="skipFavoriteBtn" class="btn btn-outline-light w-100" style="font-size:13px">⏩ Saltar por ahora — elegir después</button>
+        <button id="saveFavoriteBtn" class="btn btn-warning w-100" disabled style="font-weight:700">&#x2705; Confirmar favorito</button>
+        <button id="skipFavoriteBtn" class="btn btn-outline-light w-100" style="font-size:13px">&#x23E9; Saltar por ahora &mdash; elegir despu&eacute;s</button>
       </div>
     </div>
   </div>
@@ -133,28 +133,28 @@
   <div id="deleteOverlay" class="native-overlay">
     <div class="ov-box" style="border-color:rgba(201,52,75,0.4)">
       <div class="ov-header" style="border-color:rgba(201,52,75,0.3);background:rgba(201,52,75,0.08)">
-        <h5 style="color:#f5a0ac;margin:0">🗑️ Eliminar comparsa</h5>
-        <button class="ov-close" id="closeDeleteOverlay">×</button>
+        <h5 style="color:#f5a0ac;margin:0">&#x1F5D1;&#xFE0F; Eliminar comparsa</h5>
+        <button class="ov-close" id="closeDeleteOverlay">&times;</button>
       </div>
       <div class="ov-body">
         <div style="background:rgba(201,52,75,0.12);border:1px solid rgba(201,52,75,0.3);border-radius:10px;padding:14px;margin-bottom:16px">
-          <div style="font-weight:700;color:#f5a0ac;margin-bottom:6px">⚠️ Esta acción es irreversible</div>
+          <div style="font-weight:700;color:#f5a0ac;margin-bottom:6px">&#x26A0;&#xFE0F; Esta acci&oacute;n es irreversible</div>
           <ul style="color:#f5a0ac;font-size:0.85rem;margin:0;padding-left:18px">
-            <li>Se eliminarán todos los miembros y sus pronósticos</li>
-            <li>El código de invitación dejará de funcionar</li>
-            <li>No se puede recuperar después</li>
+            <li>Se eliminar&aacute;n todos los miembros y sus pron&oacute;sticos</li>
+            <li>El c&oacute;digo de invitaci&oacute;n dejar&aacute; de funcionar</li>
+            <li>No se puede recuperar despu&eacute;s</li>
           </ul>
         </div>
         <div style="margin-bottom:12px;font-size:0.9rem">Vas a eliminar la comparsa:<br>
           <strong id="deleteGroupName" style="color:var(--gold);font-size:1rem"></strong></div>
         <label style="font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;display:block">Para confirmar, escribe exactamente el nombre:</label>
         <input type="text" id="deleteConfirmInput" class="form-control"
-          placeholder="Escribe el nombre aquí..." autocomplete="off" autocorrect="off" spellcheck="false">
+          placeholder="Escribe el nombre aqu&iacute;..." autocomplete="off" autocorrect="off" spellcheck="false">
       </div>
       <div class="ov-footer" style="border-color:rgba(201,52,75,0.3)">
         <button id="confirmDeleteBtn" class="btn w-100" disabled
           style="background:rgba(201,52,75,0.2);color:#f5a0ac;border:1px solid rgba(201,52,75,0.5);font-weight:700">
-          🗑️ Sí, eliminar definitivamente
+          &#x1F5D1;&#xFE0F; S&iacute;, eliminar definitivamente
         </button>
         <button id="cancelDeleteBtn" class="btn btn-outline-light w-100" style="font-size:13px">Cancelar</button>
       </div>
@@ -162,20 +162,20 @@
   </div>
 
   <div class="footer-brand">
-    ⚽ WC2026 &nbsp;— Desarrollado por
+    &#x26BD; WC2026 &nbsp;&mdash; Desarrollado por
     <strong style="color:var(--primary-light)">Largotek</strong>
     <div style="margin-top:6px;font-size:10px;color:rgba(148,163,184,0.4)">
-      Juego de entretenimiento privado — No es un sitio de apuestas —
-      <a href="legal.html" target="_blank" style="color:rgba(148,163,184,0.4);text-decoration:underline">Términos de uso</a>
+      Juego de entretenimiento privado &mdash; No es un sitio de apuestas &mdash;
+      <a href="legal.html" target="_blank" style="color:rgba(148,163,184,0.4);text-decoration:underline">T&eacute;rminos de uso</a>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script type="module" src="js/firebase-config.js"></script>
   <script type="module" src="js/auth.js"></script>
-  <script type="module" src="js/groups.js"></script>
+  <script type="module" src="js/groups.js?v=2"></script>
   <script type="module">
-    import { injectSponsor } from './js/sponsor-config.js';
+    import { injectSponsor } from './js/sponsor-config.js?v=2';
     injectSponsor();
   </script>
   <script>
