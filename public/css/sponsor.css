@@ -1,0 +1,109 @@
+/* =====================================================
+   SPONSOR — Hero Banner + Navbar Logo
+   Estilos genéricos — el color de acento se aplica
+   inline desde sponsor-config.js
+   ===================================================== */
+
+/* ─ NAVBAR LOGO ─ */
+.sponsor-navbar-logo {
+  height: 34px;
+  object-fit: contain;
+  filter: brightness(1.1);
+  flex-shrink: 0;
+  transition: opacity 0.2s;
+}
+.sponsor-navbar-logo:hover { opacity: 0.85; }
+
+/* ─ HERO BANNER ─ */
+.sponsor-banner {
+  background: linear-gradient(135deg, #08121e 0%, #0f2035 25%, #0f5a84 60%, #1D90C6 80%, #1a8ab8 100%);
+  border-bottom: 4px solid #1D90C6;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+  z-index: 2;
+  min-height: 84px;
+  transition: filter 0.2s;
+}
+.sponsor-banner:hover { filter: brightness(1.05); }
+
+.sponsor-banner::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(-45deg, transparent 0px, transparent 22px,
+    rgba(255,255,255,0.03) 22px, rgba(255,255,255,0.03) 24px);
+  pointer-events: none;
+}
+.sponsor-banner::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.07),
+    rgba(255,255,255,0.12), rgba(255,255,255,0.07), transparent);
+  animation: sponsorShimmer 5s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes sponsorShimmer { 0% { left: -100%; } 100% { left: 120%; } }
+
+.sponsor-banner-accent {
+  position: absolute; left: 0; top: 0; bottom: 0;
+  width: 5px;
+  z-index: 2;
+}
+.sponsor-banner img {
+  height: 56px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 10px rgba(29,144,198,0.45)) brightness(1.08);
+  flex-shrink: 0;
+  position: relative; z-index: 2;
+  transition: transform 0.3s ease;
+}
+.sponsor-banner:hover img { transform: scale(1.04); }
+
+.sponsor-banner-body {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative; z-index: 2;
+  gap: 2px;
+}
+.sponsor-banner-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  line-height: 1;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+}
+.sponsor-banner-tagline {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.sponsor-banner-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  position: relative; z-index: 2;
+  box-shadow: 0 0 8px currentColor;
+}
+
+@media (max-width: 479px) {
+  .sponsor-banner { padding: 14px 16px; min-height: 68px; gap: 14px; }
+  .sponsor-banner img { height: 42px; }
+  .sponsor-banner-name { font-size: 1rem; letter-spacing: 2px; }
+}
+@media (min-width: 768px) {
+  .sponsor-banner img { height: 64px; }
+  .sponsor-banner-name { font-size: 1.4rem; letter-spacing: 5px; }
+}
+[data-theme="light"] .sponsor-banner {
+  background: linear-gradient(135deg, #1D90C6 0%, #1570a0 50%, #0f5a84 100%);
+}
