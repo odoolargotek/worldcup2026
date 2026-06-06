@@ -12,16 +12,45 @@ const PHASES   = ['Grupo A','Grupo B','Grupo C','Grupo D','Grupo E','Grupo F',
 
 let groupData = null;
 
+// Caché local para no repetir lecturas a /users
+const userNameCache = {};
+
 function sym() {
   return (groupData?.currency === 'BOB') ? 'Bs.' : '$';
 }
 
 function getCategory(pts) {
-  if (pts >= 150) return { label: '🔥 Leyenda',   color: '#f59e0b', bg: 'rgba(245,158,11,0.15)',  border: 'rgba(245,158,11,0.4)' };
-  if (pts >= 100) return { label: '🏆 Experto',   color: '#4aafd4', bg: 'rgba(29,144,198,0.15)',  border: 'rgba(29,144,198,0.4)' };
-  if (pts >=  60) return { label: '⚽ Competidor', color: '#34d399', bg: 'rgba(52,211,153,0.12)',  border: 'rgba(52,211,153,0.35)' };
-  if (pts >=  30) return { label: '🌱 En forma',  color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.35)' };
-  return                  { label: '🐶 Novato',    color: '#94a3b8', bg: 'rgba(148,163,184,0.1)',  border: 'rgba(148,163,184,0.3)' };
+  if (pts >= 150) return { label: '\ud83d\udd25 Leyenda',   color: '#f59e0b', bg: 'rgba(245,158,11,0.15)',  border: 'rgba(245,158,11,0.4)' };
+  if (pts >= 100) return { label: '\ud83c\udfc6 Experto',   color: '#4aafd4', bg: 'rgba(29,144,198,0.15)',  border: 'rgba(29,144,198,0.4)' };
+  if (pts >=  60) return { label: '\u26bd Competidor', color: '#34d399', bg: 'rgba(52,211,153,0.12)',  border: 'rgba(52,211,153,0.35)' };
+  if (pts >=  30) return { label: '\ud83c\udf31 En forma',  color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.35)' };
+  return                  { label: '\ud83d\udc36 Novato',    color: '#94a3b8', bg: 'rgba(148,163,184,0.1)',  border: 'rgba(148,163,184,0.3)' };
+}
+
+/**
+ * Obtiene el nombre/apodo de un usuario con triple fallback:
+ * 1. Documento /users/{uid} → display_name
+ * 2. Documento /users/{uid} → email (parte antes del @)
+ * 3. Firebase Auth currentUser.displayName (si es el usuario logueado)
+ * 4. Último recurso: "Usuario"
+ */
+async function getUserName(uid) {
+  if (userNameCache[uid]) return userNameCache[uid];
+  let name = null;
+  try {
+    const uSnap = await getDoc(doc(db, 'users', uid));
+    if (uSnap.exists()) {
+      const d = uSnap.data();
+      name = d.display_name || d.displayName || d.email?.split('@')[0] || null;
+    }
+  } catch(_) {}
+  // Fallback: si es el usuario actual, usar Auth directamente
+  if (!name && auth.currentUser?.uid === uid) {
+    name = auth.currentUser.displayName || auth.currentUser.email?.split('@')[0] || null;
+  }
+  name = name || 'Sin nombre';
+  userNameCache[uid] = name;
+  return name;
 }
 
 onAuthStateChanged(auth, async (user) => {
@@ -35,7 +64,7 @@ onAuthStateChanged(auth, async (user) => {
   const codeEl = document.getElementById('groupCodeDisplay');
   if (codeEl) codeEl.textContent = groupData.code;
   document.getElementById('copyCodeBtn')?.addEventListener('click', () => {
-    navigator.clipboard.writeText(groupData.code).then(() => alert('✅ Código copiado: ' + groupData.code));
+    navigator.clipboard.writeText(groupData.code).then(() => alert('\u2705 C\u00f3digo copiado: ' + groupData.code));
   });
 
   const prizeEl = document.getElementById('groupPrize');
@@ -55,12 +84,12 @@ function renderAdminPanel(user, g) {
   panel.id = 'adminPanel';
   panel.style.cssText = 'background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:12px;padding:14px 18px;margin-bottom:16px';
   panel.innerHTML = `
-    <div style="font-size:12px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">⚙️ Panel de administrador</div>
+    <div style="font-size:12px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">\u2699\ufe0f Panel de administrador</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button id="toggleOpenBtn" class="btn btn-sm ${
         g.is_open === false ? 'btn-outline-success' : 'btn-outline-danger'
       }" style="font-size:12px;font-weight:700">
-        ${g.is_open === false ? '🟢 Reabrir inscripciones' : '🔴 Cerrar inscripciones'}
+        ${g.is_open === false ? '\ud83d\udfe2 Reabrir inscripciones' : '\ud83d\udd34 Cerrar inscripciones'}
       </button>
     </div>
     <div id="adminMsg" style="margin-top:8px;font-size:12px"></div>`;
@@ -71,13 +100,13 @@ function renderAdminPanel(user, g) {
     g.is_open = !newState;
     const btn = document.getElementById('toggleOpenBtn');
     if (btn) {
-      btn.textContent = g.is_open === false ? '🟢 Reabrir inscripciones' : '🔴 Cerrar inscripciones';
+      btn.textContent = g.is_open === false ? '\ud83d\udfe2 Reabrir inscripciones' : '\ud83d\udd34 Cerrar inscripciones';
       btn.className   = `btn btn-sm ${g.is_open === false ? 'btn-outline-success' : 'btn-outline-danger'}`;
     }
     const msg = document.getElementById('adminMsg');
     if (msg) {
       msg.style.color = g.is_open === false ? '#f5a0ac' : '#4aafd4';
-      msg.textContent = g.is_open === false ? '🔴 Inscripciones cerradas.' : '🟢 Inscripciones reabiertas.';
+      msg.textContent = g.is_open === false ? '\ud83d\udd34 Inscripciones cerradas.' : '\ud83d\udfe2 Inscripciones reabiertas.';
     }
   });
 }
@@ -95,9 +124,9 @@ function distLabel(g, memberCount) {
   const s   = sym();
   const pct = g.prize_pct || { p1:100, p2:0, p3:0 };
   const lines = [];
-  if (pct.p1) lines.push(`🥇 ${s}${Math.round(total * pct.p1 / 100)} (${pct.p1}%)`);
-  if (pct.p2) lines.push(`🥈 ${s}${Math.round(total * pct.p2 / 100)} (${pct.p2}%)`);
-  if (pct.p3) lines.push(`🥉 ${s}${Math.round(total * pct.p3 / 100)} (${pct.p3}%)`);
+  if (pct.p1) lines.push(`\ud83e\udd47 ${s}${Math.round(total * pct.p1 / 100)} (${pct.p1}%)`);
+  if (pct.p2) lines.push(`\ud83e\udd48 ${s}${Math.round(total * pct.p2 / 100)} (${pct.p2}%)`);
+  if (pct.p3) lines.push(`\ud83e\udd49 ${s}${Math.round(total * pct.p3 / 100)} (${pct.p3}%)`);
   return lines;
 }
 
@@ -106,10 +135,10 @@ function renderMyPointsCard(me, position, total) {
   if (!el) return;
   const cat = getCategory(me.total);
   const nextCat = [
-    { min: 150, label: '🔥 Leyenda' },
-    { min: 100, label: '🏆 Experto' },
-    { min:  60, label: '⚽ Competidor' },
-    { min:  30, label: '🌱 En forma' },
+    { min: 150, label: '\ud83d\udd25 Leyenda' },
+    { min: 100, label: '\ud83c\udfc6 Experto' },
+    { min:  60, label: '\u26bd Competidor' },
+    { min:  30, label: '\ud83c\udf31 En forma' },
   ].find(c => me.total < c.min);
   const progress = nextCat ? Math.round((me.total / nextCat.min) * 100) : 100;
 
@@ -131,14 +160,14 @@ function renderMyPointsCard(me, position, total) {
       <div style="background:var(--border);border-radius:99px;height:5px;overflow:hidden">
         <div style="height:100%;width:${progress}%;background:${cat.color};border-radius:99px;transition:width 0.6s ease"></div>
       </div>
-    </div>` : `<div style="font-size:11px;color:var(--gold);font-weight:700">🔥 ¡Nivel máximo!</div>`}
+    </div>` : `<div style="font-size:11px;color:var(--gold);font-weight:700">\ud83d\udd25 \u00a1Nivel m\u00e1ximo!</div>`}
     <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
       <div style="font-size:11px;color:var(--text-muted)"><span style="color:#f59e0b;font-weight:700">${me.exactos}</span> exactos</div>
-      <div style="font-size:11px;color:var(--text-muted)">·</div>
+      <div style="font-size:11px;color:var(--text-muted)">&middot;</div>
       <div style="font-size:11px;color:var(--text-muted)"><span style="color:#4aafd4;font-weight:700">${me.resultados}</span> result.</div>
-      <div style="font-size:11px;color:var(--text-muted)">·</div>
+      <div style="font-size:11px;color:var(--text-muted)">&middot;</div>
       <div style="font-size:11px;color:var(--text-muted)"><span style="color:#34d399;font-weight:700">${me.totalFavPts}</span> favs</div>
-      ${me.totalPenalty ? `<div style="font-size:11px;color:var(--text-muted)">·</div>
+      ${me.totalPenalty ? `<div style="font-size:11px;color:var(--text-muted)">&middot;</div>
       <div style="font-size:11px;color:#f5a0ac"><span style="font-weight:700">-${me.totalPenalty}</span> pen</div>` : ''}
     </div>
   `;
@@ -162,7 +191,7 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
   if (prizeEl) {
     if (groupData.type === 'open') {
       prizeEl.innerHTML = totalPrize
-        ? `<span style="color:var(--primary-light)">💰 Pozo: ${s}${totalPrize}</span>`
+        ? `<span style="color:var(--primary-light)">\ud83d\udcb0 Pozo: ${s}${totalPrize}</span>`
         : '<span style="color:var(--text-muted)">Sin cuota</span>';
     } else {
       prizeEl.textContent = totalPrize ? `${s}${totalPrize}` : 'Sin definir';
@@ -170,7 +199,7 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
   }
   if (feeEl) {
     feeEl.textContent = groupData.fee
-      ? `Cuota: ${s}${groupData.fee} · ${memberCount} participantes`
+      ? `Cuota: ${s}${groupData.fee} \u00b7 ${memberCount} participantes`
       : `${memberCount} participantes`;
   }
 
@@ -183,11 +212,9 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
 
   const rows = [];
   for (const mDoc of membersSnap.docs) {
-    const m     = mDoc.data();
-    const uSnap = await getDoc(doc(db, 'users', m.user_uid));
-    const name  = uSnap.exists()
-      ? (uSnap.data().display_name || uSnap.data().email?.split('@')[0])
-      : 'Jugador';
+    const m    = mDoc.data();
+    const name = await getUserName(m.user_uid);
+
     const favs      = m.favorites     || {};
     const favsPts   = m.favorites_pts || {};
     const penalties = m.penalties     || {};
@@ -218,17 +245,17 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
     podio.style.cssText = 'background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(29,144,198,0.05));border:1px solid rgba(245,158,11,0.3);border-radius:12px;padding:14px 18px;margin-bottom:16px';
     podio.innerHTML = `
       <div style="font-size:12px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">
-        🏆 Distribución del premio — Pozo: ${s}${totalPrize}
-        ${groupData.type === 'open' ? `<span style="color:var(--text-muted);font-weight:400"> (${s}${groupData.fee||0} × ${memberCount} personas)</span>` : ''}
+        \ud83c\udfc6 Distribuci\u00f3n del premio \u2014 Pozo: ${s}${totalPrize}
+        ${groupData.type === 'open' ? `<span style="color:var(--text-muted);font-weight:400"> (${s}${groupData.fee||0} \u00d7 ${memberCount} personas)</span>` : ''}
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         ${distLines.map(l => `<div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:8px 14px;font-size:0.88rem;font-weight:700;color:var(--gold)">${l}</div>`).join('')}
       </div>
-      ${rows.length >= 1 ? `<div style="margin-top:10px;font-size:12px;color:var(--text-muted)">Líder actual: <strong style="color:var(--gold)">${rows[0].name}</strong> con ${rows[0].total} pts</div>` : ''}`;
+      ${rows.length >= 1 ? `<div style="margin-top:10px;font-size:12px;color:var(--text-muted)">L\u00edder actual: <strong style="color:var(--gold)">${rows[0].name}</strong> con ${rows[0].total} pts</div>` : ''}`;
     rankingTab.appendChild(podio);
   }
 
-  const medals = ['🥇','🥈','🥉'];
+  const medals = ['\ud83e\udd47','\ud83e\udd48','\ud83e\udd49'];
   const pct    = groupData?.prize_pct || { p1:100, p2:0, p3:0 };
   const pctArr = [pct.p1, pct.p2, pct.p3];
 
@@ -239,7 +266,7 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
     let prizeChip = '';
     if (totalPrize > 0 && i < 3 && pctArr[i] > 0) {
       const amount = Math.round(totalPrize * pctArr[i] / 100);
-      prizeChip = `<span style="font-size:11px;background:rgba(245,158,11,0.15);color:var(--gold);border:1px solid rgba(245,158,11,0.3);border-radius:20px;padding:2px 8px;margin-left:6px">💰 ${s}${amount}</span>`;
+      prizeChip = `<span style="font-size:11px;background:rgba(245,158,11,0.15);color:var(--gold);border:1px solid rgba(245,158,11,0.3);border-radius:20px;padding:2px 8px;margin-left:6px">\ud83d\udcb0 ${s}${amount}</span>`;
     }
 
     const favsLines = PHASES
@@ -256,7 +283,7 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
     const noFavsMsg = r.chosenCount === 0
       ? `<div style="color:var(--text-muted);font-size:0.82rem;font-style:italic">Sin favoritos elegidos</div>` : '';
     const penLine = r.totalPenalty > 0
-      ? `<div class="ranking-concept" style="color:var(--accent);font-weight:600"><span>⚠️ Penalidades</span><span>-${r.totalPenalty} pts</span></div>` : '';
+      ? `<div class="ranking-concept" style="color:var(--accent);font-weight:600"><span>\u26a0\ufe0f Penalidades</span><span>-${r.totalPenalty} pts</span></div>` : '';
 
     const card = document.createElement('div');
     card.className = 'mb-3';
@@ -267,10 +294,10 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
           <div style="flex:1">
             <div style="font-weight:700;font-size:1rem">
               ${r.name}
-              ${r.isMe ? '<span style="color:#4aafd4;font-size:11px;margin-left:6px">(tú)</span>' : ''}
+              ${r.isMe ? '<span style="color:#4aafd4;font-size:11px;margin-left:6px">(t\u00fa)</span>' : ''}
               ${prizeChip}
             </div>
-            <div style="font-size:12px;color:var(--text-muted)">🏆 ${r.chosenCount}/12 favs · 🎯 ${r.exactos} exactos · ✅ ${r.resultados} resultados</div>
+            <div style="font-size:12px;color:var(--text-muted)">\ud83c\udfc6 ${r.chosenCount}/12 favs \u00b7 \ud83c\udfaf ${r.exactos} exactos \u00b7 \u2705 ${r.resultados} resultados</div>
           </div>
           <div style="text-align:right">
             <div style="font-size:1.8rem;font-weight:800;color:${i===0?'var(--gold)':i===1?'#9ca3af':i===2?'#d97706':'var(--primary-light)'}">${r.total}</div>
@@ -278,16 +305,16 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
           </div>
         </div>
         <details>
-          <summary style="padding:10px 18px;cursor:pointer;font-size:12px;color:var(--text-muted);list-style:none">▼ Ver desglose</summary>
+          <summary style="padding:10px 18px;cursor:pointer;font-size:12px;color:var(--text-muted);list-style:none">\u25bc Ver desglose</summary>
           <div style="padding:4px 18px 12px">
-            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin:8px 0 4px">🏆 Favoritos</div>
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin:8px 0 4px">\ud83c\udfc6 Favoritos</div>
             ${favsLines || noFavsMsg}
             <div class="ranking-concept" style="font-weight:700;margin-top:4px">
               <span>Subtotal favs</span><span style="color:var(--primary-light)">+${r.totalFavPts} pts</span>
             </div>
-            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin:10px 0 4px">🎯 Pronósticos</div>
-            <div class="ranking-concept"><span>Exactos ×${r.exactos}</span><span style="color:var(--primary-light)">+${r.exactos*6} pts</span></div>
-            <div class="ranking-concept"><span>Resultados ×${r.resultados}</span><span style="color:var(--primary-light)">+${r.resultados*3} pts</span></div>
+            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin:10px 0 4px">\ud83c\udfaf Pron\u00f3sticos</div>
+            <div class="ranking-concept"><span>Exactos \u00d7${r.exactos}</span><span style="color:var(--primary-light)">+${r.exactos*6} pts</span></div>
+            <div class="ranking-concept"><span>Resultados \u00d7${r.resultados}</span><span style="color:var(--primary-light)">+${r.resultados*3} pts</span></div>
             ${penLine}
             <div style="height:1px;background:var(--border);margin:8px 0"></div>
             <div class="ranking-concept" style="font-weight:700"><span>Total</span><span style="color:var(--gold);font-size:1rem">${r.total} pts</span></div>
@@ -298,6 +325,6 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
   });
 
   if (rows.length === 0) {
-    rankingTab.innerHTML += '<p style="color:var(--text-muted);text-align:center;padding:40px 0">Aún no hay participantes.</p>';
+    rankingTab.innerHTML += '<p style="color:var(--text-muted);text-align:center;padding:40px 0">A\u00fan no hay participantes.</p>';
   }
 }
