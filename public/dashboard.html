@@ -132,6 +132,63 @@
     #saveNicknameBtn:hover { background: rgba(245,158,11,0.35); }
     #saveNicknameBtn:disabled { opacity: 0.5; cursor: default; }
     #nicknameMsg { font-size: 12px; margin-top: 6px; min-height: 16px; }
+
+    /* TV Tab styles */
+    #tab-tv { display: none; }
+    #tv-nav-item { display: none; }
+    .tv-match-card {
+      background: var(--bg-card, #1c2333);
+      border: 1px solid var(--border, rgba(255,255,255,0.07));
+      border-radius: 14px;
+      padding: 16px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: border-color 0.2s;
+    }
+    .tv-match-card:hover { border-color: rgba(29,144,198,0.5); }
+    .tv-match-teams {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+    .tv-match-vs {
+      color: var(--text-muted, #94a3b8);
+      font-size: 0.85rem;
+      font-weight: 400;
+    }
+    .tv-match-meta {
+      font-size: 11px;
+      color: var(--text-muted, #94a3b8);
+      text-align: center;
+    }
+    .tv-btn {
+      display: block;
+      width: 100%;
+      padding: 9px 0;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+      text-align: center;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .tv-btn:hover { opacity: 0.85; text-decoration: none; }
+    .tv-btn-primary   { background: #1D90C6; color: #fff; }
+    .tv-btn-secondary { background: rgba(29,144,198,0.15); color: #4aafd4; border: 1px solid rgba(29,144,198,0.4); }
+    .tv-badge-live { background: #ef4444; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; letter-spacing: 0.5px; }
+    .tv-badge-upcoming { background: rgba(245,158,11,0.2); color: #f59e0b; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; }
+
+    /* Main tabs */
+    #dashTabs { margin-bottom: 20px; }
+    #dashTabs .nav-link { color: var(--text-muted, #94a3b8); font-size: 14px; font-weight: 600; border: none; padding: 8px 16px; border-radius: 8px; }
+    #dashTabs .nav-link.active { background: rgba(29,144,198,0.15); color: #4aafd4; }
+    #dashTabs .nav-link:hover:not(.active) { background: rgba(255,255,255,0.05); color: var(--text, #e2e8f0); }
   </style>
 </head>
 <body>
@@ -169,102 +226,135 @@
   </div>
 
   <div class="container py-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
       <h5 class="mb-0" style="font-weight:800">🏆 Mis comparsas</h5>
       <span id="userEmail" style="color:var(--text-muted);font-size:0.85rem"></span>
     </div>
 
-    <!-- Banner: sin apodo -->
-    <div id="nicknameBanner">
-      <div class="nick-title">👤 ¡Ponle tu nombre o apodo!</div>
-      <div class="nick-sub">Apareces como "Sin nombre" en las comparsas. Escribe cómo quieres que te vean los demás.</div>
-      <div class="nick-row">
-        <input type="text" id="nicknameInput" maxlength="30" placeholder="Tu apodo o nombre..." autocomplete="off" autocorrect="off" spellcheck="false">
-        <button id="saveNicknameBtn">✅ Guardar</button>
-      </div>
-      <div id="nicknameMsg"></div>
-    </div>
+    <!-- TABS principales -->
+    <ul class="nav" id="dashTabs">
+      <li class="nav-item">
+        <button class="nav-link active" id="tab-comparsas-btn" onclick="switchDashTab('comparsas')">🏆 Comparsas</button>
+      </li>
+      <li class="nav-item" id="tv-nav-item">
+        <button class="nav-link" id="tab-tv-btn" onclick="switchDashTab('tv')">📺 Ver en vivo</button>
+      </li>
+    </ul>
 
-    <!-- Estado de carga -->
-    <div id="groupLoadingState">
-      <div class="loading-label">
-        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-        Cargando tus comparsas, espera un momento...
-      </div>
-      <div class="skeleton-card">
-        <div class="skeleton-line title"></div>
-        <div class="skeleton-line sub"></div>
-        <div class="skeleton-line badge"></div>
-        <div class="skeleton-line btn"></div>
-      </div>
-      <div class="skeleton-card">
-        <div class="skeleton-line title" style="width:45%"></div>
-        <div class="skeleton-line sub" style="width:30%"></div>
-        <div class="skeleton-line badge"></div>
-        <div class="skeleton-line btn"></div>
-      </div>
-    </div>
+    <!-- TAB: Comparsas -->
+    <div id="tab-comparsas">
 
-    <!-- Lista real: empieza oculta con inline style -->
-    <div id="groupList" class="row g-3 mb-4" style="display:none"></div>
+      <!-- Banner: sin apodo -->
+      <div id="nicknameBanner">
+        <div class="nick-title">👤 ¡Ponle tu nombre o apodo!</div>
+        <div class="nick-sub">Apareces como "Sin nombre" en las comparsas. Escribe cómo quieres que te vean los demás.</div>
+        <div class="nick-row">
+          <input type="text" id="nicknameInput" maxlength="30" placeholder="Tu apodo o nombre..." autocomplete="off" autocorrect="off" spellcheck="false">
+          <button id="saveNicknameBtn">✅ Guardar</button>
+        </div>
+        <div id="nicknameMsg"></div>
+      </div>
 
-    <div class="row g-3">
-      <div class="col-md-6">
-        <div class="card p-4">
-          <h6 style="color:var(--primary-light);font-weight:700" class="mb-3">➕ Crear comparsa</h6>
-          <input type="text" id="newGroupName" class="form-control mb-2" placeholder="Nombre de la comparsa">
-          <select id="newGroupStage" class="form-select mb-2">
-            <option value="">-- Etapa de inicio --</option>
-            <option value="Grupos">Fase de Grupos</option>
-            <option value="Octavos">Desde Octavos</option>
-            <option value="Cuartos">Desde Cuartos</option>
-            <option value="Semifinal">Desde Semifinal</option>
-            <option value="Final">Solo Final</option>
-          </select>
-          <select id="newGroupCurrency" class="form-select mb-2">
-            <option value="USD">💵 USD — Dólares americanos ($)</option>
-            <option value="BOB">🇧🇴 BOB — Bolivianos (Bs.)</option>
-          </select>
-          <select id="newGroupType" class="form-select mb-2">
-            <option value="open">🌐 Abierta — Pozo acumulable</option>
-            <option value="closed">🔒 Cerrada — Premio fijo</option>
-          </select>
-          <div id="openFields">
-            <input type="number" id="newGroupFeeOpen" class="form-control mb-2" placeholder="Cuota por participante">
-          </div>
-          <div id="closedFields" class="d-none">
-            <input type="number" id="newGroupPrizeClosed" class="form-control mb-2" placeholder="Premio total fijo">
-            <input type="number" id="newGroupFee" class="form-control mb-2" placeholder="Cuota por participante (opcional)">
-            <input type="number" id="newGroupMax" class="form-control mb-2" placeholder="Máx. participantes" min="2">
-          </div>
-          <select id="newGroupDist" class="form-select mb-2">
-            <option value="winner">🥇 Todo al 1° lugar (100%)</option>
-            <option value="top2">🥇🥈 Top 2: 70% / 30%</option>
-            <option value="top3">🥇🥈🥉 Top 3: 60% / 30% / 10%</option>
-            <option value="custom">⚙️ Personalizado</option>
-          </select>
-          <div id="customDistFields" class="d-none mb-2">
-            <div class="d-flex gap-2">
-              <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥇 1° %</label><input type="number" id="distP1" class="form-control" placeholder="60"></div>
-              <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥈 2° %</label><input type="number" id="distP2" class="form-control" placeholder="30"></div>
-              <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥉 3° %</label><input type="number" id="distP3" class="form-control" placeholder="10"></div>
+      <!-- Estado de carga -->
+      <div id="groupLoadingState">
+        <div class="loading-label">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          Cargando tus comparsas, espera un momento...
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-line title"></div>
+          <div class="skeleton-line sub"></div>
+          <div class="skeleton-line badge"></div>
+          <div class="skeleton-line btn"></div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-line title" style="width:45%"></div>
+          <div class="skeleton-line sub" style="width:30%"></div>
+          <div class="skeleton-line badge"></div>
+          <div class="skeleton-line btn"></div>
+        </div>
+      </div>
+
+      <!-- Lista real: empieza oculta con inline style -->
+      <div id="groupList" class="row g-3 mb-4" style="display:none"></div>
+
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="card p-4">
+            <h6 style="color:var(--primary-light);font-weight:700" class="mb-3">➕ Crear comparsa</h6>
+            <input type="text" id="newGroupName" class="form-control mb-2" placeholder="Nombre de la comparsa">
+            <select id="newGroupStage" class="form-select mb-2">
+              <option value="">-- Etapa de inicio --</option>
+              <option value="Grupos">Fase de Grupos</option>
+              <option value="Octavos">Desde Octavos</option>
+              <option value="Cuartos">Desde Cuartos</option>
+              <option value="Semifinal">Desde Semifinal</option>
+              <option value="Final">Solo Final</option>
+            </select>
+            <select id="newGroupCurrency" class="form-select mb-2">
+              <option value="USD">💵 USD — Dólares americanos ($)</option>
+              <option value="BOB">🇧🇴 BOB — Bolivianos (Bs.)</option>
+            </select>
+            <select id="newGroupType" class="form-select mb-2">
+              <option value="open">🌐 Abierta — Pozo acumulable</option>
+              <option value="closed">🔒 Cerrada — Premio fijo</option>
+            </select>
+            <div id="openFields">
+              <input type="number" id="newGroupFeeOpen" class="form-control mb-2" placeholder="Cuota por participante">
             </div>
-            <div id="distError" style="font-size:11px;color:var(--accent);margin-top:4px"></div>
+            <div id="closedFields" class="d-none">
+              <input type="number" id="newGroupPrizeClosed" class="form-control mb-2" placeholder="Premio total fijo">
+              <input type="number" id="newGroupFee" class="form-control mb-2" placeholder="Cuota por participante (opcional)">
+              <input type="number" id="newGroupMax" class="form-control mb-2" placeholder="Máx. participantes" min="2">
+            </div>
+            <select id="newGroupDist" class="form-select mb-2">
+              <option value="winner">🥇 Todo al 1° lugar (100%)</option>
+              <option value="top2">🥇🥈 Top 2: 70% / 30%</option>
+              <option value="top3">🥇🥈🥉 Top 3: 60% / 30% / 10%</option>
+              <option value="custom">⚙️ Personalizado</option>
+            </select>
+            <div id="customDistFields" class="d-none mb-2">
+              <div class="d-flex gap-2">
+                <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥇 1° %</label><input type="number" id="distP1" class="form-control" placeholder="60"></div>
+                <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥈 2° %</label><input type="number" id="distP2" class="form-control" placeholder="30"></div>
+                <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥉 3° %</label><input type="number" id="distP3" class="form-control" placeholder="10"></div>
+              </div>
+              <div id="distError" style="font-size:11px;color:var(--accent);margin-top:4px"></div>
+            </div>
+            <button id="createGroupBtn" class="btn btn-success w-100 mt-1">⚽ Crear comparsa</button>
+            <div id="createMsg" class="mt-2"></div>
           </div>
-          <button id="createGroupBtn" class="btn btn-success w-100 mt-1">⚽ Crear comparsa</button>
-          <div id="createMsg" class="mt-2"></div>
+        </div>
+        <div class="col-md-6">
+          <div class="card p-4">
+            <h6 style="color:var(--gold);font-weight:700" class="mb-3">🔗 Unirse a comparsa</h6>
+            <p style="font-size:0.83rem;color:var(--text-muted)">Pide el código de 6 letras al dueño e ingrésalo aquí.</p>
+            <input type="text" id="joinCode" class="form-control mb-3" placeholder="Código (ej: AB3X7Z)" style="letter-spacing:3px;font-weight:700;text-transform:uppercase">
+            <button id="joinGroupBtn" class="btn btn-warning w-100">🔗 Unirse</button>
+            <div id="joinMsg" class="mt-2"></div>
+          </div>
         </div>
       </div>
-      <div class="col-md-6">
-        <div class="card p-4">
-          <h6 style="color:var(--gold);font-weight:700" class="mb-3">🔗 Unirse a comparsa</h6>
-          <p style="font-size:0.83rem;color:var(--text-muted)">Pide el código de 6 letras al dueño e ingrésalo aquí.</p>
-          <input type="text" id="joinCode" class="form-control mb-3" placeholder="Código (ej: AB3X7Z)" style="letter-spacing:3px;font-weight:700;text-transform:uppercase">
-          <button id="joinGroupBtn" class="btn btn-warning w-100">🔗 Unirse</button>
-          <div id="joinMsg" class="mt-2"></div>
+    </div><!-- /tab-comparsas -->
+
+    <!-- TAB: Ver en vivo -->
+    <div id="tab-tv" style="display:none">
+      <div style="margin-bottom:16px">
+        <h6 style="font-weight:800;margin-bottom:4px">📺 Partidos disponibles</h6>
+        <p style="font-size:12px;color:var(--text-muted);margin:0">Haz clic en "Ver" para abrir el partido en una nueva ventana.</p>
+      </div>
+      <div id="tvMatchesLoading" style="text-align:center;padding:40px 0;color:var(--text-muted);font-size:13px">
+        <div class="loading-label" style="justify-content:center">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          Cargando partidos...
         </div>
       </div>
-    </div>
+      <div id="tvMatchesGrid" class="row g-3"></div>
+      <div id="tvMatchesError" style="display:none;text-align:center;padding:30px 0">
+        <span style="color:#f5a0ac;font-size:13px">⚠️ No se pudo cargar la lista de partidos. Intenta más tarde.</span>
+      </div>
+    </div><!-- /tab-tv -->
+
   </div>
 
   <!-- OVERLAY FAVORITO -->
@@ -335,7 +425,7 @@
   <script type="module" src="js/auth.js"></script>
   <script type="module" src="js/groups.js?v=5"></script>
 
-  <!-- Banner apodo: detecta y guarda display_name -->
+  <!-- Banner apodo + TV access check -->
   <script type="module">
     import { auth, db } from './js/firebase-config.js';
     import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
@@ -346,9 +436,16 @@
       try {
         const snap = await getDoc(doc(db, 'users', user.uid));
         const data = snap.exists() ? snap.data() : {};
+
+        // Banner apodo
         const hasName = (data.display_name || '').trim().length > 0;
         if (!hasName) {
           document.getElementById('nicknameBanner').style.display = 'block';
+        }
+
+        // Acceso TV
+        if (data.tv_access === true) {
+          document.getElementById('tv-nav-item').style.display = 'block';
         }
       } catch(e) { /* silencioso */ }
     });
@@ -388,6 +485,101 @@
     document.getElementById('nicknameInput').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') document.getElementById('saveNicknameBtn').click();
     });
+  </script>
+
+  <!-- TV Tab: cargar partidos desde API -->
+  <script>
+    let tvLoaded = false;
+
+    window.switchDashTab = function(tab) {
+      document.getElementById('tab-comparsas').style.display = tab === 'comparsas' ? '' : 'none';
+      document.getElementById('tab-tv').style.display        = tab === 'tv'        ? '' : 'none';
+      document.getElementById('tab-comparsas-btn').classList.toggle('active', tab === 'comparsas');
+      document.getElementById('tab-tv-btn').classList.toggle('active', tab === 'tv');
+      if (tab === 'tv' && !tvLoaded) loadTvMatches();
+    };
+
+    async function loadTvMatches() {
+      tvLoaded = true;
+      const grid    = document.getElementById('tvMatchesGrid');
+      const loading = document.getElementById('tvMatchesLoading');
+      const errDiv  = document.getElementById('tvMatchesError');
+      try {
+        const res  = await fetch('https://streamtp.top/api/matches.json', { cache: 'no-cache' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        loading.style.display = 'none';
+
+        // Normalizar: el JSON puede ser array o { matches: [...] }
+        const matches = Array.isArray(data) ? data : (data.matches || data.events || []);
+
+        if (!matches.length) {
+          grid.innerHTML = '<div class="col-12" style="text-align:center;padding:30px 0;color:var(--text-muted);font-size:13px">No hay partidos disponibles en este momento.</div>';
+          return;
+        }
+
+        grid.innerHTML = matches.map(m => buildTvCard(m)).join('');
+      } catch(e) {
+        loading.style.display = 'none';
+        errDiv.style.display  = '';
+        console.error('TV matches error:', e);
+      }
+    }
+
+    function buildTvCard(m) {
+      // Campos flexibles según lo que devuelva el JSON
+      const home    = m.home_team   || m.home   || m.team1  || m.homeTeam  || '?';
+      const away    = m.away_team   || m.away   || m.team2  || m.awayTeam  || '?';
+      const date    = m.date        || m.time   || m.kickoff || m.datetime  || '';
+      const league  = m.league      || m.competition || m.category || '';
+      const links   = m.links       || m.streams || m.channels || [];
+      const title   = m.title       || m.name   || (home && away ? home + ' vs ' + away : 'Partido');
+      const isLive  = m.status === 'live' || m.live === true || m.is_live === true;
+
+      let dateStr = '';
+      if (date) {
+        try {
+          const d = new Date(date);
+          if (!isNaN(d)) {
+            dateStr = d.toLocaleDateString('es', { weekday:'short', day:'numeric', month:'short' })
+                    + ' ' + d.toLocaleTimeString('es', { hour:'2-digit', minute:'2-digit' });
+          } else { dateStr = date; }
+        } catch(e) { dateStr = date; }
+      }
+
+      // Botones de links
+      let buttonsHtml = '';
+      if (Array.isArray(links) && links.length) {
+        buttonsHtml = links.map((l, i) => {
+          const url  = typeof l === 'string' ? l : (l.url || l.link || l.href || '#');
+          const name = typeof l === 'object' ? (l.name || l.label || l.channel || ('Opción ' + (i+1))) : ('Canal ' + (i+1));
+          return `<a href="${url}" target="_blank" rel="noopener" class="tv-btn ${i === 0 ? 'tv-btn-primary' : 'tv-btn-secondary'}" style="margin-top:${i>0?'6px':'0'}">
+            📺 Ver — ${name}
+          </a>`;
+        }).join('');
+      } else if (m.url || m.link || m.stream_url) {
+        const url = m.url || m.link || m.stream_url;
+        buttonsHtml = `<a href="${url}" target="_blank" rel="noopener" class="tv-btn tv-btn-primary">📺 Ver partido</a>`;
+      } else {
+        buttonsHtml = `<span style="font-size:12px;color:var(--text-muted)">Sin enlace disponible</span>`;
+      }
+
+      return `
+      <div class="col-12 col-sm-6 col-lg-4">
+        <div class="tv-match-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+            <span style="font-size:11px;color:var(--text-muted);flex:1">${league}</span>
+            ${isLive ? '<span class="tv-badge-live">● EN VIVO</span>' : (dateStr ? '<span class="tv-badge-upcoming">' + dateStr + '</span>' : '')}
+          </div>
+          <div class="tv-match-teams">
+            ${home} <span class="tv-match-vs">vs</span> ${away}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
+            ${buttonsHtml}
+          </div>
+        </div>
+      </div>`;
+    }
   </script>
 
   <script>

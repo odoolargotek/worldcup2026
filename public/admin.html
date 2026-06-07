@@ -13,6 +13,28 @@
   </script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="css/style.css">
+  <style>
+    .tv-user-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--border, rgba(255,255,255,0.07));
+      margin-bottom: 8px;
+      gap: 12px;
+    }
+    .tv-user-info { flex: 1; min-width: 0; }
+    .tv-user-name { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tv-user-email { font-size: 11px; color: var(--text-muted, #94a3b8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tv-toggle-on  { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.4); border-radius: 8px; padding: 5px 14px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
+    .tv-toggle-on:hover  { background: rgba(52,211,153,0.3); }
+    .tv-toggle-off { background: rgba(201,52,75,0.12); color: #f5a0ac; border: 1px solid rgba(201,52,75,0.35); border-radius: 8px; padding: 5px 14px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.15s; }
+    .tv-toggle-off:hover { background: rgba(201,52,75,0.28); }
+    .tv-badge-on  { font-size: 10px; background: rgba(52,211,153,0.15); color: #34d399; border-radius: 20px; padding: 2px 8px; font-weight: 700; }
+    .tv-badge-off { font-size: 10px; background: rgba(148,163,184,0.1); color: var(--text-muted); border-radius: 20px; padding: 2px 8px; font-weight: 700; }
+  </style>
 </head>
 <body>
 
@@ -33,6 +55,7 @@
       <li class="nav-item"><button class="nav-link active" data-atab="results">🏆 Resultados</button></li>
       <li class="nav-item"><button class="nav-link" data-atab="matches">⚽ Partidos</button></li>
       <li class="nav-item"><button class="nav-link" data-atab="groupsmgr">👥 Comparsas</button></li>
+      <li class="nav-item"><button class="nav-link" data-atab="tvaccess">📺 Acceso TV</button></li>
     </ul>
 
     <div id="atab-results">
@@ -147,6 +170,30 @@
       </div>
     </div>
 
+    <!-- NUEVA PESTAÑA: Acceso TV -->
+    <div id="atab-tvaccess" class="d-none">
+      <div class="card p-4">
+        <h6 style="color:#4aafd4;font-weight:700" class="mb-1">📺 Gestión de acceso TV</h6>
+        <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:20px">Solo los usuarios con acceso habilitado verán la pestaña "Ver en vivo" en su dashboard.</p>
+
+        <!-- Buscar usuario -->
+        <div class="mb-4">
+          <label class="form-label" style="font-size:13px;font-weight:700">🔍 Buscar usuario por email</label>
+          <div class="d-flex gap-2">
+            <input type="text" id="tvSearchInput" class="form-control" placeholder="correo@ejemplo.com" style="font-size:13px">
+            <button id="tvSearchBtn" class="btn btn-sm" style="background:#1D90C6;color:#fff;font-weight:700;white-space:nowrap">Buscar</button>
+          </div>
+          <div id="tvSearchResult" class="mt-3"></div>
+        </div>
+
+        <!-- Lista de usuarios con acceso -->
+        <div>
+          <h6 style="font-size:13px;font-weight:700;color:var(--text-muted);margin-bottom:12px">✅ Usuarios con acceso activo</h6>
+          <div id="tvAccessList"><div style="color:var(--text-muted);font-size:13px">Cargando...</div></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <!-- Modal confirmar borrar todos -->
@@ -216,6 +263,115 @@
         btn.disabled = false;
         btn.textContent = '⚡ Cargar todos los partidos';
       }
+    });
+  </script>
+
+  <!-- TV Access management -->
+  <script type="module">
+    import { db } from './js/firebase-config.js';
+    import {
+      collection, query, where, getDocs,
+      doc, updateDoc, getDoc
+    } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+    // ── Cargar lista de usuarios con acceso activo ──
+    async function loadTvAccessList() {
+      const el = document.getElementById('tvAccessList');
+      try {
+        const q    = query(collection(db, 'users'), where('tv_access', '==', true));
+        const snap = await getDocs(q);
+        if (snap.empty) {
+          el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">Ningún usuario tiene acceso habilitado aún.</div>';
+          return;
+        }
+        el.innerHTML = '';
+        snap.forEach(d => renderTvRow(el, d.id, d.data(), true));
+      } catch(e) {
+        el.innerHTML = `<div style="color:#f5a0ac;font-size:13px">Error cargando lista: ${e.message}</div>`;
+      }
+    }
+
+    function renderTvRow(container, uid, data, hasAccess) {
+      const name  = data.display_name || data.email || 'Sin nombre';
+      const email = data.email || '';
+      const div   = document.createElement('div');
+      div.className = 'tv-user-row';
+      div.id = 'tv-row-' + uid;
+      div.innerHTML = `
+        <div class="tv-user-info">
+          <div class="tv-user-name">${name}</div>
+          <div class="tv-user-email">${email}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+          <span class="${hasAccess ? 'tv-badge-on' : 'tv-badge-off'}">${hasAccess ? '✅ Activo' : '🚫 Sin acceso'}</span>
+          <button class="${hasAccess ? 'tv-toggle-off' : 'tv-toggle-on'}" data-uid="${uid}" data-access="${hasAccess}">
+            ${hasAccess ? '🚫 Quitar' : '✅ Dar acceso'}
+          </button>
+        </div>`;
+      container.appendChild(div);
+      div.querySelector('button').addEventListener('click', () => toggleAccess(uid, hasAccess));
+    }
+
+    async function toggleAccess(uid, currentAccess) {
+      const btn = document.querySelector(`#tv-row-${uid} button`);
+      if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
+      try {
+        await updateDoc(doc(db, 'users', uid), { tv_access: !currentAccess });
+        // Recargar lista
+        await loadTvAccessList();
+        // Si el resultado del search está mostrando este uid, actualizarlo
+        const searchRow = document.getElementById('tv-search-row-' + uid);
+        if (searchRow) {
+          const d = await getDoc(doc(db, 'users', uid));
+          searchRow.replaceWith((() => {
+            const tmp = document.createElement('div');
+            renderTvRow(tmp, uid, d.data(), !currentAccess);
+            const el = tmp.firstElementChild;
+            el.id = 'tv-search-row-' + uid;
+            return el;
+          })());
+        }
+      } catch(e) {
+        alert('Error: ' + e.message);
+        if (btn) { btn.disabled = false; }
+      }
+    }
+
+    // ── Buscar usuario por email ──
+    document.getElementById('tvSearchBtn').addEventListener('click', async () => {
+      const input = document.getElementById('tvSearchInput').value.trim().toLowerCase();
+      const res   = document.getElementById('tvSearchResult');
+      if (!input) { res.innerHTML = '<span style="color:#f5a0ac;font-size:13px">⚠️ Ingresa un email para buscar.</span>'; return; }
+      res.innerHTML = '<span style="color:var(--text-muted);font-size:13px">Buscando...</span>';
+      try {
+        const q    = query(collection(db, 'users'), where('email', '==', input));
+        const snap = await getDocs(q);
+        res.innerHTML = '';
+        if (snap.empty) {
+          res.innerHTML = '<div style="color:#f5a0ac;font-size:13px">No se encontró ningún usuario con ese email.</div>';
+          return;
+        }
+        snap.forEach(d => {
+          const tmp = document.createElement('div');
+          renderTvRow(tmp, d.id, d.data(), d.data().tv_access === true);
+          const el = tmp.firstElementChild;
+          el.id = 'tv-search-row-' + d.id;
+          res.appendChild(el);
+        });
+      } catch(e) {
+        res.innerHTML = `<div style="color:#f5a0ac;font-size:13px">Error: ${e.message}</div>`;
+      }
+    });
+
+    document.getElementById('tvSearchInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') document.getElementById('tvSearchBtn').click();
+    });
+
+    // Cargar lista al abrir pestaña TV
+    document.querySelectorAll('[data-atab]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.dataset.atab === 'tvaccess') loadTvAccessList();
+      });
     });
   </script>
 </body>
