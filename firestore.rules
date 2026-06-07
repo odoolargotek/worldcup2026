@@ -20,9 +20,16 @@ service cloud.firestore {
     match /group_members/{mid} {
       allow read: if request.auth != null;
 
-      // Crear o actualizar: el user_uid del documento debe ser el del usuario actual
-      allow create, update: if request.auth != null &&
-                               request.resource.data.user_uid == request.auth.uid;
+      // Crear: solo el propio usuario puede crear su membresía
+      allow create: if request.auth != null &&
+                       request.resource.data.user_uid == request.auth.uid;
+
+      // Actualizar: el propio miembro O el admin/owner del grupo
+      allow update: if request.auth != null && (
+                       request.resource.data.user_uid == request.auth.uid ||
+                       resource.data.user_uid == request.auth.uid ||
+                       get(/databases/$(database)/documents/groups/$(resource.data.group_id)).data.owner_uid == request.auth.uid
+                    );
 
       // Borrar: el propio miembro O el owner del grupo puede eliminar
       allow delete: if request.auth != null && (
