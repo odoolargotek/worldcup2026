@@ -55,11 +55,7 @@ if (inviteCode) {
 }
 
 onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    // Usuario no autenticado: ocultar skeleton igual
-    hideLoading();
-    return;
-  }
+  if (!user) { hideLoading(); return; }
   const emailEl = document.getElementById('userEmail');
   if (emailEl) emailEl.textContent = user.email;
   await loadGroups(user);
@@ -73,33 +69,44 @@ async function loadGroups(user) {
   container.innerHTML = '';
 
   try {
-    const q    = query(collection(db, 'group_members'), where('user_uid', '==', user.uid));
-    const snap = await getDocs(q);
+    // 1. Traer membresías del usuario
+    const snap = await getDocs(
+      query(collection(db, 'group_members'), where('user_uid', '==', user.uid))
+    );
 
-    const validDocs = [];
-    for (const memberDoc of snap.docs) {
-      const gid   = memberDoc.data().group_id;
-      const gSnap = await getDoc(doc(db, 'groups', gid));
-      if (gSnap.exists()) validDocs.push({ gSnap, memberData: memberDoc.data() });
-    }
-
-    if (validDocs.length === 0) {
+    if (snap.empty) {
       container.innerHTML = '<div class="col-12"><p style="color:var(--text-muted)">\u00a1A\u00fan no perteneces a ninguna comparsa! Crea una o \u00fanete con un c\u00f3digo.</p></div>';
       return;
     }
 
-    for (const { gSnap, memberData } of validDocs) {
-      const membersSnap = await getDocs(
-        query(collection(db, 'group_members'), where('group_id', '==', gSnap.id))
-      );
-      renderGroupCard(gSnap, memberData, container, user, membersSnap.size);
+    // 2. Traer todos los grupos y conteos EN PARALELO
+    const memberDocs = snap.docs;
+    const [gSnaps, memberCountSnaps] = await Promise.all([
+      // Todos los documentos de grupo a la vez
+      Promise.all(memberDocs.map(m => getDoc(doc(db, 'groups', m.data().group_id)))),
+      // Todos los conteos de miembros a la vez
+      Promise.all(memberDocs.map(m =>
+        getDocs(query(collection(db, 'group_members'), where('group_id', '==', m.data().group_id)))
+      ))
+    ]);
+
+    // 3. Renderizar
+    let rendered = 0;
+    memberDocs.forEach((memberDoc, i) => {
+      const gSnap = gSnaps[i];
+      if (!gSnap.exists()) return;
+      renderGroupCard(gSnap, memberDoc.data(), container, user, memberCountSnaps[i].size);
+      rendered++;
+    });
+
+    if (rendered === 0) {
+      container.innerHTML = '<div class="col-12"><p style="color:var(--text-muted)">\u00a1A\u00fan no perteneces a ninguna comparsa! Crea una o \u00fanete con un c\u00f3digo.</p></div>';
     }
 
   } catch (err) {
     console.error('[loadGroups] Error:', err);
-    container.innerHTML = `<div class="col-12"><p style="color:var(--accent)">\u274c Error al cargar comparsas. Recarga la p\u00e1gina.</p></div>`;
+    container.innerHTML = `<div class="col-12"><p style="color:var(--accent)">❌ Error al cargar comparsas. Recarga la página.<br><small style="opacity:0.6">${err.message}</small></p></div>`;
   } finally {
-    // Siempre ocultar el skeleton, pase lo que pase
     hideLoading();
   }
 }
