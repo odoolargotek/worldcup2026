@@ -77,6 +77,61 @@
     @media (prefers-reduced-motion: reduce) {
       .skeleton-line, .dot { animation: none !important; }
     }
+
+    /* Banner apodo */
+    #nicknameBanner {
+      display: none;
+      background: rgba(245,158,11,0.10);
+      border: 1px solid rgba(245,158,11,0.35);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 20px;
+    }
+    #nicknameBanner .nick-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #f59e0b;
+      margin-bottom: 4px;
+    }
+    #nicknameBanner .nick-sub {
+      font-size: 12px;
+      color: var(--text-muted, #94a3b8);
+      margin-bottom: 10px;
+    }
+    #nicknameBanner .nick-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    #nicknameInput {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 600;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(245,158,11,0.4);
+      border-radius: 8px;
+      padding: 8px 12px;
+      color: inherit;
+    }
+    #nicknameInput:focus {
+      outline: none;
+      border-color: #f59e0b;
+    }
+    #saveNicknameBtn {
+      background: rgba(245,158,11,0.2);
+      border: 1px solid rgba(245,158,11,0.5);
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #f59e0b;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    #saveNicknameBtn:hover { background: rgba(245,158,11,0.35); }
+    #saveNicknameBtn:disabled { opacity: 0.5; cursor: default; }
+    #nicknameMsg { font-size: 12px; margin-top: 6px; min-height: 16px; }
   </style>
 </head>
 <body>
@@ -117,6 +172,17 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
       <h5 class="mb-0" style="font-weight:800">🏆 Mis comparsas</h5>
       <span id="userEmail" style="color:var(--text-muted);font-size:0.85rem"></span>
+    </div>
+
+    <!-- Banner: sin apodo -->
+    <div id="nicknameBanner">
+      <div class="nick-title">👤 ¡Ponle tu nombre o apodo!</div>
+      <div class="nick-sub">Apareces como "Sin nombre" en las comparsas. Escribe cómo quieres que te vean los demás.</div>
+      <div class="nick-row">
+        <input type="text" id="nicknameInput" maxlength="30" placeholder="Tu apodo o nombre..." autocomplete="off" autocorrect="off" spellcheck="false">
+        <button id="saveNicknameBtn">✅ Guardar</button>
+      </div>
+      <div id="nicknameMsg"></div>
     </div>
 
     <!-- Estado de carga -->
@@ -268,8 +334,63 @@
   <script type="module" src="js/firebase-config.js"></script>
   <script type="module" src="js/auth.js"></script>
   <script type="module" src="js/groups.js?v=5"></script>
+
+  <!-- Banner apodo: detecta y guarda display_name -->
+  <script type="module">
+    import { auth, db } from './js/firebase-config.js';
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
+    import { doc, getDoc, setDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) return;
+      try {
+        const snap = await getDoc(doc(db, 'users', user.uid));
+        const data = snap.exists() ? snap.data() : {};
+        const hasName = (data.display_name || '').trim().length > 0;
+        if (!hasName) {
+          document.getElementById('nicknameBanner').style.display = 'block';
+        }
+      } catch(e) { /* silencioso */ }
+    });
+
+    document.getElementById('saveNicknameBtn').addEventListener('click', async () => {
+      const input = document.getElementById('nicknameInput');
+      const msg   = document.getElementById('nicknameMsg');
+      const btn   = document.getElementById('saveNicknameBtn');
+      const name  = input.value.trim();
+      if (!name) {
+        msg.innerHTML = '<span style="color:#f5a0ac">⚠️ Escribe un nombre o apodo primero.</span>';
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Guardando...';
+      try {
+        const user = auth.currentUser;
+        if (!user) throw new Error('no user');
+        const ref  = doc(db, 'users', user.uid);
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          await updateDoc(ref, { display_name: name, email: user.email });
+        } else {
+          await setDoc(ref, { uid: user.uid, display_name: name, email: user.email, created_at: new Date() });
+        }
+        msg.innerHTML = '<span style="color:#34d399">✅ ¡Listo! Ya aparecerás como <strong>' + name + '</strong> en las comparsas.</span>';
+        setTimeout(() => {
+          document.getElementById('nicknameBanner').style.display = 'none';
+        }, 2500);
+      } catch(e) {
+        msg.innerHTML = '<span style="color:#f5a0ac">⚠️ Error al guardar. Intenta de nuevo.</span>';
+        btn.disabled = false;
+        btn.textContent = '✅ Guardar';
+      }
+    });
+
+    document.getElementById('nicknameInput').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') document.getElementById('saveNicknameBtn').click();
+    });
+  </script>
+
   <script>
-    // Función global que llama groups.js cuando termina de cargar
     window.hideGroupsLoading = function() {
       var loading = document.getElementById('groupLoadingState');
       var list    = document.getElementById('groupList');
@@ -277,7 +398,6 @@
       if (list)    list.style.display    = '';
     };
 
-    // Seguridad: si en 5s no llamó hideGroupsLoading, mostrar lista igual
     setTimeout(function() {
       var loading = document.getElementById('groupLoadingState');
       if (loading && loading.style.display !== 'none') {
