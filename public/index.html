@@ -63,7 +63,11 @@
     <div id="loginSection" class="card p-4 mb-3">
       <h6 style="color:var(--primary-light);font-weight:700" class="mb-3">🔐 Inicia sesión</h6>
       <input type="email" id="loginEmail" class="form-control mb-2" placeholder="Correo electrónico">
-      <input type="password" id="loginPass" class="form-control mb-3" placeholder="Contraseña">
+      <input type="password" id="loginPass" class="form-control mb-2" placeholder="Contraseña">
+      <!-- Enlace olvidé contraseña -->
+      <div style="text-align:right;margin-bottom:12px">
+        <button id="showForgot" style="background:none;border:none;padding:0;font-size:0.8rem;color:var(--primary-light);cursor:pointer;text-decoration:underline">¿Olvidaste tu contraseña?</button>
+      </div>
       <button id="loginBtn" class="btn btn-success w-100 mb-2">Entrar</button>
       <div id="loginMsg" class="mt-1" style="font-size:0.85rem"></div>
       <hr style="border-color:var(--border)">
@@ -81,6 +85,17 @@
       <div id="registerMsg" class="mt-1" style="font-size:0.85rem"></div>
       <hr style="border-color:var(--border)">
       <button id="showLogin" class="btn btn-outline-light btn-sm w-100">← Ya tengo cuenta</button>
+    </div>
+
+    <!-- RECUPERAR CONTRASEÑA -->
+    <div id="forgotSection" class="card p-4 mb-3 d-none">
+      <h6 style="color:var(--primary-light);font-weight:700" class="mb-2">🔑 Recuperar contraseña</h6>
+      <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:14px">Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña.</p>
+      <input type="email" id="forgotEmail" class="form-control mb-3" placeholder="Correo electrónico">
+      <button id="forgotBtn" class="btn btn-success w-100 mb-2">📧 Enviar enlace</button>
+      <div id="forgotMsg" class="mt-1" style="font-size:0.85rem"></div>
+      <hr style="border-color:var(--border)">
+      <button id="backToLogin" class="btn btn-outline-light btn-sm w-100">← Volver al inicio de sesión</button>
     </div>
 
     <div class="text-center mt-4" style="color:var(--text-muted);font-size:12px">
@@ -105,14 +120,21 @@
   <script type="module" src="js/firebase-config.js"></script>
   <script type="module" src="js/auth.js"></script>
   <script>
-    document.getElementById('showRegister').addEventListener('click',()=>{
-      document.getElementById('loginSection').classList.add('d-none');
-      document.getElementById('registerSection').classList.remove('d-none');
+    function showSection(id) {
+      ['loginSection','registerSection','forgotSection'].forEach(s =>
+        document.getElementById(s).classList.toggle('d-none', s !== id)
+      );
+    }
+    document.getElementById('showRegister').addEventListener('click', () => showSection('registerSection'));
+    document.getElementById('showLogin').addEventListener('click',    () => showSection('loginSection'));
+    document.getElementById('showForgot').addEventListener('click',   () => {
+      // Pre-llenar el email si ya lo escribieron
+      const email = document.getElementById('loginEmail')?.value.trim();
+      if (email) document.getElementById('forgotEmail').value = email;
+      document.getElementById('forgotMsg').innerHTML = '';
+      showSection('forgotSection');
     });
-    document.getElementById('showLogin').addEventListener('click',()=>{
-      document.getElementById('registerSection').classList.add('d-none');
-      document.getElementById('loginSection').classList.remove('d-none');
-    });
+    document.getElementById('backToLogin').addEventListener('click',  () => showSection('loginSection'));
   </script>
 </body>
 </html>

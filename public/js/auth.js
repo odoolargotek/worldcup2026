@@ -1,5 +1,5 @@
 // ====================================================
-// auth.js — Login, Registro, Logout, Guard de ruta
+// auth.js — Login, Registro, Logout, Guard de ruta, Recuperar contraseña
 // ====================================================
 import { auth, db } from './firebase-config.js';
 import {
@@ -7,7 +7,8 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  updateProfile
+  updateProfile,
+  sendPasswordResetEmail
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import { doc, setDoc } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
@@ -32,18 +33,16 @@ onAuthStateChanged(auth, (user) => {
     return;
   }
 
-  // Mostrar nombre en navbar
   const nameEl = document.getElementById('userDisplayName');
   if (nameEl && user) nameEl.textContent = user.displayName || user.email;
 
-  // Mostrar/ocultar botones navbar en index
   const dashLink  = document.getElementById('dashboardLink');
   const logoutBtn = document.getElementById('logoutBtn');
   if (dashLink)  dashLink.classList.toggle('d-none', !user);
   if (logoutBtn) logoutBtn.classList.toggle('d-none', !user);
 });
 
-// --- Login (botones sueltos en index.html) ---
+// --- Login ---
 document.getElementById('loginBtn')?.addEventListener('click', async () => {
   const email = document.getElementById('loginEmail')?.value.trim();
   const pass  = document.getElementById('loginPass')?.value;
@@ -57,7 +56,6 @@ document.getElementById('loginBtn')?.addEventListener('click', async () => {
   }
 });
 
-// Permitir Enter en el campo password del login
 document.getElementById('loginPass')?.addEventListener('keydown', (e) => {
   if (e.key === 'Enter') document.getElementById('loginBtn')?.click();
 });
@@ -85,6 +83,33 @@ document.getElementById('registerBtn')?.addEventListener('click', async () => {
   }
 });
 
+// --- Recuperar contraseña ---
+document.getElementById('forgotBtn')?.addEventListener('click', async () => {
+  const email = document.getElementById('forgotEmail')?.value.trim();
+  const msg   = document.getElementById('forgotMsg');
+  if (!email) { if (msg) msg.innerHTML = err('Ingresa tu correo'); return; }
+
+  const btn = document.getElementById('forgotBtn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+    if (msg) msg.innerHTML = ok('✅ ¡Correo enviado! Revisa tu bandeja de entrada (y la carpeta de spam).');
+    // Limpiar el campo
+    document.getElementById('forgotEmail').value = '';
+  } catch (e) {
+    if (msg) msg.innerHTML = err(friendlyError(e.code));
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📧 Enviar enlace';
+  }
+});
+
+document.getElementById('forgotEmail')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('forgotBtn')?.click();
+});
+
 // --- Logout ---
 document.getElementById('logoutBtn')?.addEventListener('click', async () => {
   await signOut(auth);
@@ -101,10 +126,14 @@ function friendlyError(code) {
     'auth/weak-password':       'La contraseña debe tener mínimo 6 caracteres',
     'auth/invalid-email':       'El correo no es válido',
     'auth/too-many-requests':   'Demasiados intentos. Espera un momento.',
+    'auth/missing-email':       'Ingresa tu correo electrónico',
   };
   return map[code] || 'Error. Inténtalo de nuevo.';
 }
 
 function err(msg) {
   return `<span style="color:var(--danger);font-weight:600">⚠️ ${msg}</span>`;
+}
+function ok(msg) {
+  return `<span style="color:#34d399;font-weight:600">${msg}</span>`;
 }
