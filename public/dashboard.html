@@ -273,17 +273,17 @@
     let tvLoaded = false;
 
     window.switchDashTab = function(tab) {
-      document.getElementById('tab-comparsas').style.display = tab==='comparsas'?'':'none';
-      document.getElementById('tab-tv').style.display        = tab==='tv'?'':'none';
-      document.getElementById('tab-comparsas-btn').classList.toggle('active',tab==='comparsas');
-      document.getElementById('tab-tv-btn').classList.toggle('active',tab==='tv');
+      document.getElementById('tab-comparsas').style.display = tab==='comparsas' ? 'block' : 'none';
+      document.getElementById('tab-tv').style.display        = tab==='tv'         ? 'block' : 'none';
+      document.getElementById('tab-comparsas-btn').classList.toggle('active', tab==='comparsas');
+      document.getElementById('tab-tv-btn').classList.toggle('active', tab==='tv');
       if (tab==='tv' && !tvLoaded) loadTvMatches();
     };
 
     window.retryTvLoad = function() {
       tvLoaded=false;
       document.getElementById('tvMatchesError').style.display='none';
-      document.getElementById('tvMatchesLoading').style.display='';
+      document.getElementById('tvMatchesLoading').style.display='block';
       document.getElementById('tvMatchesGrid').innerHTML='';
       loadTvMatches();
     };
@@ -295,7 +295,6 @@
       const errDiv  = document.getElementById('tvMatchesError');
       const errDetail = document.getElementById('tvErrorDetail');
 
-      // Leer desde raw.githubusercontent.com — siempre actualizado, sin CORS
       const sources = [
         'https://raw.githubusercontent.com/odoolargotek/worldcup2026/main/public/data/matches.json',
         'https://streamtp.top/api/matches.json'
@@ -318,7 +317,7 @@
       loading.style.display = 'none';
 
       if (!matches || !matches.length) {
-        errDiv.style.display='';
+        errDiv.style.display='block';
         errDetail.textContent = lastError || 'No hay partidos disponibles.';
         return;
       }
