@@ -25,6 +25,7 @@
       margin-bottom: 8px;
       gap: 12px;
     }
+    .tv-user-row.has-access { border-color: rgba(52,211,153,0.2); background: rgba(52,211,153,0.04); }
     .tv-user-info { flex: 1; min-width: 0; }
     .tv-user-name { font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .tv-user-email { font-size: 11px; color: var(--text-muted, #94a3b8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -34,6 +35,13 @@
     .tv-toggle-off:hover { background: rgba(201,52,75,0.28); }
     .tv-badge-on  { font-size: 10px; background: rgba(52,211,153,0.15); color: #34d399; border-radius: 20px; padding: 2px 8px; font-weight: 700; }
     .tv-badge-off { font-size: 10px; background: rgba(148,163,184,0.1); color: var(--text-muted); border-radius: 20px; padding: 2px 8px; font-weight: 700; }
+    .tv-section-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin: 18px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border, rgba(255,255,255,0.07)); }
+    .tv-filter-input { background: rgba(255,255,255,0.05); border: 1px solid var(--border, rgba(255,255,255,0.1)); color: var(--text, #f1f5f9); border-radius: 8px; padding: 7px 12px; font-size: 13px; width: 100%; outline: none; }
+    .tv-filter-input:focus { border-color: #4aafd4; }
+    .tv-stats { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+    .tv-stat { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 10px; padding: 8px 16px; text-align: center; flex: 1; min-width: 80px; }
+    .tv-stat-num { font-size: 1.4rem; font-weight: 800; }
+    .tv-stat-label { font-size: 10px; color: var(--text-muted); }
   </style>
 </head>
 <body>
@@ -95,7 +103,6 @@
 
     <div id="atab-matches" class="d-none">
 
-      <!-- BULK LOAD BUTTON -->
       <div class="card p-4 mb-4" style="border-color:rgba(29,144,198,0.4);background:rgba(29,144,198,0.05)">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
           <div>
@@ -176,21 +183,20 @@
         <h6 style="color:#4aafd4;font-weight:700" class="mb-1">📺 Gestión de acceso TV</h6>
         <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:20px">Solo los usuarios con acceso habilitado verán la pestaña "Ver en vivo" en su dashboard.</p>
 
-        <!-- Buscar usuario -->
+        <!-- Stats -->
+        <div class="tv-stats" id="tvStats"></div>
+
+        <!-- Buscador / filtro unificado -->
         <div class="mb-4">
-          <label class="form-label" style="font-size:13px;font-weight:700">🔍 Buscar usuario por email</label>
+          <label style="font-size:13px;font-weight:700;display:block;margin-bottom:8px">🔍 Buscar por nombre o correo</label>
           <div class="d-flex gap-2">
-            <input type="text" id="tvSearchInput" class="form-control" placeholder="correo@ejemplo.com" style="font-size:13px">
-            <button id="tvSearchBtn" class="btn btn-sm" style="background:#1D90C6;color:#fff;font-weight:700;white-space:nowrap">Buscar</button>
+            <input type="text" id="tvFilterInput" class="tv-filter-input" placeholder="nombre o correo@ejemplo.com" autocomplete="off">
+            <button id="tvClearFilter" class="btn btn-sm btn-outline-secondary" style="white-space:nowrap">✕ Limpiar</button>
           </div>
-          <div id="tvSearchResult" class="mt-3"></div>
         </div>
 
-        <!-- Lista de usuarios con acceso -->
-        <div>
-          <h6 style="font-size:13px;font-weight:700;color:var(--text-muted);margin-bottom:12px">✅ Usuarios con acceso activo</h6>
-          <div id="tvAccessList"><div style="color:var(--text-muted);font-size:13px">Cargando...</div></div>
-        </div>
+        <!-- Lista completa de usuarios -->
+        <div id="tvUserList"><div style="color:var(--text-muted);font-size:13px">Cargando usuarios...</div></div>
       </div>
     </div>
 
@@ -270,36 +276,92 @@
   <script type="module">
     import { db } from './js/firebase-config.js';
     import {
-      collection, query, where, getDocs,
-      doc, updateDoc, getDoc
+      collection, getDocs, doc, updateDoc
     } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
-    let tvListLoaded = false;
+    let allUsers = [];   // cache completo
+    let filterVal = '';
 
-    async function loadTvAccessList() {
-      tvListLoaded = true;
-      const el = document.getElementById('tvAccessList');
-      el.innerHTML = '<div style="color:var(--text-muted);font-size:13px">Cargando...</div>';
+    // ── Cargar TODOS los usuarios ──
+    async function loadAllUsers() {
+      const list = document.getElementById('tvUserList');
+      const stats = document.getElementById('tvStats');
+      list.innerHTML = '<div style="color:var(--text-muted);font-size:13px">Cargando usuarios...</div>';
       try {
-        const q    = query(collection(db, 'users'), where('tv_access', '==', true));
-        const snap = await getDocs(q);
-        el.innerHTML = '';
-        if (snap.empty) {
-          el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">Ningún usuario tiene acceso habilitado aún.</div>';
-          return;
-        }
-        snap.forEach(d => renderTvRow(el, d.id, d.data(), true));
+        const snap = await getDocs(collection(db, 'users'));
+        allUsers = [];
+        snap.forEach(d => allUsers.push({ uid: d.id, ...d.data() }));
+        allUsers.sort((a, b) => {
+          const na = (a.display_name || a.email || '').toLowerCase();
+          const nb = (b.display_name || b.email || '').toLowerCase();
+          return na.localeCompare(nb);
+        });
+        renderStats(stats);
+        renderList(list);
       } catch(e) {
-        el.innerHTML = `<div style="color:#f5a0ac;font-size:13px">Error cargando lista: ${e.message}</div>`;
+        list.innerHTML = `<div style="color:#f5a0ac;font-size:13px">Error: ${e.message}</div>`;
       }
     }
 
-    function renderTvRow(container, uid, data, hasAccess) {
-      const name  = data.display_name || data.email || 'Sin nombre';
-      const email = data.email || '';
+    function renderStats(el) {
+      const total  = allUsers.length;
+      const active = allUsers.filter(u => u.tv_access === true).length;
+      el.innerHTML = `
+        <div class="tv-stat">
+          <div class="tv-stat-num" style="color:var(--text)">${total}</div>
+          <div class="tv-stat-label">Usuarios registrados</div>
+        </div>
+        <div class="tv-stat">
+          <div class="tv-stat-num" style="color:#34d399">${active}</div>
+          <div class="tv-stat-label">Con acceso TV</div>
+        </div>
+        <div class="tv-stat">
+          <div class="tv-stat-num" style="color:#f5a0ac">${total - active}</div>
+          <div class="tv-stat-label">Sin acceso</div>
+        </div>`;
+    }
+
+    function renderList(el) {
+      const q = filterVal.toLowerCase();
+      const filtered = q
+        ? allUsers.filter(u =>
+            (u.display_name || '').toLowerCase().includes(q) ||
+            (u.email || '').toLowerCase().includes(q))
+        : allUsers;
+
+      if (filtered.length === 0) {
+        el.innerHTML = `<div style="color:var(--text-muted);font-size:13px;padding:12px 0">No se encontraron usuarios${q ? ' con ese criterio' : ''}.</div>`;
+        return;
+      }
+
+      const withAccess    = filtered.filter(u => u.tv_access === true);
+      const withoutAccess = filtered.filter(u => u.tv_access !== true);
+
+      el.innerHTML = '';
+
+      if (withAccess.length) {
+        const t = document.createElement('div');
+        t.className = 'tv-section-title';
+        t.innerHTML = `✅ Con acceso <span style="color:#34d399;font-size:13px;font-weight:800">(${withAccess.length})</span>`;
+        el.appendChild(t);
+        withAccess.forEach(u => el.appendChild(buildRow(u, true)));
+      }
+
+      if (withoutAccess.length) {
+        const t = document.createElement('div');
+        t.className = 'tv-section-title';
+        t.innerHTML = `🚫 Sin acceso <span style="color:#f5a0ac;font-size:13px;font-weight:800">(${withoutAccess.length})</span>`;
+        el.appendChild(t);
+        withoutAccess.forEach(u => el.appendChild(buildRow(u, false)));
+      }
+    }
+
+    function buildRow(u, hasAccess) {
+      const name  = u.display_name || u.email || 'Sin nombre';
+      const email = u.email || '';
       const div   = document.createElement('div');
-      div.className = 'tv-user-row';
-      div.id = 'tv-row-' + uid;
+      div.className = 'tv-user-row' + (hasAccess ? ' has-access' : '');
+      div.id = 'tvrow-' + u.uid;
       div.innerHTML = `
         <div class="tv-user-info">
           <div class="tv-user-name">${name}</div>
@@ -309,69 +371,45 @@
           <span class="${hasAccess ? 'tv-badge-on' : 'tv-badge-off'}">${hasAccess ? '✅ Activo' : '🚫 Sin acceso'}</span>
           <button class="${hasAccess ? 'tv-toggle-off' : 'tv-toggle-on'}">${hasAccess ? '🚫 Quitar' : '✅ Dar acceso'}</button>
         </div>`;
-      container.appendChild(div);
-      div.querySelector('button').addEventListener('click', () => toggleAccess(uid, hasAccess));
+      div.querySelector('button').addEventListener('click', () => toggleAccess(u.uid, hasAccess));
+      return div;
     }
 
     async function toggleAccess(uid, currentAccess) {
-      const row = document.getElementById('tv-row-' + uid);
-      const btn = row ? row.querySelector('button') : null;
+      const row = document.getElementById('tvrow-' + uid);
+      const btn = row?.querySelector('button');
       if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
       try {
         await updateDoc(doc(db, 'users', uid), { tv_access: !currentAccess });
-        await loadTvAccessList();
-        // Refrescar fila en resultado de búsqueda si existe
-        const searchRow = document.getElementById('tv-search-row-' + uid);
-        if (searchRow) {
-          const d = await getDoc(doc(db, 'users', uid));
-          const newAccess = !currentAccess;
-          const tmp = document.createElement('div');
-          renderTvRow(tmp, uid, d.data(), newAccess);
-          const newEl = tmp.firstElementChild;
-          newEl.id = 'tv-search-row-' + uid;
-          searchRow.replaceWith(newEl);
-        }
+        // Actualizar cache local
+        const u = allUsers.find(x => x.uid === uid);
+        if (u) u.tv_access = !currentAccess;
+        renderStats(document.getElementById('tvStats'));
+        renderList(document.getElementById('tvUserList'));
       } catch(e) {
         alert('Error: ' + e.message);
         if (btn) { btn.disabled = false; }
       }
     }
 
-    // Buscar usuario por email
-    document.getElementById('tvSearchBtn').addEventListener('click', async () => {
-      const input = document.getElementById('tvSearchInput').value.trim().toLowerCase();
-      const res   = document.getElementById('tvSearchResult');
-      if (!input) { res.innerHTML = '<span style="color:#f5a0ac;font-size:13px">⚠️ Ingresa un email.</span>'; return; }
-      res.innerHTML = '<span style="color:var(--text-muted);font-size:13px">Buscando...</span>';
-      try {
-        const q    = query(collection(db, 'users'), where('email', '==', input));
-        const snap = await getDocs(q);
-        res.innerHTML = '';
-        if (snap.empty) {
-          res.innerHTML = '<div style="color:#f5a0ac;font-size:13px">No se encontró ningún usuario con ese email.</div>';
-          return;
-        }
-        snap.forEach(d => {
-          const tmp = document.createElement('div');
-          renderTvRow(tmp, d.id, d.data(), d.data().tv_access === true);
-          const el = tmp.firstElementChild;
-          el.id = 'tv-search-row-' + d.id;
-          res.appendChild(el);
-        });
-      } catch(e) {
-        res.innerHTML = `<div style="color:#f5a0ac;font-size:13px">Error: ${e.message}</div>`;
-      }
+    // Filtro en tiempo real
+    document.getElementById('tvFilterInput').addEventListener('input', e => {
+      filterVal = e.target.value;
+      renderList(document.getElementById('tvUserList'));
+    });
+    document.getElementById('tvClearFilter').addEventListener('click', () => {
+      document.getElementById('tvFilterInput').value = '';
+      filterVal = '';
+      renderList(document.getElementById('tvUserList'));
     });
 
-    document.getElementById('tvSearchInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') document.getElementById('tvSearchBtn').click();
-    });
-
-    // ✔ MutationObserver: detecta cuando admin.js quita 'd-none' del div TV
+    // ✔ MutationObserver: carga cuando admin.js muestra el div
     const tvDiv = document.getElementById('atab-tvaccess');
+    let loaded = false;
     new MutationObserver(() => {
-      if (!tvDiv.classList.contains('d-none') && !tvListLoaded) {
-        loadTvAccessList();
+      if (!tvDiv.classList.contains('d-none') && !loaded) {
+        loaded = true;
+        loadAllUsers();
       }
     }).observe(tvDiv, { attributes: true, attributeFilter: ['class'] });
   </script>
