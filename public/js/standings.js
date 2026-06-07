@@ -2,7 +2,7 @@
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
-  collection, getDocs, query, where, getDoc, doc, updateDoc
+  collection, getDocs, query, where, getDoc, doc, updateDoc, deleteDoc
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
 const params   = new URLSearchParams(window.location.search);
@@ -12,7 +12,6 @@ const PHASES   = ['Grupo A','Grupo B','Grupo C','Grupo D','Grupo E','Grupo F',
 
 let groupData = null;
 
-// Caché local para no repetir lecturas a /users
 const userNameCache = {};
 
 function sym() {
@@ -27,13 +26,6 @@ function getCategory(pts) {
   return                  { label: '\ud83d\udc36 Novato',    color: '#94a3b8', bg: 'rgba(148,163,184,0.1)',  border: 'rgba(148,163,184,0.3)' };
 }
 
-/**
- * Obtiene el nombre/apodo de un usuario con triple fallback:
- * 1. Documento /users/{uid} → display_name
- * 2. Documento /users/{uid} → email (parte antes del @)
- * 3. Firebase Auth currentUser.displayName (si es el usuario logueado)
- * 4. Último recurso: "Usuario"
- */
 async function getUserName(uid) {
   if (userNameCache[uid]) return userNameCache[uid];
   let name = null;
@@ -44,7 +36,6 @@ async function getUserName(uid) {
       name = d.display_name || d.displayName || d.email?.split('@')[0] || null;
     }
   } catch(_) {}
-  // Fallback: si es el usuario actual, usar Auth directamente
   if (!name && auth.currentUser?.uid === uid) {
     name = auth.currentUser.displayName || auth.currentUser.email?.split('@')[0] || null;
   }
@@ -77,23 +68,32 @@ onAuthStateChanged(auth, async (user) => {
   await renderStandings(user, prizeEl, feeEl);
 });
 
+// ─────────────────────────────────────────────────────────
+// PANEL DE ADMINISTRADOR (con botón Editar configuración)
+// ─────────────────────────────────────────────────────────
 function renderAdminPanel(user, g) {
   const container = document.getElementById('rankingTab');
   if (!container) return;
+
   const panel = document.createElement('div');
   panel.id = 'adminPanel';
   panel.style.cssText = 'background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:12px;padding:14px 18px;margin-bottom:16px';
   panel.innerHTML = `
-    <div style="font-size:12px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">\u2699\ufe0f Panel de administrador</div>
+    <div style="font-size:12px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">\u2699\ufe0f Panel de administrador</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button id="toggleOpenBtn" class="btn btn-sm ${
         g.is_open === false ? 'btn-outline-success' : 'btn-outline-danger'
       }" style="font-size:12px;font-weight:700">
         ${g.is_open === false ? '\ud83d\udfe2 Reabrir inscripciones' : '\ud83d\udd34 Cerrar inscripciones'}
       </button>
+      <button id="editGroupBtn" class="btn btn-sm btn-outline-warning" style="font-size:12px;font-weight:700">
+        \u270f\ufe0f Editar configuraci\u00f3n
+      </button>
     </div>
     <div id="adminMsg" style="margin-top:8px;font-size:12px"></div>`;
   container.parentNode.insertBefore(panel, container);
+
+  // Toggle inscripciones
   document.getElementById('toggleOpenBtn')?.addEventListener('click', async () => {
     const newState = !(g.is_open === false);
     await updateDoc(doc(db, 'groups', GROUP_ID), { is_open: !newState });
@@ -109,6 +109,218 @@ function renderAdminPanel(user, g) {
       msg.textContent = g.is_open === false ? '\ud83d\udd34 Inscripciones cerradas.' : '\ud83d\udfe2 Inscripciones reabiertas.';
     }
   });
+
+  // Abrir modal de edición
+  document.getElementById('editGroupBtn')?.addEventListener('click', () => openEditModal(g));
+}
+
+// ─────────────────────────────────────────────────────────
+// MODAL: EDITAR CONFIGURACIÓN DEL GRUPO
+// ─────────────────────────────────────────────────────────
+async function openEditModal(g) {
+  // Cargar participantes actuales para la pestaña de gestión
+  const membersSnap = await getDocs(
+    query(collection(db, 'group_members'), where('group_id', '==', GROUP_ID))
+  );
+  const members = [];
+  for (const mDoc of membersSnap.docs) {
+    const m = mDoc.data();
+    const name = await getUserName(m.user_uid);
+    members.push({ docId: mDoc.id, uid: m.user_uid, name, role: m.role });
+  }
+
+  // Quitar modal anterior si existe
+  document.getElementById('editGroupModal')?.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'editGroupModal';
+  modal.style.cssText = `
+    position:fixed;inset:0;z-index:9999;
+    background:rgba(0,0,0,0.7);display:flex;
+    align-items:flex-start;justify-content:center;
+    padding:20px 16px;overflow-y:auto;`;
+
+  const pct = g.prize_pct || { p1: 60, p2: 30, p3: 10 };
+  const pctP3 = pct.p3 || 0;
+
+  modal.innerHTML = `
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:480px;position:relative">
+    <button id="closeEditModal" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;color:var(--text-muted);cursor:pointer">\u00d7</button>
+    <h5 style="font-weight:800;margin-bottom:18px;color:var(--gold)">\u270f\ufe0f Editar comparsa</h5>
+
+    <!-- Tabs internas -->
+    <div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap">
+      <button class="edit-tab-btn active" data-etab="general" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:rgba(245,158,11,0.15);color:var(--gold);cursor:pointer">\ud83d\udcdd General</button>
+      <button class="edit-tab-btn" data-etab="montos" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer">\ud83d\udcb0 Montos</button>
+      <button class="edit-tab-btn" data-etab="participantes" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer">\ud83d\udc65 Participantes</button>
+    </div>
+
+    <!-- TAB: GENERAL -->
+    <div id="etab-general">
+      <div class="mb-3">
+        <label style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:block">Nombre de la comparsa</label>
+        <input type="text" id="editName" class="form-control" value="${escHtml(g.name || '')}" maxlength="50">
+      </div>
+      <div class="mb-3">
+        <label style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:block">Descripci\u00f3n (opcional)</label>
+        <textarea id="editDesc" class="form-control" rows="2" maxlength="200" style="resize:none">${escHtml(g.description || '')}</textarea>
+      </div>
+    </div>
+
+    <!-- TAB: MONTOS -->
+    <div id="etab-montos" class="d-none">
+      <div class="mb-3">
+        <label style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:block">Moneda</label>
+        <select id="editCurrency" class="form-select">
+          <option value="USD" ${(g.currency||'USD')==='USD'?'selected':''}>USD — D\u00f3lar</option>
+          <option value="BOB" ${g.currency==='BOB'?'selected':''}>BOB — Boliviano</option>
+        </select>
+      </div>
+      <div class="mb-3">
+        <label style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:block">Cuota por participante</label>
+        <input type="number" id="editFee" class="form-control" min="0" value="${g.fee||0}">
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Deja en 0 si la comparsa es sin costo.</div>
+      </div>
+      <div class="mb-3">
+        <label style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:block">Premio fijo (solo comparsa cerrada)</label>
+        <input type="number" id="editPrize" class="form-control" min="0" value="${g.prize||0}">
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Si es comparsa abierta el pozo se calcula (cuota × participantes).</div>
+      </div>
+      <div class="mb-1">
+        <label style="font-size:12px;color:var(--text-muted);margin-bottom:6px;display:block">Distribuci\u00f3n del premio (%)</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div style="flex:1;text-align:center">
+            <div style="font-size:11px;color:#f59e0b;margin-bottom:4px">\ud83e\udd47 1\u00b0</div>
+            <input type="number" id="editP1" class="form-control" min="0" max="100" value="${pct.p1||60}">
+          </div>
+          <div style="flex:1;text-align:center">
+            <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">\ud83e\udd48 2\u00b0</div>
+            <input type="number" id="editP2" class="form-control" min="0" max="100" value="${pct.p2||30}">
+          </div>
+          <div style="flex:1;text-align:center">
+            <div style="font-size:11px;color:#d97706;margin-bottom:4px">\ud83e\udd49 3\u00b0</div>
+            <input type="number" id="editP3" class="form-control" min="0" max="100" value="${pctP3}">
+          </div>
+        </div>
+        <div id="pctError" style="font-size:11px;color:#f5a0ac;margin-top:4px"></div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Deben sumar 100%.</div>
+      </div>
+    </div>
+
+    <!-- TAB: PARTICIPANTES -->
+    <div id="etab-participantes" class="d-none">
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">${members.length} participante(s). Puedes expulsar a quien necesites.</p>
+      <div style="display:flex;flex-direction:column;gap:8px" id="membersList">
+        ${members.map(m => `
+          <div id="member-row-${m.uid}" style="display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px">
+            <div style="flex:1">
+              <div style="font-weight:600;font-size:0.9rem">${escHtml(m.name)}</div>
+              <div style="font-size:11px;color:var(--text-muted)">${m.role === 'admin' ? '\u2B50 Administrador' : 'Participante'}</div>
+            </div>
+            ${m.role !== 'admin' ? `
+            <button onclick="window._kickMember('${m.uid}','${escHtml(m.name)}','${m.docId}')" style="background:rgba(201,52,75,0.15);color:#f5a0ac;border:1px solid rgba(201,52,75,0.3);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer">
+              Expulsar
+            </button>` : ''}
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end" id="editModalActions">
+      <button id="cancelEditBtn" class="btn btn-outline-light btn-sm">Cancelar</button>
+      <button id="saveEditBtn" class="btn btn-warning btn-sm" style="font-weight:700">\ud83d\udcbe Guardar cambios</button>
+    </div>
+    <div id="editSaveMsg" style="margin-top:10px;font-size:12px;text-align:right"></div>
+  </div>`;
+
+  document.body.appendChild(modal);
+
+  // Cerrar
+  document.getElementById('closeEditModal')?.addEventListener('click', () => modal.remove());
+  document.getElementById('cancelEditBtn')?.addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+
+  // Tabs internas
+  modal.querySelectorAll('.edit-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      modal.querySelectorAll('.edit-tab-btn').forEach(b => {
+        b.style.background = 'var(--bg)';
+        b.style.color = 'var(--text-muted)';
+        b.classList.remove('active');
+      });
+      btn.style.background = 'rgba(245,158,11,0.15)';
+      btn.style.color = 'var(--gold)';
+      btn.classList.add('active');
+      const tab = btn.dataset.etab;
+      ['general','montos','participantes'].forEach(t => {
+        document.getElementById(`etab-${t}`)?.classList.toggle('d-none', t !== tab);
+      });
+      // ocultar/mostrar botón guardar según tab
+      const actions = document.getElementById('editModalActions');
+      if (actions) actions.style.display = tab === 'participantes' ? 'none' : 'flex';
+    });
+  });
+
+  // Guardar cambios de configuración
+  document.getElementById('saveEditBtn')?.addEventListener('click', async () => {
+    const name     = document.getElementById('editName')?.value.trim();
+    const desc     = document.getElementById('editDesc')?.value.trim();
+    const currency = document.getElementById('editCurrency')?.value;
+    const fee      = parseFloat(document.getElementById('editFee')?.value) || 0;
+    const prize    = parseFloat(document.getElementById('editPrize')?.value) || 0;
+    const p1       = parseInt(document.getElementById('editP1')?.value) || 0;
+    const p2       = parseInt(document.getElementById('editP2')?.value) || 0;
+    const p3       = parseInt(document.getElementById('editP3')?.value) || 0;
+    const saveMsg  = document.getElementById('editSaveMsg');
+    const pctErr   = document.getElementById('pctError');
+
+    if (!name) { if (saveMsg) saveMsg.innerHTML = '<span style="color:#f5a0ac">\u26a0\ufe0f El nombre no puede estar vacío</span>'; return; }
+    if (p1 + p2 + p3 !== 100) {
+      if (pctErr) pctErr.textContent = '\u26a0\ufe0f La distribución debe sumar exactamente 100%';
+      if (saveMsg) saveMsg.innerHTML = '';
+      return;
+    }
+    if (pctErr) pctErr.textContent = '';
+
+    const btn = document.getElementById('saveEditBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
+
+    try {
+      await updateDoc(doc(db, 'groups', GROUP_ID), {
+        name,
+        description: desc || '',
+        currency,
+        fee,
+        prize,
+        prize_pct: { p1, p2, p3 }
+      });
+      // Actualizar objeto local
+      Object.assign(g, { name, description: desc, currency, fee, prize, prize_pct: { p1, p2, p3 } });
+      // Actualizar navbar
+      const nameNav = document.getElementById('groupNameNav');
+      if (nameNav) nameNav.textContent = name;
+      if (saveMsg) saveMsg.innerHTML = '<span style="color:#34d399">\u2705 Guardado correctamente. Recarga para ver todos los cambios.</span>';
+    } catch(e) {
+      if (saveMsg) saveMsg.innerHTML = '<span style="color:#f5a0ac">\u26a0\ufe0f Error al guardar. Intenta de nuevo.</span>';
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '\ud83d\udcbe Guardar cambios'; }
+    }
+  });
+
+  // Expulsar participante (función global temporal)
+  window._kickMember = async (uid, name, docId) => {
+    if (!confirm(`¿Expulsar a ${name} de la comparsa?`)) return;
+    try {
+      await deleteDoc(doc(db, 'group_members', docId));
+      document.getElementById(`member-row-${uid}`)?.remove();
+    } catch(e) {
+      alert('Error al expulsar participante.');
+    }
+  };
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
 function calcPrize(g, memberCount) {
