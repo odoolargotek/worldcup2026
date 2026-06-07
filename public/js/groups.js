@@ -6,27 +6,18 @@ import {
   query, where, setDoc, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
-// 48 clasificados oficiales al Mundial 2026 (fuente: ESPN/Reuters/TyC, abril 2026)
 const TEAMS = [
-  // Anfitrión
   "Canadá", "México", "USA",
-  // CONMEBOL
   "Argentina", "Brasil", "Uruguay", "Paraguay", "Ecuador", "Colombia",
-  // UEFA
   "España", "Francia", "Alemania", "Inglaterra", "Portugal", "Países Bajos",
   "Bélgica", "Austria", "Suiza", "Croacia", "Noruega", "Escocia",
   "Bosnia y Herzegovina", "Suecia", "Turquía", "Rep. Checa",
-  // AFC
   "Japón", "Corea del Sur", "Irán", "Australia", "Arabia Saudita",
   "Uzbekistán", "Jordania", "Qatar",
-  // CAF
   "Marruecos", "Túnez", "Egipto", "Argelia", "Ghana",
   "Senegal", "Costa de Marfil", "Sudáfrica", "Cabo Verde",
-  // CONCACAF
   "Panamá", "Haití", "Curazao",
-  // OFC
   "Nueva Zelanda",
-  // Repechaje intercontinental
   "RD Congo", "Irak",
 ];
 
@@ -47,6 +38,9 @@ function genCode(len = 6) {
 }
 function showOverlay(id) { document.getElementById(id)?.classList.add('show'); }
 function hideOverlay(id)  { document.getElementById(id)?.classList.remove('show'); }
+function hideLoading()    {
+  if (typeof window.hideGroupsLoading === 'function') window.hideGroupsLoading();
+}
 
 const urlParams  = new URLSearchParams(window.location.search);
 const inviteCode = urlParams.get('join');
@@ -61,7 +55,11 @@ if (inviteCode) {
 }
 
 onAuthStateChanged(auth, async (user) => {
-  if (!user) return;
+  if (!user) {
+    // Usuario no autenticado: ocultar skeleton igual
+    hideLoading();
+    return;
+  }
   const emailEl = document.getElementById('userEmail');
   if (emailEl) emailEl.textContent = user.email;
   await loadGroups(user);
@@ -70,35 +68,40 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 async function loadGroups(user) {
-  const q    = query(collection(db, 'group_members'), where('user_uid', '==', user.uid));
-  const snap = await getDocs(q);
   const container = document.getElementById('groupList');
-  if (!container) return;
+  if (!container) { hideLoading(); return; }
   container.innerHTML = '';
 
-  const validDocs = [];
-  for (const memberDoc of snap.docs) {
-    const gid   = memberDoc.data().group_id;
-    const gSnap = await getDoc(doc(db, 'groups', gid));
-    if (gSnap.exists()) validDocs.push({ gSnap, memberData: memberDoc.data() });
-  }
+  try {
+    const q    = query(collection(db, 'group_members'), where('user_uid', '==', user.uid));
+    const snap = await getDocs(q);
 
-  if (validDocs.length === 0) {
-    container.innerHTML = '<div class="col-12"><p style="color:var(--text-muted)">\u00a1A\u00fan no perteneces a ninguna comparsa! Crea una o \u00fanete con un c\u00f3digo.</p></div>';
-    // Ocultar skeleton y mostrar lista aunque esté vacía
-    if (typeof window.hideGroupsLoading === 'function') window.hideGroupsLoading();
-    return;
-  }
-  for (const { gSnap, memberData } of validDocs) {
-    const membersSnap = await getDocs(
-      query(collection(db, 'group_members'), where('group_id', '==', gSnap.id))
-    );
-    const memberCount = membersSnap.size;
-    renderGroupCard(gSnap, memberData, container, user, memberCount);
-  }
+    const validDocs = [];
+    for (const memberDoc of snap.docs) {
+      const gid   = memberDoc.data().group_id;
+      const gSnap = await getDoc(doc(db, 'groups', gid));
+      if (gSnap.exists()) validDocs.push({ gSnap, memberData: memberDoc.data() });
+    }
 
-  // Ocultar skeleton y revelar la lista ya renderizada
-  if (typeof window.hideGroupsLoading === 'function') window.hideGroupsLoading();
+    if (validDocs.length === 0) {
+      container.innerHTML = '<div class="col-12"><p style="color:var(--text-muted)">\u00a1A\u00fan no perteneces a ninguna comparsa! Crea una o \u00fanete con un c\u00f3digo.</p></div>';
+      return;
+    }
+
+    for (const { gSnap, memberData } of validDocs) {
+      const membersSnap = await getDocs(
+        query(collection(db, 'group_members'), where('group_id', '==', gSnap.id))
+      );
+      renderGroupCard(gSnap, memberData, container, user, membersSnap.size);
+    }
+
+  } catch (err) {
+    console.error('[loadGroups] Error:', err);
+    container.innerHTML = `<div class="col-12"><p style="color:var(--accent)">\u274c Error al cargar comparsas. Recarga la p\u00e1gina.</p></div>`;
+  } finally {
+    // Siempre ocultar el skeleton, pase lo que pase
+    hideLoading();
+  }
 }
 
 function renderGroupCard(gSnap, memberData, container, user, memberCount) {
@@ -161,7 +164,7 @@ function renderGroupCard(gSnap, memberData, container, user, memberCount) {
         <a href="${waLink}" target="_blank" rel="noopener"
           class="btn btn-sm"
           style="flex:1;font-size:12px;font-weight:700;background:#1D90C6;color:#fff;border:none;border-radius:8px">
-          \ud83d� Invitar</a>
+          \ud83d\udce4 Invitar</a>
         <button class="btn btn-outline-light btn-sm" style="font-size:12px;padding:4px 10px"
           onclick="event.stopPropagation();copyInviteLink('${appUrl}',this)" title="Copiar link">\ud83d\udccb</button>
       </div>
@@ -193,7 +196,8 @@ window.copyInviteLink = function(url, btn) {
   });
 };
 
-// \u2500\u2500 Crear comparsa \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ndocument.getElementById('createGroupBtn')?.addEventListener('click', async () => {
+// ── Crear comparsa ───────────────────────────────────────────────────────────────────────────────────
+document.getElementById('createGroupBtn')?.addEventListener('click', async () => {
   const user     = auth.currentUser;
   const name     = document.getElementById('newGroupName').value.trim();
   const stage    = document.getElementById('newGroupStage').value;
@@ -262,7 +266,8 @@ window.copyInviteLink = function(url, btn) {
   }
 });
 
-// \u2500\u2500 Unirse a comparsa \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ndocument.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
+// ── Unirse a comparsa ──────────────────────────────────────────────────────────────────────────────
+document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
   const user = auth.currentUser;
   const code = document.getElementById('joinCode').value.trim().toUpperCase();
   if (!code || !user) return;
@@ -298,7 +303,7 @@ window.copyInviteLink = function(url, btn) {
   openFavoriteOverlay();
 });
 
-// \u2500\u2500 Overlay favorito \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ── Overlay favorito ──────────────────────────────────────────────────────────────────────────────
 function openFavoriteOverlay() {
   document.getElementById('selectedTeam').value = '';
   document.getElementById('saveFavoriteBtn').disabled = true;
@@ -360,7 +365,7 @@ function setupFavoriteOverlay(user) {
   });
 }
 
-// \u2500\u2500 Overlay eliminar \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// ── Overlay eliminar ──────────────────────────────────────────────────────────────────────────────
 let _deleteGid = null;
 let _deleteUser = null;
 
