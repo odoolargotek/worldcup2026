@@ -47,18 +47,6 @@
     .tv-badge-live{background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:0.5px}
     .tv-badge-upcoming{background:rgba(245,158,11,0.2);color:#f59e0b;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px}
     .tv-badge-cat{background:rgba(29,144,198,0.15);color:#4aafd4;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px}
-    #playerOverlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.92);align-items:center;justify-content:center}
-    #playerOverlay.show{display:flex}
-    #playerBox{width:100%;max-width:860px;background:#0d1117;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);display:flex;flex-direction:column}
-    #playerHeader{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(29,144,198,0.12);border-bottom:1px solid rgba(255,255,255,0.07)}
-    #playerTitle{font-weight:700;font-size:14px;color:#e2e8f0}
-    #playerClose{background:rgba(255,255,255,0.08);border:none;color:#e2e8f0;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:16px;line-height:1}
-    #playerClose:hover{background:rgba(255,255,255,0.16)}
-    #playerFrame{width:100%;aspect-ratio:16/9;border:none;background:#000}
-    #playerChannels{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,255,255,0.07)}
-    .player-ch-btn{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:background 0.15s}
-    .player-ch-btn.active{background:#1D90C6;color:#fff}
-    .player-ch-btn:not(.active){background:rgba(29,144,198,0.15);color:#4aafd4;border:1px solid rgba(29,144,198,0.35)}
     #dashTabs{margin-bottom:20px}
     #dashTabs .nav-link{color:var(--text-muted,#94a3b8);font-size:14px;font-weight:600;border:none;padding:8px 16px;border-radius:8px}
     #dashTabs .nav-link.active{background:rgba(29,144,198,0.15);color:#4aafd4}
@@ -157,7 +145,7 @@
     <div id="tab-tv" style="display:none">
       <div style="margin-bottom:16px">
         <h6 style="font-weight:800;margin-bottom:4px">📺 Partidos disponibles</h6>
-        <p style="font-size:12px;color:var(--text-muted);margin:0">Haz clic en "Ver partido" para ver el stream dentro de la página.</p>
+        <p style="font-size:12px;color:var(--text-muted);margin:0">Haz clic en "📺 Ver partido" para abrir el stream en una nueva pestaña.</p>
       </div>
       <div id="tvMatchesLoading" style="text-align:center;padding:40px 0;color:var(--text-muted);font-size:13px">
         <div class="loading-label" style="justify-content:center"><span class="dot"></span><span class="dot"></span><span class="dot"></span>Cargando partidos...</div>
@@ -170,15 +158,6 @@
       </div>
     </div>
   </div><!-- /container -->
-
-  <!-- PLAYER OVERLAY -->
-  <div id="playerOverlay">
-    <div id="playerBox">
-      <div id="playerHeader"><span id="playerTitle"></span><button id="playerClose" onclick="closePlayer()">×</button></div>
-      <iframe id="playerFrame" allowfullscreen allow="autoplay; encrypted-media" scrolling="no"></iframe>
-      <div id="playerChannels"></div>
-    </div>
-  </div>
 
   <!-- OVERLAY FAVORITO -->
   <div id="favoriteOverlay" class="native-overlay">
@@ -290,9 +269,9 @@
 
     async function loadTvMatches() {
       tvLoaded = true;
-      const grid    = document.getElementById('tvMatchesGrid');
-      const loading = document.getElementById('tvMatchesLoading');
-      const errDiv  = document.getElementById('tvMatchesError');
+      const grid      = document.getElementById('tvMatchesGrid');
+      const loading   = document.getElementById('tvMatchesLoading');
+      const errDiv    = document.getElementById('tvMatchesError');
       const errDetail = document.getElementById('tvErrorDetail');
 
       const sources = [
@@ -300,9 +279,7 @@
         'https://streamtp.top/api/matches.json'
       ];
 
-      let matches = null;
-      let lastError = '';
-
+      let matches = null, lastError = '';
       for (const url of sources) {
         try {
           const res = await fetch(url, {cache:'no-cache'});
@@ -315,13 +292,11 @@
       }
 
       loading.style.display = 'none';
-
       if (!matches || !matches.length) {
-        errDiv.style.display='block';
+        errDiv.style.display = 'block';
         errDetail.textContent = lastError || 'No hay partidos disponibles.';
         return;
       }
-
       grid.innerHTML = matches.map(m => buildTvCard(m)).join('');
     }
 
@@ -331,41 +306,29 @@
       const category = m.category || '';
       const isLive   = m.status === 'live' || m.status === 'en vivo';
       const streams  = Array.isArray(m.streams) ? m.streams : [];
-      const mainUrl  = streams.length ? streams[0].embedUrl : null;
-      const flag     = streams.length ? (streams[0].flag||'') : '';
-      const statusBadge = isLive ? '<span class="tv-badge-live">● EN VIVO</span>' : (time ? `<span class="tv-badge-upcoming">⏰ ${time}</span>` : '');
+      const statusBadge = isLive
+        ? '<span class="tv-badge-live">● EN VIVO</span>'
+        : (time ? `<span class="tv-badge-upcoming">⏰ ${time}</span>` : '');
       const catBadge = category ? `<span class="tv-badge-cat">${category}</span>` : '';
-      const watchBtn = mainUrl
-        ? `<button class="tv-btn tv-btn-primary" onclick='openPlayer(${JSON.stringify(title)},${JSON.stringify(streams)})'>📺 Ver partido ${flag}</button>`
-        : `<span style="font-size:12px;color:var(--text-muted)">Sin enlace disponible</span>`;
+
+      // Un botón por canal, cada uno abre en nueva pestaña
+      const buttons = streams.length
+        ? streams.map((s, i) => {
+            const label = (s.flag || '') + ' ' + (i === 0 ? '📺 Ver partido' : (s.language || s.streamId || 'Canal '+(i+1)));
+            const cls   = i === 0 ? 'tv-btn tv-btn-primary' : 'tv-btn tv-btn-secondary';
+            return `<a href="${s.embedUrl}" target="_blank" rel="noopener" class="${cls}" style="margin-top:${i>0?'6px':'0'}">${label}</a>`;
+          }).join('')
+        : '<span style="font-size:12px;color:var(--text-muted)">Sin enlace disponible</span>';
+
       return `
       <div class="col-12 col-sm-6 col-lg-4">
         <div class="tv-match-card">
           <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center">${catBadge}${statusBadge}</div>
           <div class="tv-match-title">${title}</div>
-          ${watchBtn}
+          <div style="display:flex;flex-direction:column;gap:4px">${buttons}</div>
         </div>
       </div>`;
     }
-
-    window.openPlayer = function(title, streams) {
-      const overlay=document.getElementById('playerOverlay');
-      const frame=document.getElementById('playerFrame');
-      document.getElementById('playerTitle').textContent=title;
-      const chEl=document.getElementById('playerChannels');
-      if (streams && streams.length) {
-        frame.src=streams[0].embedUrl;
-        chEl.innerHTML=streams.map((s,i)=>{
-          const label=(s.flag||'')+' '+(s.language||s.streamId||('Canal '+(i+1)));
-          return `<button class="player-ch-btn ${i===0?'active':''}" onclick="switchChannel(this,'${s.embedUrl}')">${label}</button>`;
-        }).join('');
-      }
-      overlay.classList.add('show');
-      document.body.style.overflow='hidden';
-    };
-    window.switchChannel=function(btn,url){document.querySelectorAll('.player-ch-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById('playerFrame').src=url;};
-    window.closePlayer=function(){document.getElementById('playerOverlay').classList.remove('show');document.getElementById('playerFrame').src='';document.body.style.overflow='';};
-    document.getElementById('playerOverlay').addEventListener('click',function(e){if(e.target===this)closePlayer();});
 
     window.hideGroupsLoading=function(){var l=document.getElementById('groupLoadingState'),g=document.getElementById('groupList');if(l)l.style.display='none';if(g)g.style.display='';};
     setTimeout(function(){var l=document.getElementById('groupLoadingState');if(l&&l.style.display!=='none')window.hideGroupsLoading();},5000);
