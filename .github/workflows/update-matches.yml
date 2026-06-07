@@ -1,0 +1,29 @@
+name: Update TV Matches
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'   # cada 5 minutos
+  workflow_dispatch:         # también manual
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch matches from streamtp
+        run: |
+          curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
+            "https://streamtp.top/api/matches.json" \
+            -o public/data/matches.json
+
+      - name: Validate JSON
+        run: python3 -c "import json,sys; json.load(open('public/data/matches.json'))" || echo '{"matches":[],"count":0}' > public/data/matches.json
+
+      - name: Commit if changed
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add public/data/matches.json
+          git diff --cached --quiet || git commit -m "chore: update matches cache [skip ci]"
+          git push
