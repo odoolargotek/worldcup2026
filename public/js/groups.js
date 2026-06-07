@@ -8,7 +8,7 @@ import {
 
 // 48 clasificados oficiales al Mundial 2026 (fuente: ESPN/Reuters/TyC, abril 2026)
 const TEAMS = [
-  // Anfitriones
+  // Anfitrión
   "Canadá", "México", "USA",
   // CONMEBOL
   "Argentina", "Brasil", "Uruguay", "Paraguay", "Ecuador", "Colombia",
@@ -85,6 +85,8 @@ async function loadGroups(user) {
 
   if (validDocs.length === 0) {
     container.innerHTML = '<div class="col-12"><p style="color:var(--text-muted)">\u00a1A\u00fan no perteneces a ninguna comparsa! Crea una o \u00fanete con un c\u00f3digo.</p></div>';
+    // Ocultar skeleton y mostrar lista aunque esté vacía
+    if (typeof window.hideGroupsLoading === 'function') window.hideGroupsLoading();
     return;
   }
   for (const { gSnap, memberData } of validDocs) {
@@ -94,6 +96,9 @@ async function loadGroups(user) {
     const memberCount = membersSnap.size;
     renderGroupCard(gSnap, memberData, container, user, memberCount);
   }
+
+  // Ocultar skeleton y revelar la lista ya renderizada
+  if (typeof window.hideGroupsLoading === 'function') window.hideGroupsLoading();
 }
 
 function renderGroupCard(gSnap, memberData, container, user, memberCount) {
@@ -152,13 +157,13 @@ function renderGroupCard(gSnap, memberData, container, user, memberCount) {
       </div>
       <div style="display:flex;gap:8px;margin-top:12px">
         <button class="btn btn-success btn-sm" style="flex:1;font-size:12px;font-weight:700"
-          onclick="event.stopPropagation();window.location='group.html?gid=${gid}'">🏆 Ver</button>
+          onclick="event.stopPropagation();window.location='group.html?gid=${gid}'">\ud83c\udfc6 Ver</button>
         <a href="${waLink}" target="_blank" rel="noopener"
           class="btn btn-sm"
           style="flex:1;font-size:12px;font-weight:700;background:#1D90C6;color:#fff;border:none;border-radius:8px">
-          📤 Invitar</a>
+          \ud83d� Invitar</a>
         <button class="btn btn-outline-light btn-sm" style="font-size:12px;padding:4px 10px"
-          onclick="event.stopPropagation();copyInviteLink('${appUrl}',this)" title="Copiar link">📋</button>
+          onclick="event.stopPropagation();copyInviteLink('${appUrl}',this)" title="Copiar link">\ud83d\udccb</button>
       </div>
       ${isAdmin ? `
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(201,52,75,0.15)">
@@ -188,8 +193,7 @@ window.copyInviteLink = function(url, btn) {
   });
 };
 
-// ── Crear comparsa ─────────────────────────────────────────────────────────────────
-document.getElementById('createGroupBtn')?.addEventListener('click', async () => {
+// \u2500\u2500 Crear comparsa \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ndocument.getElementById('createGroupBtn')?.addEventListener('click', async () => {
   const user     = auth.currentUser;
   const name     = document.getElementById('newGroupName').value.trim();
   const stage    = document.getElementById('newGroupStage').value;
@@ -258,8 +262,7 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
   }
 });
 
-// ── Unirse a comparsa ──────────────────────────────────────────────────────
-document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
+// \u2500\u2500 Unirse a comparsa \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\ndocument.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
   const user = auth.currentUser;
   const code = document.getElementById('joinCode').value.trim().toUpperCase();
   if (!code || !user) return;
@@ -295,7 +298,7 @@ document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
   openFavoriteOverlay();
 });
 
-// ── Overlay favorito ──────────────────────────────────────────────────────
+// \u2500\u2500 Overlay favorito \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function openFavoriteOverlay() {
   document.getElementById('selectedTeam').value = '';
   document.getElementById('saveFavoriteBtn').disabled = true;
@@ -357,7 +360,7 @@ function setupFavoriteOverlay(user) {
   });
 }
 
-// ── Overlay eliminar ──────────────────────────────────────────────────────
+// \u2500\u2500 Overlay eliminar \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 let _deleteGid = null;
 let _deleteUser = null;
 
