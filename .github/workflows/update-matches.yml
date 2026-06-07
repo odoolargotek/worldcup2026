@@ -2,23 +2,44 @@ name: Update TV Matches
 
 on:
   schedule:
-    - cron: '*/5 * * * *'   # cada 5 minutos
-  workflow_dispatch:         # también manual
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Fetch matches from streamtp
         run: |
-          curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
+          curl -s -L \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36" \
+            -H "Accept: application/json" \
             "https://streamtp.top/api/matches.json" \
-            -o public/data/matches.json
+            -o public/data/matches.json \
+            || echo '{"matches":[],"count":0}' > public/data/matches.json
 
       - name: Validate JSON
-        run: python3 -c "import json,sys; json.load(open('public/data/matches.json'))" || echo '{"matches":[],"count":0}' > public/data/matches.json
+        run: |
+          python3 -c "
+import json, sys
+try:
+    d = json.load(open('public/data/matches.json'))
+    n = len(d.get('matches', d) if isinstance(d, dict) else d)
+    print('OK:', n, 'partidos')
+except Exception as e:
+    print('JSON invalido:', e)
+    sys.exit(1)
+" || echo '{"matches":[],"count":0}' > public/data/matches.json
 
       - name: Commit if changed
         run: |
