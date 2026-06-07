@@ -38,3 +38,11 @@ jobs:
           git add public/data/matches.json
           git diff --cached --quiet || git commit -m "chore: update matches cache [skip ci]"
           git push origin main
+
+      - name: Deploy to Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: worldcup2026-c12af
