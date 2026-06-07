@@ -170,7 +170,7 @@
       </div>
     </div>
 
-    <!-- NUEVA PESTAÑA: Acceso TV -->
+    <!-- PESTAÑA: Acceso TV -->
     <div id="atab-tvaccess" class="d-none">
       <div class="card p-4">
         <h6 style="color:#4aafd4;font-weight:700" class="mb-1">📺 Gestión de acceso TV</h6>
@@ -274,17 +274,20 @@
       doc, updateDoc, getDoc
     } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
-    // ── Cargar lista de usuarios con acceso activo ──
+    let tvListLoaded = false;
+
     async function loadTvAccessList() {
+      tvListLoaded = true;
       const el = document.getElementById('tvAccessList');
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:13px">Cargando...</div>';
       try {
         const q    = query(collection(db, 'users'), where('tv_access', '==', true));
         const snap = await getDocs(q);
+        el.innerHTML = '';
         if (snap.empty) {
           el.innerHTML = '<div style="color:var(--text-muted);font-size:13px;padding:12px 0">Ningún usuario tiene acceso habilitado aún.</div>';
           return;
         }
-        el.innerHTML = '';
         snap.forEach(d => renderTvRow(el, d.id, d.data(), true));
       } catch(e) {
         el.innerHTML = `<div style="color:#f5a0ac;font-size:13px">Error cargando lista: ${e.message}</div>`;
@@ -304,32 +307,29 @@
         </div>
         <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
           <span class="${hasAccess ? 'tv-badge-on' : 'tv-badge-off'}">${hasAccess ? '✅ Activo' : '🚫 Sin acceso'}</span>
-          <button class="${hasAccess ? 'tv-toggle-off' : 'tv-toggle-on'}" data-uid="${uid}" data-access="${hasAccess}">
-            ${hasAccess ? '🚫 Quitar' : '✅ Dar acceso'}
-          </button>
+          <button class="${hasAccess ? 'tv-toggle-off' : 'tv-toggle-on'}">${hasAccess ? '🚫 Quitar' : '✅ Dar acceso'}</button>
         </div>`;
       container.appendChild(div);
       div.querySelector('button').addEventListener('click', () => toggleAccess(uid, hasAccess));
     }
 
     async function toggleAccess(uid, currentAccess) {
-      const btn = document.querySelector(`#tv-row-${uid} button`);
+      const row = document.getElementById('tv-row-' + uid);
+      const btn = row ? row.querySelector('button') : null;
       if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
       try {
         await updateDoc(doc(db, 'users', uid), { tv_access: !currentAccess });
-        // Recargar lista
         await loadTvAccessList();
-        // Si el resultado del search está mostrando este uid, actualizarlo
+        // Refrescar fila en resultado de búsqueda si existe
         const searchRow = document.getElementById('tv-search-row-' + uid);
         if (searchRow) {
           const d = await getDoc(doc(db, 'users', uid));
-          searchRow.replaceWith((() => {
-            const tmp = document.createElement('div');
-            renderTvRow(tmp, uid, d.data(), !currentAccess);
-            const el = tmp.firstElementChild;
-            el.id = 'tv-search-row-' + uid;
-            return el;
-          })());
+          const newAccess = !currentAccess;
+          const tmp = document.createElement('div');
+          renderTvRow(tmp, uid, d.data(), newAccess);
+          const newEl = tmp.firstElementChild;
+          newEl.id = 'tv-search-row-' + uid;
+          searchRow.replaceWith(newEl);
         }
       } catch(e) {
         alert('Error: ' + e.message);
@@ -337,11 +337,11 @@
       }
     }
 
-    // ── Buscar usuario por email ──
+    // Buscar usuario por email
     document.getElementById('tvSearchBtn').addEventListener('click', async () => {
       const input = document.getElementById('tvSearchInput').value.trim().toLowerCase();
       const res   = document.getElementById('tvSearchResult');
-      if (!input) { res.innerHTML = '<span style="color:#f5a0ac;font-size:13px">⚠️ Ingresa un email para buscar.</span>'; return; }
+      if (!input) { res.innerHTML = '<span style="color:#f5a0ac;font-size:13px">⚠️ Ingresa un email.</span>'; return; }
       res.innerHTML = '<span style="color:var(--text-muted);font-size:13px">Buscando...</span>';
       try {
         const q    = query(collection(db, 'users'), where('email', '==', input));
@@ -367,12 +367,13 @@
       if (e.key === 'Enter') document.getElementById('tvSearchBtn').click();
     });
 
-    // Cargar lista al abrir pestaña TV
-    document.querySelectorAll('[data-atab]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (btn.dataset.atab === 'tvaccess') loadTvAccessList();
-      });
-    });
+    // ✔ MutationObserver: detecta cuando admin.js quita 'd-none' del div TV
+    const tvDiv = document.getElementById('atab-tvaccess');
+    new MutationObserver(() => {
+      if (!tvDiv.classList.contains('d-none') && !tvListLoaded) {
+        loadTvAccessList();
+      }
+    }).observe(tvDiv, { attributes: true, attributeFilter: ['class'] });
   </script>
 </body>
 </html>
