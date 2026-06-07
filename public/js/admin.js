@@ -11,7 +11,7 @@ document.querySelectorAll('[data-atab]').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('[data-atab]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    ['results','matches','groupsmgr'].forEach(t => {
+    ['results','matches','groupsmgr','tvaccess'].forEach(t => {
       document.getElementById(`atab-${t}`)?.classList.toggle('d-none', btn.dataset.atab !== t);
     });
     if (btn.dataset.atab === 'matches')   loadAllMatchesList();
@@ -225,14 +225,12 @@ document.getElementById('deleteAllMatchesBtn')?.addEventListener('click', async 
   let done  = 0;
 
   for (const mDoc of matchesSnap.docs) {
-    // borrar pronósticos del partido
     const predsSnap = await getDocs(
       query(collection(db, 'predictions'), where('match_id','==', mDoc.id))
     );
     for (const p of predsSnap.docs) {
       await deleteDoc(p.ref);
     }
-    // borrar el partido
     await deleteDoc(mDoc.ref);
     done++;
     list.innerHTML = `<p style="color:var(--text-muted)">⏳ Borrando ${done}/${total}...</p>`;
@@ -321,7 +319,7 @@ async function loadGroupsMgr() {
           </div>
         </div>
         <button class="btn btn-sm btn-outline-danger" style="font-size:11px;white-space:nowrap" 
-          onclick="deleteGroupConfirm('${gid}','${g.name.replace(/'/g,"\\'")}')">🗑 Eliminar</button>
+          onclick="deleteGroupConfirm('${gid}','${g.name.replace(/'/g,"\\'")}')">&#x1F5D1; Eliminar</button>
       </div>`;
     container.appendChild(row);
   });
