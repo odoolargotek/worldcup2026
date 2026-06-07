@@ -95,6 +95,7 @@
       <li class="nav-item" style="white-space:nowrap"><button class="nav-link active" data-tab="matches">📅 Partidos</button></li>
       <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="ranking">🏆 Ranking</button></li>
       <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="groups">🏙️ Fase de Grupos</button></li>
+      <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="payment">💳 Pagos</button></li>
       <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="news">📰 Noticias</button></li>
       <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="rules">ℹ️ Cómo jugar</button></li>
       <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="disclaimer">⚖️ Aviso Legal</button></li>
@@ -103,6 +104,7 @@
     <div id="matchesTab"><div id="matchList"><div class="text-center py-4" style="color:var(--text-muted)">Cargando partidos...</div></div></div>
     <div id="rankingTab" class="d-none"></div>
     <div id="groupsTab" class="d-none"></div>
+    <div id="paymentTab" class="d-none"></div>
     <div id="newsTab" class="d-none"></div>
     <div id="rulesTab" class="d-none"></div>
     <div id="disclaimerTab" class="d-none"></div>
@@ -128,9 +130,11 @@
     import { renderNews }         from './js/news.js?v=3';
     import { renderRules }        from './js/rules.js?v=3';
     import { renderDisclaimer }   from './js/disclaimer.js?v=3';
+    import { renderPayment }      from './js/payment.js?v=1';
 
-    let groupsLoaded = false, newsLoaded = false, rulesLoaded = false, disclaimerLoaded = false;
-    const TABS = ['matches','ranking','groups','news','rules','disclaimer'];
+    let groupsLoaded = false, newsLoaded = false, rulesLoaded = false,
+        disclaimerLoaded = false, paymentLoaded = false;
+    const TABS = ['matches','ranking','groups','payment','news','rules','disclaimer'];
 
     function activateTab(tabName) {
       document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
@@ -147,11 +151,15 @@
         if (tab === 'news'       && !newsLoaded)       { newsLoaded       = true; renderNews(); }
         if (tab === 'rules'      && !rulesLoaded)      { rulesLoaded      = true; renderRules(); }
         if (tab === 'disclaimer' && !disclaimerLoaded) { disclaimerLoaded = true; renderDisclaimer(); }
+        if (tab === 'payment'    && !paymentLoaded)    { paymentLoaded    = true; await renderPayment(document.getElementById('paymentTab')); }
       });
     });
 
     const initTab = new URLSearchParams(window.location.search).get('tab');
-    if (initTab && TABS.includes(initTab)) activateTab(initTab);
+    if (initTab && TABS.includes(initTab)) {
+      activateTab(initTab);
+      if (initTab === 'payment') { paymentLoaded = true; renderPayment(document.getElementById('paymentTab')); }
+    }
   </script>
 </body>
 </html>
