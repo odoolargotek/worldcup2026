@@ -20,6 +20,11 @@ jobs:
         with:
           ref: main
 
+      - name: Setup Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
       - name: Fetch and validate matches
         run: |
           mkdir -p public/data
@@ -39,10 +44,13 @@ jobs:
           git diff --cached --quiet || git commit -m "chore: update matches cache [skip ci]"
           git push origin main
 
-      - name: Deploy to Firebase Hosting
+      - name: Deploy Hosting to Firebase
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           channelId: live
-          projectId: worldcup2026-c12af
+          projectId: ${{ secrets.FIREBASE_PROJECT_ID }}
+          entryPoint: '.'
+        env:
+          FIREBASE_CLI_EXPERIMENTS: webframeworks
