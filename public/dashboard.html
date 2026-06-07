@@ -78,7 +78,6 @@
       .skeleton-line, .dot { animation: none !important; }
     }
 
-    /* Banner apodo */
     #nicknameBanner {
       display: none;
       background: rgba(245,158,11,0.10);
@@ -87,104 +86,51 @@
       padding: 14px 16px;
       margin-bottom: 20px;
     }
-    #nicknameBanner .nick-title {
-      font-size: 13px;
-      font-weight: 700;
-      color: #f59e0b;
-      margin-bottom: 4px;
-    }
-    #nicknameBanner .nick-sub {
-      font-size: 12px;
-      color: var(--text-muted, #94a3b8);
-      margin-bottom: 10px;
-    }
-    #nicknameBanner .nick-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-    }
+    #nicknameBanner .nick-title { font-size: 13px; font-weight: 700; color: #f59e0b; margin-bottom: 4px; }
+    #nicknameBanner .nick-sub   { font-size: 12px; color: var(--text-muted, #94a3b8); margin-bottom: 10px; }
+    #nicknameBanner .nick-row   { display: flex; gap: 8px; align-items: center; }
     #nicknameInput {
-      flex: 1;
-      font-size: 14px;
-      font-weight: 600;
-      background: rgba(255,255,255,0.05);
-      border: 1px solid rgba(245,158,11,0.4);
-      border-radius: 8px;
-      padding: 8px 12px;
-      color: inherit;
+      flex: 1; font-size: 14px; font-weight: 600;
+      background: rgba(255,255,255,0.05); border: 1px solid rgba(245,158,11,0.4);
+      border-radius: 8px; padding: 8px 12px; color: inherit;
     }
-    #nicknameInput:focus {
-      outline: none;
-      border-color: #f59e0b;
-    }
+    #nicknameInput:focus { outline: none; border-color: #f59e0b; }
     #saveNicknameBtn {
-      background: rgba(245,158,11,0.2);
-      border: 1px solid rgba(245,158,11,0.5);
-      border-radius: 8px;
-      padding: 8px 16px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #f59e0b;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: background 0.15s;
+      background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.5);
+      border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 700;
+      color: #f59e0b; cursor: pointer; white-space: nowrap; transition: background 0.15s;
     }
     #saveNicknameBtn:hover { background: rgba(245,158,11,0.35); }
     #saveNicknameBtn:disabled { opacity: 0.5; cursor: default; }
     #nicknameMsg { font-size: 12px; margin-top: 6px; min-height: 16px; }
 
-    /* TV Tab styles */
     #tab-tv { display: none; }
     #tv-nav-item { display: none; }
     .tv-match-card {
       background: var(--bg-card, #1c2333);
       border: 1px solid var(--border, rgba(255,255,255,0.07));
-      border-radius: 14px;
-      padding: 16px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      border-radius: 14px; padding: 16px 18px;
+      display: flex; flex-direction: column; gap: 10px;
       transition: border-color 0.2s;
     }
     .tv-match-card:hover { border-color: rgba(29,144,198,0.5); }
     .tv-match-teams {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      font-size: 1.05rem;
-      font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; font-size: 1.05rem; font-weight: 700;
     }
-    .tv-match-vs {
-      color: var(--text-muted, #94a3b8);
-      font-size: 0.85rem;
-      font-weight: 400;
-    }
-    .tv-match-meta {
-      font-size: 11px;
-      color: var(--text-muted, #94a3b8);
-      text-align: center;
-    }
+    .tv-match-vs { color: var(--text-muted, #94a3b8); font-size: 0.85rem; font-weight: 400; }
     .tv-btn {
-      display: block;
-      width: 100%;
-      padding: 9px 0;
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 700;
-      text-align: center;
-      text-decoration: none;
-      border: none;
-      cursor: pointer;
+      display: block; width: 100%; padding: 9px 0;
+      border-radius: 8px; font-size: 13px; font-weight: 700;
+      text-align: center; text-decoration: none; border: none; cursor: pointer;
       transition: opacity 0.15s;
     }
     .tv-btn:hover { opacity: 0.85; text-decoration: none; }
     .tv-btn-primary   { background: #1D90C6; color: #fff; }
     .tv-btn-secondary { background: rgba(29,144,198,0.15); color: #4aafd4; border: 1px solid rgba(29,144,198,0.4); }
-    .tv-badge-live { background: #ef4444; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; letter-spacing: 0.5px; }
+    .tv-badge-live     { background: #ef4444; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; letter-spacing: 0.5px; }
     .tv-badge-upcoming { background: rgba(245,158,11,0.2); color: #f59e0b; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; }
 
-    /* Main tabs */
     #dashTabs { margin-bottom: 20px; }
     #dashTabs .nav-link { color: var(--text-muted, #94a3b8); font-size: 14px; font-weight: 600; border: none; padding: 8px 16px; border-radius: 8px; }
     #dashTabs .nav-link.active { background: rgba(29,144,198,0.15); color: #4aafd4; }
@@ -231,7 +177,6 @@
       <span id="userEmail" style="color:var(--text-muted);font-size:0.85rem"></span>
     </div>
 
-    <!-- TABS principales -->
     <ul class="nav" id="dashTabs">
       <li class="nav-item">
         <button class="nav-link active" id="tab-comparsas-btn" onclick="switchDashTab('comparsas')">🏆 Comparsas</button>
@@ -244,9 +189,8 @@
     <!-- TAB: Comparsas -->
     <div id="tab-comparsas">
 
-      <!-- Banner: sin apodo -->
       <div id="nicknameBanner">
-        <div class="nick-title">👤 ¡Ponle tu nombre o apodo!</div>
+        <div class="nick-title">👤 ¡Pónle tu nombre o apodo!</div>
         <div class="nick-sub">Apareces como "Sin nombre" en las comparsas. Escribe cómo quieres que te vean los demás.</div>
         <div class="nick-row">
           <input type="text" id="nicknameInput" maxlength="30" placeholder="Tu apodo o nombre..." autocomplete="off" autocorrect="off" spellcheck="false">
@@ -255,7 +199,6 @@
         <div id="nicknameMsg"></div>
       </div>
 
-      <!-- Estado de carga -->
       <div id="groupLoadingState">
         <div class="loading-label">
           <span class="dot"></span><span class="dot"></span><span class="dot"></span>
@@ -275,7 +218,6 @@
         </div>
       </div>
 
-      <!-- Lista real: empieza oculta con inline style -->
       <div id="groupList" class="row g-3 mb-4" style="display:none"></div>
 
       <div class="row g-3">
@@ -335,7 +277,7 @@
           </div>
         </div>
       </div>
-    </div><!-- /tab-comparsas -->
+    </div>
 
     <!-- TAB: Ver en vivo -->
     <div id="tab-tv" style="display:none">
@@ -351,9 +293,11 @@
       </div>
       <div id="tvMatchesGrid" class="row g-3"></div>
       <div id="tvMatchesError" style="display:none;text-align:center;padding:30px 0">
-        <span style="color:#f5a0ac;font-size:13px">⚠️ No se pudo cargar la lista de partidos. Intenta más tarde.</span>
+        <div style="color:#f5a0ac;font-size:13px;margin-bottom:12px">⚠️ No se pudo cargar la lista de partidos.</div>
+        <div id="tvErrorDetail" style="color:var(--text-muted);font-size:11px;margin-bottom:16px"></div>
+        <button onclick="retryTvLoad()" style="background:rgba(29,144,198,0.2);color:#4aafd4;border:1px solid rgba(29,144,198,0.4);border-radius:8px;padding:7px 18px;font-size:13px;font-weight:700;cursor:pointer">🔄 Reintentar</button>
       </div>
-    </div><!-- /tab-tv -->
+    </div>
 
   </div>
 
@@ -436,17 +380,9 @@
       try {
         const snap = await getDoc(doc(db, 'users', user.uid));
         const data = snap.exists() ? snap.data() : {};
-
-        // Banner apodo
         const hasName = (data.display_name || '').trim().length > 0;
-        if (!hasName) {
-          document.getElementById('nicknameBanner').style.display = 'block';
-        }
-
-        // Acceso TV
-        if (data.tv_access === true) {
-          document.getElementById('tv-nav-item').style.display = 'block';
-        }
+        if (!hasName) document.getElementById('nicknameBanner').style.display = 'block';
+        if (data.tv_access === true) document.getElementById('tv-nav-item').style.display = 'block';
       } catch(e) { /* silencioso */ }
     });
 
@@ -455,33 +391,22 @@
       const msg   = document.getElementById('nicknameMsg');
       const btn   = document.getElementById('saveNicknameBtn');
       const name  = input.value.trim();
-      if (!name) {
-        msg.innerHTML = '<span style="color:#f5a0ac">⚠️ Escribe un nombre o apodo primero.</span>';
-        return;
-      }
-      btn.disabled = true;
-      btn.textContent = 'Guardando...';
+      if (!name) { msg.innerHTML = '<span style="color:#f5a0ac">⚠️ Escribe un nombre o apodo primero.</span>'; return; }
+      btn.disabled = true; btn.textContent = 'Guardando...';
       try {
         const user = auth.currentUser;
         if (!user) throw new Error('no user');
         const ref  = doc(db, 'users', user.uid);
         const snap = await getDoc(ref);
-        if (snap.exists()) {
-          await updateDoc(ref, { display_name: name, email: user.email });
-        } else {
-          await setDoc(ref, { uid: user.uid, display_name: name, email: user.email, created_at: new Date() });
-        }
+        if (snap.exists()) await updateDoc(ref, { display_name: name, email: user.email });
+        else await setDoc(ref, { uid: user.uid, display_name: name, email: user.email, created_at: new Date() });
         msg.innerHTML = '<span style="color:#34d399">✅ ¡Listo! Ya aparecerás como <strong>' + name + '</strong> en las comparsas.</span>';
-        setTimeout(() => {
-          document.getElementById('nicknameBanner').style.display = 'none';
-        }, 2500);
+        setTimeout(() => { document.getElementById('nicknameBanner').style.display = 'none'; }, 2500);
       } catch(e) {
         msg.innerHTML = '<span style="color:#f5a0ac">⚠️ Error al guardar. Intenta de nuevo.</span>';
-        btn.disabled = false;
-        btn.textContent = '✅ Guardar';
+        btn.disabled = false; btn.textContent = '✅ Guardar';
       }
     });
-
     document.getElementById('nicknameInput').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') document.getElementById('saveNicknameBtn').click();
     });
@@ -490,6 +415,13 @@
   <!-- TV Tab: cargar partidos desde API -->
   <script>
     let tvLoaded = false;
+    const TV_API = 'https://streamtp.top/api/matches.json';
+    // Proxies CORS públicos como fallback
+    const PROXIES = [
+      url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+      url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+      url => `https://cors-anywhere.herokuapp.com/${url}`
+    ];
 
     window.switchDashTab = function(tab) {
       document.getElementById('tab-comparsas').style.display = tab === 'comparsas' ? '' : 'none';
@@ -499,42 +431,69 @@
       if (tab === 'tv' && !tvLoaded) loadTvMatches();
     };
 
+    window.retryTvLoad = function() {
+      tvLoaded = false;
+      document.getElementById('tvMatchesError').style.display  = 'none';
+      document.getElementById('tvMatchesLoading').style.display = '';
+      document.getElementById('tvMatchesGrid').innerHTML = '';
+      loadTvMatches();
+    };
+
+    async function fetchWithFallback(url) {
+      // 1º intento: directo
+      try {
+        const r = await fetch(url, { cache: 'no-cache' });
+        if (r.ok) return await r.json();
+      } catch(e) { /* CORS bloqueado, intentar proxy */ }
+
+      // Intentar proxies en orden
+      for (const makeProxy of PROXIES) {
+        try {
+          const r = await fetch(makeProxy(url), { cache: 'no-cache' });
+          if (r.ok) return await r.json();
+        } catch(e) { /* siguiente proxy */ }
+      }
+      throw new Error('No se pudo conectar con la fuente de partidos. Verifica que streamtp.top esté disponible.');
+    }
+
     async function loadTvMatches() {
       tvLoaded = true;
       const grid    = document.getElementById('tvMatchesGrid');
       const loading = document.getElementById('tvMatchesLoading');
       const errDiv  = document.getElementById('tvMatchesError');
+      const errDetail = document.getElementById('tvErrorDetail');
       try {
-        const res  = await fetch('https://streamtp.top/api/matches.json', { cache: 'no-cache' });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        const data = await res.json();
+        const data = await fetchWithFallback(TV_API);
         loading.style.display = 'none';
+        console.log('[TV] JSON recibido:', data);
 
-        // Normalizar: el JSON puede ser array o { matches: [...] }
-        const matches = Array.isArray(data) ? data : (data.matches || data.events || []);
+        const matches = Array.isArray(data) ? data
+                      : (data.matches || data.events || data.data || Object.values(data)[0] || []);
 
-        if (!matches.length) {
-          grid.innerHTML = '<div class="col-12" style="text-align:center;padding:30px 0;color:var(--text-muted);font-size:13px">No hay partidos disponibles en este momento.</div>';
+        if (!Array.isArray(matches) || !matches.length) {
+          grid.innerHTML = `<div class="col-12" style="text-align:center;padding:30px 0;color:var(--text-muted);font-size:13px">
+            No hay partidos disponibles en este momento.<br>
+            <span style="font-size:11px;opacity:0.6">Estructura recibida: ${JSON.stringify(data).substring(0,200)}</span>
+          </div>`;
           return;
         }
 
         grid.innerHTML = matches.map(m => buildTvCard(m)).join('');
       } catch(e) {
-        loading.style.display = 'none';
-        errDiv.style.display  = '';
-        console.error('TV matches error:', e);
+        loading.style.display  = 'none';
+        errDiv.style.display   = '';
+        errDetail.textContent  = e.message;
+        console.error('[TV] Error:', e);
       }
     }
 
     function buildTvCard(m) {
-      // Campos flexibles según lo que devuelva el JSON
-      const home    = m.home_team   || m.home   || m.team1  || m.homeTeam  || '?';
-      const away    = m.away_team   || m.away   || m.team2  || m.awayTeam  || '?';
-      const date    = m.date        || m.time   || m.kickoff || m.datetime  || '';
-      const league  = m.league      || m.competition || m.category || '';
-      const links   = m.links       || m.streams || m.channels || [];
-      const title   = m.title       || m.name   || (home && away ? home + ' vs ' + away : 'Partido');
-      const isLive  = m.status === 'live' || m.live === true || m.is_live === true;
+      const home   = m.home_team  || m.home   || m.team1    || m.homeTeam  || m.local || '?';
+      const away   = m.away_team  || m.away   || m.team2    || m.awayTeam  || m.visita || '?';
+      const date   = m.date       || m.time   || m.kickoff  || m.datetime  || m.hora || '';
+      const league = m.league     || m.competition || m.category || m.torneo || '';
+      const links  = m.links      || m.streams || m.channels || m.canales || [];
+      const isLive = m.status === 'live' || m.live === true || m.is_live === true || m.en_vivo === true;
 
       let dateStr = '';
       if (date) {
@@ -543,22 +502,19 @@
           if (!isNaN(d)) {
             dateStr = d.toLocaleDateString('es', { weekday:'short', day:'numeric', month:'short' })
                     + ' ' + d.toLocaleTimeString('es', { hour:'2-digit', minute:'2-digit' });
-          } else { dateStr = date; }
-        } catch(e) { dateStr = date; }
+          } else { dateStr = String(date); }
+        } catch(e) { dateStr = String(date); }
       }
 
-      // Botones de links
       let buttonsHtml = '';
       if (Array.isArray(links) && links.length) {
         buttonsHtml = links.map((l, i) => {
           const url  = typeof l === 'string' ? l : (l.url || l.link || l.href || '#');
-          const name = typeof l === 'object' ? (l.name || l.label || l.channel || ('Opción ' + (i+1))) : ('Canal ' + (i+1));
-          return `<a href="${url}" target="_blank" rel="noopener" class="tv-btn ${i === 0 ? 'tv-btn-primary' : 'tv-btn-secondary'}" style="margin-top:${i>0?'6px':'0'}">
-            📺 Ver — ${name}
-          </a>`;
+          const name = typeof l === 'object' ? (l.name || l.label || l.channel || l.canal || ('Opción ' + (i+1))) : ('Canal ' + (i+1));
+          return `<a href="${url}" target="_blank" rel="noopener" class="tv-btn ${i===0?'tv-btn-primary':'tv-btn-secondary'}" style="margin-top:${i>0?'6px':'0'}">📺 Ver — ${name}</a>`;
         }).join('');
-      } else if (m.url || m.link || m.stream_url) {
-        const url = m.url || m.link || m.stream_url;
+      } else if (m.url || m.link || m.stream_url || m.enlace) {
+        const url = m.url || m.link || m.stream_url || m.enlace;
         buttonsHtml = `<a href="${url}" target="_blank" rel="noopener" class="tv-btn tv-btn-primary">📺 Ver partido</a>`;
       } else {
         buttonsHtml = `<span style="font-size:12px;color:var(--text-muted)">Sin enlace disponible</span>`;
@@ -568,15 +524,11 @@
       <div class="col-12 col-sm-6 col-lg-4">
         <div class="tv-match-card">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-            <span style="font-size:11px;color:var(--text-muted);flex:1">${league}</span>
-            ${isLive ? '<span class="tv-badge-live">● EN VIVO</span>' : (dateStr ? '<span class="tv-badge-upcoming">' + dateStr + '</span>' : '')}
+            <span style="font-size:11px;color:var(--text-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${league}</span>
+            ${isLive ? '<span class="tv-badge-live">● EN VIVO</span>' : (dateStr ? `<span class="tv-badge-upcoming">${dateStr}</span>` : '')}
           </div>
-          <div class="tv-match-teams">
-            ${home} <span class="tv-match-vs">vs</span> ${away}
-          </div>
-          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">
-            ${buttonsHtml}
-          </div>
+          <div class="tv-match-teams">${home} <span class="tv-match-vs">vs</span> ${away}</div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">${buttonsHtml}</div>
         </div>
       </div>`;
     }
@@ -589,14 +541,10 @@
       if (loading) loading.style.display = 'none';
       if (list)    list.style.display    = '';
     };
-
     setTimeout(function() {
       var loading = document.getElementById('groupLoadingState');
-      if (loading && loading.style.display !== 'none') {
-        window.hideGroupsLoading();
-      }
+      if (loading && loading.style.display !== 'none') window.hideGroupsLoading();
     }, 5000);
-
     document.getElementById('newGroupType').addEventListener('change', function(){
       var isClosed = this.value === 'closed';
       document.getElementById('openFields').classList.toggle('d-none', isClosed);
