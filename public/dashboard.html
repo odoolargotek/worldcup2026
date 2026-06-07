@@ -157,7 +157,7 @@
     <div id="tab-tv" style="display:none">
       <div style="margin-bottom:16px">
         <h6 style="font-weight:800;margin-bottom:4px">📺 Partidos disponibles</h6>
-        <p style="font-size:12px;color:var(--text-muted);margin:0">Haz clic en “Ver partido” para ver el stream dentro de la página.</p>
+        <p style="font-size:12px;color:var(--text-muted);margin:0">Haz clic en "Ver partido" para ver el stream dentro de la página.</p>
       </div>
       <div id="tvMatchesLoading" style="text-align:center;padding:40px 0;color:var(--text-muted);font-size:13px">
         <div class="loading-label" style="justify-content:center"><span class="dot"></span><span class="dot"></span><span class="dot"></span>Cargando partidos...</div>
@@ -290,15 +290,14 @@
 
     async function loadTvMatches() {
       tvLoaded = true;
-      const grid=document.getElementById('tvMatchesGrid');
-      const loading=document.getElementById('tvMatchesLoading');
-      const errDiv=document.getElementById('tvMatchesError');
-      const errDetail=document.getElementById('tvErrorDetail');
+      const grid    = document.getElementById('tvMatchesGrid');
+      const loading = document.getElementById('tvMatchesLoading');
+      const errDiv  = document.getElementById('tvMatchesError');
+      const errDetail = document.getElementById('tvErrorDetail');
 
-      // Intentar primero el archivo cacheado en nuestro propio hosting (sin CORS)
-      // Si está vacío, intentar directo a streamtp (funciona desde el browser del usuario)
+      // Leer desde raw.githubusercontent.com — siempre actualizado, sin CORS
       const sources = [
-        '/data/matches.json',
+        'https://raw.githubusercontent.com/odoolargotek/worldcup2026/main/public/data/matches.json',
         'https://streamtp.top/api/matches.json'
       ];
 
