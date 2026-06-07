@@ -1,0 +1,99 @@
+name: Firestore Backup
+
+on:
+  schedule:
+    # Cada domingo a las 00:00 UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+    # También se puede disparar manualmente desde GitHub Actions
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install firebase-admin
+        run: npm install firebase-admin
+
+      - name: Export Firestore collections
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          node << 'EOF'
+          const admin = require('firebase-admin');
+          const fs    = require('fs');
+          const path  = require('path');
+
+          const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+          admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+
+          const db = admin.firestore();
+
+          const COLLECTIONS = [
+            'users',
+            'groups',
+            'group_members',
+            'predictions',
+            'matches'
+          ];
+
+          async function exportAll() {
+            const backup = {
+              exported_at: new Date().toISOString(),
+              project_id:  serviceAccount.project_id,
+              collections: {}
+            };
+
+            for (const col of COLLECTIONS) {
+              console.log(`Exportando colección: ${col}`);
+              const snap = await db.collection(col).get();
+              backup.collections[col] = {};
+              snap.forEach(doc => {
+                backup.collections[col][doc.id] = doc.data();
+              });
+              console.log(`  → ${snap.size} documentos`);
+            }
+
+            const date     = new Date().toISOString().slice(0, 10);
+            const outDir   = 'backups';
+            const outFile  = path.join(outDir, `firestore-${date}.json`);
+
+            if (!fs.existsSync(outDir)) fs.mkdirSync(outDir);
+            fs.writeFileSync(outFile, JSON.stringify(backup, null, 2), 'utf8');
+            console.log(`Backup guardado en: ${outFile}`);
+
+            // Mantener solo los últimos 10 backups
+            const files = fs.readdirSync(outDir)
+              .filter(f => f.startsWith('firestore-') && f.endsWith('.json'))
+              .sort();
+            if (files.length > 10) {
+              const toDelete = files.slice(0, files.length - 10);
+              toDelete.forEach(f => {
+                fs.unlinkSync(path.join(outDir, f));
+                console.log(`Eliminado backup antiguo: ${f}`);
+              });
+            }
+          }
+
+          exportAll().catch(e => { console.error(e); process.exit(1); });
+          EOF
+
+      - name: Commit backup to repo
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add backups/
+          git diff --cached --quiet || git commit -m "backup: Firestore $(date -u +%Y-%m-%d)"
+          git push origin main
