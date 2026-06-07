@@ -29,17 +29,26 @@ function getCategory(pts) {
 async function getUserName(uid) {
   if (userNameCache[uid]) return userNameCache[uid];
   let name = null;
+  let emailFallback = null;
   try {
     const uSnap = await getDoc(doc(db, 'users', uid));
     if (uSnap.exists()) {
       const d = uSnap.data();
-      name = d.display_name || d.displayName || d.email?.split('@')[0] || null;
+      // Nombre: display_name o displayName (solo si no está vacío)
+      const candidate = (d.display_name || '').trim() || (d.displayName || '').trim();
+      if (candidate) name = candidate;
+      // Guardar email completo como fallback
+      if (d.email) emailFallback = d.email;
     }
   } catch(_) {}
+  // Si no hay nombre en Firestore, intentar con el objeto auth
   if (!name && auth.currentUser?.uid === uid) {
-    name = auth.currentUser.displayName || auth.currentUser.email?.split('@')[0] || null;
+    const authName = (auth.currentUser.displayName || '').trim();
+    if (authName) name = authName;
+    if (!emailFallback && auth.currentUser.email) emailFallback = auth.currentUser.email;
   }
-  name = name || 'Sin nombre';
+  // Fallback final: correo completo
+  name = name || emailFallback || 'Sin nombre';
   userNameCache[uid] = name;
   return name;
 }
