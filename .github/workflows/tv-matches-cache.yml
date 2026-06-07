@@ -20,28 +20,16 @@ jobs:
         with:
           ref: main
 
-      - name: Fetch matches from streamtp
+      - name: Fetch and validate matches
         run: |
           mkdir -p public/data
           curl -s -L \
-            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124.0 Safari/537.36" \
+            -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" \
             -H "Accept: application/json" \
             "https://streamtp.top/api/matches.json" \
-            -o public/data/matches.json \
-          || echo '{"matches":[],"count":0}' > public/data/matches.json
-
-      - name: Validate JSON
-        run: |
-          python3 -c "
-import json, sys
-try:
-    d = json.load(open('public/data/matches.json'))
-    arr = d.get('matches', d) if isinstance(d, dict) else d
-    print('OK:', len(arr), 'partidos')
-except Exception as e:
-    print('JSON invalido:', e)
-    sys.exit(1)
-" || echo '{"matches":[],"count":0}' > public/data/matches.json
+            -o public/data/matches.json
+          python3 -c "import json; d=open('public/data/matches.json').read(); json.loads(d); print('JSON OK')" \
+            || echo '{"matches":[],"count":0}' > public/data/matches.json
 
       - name: Commit if changed
         run: |
