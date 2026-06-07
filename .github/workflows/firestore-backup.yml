@@ -5,7 +5,9 @@ on:
     # Cada domingo a las 00:00 UTC
     - cron: '0 0 * * 0'
   workflow_dispatch:
-    # También se puede disparar manualmente desde GitHub Actions
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   backup:
@@ -22,7 +24,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Install firebase-admin
         run: npm install firebase-admin
