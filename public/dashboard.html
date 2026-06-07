@@ -23,118 +23,115 @@
     .skeleton-card {
       background: var(--bg-card, #1c2333);
       border: 1px solid var(--border, rgba(255,255,255,0.07));
-      border-radius: 14px;
-      padding: 18px 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      border-radius: 14px; padding: 18px 20px;
+      display: flex; flex-direction: column; gap: 10px;
     }
     .skeleton-line {
-      height: 12px;
-      border-radius: 6px;
-      background: linear-gradient(
-        90deg,
-        rgba(255,255,255,0.04) 25%,
-        rgba(255,255,255,0.10) 50%,
-        rgba(255,255,255,0.04) 75%
-      );
+      height: 12px; border-radius: 6px;
+      background: linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.10) 50%,rgba(255,255,255,0.04) 75%);
       background-size: 400px 100%;
       animation: shimmer 1.5s ease-in-out infinite;
     }
-    .skeleton-line.title  { width: 55%; height: 15px; }
-    .skeleton-line.sub    { width: 35%; height: 10px; margin-top: 2px; }
-    .skeleton-line.badge  { width: 28%; height: 22px; border-radius: 20px; margin-top: 4px; }
-    .skeleton-line.btn    { width: 100%; height: 36px; border-radius: 8px; margin-top: 6px; }
-    #groupLoadingState {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
+    .skeleton-line.title  { width:55%;height:15px; }
+    .skeleton-line.sub    { width:35%;height:10px;margin-top:2px; }
+    .skeleton-line.badge  { width:28%;height:22px;border-radius:20px;margin-top:4px; }
+    .skeleton-line.btn    { width:100%;height:36px;border-radius:8px;margin-top:6px; }
+    #groupLoadingState { display:flex;flex-direction:column;gap:10px;margin-bottom:16px; }
     .loading-label {
-      text-align: center;
-      font-size: 12px;
-      color: var(--text-muted, #94a3b8);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 4px 0 8px;
+      text-align:center;font-size:12px;color:var(--text-muted,#94a3b8);
+      display:flex;align-items:center;justify-content:center;gap:8px;padding:4px 0 8px;
     }
     .loading-label .dot {
-      display: inline-block;
-      width: 5px; height: 5px;
-      border-radius: 50%;
-      background: var(--primary-light, #4aafd4);
-      animation: bounce 1.2s ease-in-out infinite;
+      display:inline-block;width:5px;height:5px;border-radius:50%;
+      background:var(--primary-light,#4aafd4);animation:bounce 1.2s ease-in-out infinite;
     }
-    .loading-label .dot:nth-child(2) { animation-delay: 0.2s; }
-    .loading-label .dot:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes bounce {
-      0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
-      40%            { transform: scale(1.0); opacity: 1;   }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .skeleton-line, .dot { animation: none !important; }
-    }
+    .loading-label .dot:nth-child(2){animation-delay:0.2s}
+    .loading-label .dot:nth-child(3){animation-delay:0.4s}
+    @keyframes bounce{0%,80%,100%{transform:scale(0.6);opacity:0.4}40%{transform:scale(1);opacity:1}}
+    @media(prefers-reduced-motion:reduce){.skeleton-line,.dot{animation:none!important}}
 
     #nicknameBanner {
-      display: none;
-      background: rgba(245,158,11,0.10);
-      border: 1px solid rgba(245,158,11,0.35);
-      border-radius: 12px;
-      padding: 14px 16px;
-      margin-bottom: 20px;
+      display:none;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.35);
+      border-radius:12px;padding:14px 16px;margin-bottom:20px;
     }
-    #nicknameBanner .nick-title { font-size: 13px; font-weight: 700; color: #f59e0b; margin-bottom: 4px; }
-    #nicknameBanner .nick-sub   { font-size: 12px; color: var(--text-muted, #94a3b8); margin-bottom: 10px; }
-    #nicknameBanner .nick-row   { display: flex; gap: 8px; align-items: center; }
+    #nicknameBanner .nick-title{font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:4px}
+    #nicknameBanner .nick-sub  {font-size:12px;color:var(--text-muted,#94a3b8);margin-bottom:10px}
+    #nicknameBanner .nick-row  {display:flex;gap:8px;align-items:center}
     #nicknameInput {
-      flex: 1; font-size: 14px; font-weight: 600;
-      background: rgba(255,255,255,0.05); border: 1px solid rgba(245,158,11,0.4);
-      border-radius: 8px; padding: 8px 12px; color: inherit;
+      flex:1;font-size:14px;font-weight:600;
+      background:rgba(255,255,255,0.05);border:1px solid rgba(245,158,11,0.4);
+      border-radius:8px;padding:8px 12px;color:inherit;
     }
-    #nicknameInput:focus { outline: none; border-color: #f59e0b; }
+    #nicknameInput:focus{outline:none;border-color:#f59e0b}
     #saveNicknameBtn {
-      background: rgba(245,158,11,0.2); border: 1px solid rgba(245,158,11,0.5);
-      border-radius: 8px; padding: 8px 16px; font-size: 13px; font-weight: 700;
-      color: #f59e0b; cursor: pointer; white-space: nowrap; transition: background 0.15s;
+      background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.5);
+      border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;
+      color:#f59e0b;cursor:pointer;white-space:nowrap;transition:background 0.15s;
     }
-    #saveNicknameBtn:hover { background: rgba(245,158,11,0.35); }
-    #saveNicknameBtn:disabled { opacity: 0.5; cursor: default; }
-    #nicknameMsg { font-size: 12px; margin-top: 6px; min-height: 16px; }
+    #saveNicknameBtn:hover{background:rgba(245,158,11,0.35)}
+    #saveNicknameBtn:disabled{opacity:0.5;cursor:default}
+    #nicknameMsg{font-size:12px;margin-top:6px;min-height:16px}
 
-    #tab-tv { display: none; }
-    #tv-nav-item { display: none; }
+    #tab-tv{display:none}
+    #tv-nav-item{display:none}
     .tv-match-card {
-      background: var(--bg-card, #1c2333);
-      border: 1px solid var(--border, rgba(255,255,255,0.07));
-      border-radius: 14px; padding: 16px 18px;
-      display: flex; flex-direction: column; gap: 10px;
-      transition: border-color 0.2s;
+      background:var(--bg-card,#1c2333);border:1px solid var(--border,rgba(255,255,255,0.07));
+      border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;
+      transition:border-color 0.2s;
     }
-    .tv-match-card:hover { border-color: rgba(29,144,198,0.5); }
-    .tv-match-teams {
-      display: flex; align-items: center; justify-content: center;
-      gap: 10px; font-size: 1.05rem; font-weight: 700;
-    }
-    .tv-match-vs { color: var(--text-muted, #94a3b8); font-size: 0.85rem; font-weight: 400; }
+    .tv-match-card:hover{border-color:rgba(29,144,198,0.5)}
+    .tv-match-title{font-size:0.98rem;font-weight:700;line-height:1.3}
     .tv-btn {
-      display: block; width: 100%; padding: 9px 0;
-      border-radius: 8px; font-size: 13px; font-weight: 700;
-      text-align: center; text-decoration: none; border: none; cursor: pointer;
-      transition: opacity 0.15s;
+      display:block;width:100%;padding:9px 0;border-radius:8px;font-size:13px;font-weight:700;
+      text-align:center;text-decoration:none;border:none;cursor:pointer;transition:opacity 0.15s;
     }
-    .tv-btn:hover { opacity: 0.85; text-decoration: none; }
-    .tv-btn-primary   { background: #1D90C6; color: #fff; }
-    .tv-btn-secondary { background: rgba(29,144,198,0.15); color: #4aafd4; border: 1px solid rgba(29,144,198,0.4); }
-    .tv-badge-live     { background: #ef4444; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; letter-spacing: 0.5px; }
-    .tv-badge-upcoming { background: rgba(245,158,11,0.2); color: #f59e0b; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; }
+    .tv-btn:hover{opacity:0.85;text-decoration:none}
+    .tv-btn-primary  {background:#1D90C6;color:#fff}
+    .tv-btn-secondary{background:rgba(29,144,198,0.15);color:#4aafd4;border:1px solid rgba(29,144,198,0.4)}
+    .tv-badge-live    {background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:0.5px}
+    .tv-badge-upcoming{background:rgba(245,158,11,0.2);color:#f59e0b;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px}
+    .tv-badge-cat     {background:rgba(29,144,198,0.15);color:#4aafd4;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px}
 
-    #dashTabs { margin-bottom: 20px; }
-    #dashTabs .nav-link { color: var(--text-muted, #94a3b8); font-size: 14px; font-weight: 600; border: none; padding: 8px 16px; border-radius: 8px; }
-    #dashTabs .nav-link.active { background: rgba(29,144,198,0.15); color: #4aafd4; }
-    #dashTabs .nav-link:hover:not(.active) { background: rgba(255,255,255,0.05); color: var(--text, #e2e8f0); }
+    /* Player overlay */
+    #playerOverlay {
+      display:none;position:fixed;inset:0;z-index:9999;
+      background:rgba(0,0,0,0.92);align-items:center;justify-content:center;
+    }
+    #playerOverlay.show{display:flex}
+    #playerBox {
+      width:100%;max-width:860px;background:#0d1117;
+      border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);
+      display:flex;flex-direction:column;
+    }
+    #playerHeader {
+      display:flex;align-items:center;justify-content:space-between;
+      padding:12px 16px;background:rgba(29,144,198,0.12);border-bottom:1px solid rgba(255,255,255,0.07);
+    }
+    #playerTitle{font-weight:700;font-size:14px;color:#e2e8f0}
+    #playerClose {
+      background:rgba(255,255,255,0.08);border:none;color:#e2e8f0;
+      border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:16px;line-height:1;
+    }
+    #playerClose:hover{background:rgba(255,255,255,0.16)}
+    #playerFrame{
+      width:100%;aspect-ratio:16/9;border:none;
+      background:#000;
+    }
+    #playerChannels{
+      display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;
+      background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,255,255,0.07);
+    }
+    .player-ch-btn {
+      padding:6px 14px;border-radius:7px;font-size:12px;font-weight:700;
+      cursor:pointer;border:none;transition:background 0.15s;
+    }
+    .player-ch-btn.active{background:#1D90C6;color:#fff}
+    .player-ch-btn:not(.active){background:rgba(29,144,198,0.15);color:#4aafd4;border:1px solid rgba(29,144,198,0.35)}
+
+    #dashTabs{margin-bottom:20px}
+    #dashTabs .nav-link{color:var(--text-muted,#94a3b8);font-size:14px;font-weight:600;border:none;padding:8px 16px;border-radius:8px}
+    #dashTabs .nav-link.active{background:rgba(29,144,198,0.15);color:#4aafd4}
+    #dashTabs .nav-link:hover:not(.active){background:rgba(255,255,255,0.05);color:var(--text,#e2e8f0)}
   </style>
 </head>
 <body>
@@ -188,7 +185,6 @@
 
     <!-- TAB: Comparsas -->
     <div id="tab-comparsas">
-
       <div id="nicknameBanner">
         <div class="nick-title">👤 ¡Pónle tu nombre o apodo!</div>
         <div class="nick-sub">Apareces como "Sin nombre" en las comparsas. Escribe cómo quieres que te vean los demás.</div>
@@ -205,16 +201,12 @@
           Cargando tus comparsas, espera un momento...
         </div>
         <div class="skeleton-card">
-          <div class="skeleton-line title"></div>
-          <div class="skeleton-line sub"></div>
-          <div class="skeleton-line badge"></div>
-          <div class="skeleton-line btn"></div>
+          <div class="skeleton-line title"></div><div class="skeleton-line sub"></div>
+          <div class="skeleton-line badge"></div><div class="skeleton-line btn"></div>
         </div>
         <div class="skeleton-card">
-          <div class="skeleton-line title" style="width:45%"></div>
-          <div class="skeleton-line sub" style="width:30%"></div>
-          <div class="skeleton-line badge"></div>
-          <div class="skeleton-line btn"></div>
+          <div class="skeleton-line title" style="width:45%"></div><div class="skeleton-line sub" style="width:30%"></div>
+          <div class="skeleton-line badge"></div><div class="skeleton-line btn"></div>
         </div>
       </div>
 
@@ -277,13 +269,13 @@
           </div>
         </div>
       </div>
-    </div>
+    </div><!-- /tab-comparsas -->
 
     <!-- TAB: Ver en vivo -->
     <div id="tab-tv" style="display:none">
       <div style="margin-bottom:16px">
         <h6 style="font-weight:800;margin-bottom:4px">📺 Partidos disponibles</h6>
-        <p style="font-size:12px;color:var(--text-muted);margin:0">Haz clic en "Ver" para abrir el partido en una nueva ventana.</p>
+        <p style="font-size:12px;color:var(--text-muted);margin:0">Haz clic en “Ver partido” para ver el stream dentro de la página.</p>
       </div>
       <div id="tvMatchesLoading" style="text-align:center;padding:40px 0;color:var(--text-muted);font-size:13px">
         <div class="loading-label" style="justify-content:center">
@@ -293,12 +285,24 @@
       </div>
       <div id="tvMatchesGrid" class="row g-3"></div>
       <div id="tvMatchesError" style="display:none;text-align:center;padding:30px 0">
-        <div style="color:#f5a0ac;font-size:13px;margin-bottom:12px">⚠️ No se pudo cargar la lista de partidos.</div>
+        <div style="color:#f5a0ac;font-size:13px;margin-bottom:8px">⚠️ No se pudo cargar la lista de partidos.</div>
         <div id="tvErrorDetail" style="color:var(--text-muted);font-size:11px;margin-bottom:16px"></div>
         <button onclick="retryTvLoad()" style="background:rgba(29,144,198,0.2);color:#4aafd4;border:1px solid rgba(29,144,198,0.4);border-radius:8px;padding:7px 18px;font-size:13px;font-weight:700;cursor:pointer">🔄 Reintentar</button>
       </div>
     </div>
 
+  </div><!-- /container -->
+
+  <!-- PLAYER OVERLAY -->
+  <div id="playerOverlay">
+    <div id="playerBox">
+      <div id="playerHeader">
+        <span id="playerTitle"></span>
+        <button id="playerClose" onclick="closePlayer()">×</button>
+      </div>
+      <iframe id="playerFrame" allowfullscreen allow="autoplay; encrypted-media" scrolling="no"></iframe>
+      <div id="playerChannels"></div>
+    </div>
   </div>
 
   <!-- OVERLAY FAVORITO -->
@@ -380,193 +384,170 @@
       try {
         const snap = await getDoc(doc(db, 'users', user.uid));
         const data = snap.exists() ? snap.data() : {};
-        const hasName = (data.display_name || '').trim().length > 0;
-        if (!hasName) document.getElementById('nicknameBanner').style.display = 'block';
-        if (data.tv_access === true) document.getElementById('tv-nav-item').style.display = 'block';
-      } catch(e) { /* silencioso */ }
+        if (!(data.display_name||'').trim()) document.getElementById('nicknameBanner').style.display='block';
+        if (data.tv_access === true) document.getElementById('tv-nav-item').style.display='block';
+      } catch(e){}
     });
 
     document.getElementById('saveNicknameBtn').addEventListener('click', async () => {
-      const input = document.getElementById('nicknameInput');
-      const msg   = document.getElementById('nicknameMsg');
-      const btn   = document.getElementById('saveNicknameBtn');
-      const name  = input.value.trim();
-      if (!name) { msg.innerHTML = '<span style="color:#f5a0ac">⚠️ Escribe un nombre o apodo primero.</span>'; return; }
-      btn.disabled = true; btn.textContent = 'Guardando...';
-      try {
-        const user = auth.currentUser;
-        if (!user) throw new Error('no user');
-        const ref  = doc(db, 'users', user.uid);
-        const snap = await getDoc(ref);
-        if (snap.exists()) await updateDoc(ref, { display_name: name, email: user.email });
-        else await setDoc(ref, { uid: user.uid, display_name: name, email: user.email, created_at: new Date() });
-        msg.innerHTML = '<span style="color:#34d399">✅ ¡Listo! Ya aparecerás como <strong>' + name + '</strong> en las comparsas.</span>';
-        setTimeout(() => { document.getElementById('nicknameBanner').style.display = 'none'; }, 2500);
-      } catch(e) {
-        msg.innerHTML = '<span style="color:#f5a0ac">⚠️ Error al guardar. Intenta de nuevo.</span>';
-        btn.disabled = false; btn.textContent = '✅ Guardar';
+      const input=document.getElementById('nicknameInput'), msg=document.getElementById('nicknameMsg'), btn=document.getElementById('saveNicknameBtn');
+      const name=input.value.trim();
+      if(!name){msg.innerHTML='<span style="color:#f5a0ac">⚠️ Escribe un nombre o apodo primero.</span>';return;}
+      btn.disabled=true;btn.textContent='Guardando...';
+      try{
+        const user=auth.currentUser;
+        if(!user)throw new Error('no user');
+        const ref=doc(db,'users',user.uid),snap=await getDoc(ref);
+        if(snap.exists())await updateDoc(ref,{display_name:name,email:user.email});
+        else await setDoc(ref,{uid:user.uid,display_name:name,email:user.email,created_at:new Date()});
+        msg.innerHTML='<span style="color:#34d399">✅ ¡Listo! Ya aparecerás como <strong>'+name+'</strong>.</span>';
+        setTimeout(()=>{document.getElementById('nicknameBanner').style.display='none';},2500);
+      }catch(e){
+        msg.innerHTML='<span style="color:#f5a0ac">⚠️ Error al guardar.</span>';
+        btn.disabled=false;btn.textContent='✅ Guardar';
       }
     });
-    document.getElementById('nicknameInput').addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') document.getElementById('saveNicknameBtn').click();
-    });
+    document.getElementById('nicknameInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('saveNicknameBtn').click();});
   </script>
 
-  <!-- TV Tab: cargar partidos desde API -->
+  <!-- TV Tab -->
   <script>
     let tvLoaded = false;
-    const TV_API = 'https://streamtp.top/api/matches.json';
-    // Proxies CORS públicos como fallback
-    const PROXIES = [
-      url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
-      url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
-      url => `https://cors-anywhere.herokuapp.com/${url}`
-    ];
 
     window.switchDashTab = function(tab) {
-      document.getElementById('tab-comparsas').style.display = tab === 'comparsas' ? '' : 'none';
-      document.getElementById('tab-tv').style.display        = tab === 'tv'        ? '' : 'none';
-      document.getElementById('tab-comparsas-btn').classList.toggle('active', tab === 'comparsas');
-      document.getElementById('tab-tv-btn').classList.toggle('active', tab === 'tv');
-      if (tab === 'tv' && !tvLoaded) loadTvMatches();
+      document.getElementById('tab-comparsas').style.display = tab==='comparsas'?'':'none';
+      document.getElementById('tab-tv').style.display        = tab==='tv'?'':'none';
+      document.getElementById('tab-comparsas-btn').classList.toggle('active', tab==='comparsas');
+      document.getElementById('tab-tv-btn').classList.toggle('active', tab==='tv');
+      if (tab==='tv' && !tvLoaded) loadTvMatches();
     };
 
     window.retryTvLoad = function() {
       tvLoaded = false;
-      document.getElementById('tvMatchesError').style.display  = 'none';
+      document.getElementById('tvMatchesError').style.display   = 'none';
       document.getElementById('tvMatchesLoading').style.display = '';
       document.getElementById('tvMatchesGrid').innerHTML = '';
       loadTvMatches();
     };
 
-    async function fetchWithFallback(url) {
-      // 1º intento: directo
-      try {
-        const r = await fetch(url, { cache: 'no-cache' });
-        if (r.ok) return await r.json();
-      } catch(e) { /* CORS bloqueado, intentar proxy */ }
-
-      // Intentar proxies en orden
-      for (const makeProxy of PROXIES) {
-        try {
-          const r = await fetch(makeProxy(url), { cache: 'no-cache' });
-          if (r.ok) return await r.json();
-        } catch(e) { /* siguiente proxy */ }
-      }
-      throw new Error('No se pudo conectar con la fuente de partidos. Verifica que streamtp.top esté disponible.');
-    }
-
     async function loadTvMatches() {
       tvLoaded = true;
-      const grid    = document.getElementById('tvMatchesGrid');
-      const loading = document.getElementById('tvMatchesLoading');
-      const errDiv  = document.getElementById('tvMatchesError');
-      const errDetail = document.getElementById('tvErrorDetail');
+      const grid=document.getElementById('tvMatchesGrid');
+      const loading=document.getElementById('tvMatchesLoading');
+      const errDiv=document.getElementById('tvMatchesError');
+      const errDetail=document.getElementById('tvErrorDetail');
       try {
-        const data = await fetchWithFallback(TV_API);
+        const res = await fetch('https://streamtp.top/api/matches.json', {cache:'no-cache'});
+        if (!res.ok) throw new Error('HTTP '+res.status);
+        const data = await res.json();
         loading.style.display = 'none';
-        console.log('[TV] JSON recibido:', data);
-
-        const matches = Array.isArray(data) ? data
-                      : (data.matches || data.events || data.data || Object.values(data)[0] || []);
-
-        if (!Array.isArray(matches) || !matches.length) {
-          grid.innerHTML = `<div class="col-12" style="text-align:center;padding:30px 0;color:var(--text-muted);font-size:13px">
-            No hay partidos disponibles en este momento.<br>
-            <span style="font-size:11px;opacity:0.6">Estructura recibida: ${JSON.stringify(data).substring(0,200)}</span>
-          </div>`;
+        // streamtp returns { matches: [...], count, extractedAt }
+        const matches = Array.isArray(data) ? data : (data.matches || []);
+        if (!matches.length) {
+          grid.innerHTML='<div class="col-12" style="text-align:center;padding:30px 0;color:var(--text-muted);font-size:13px">No hay partidos disponibles en este momento.</div>';
           return;
         }
-
         grid.innerHTML = matches.map(m => buildTvCard(m)).join('');
       } catch(e) {
-        loading.style.display  = 'none';
-        errDiv.style.display   = '';
-        errDetail.textContent  = e.message;
-        console.error('[TV] Error:', e);
+        loading.style.display = 'none';
+        errDiv.style.display  = '';
+        errDetail.textContent = e.message;
       }
     }
 
     function buildTvCard(m) {
-      const home   = m.home_team  || m.home   || m.team1    || m.homeTeam  || m.local || '?';
-      const away   = m.away_team  || m.away   || m.team2    || m.awayTeam  || m.visita || '?';
-      const date   = m.date       || m.time   || m.kickoff  || m.datetime  || m.hora || '';
-      const league = m.league     || m.competition || m.category || m.torneo || '';
-      const links  = m.links      || m.streams || m.channels || m.canales || [];
-      const isLive = m.status === 'live' || m.live === true || m.is_live === true || m.en_vivo === true;
+      // streamtp structure: { title, time, category, status, streams:[{streamId,language,flag,embedUrl}] }
+      const title    = m.title || 'Partido';
+      const time     = m.time  || '';
+      const category = m.category || '';
+      const isLive   = m.status === 'live' || m.status === 'en vivo';
+      const streams  = Array.isArray(m.streams) ? m.streams : [];
+      const mainUrl  = streams.length ? streams[0].embedUrl : null;
+      const flag     = streams.length ? (streams[0].flag||'🇦🇴') : '';
 
-      let dateStr = '';
-      if (date) {
-        try {
-          const d = new Date(date);
-          if (!isNaN(d)) {
-            dateStr = d.toLocaleDateString('es', { weekday:'short', day:'numeric', month:'short' })
-                    + ' ' + d.toLocaleTimeString('es', { hour:'2-digit', minute:'2-digit' });
-          } else { dateStr = String(date); }
-        } catch(e) { dateStr = String(date); }
-      }
+      const statusBadge = isLive
+        ? '<span class="tv-badge-live">● EN VIVO</span>'
+        : (time ? `<span class="tv-badge-upcoming">⏰ ${time}</span>` : '');
+      const catBadge = category ? `<span class="tv-badge-cat">${category}</span>` : '';
 
-      let buttonsHtml = '';
-      if (Array.isArray(links) && links.length) {
-        buttonsHtml = links.map((l, i) => {
-          const url  = typeof l === 'string' ? l : (l.url || l.link || l.href || '#');
-          const name = typeof l === 'object' ? (l.name || l.label || l.channel || l.canal || ('Opción ' + (i+1))) : ('Canal ' + (i+1));
-          return `<a href="${url}" target="_blank" rel="noopener" class="tv-btn ${i===0?'tv-btn-primary':'tv-btn-secondary'}" style="margin-top:${i>0?'6px':'0'}">📺 Ver — ${name}</a>`;
-        }).join('');
-      } else if (m.url || m.link || m.stream_url || m.enlace) {
-        const url = m.url || m.link || m.stream_url || m.enlace;
-        buttonsHtml = `<a href="${url}" target="_blank" rel="noopener" class="tv-btn tv-btn-primary">📺 Ver partido</a>`;
-      } else {
-        buttonsHtml = `<span style="font-size:12px;color:var(--text-muted)">Sin enlace disponible</span>`;
-      }
+      const streamsJson = JSON.stringify(streams).replace(/"/g,'&quot;');
+
+      const watchBtn = mainUrl
+        ? `<button class="tv-btn tv-btn-primary" onclick='openPlayer(${JSON.stringify(title)},${JSON.stringify(streams)})'>📺 Ver partido ${flag}</button>`
+        : `<span style="font-size:12px;color:var(--text-muted)">Sin enlace disponible</span>`;
 
       return `
       <div class="col-12 col-sm-6 col-lg-4">
         <div class="tv-match-card">
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-            <span style="font-size:11px;color:var(--text-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${league}</span>
-            ${isLive ? '<span class="tv-badge-live">● EN VIVO</span>' : (dateStr ? `<span class="tv-badge-upcoming">${dateStr}</span>` : '')}
+          <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center">
+            ${catBadge}${statusBadge}
           </div>
-          <div class="tv-match-teams">${home} <span class="tv-match-vs">vs</span> ${away}</div>
-          <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px">${buttonsHtml}</div>
+          <div class="tv-match-title">${title}</div>
+          ${watchBtn}
         </div>
       </div>`;
     }
+
+    // Player
+    window.openPlayer = function(title, streams) {
+      const overlay = document.getElementById('playerOverlay');
+      const frame   = document.getElementById('playerFrame');
+      const titleEl = document.getElementById('playerTitle');
+      const chEl    = document.getElementById('playerChannels');
+      titleEl.textContent = title;
+      // load first stream
+      if (streams && streams.length) {
+        frame.src = streams[0].embedUrl;
+        chEl.innerHTML = streams.map((s,i) => {
+          const label = (s.flag||'') + ' ' + (s.language||s.streamId||('Canal '+(i+1)));
+          return `<button class="player-ch-btn ${i===0?'active':''}" onclick="switchChannel(this,'${s.embedUrl}')">${label}</button>`;
+        }).join('');
+      }
+      overlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    };
+
+    window.switchChannel = function(btn, url) {
+      document.querySelectorAll('.player-ch-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('playerFrame').src = url;
+    };
+
+    window.closePlayer = function() {
+      document.getElementById('playerOverlay').classList.remove('show');
+      document.getElementById('playerFrame').src = '';
+      document.body.style.overflow = '';
+    };
+
+    document.getElementById('playerOverlay').addEventListener('click', function(e){
+      if (e.target === this) closePlayer();
+    });
   </script>
 
   <script>
     window.hideGroupsLoading = function() {
-      var loading = document.getElementById('groupLoadingState');
-      var list    = document.getElementById('groupList');
-      if (loading) loading.style.display = 'none';
-      if (list)    list.style.display    = '';
+      var loading=document.getElementById('groupLoadingState'),list=document.getElementById('groupList');
+      if(loading)loading.style.display='none';
+      if(list)list.style.display='';
     };
-    setTimeout(function() {
-      var loading = document.getElementById('groupLoadingState');
-      if (loading && loading.style.display !== 'none') window.hideGroupsLoading();
-    }, 5000);
-    document.getElementById('newGroupType').addEventListener('change', function(){
-      var isClosed = this.value === 'closed';
-      document.getElementById('openFields').classList.toggle('d-none', isClosed);
-      document.getElementById('closedFields').classList.toggle('d-none', !isClosed);
+    setTimeout(function(){
+      var loading=document.getElementById('groupLoadingState');
+      if(loading&&loading.style.display!=='none')window.hideGroupsLoading();
+    },5000);
+    document.getElementById('newGroupType').addEventListener('change',function(){
+      var isClosed=this.value==='closed';
+      document.getElementById('openFields').classList.toggle('d-none',isClosed);
+      document.getElementById('closedFields').classList.toggle('d-none',!isClosed);
     });
-    document.getElementById('newGroupDist').addEventListener('change', function(){
-      document.getElementById('customDistFields').classList.toggle('d-none', this.value !== 'custom');
+    document.getElementById('newGroupDist').addEventListener('change',function(){
+      document.getElementById('customDistFields').classList.toggle('d-none',this.value!=='custom');
     });
-    ['favoriteOverlay','deleteOverlay'].forEach(function(id) {
-      document.getElementById(id).addEventListener('click', function(e){
-        if (e.target === this) this.classList.remove('show');
-      });
+    ['favoriteOverlay','deleteOverlay'].forEach(function(id){
+      document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
     });
-    document.getElementById('closeFavoriteOverlay').addEventListener('click', function() {
-      document.getElementById('favoriteOverlay').classList.remove('show');
-    });
-    document.getElementById('closeDeleteOverlay').addEventListener('click', function() {
-      document.getElementById('deleteOverlay').classList.remove('show');
-    });
-    document.getElementById('cancelDeleteBtn').addEventListener('click', function() {
-      document.getElementById('deleteOverlay').classList.remove('show');
-    });
+    document.getElementById('closeFavoriteOverlay').addEventListener('click',function(){document.getElementById('favoriteOverlay').classList.remove('show');});
+    document.getElementById('closeDeleteOverlay').addEventListener('click',function(){document.getElementById('deleteOverlay').classList.remove('show');});
+    document.getElementById('cancelDeleteBtn').addEventListener('click',function(){document.getElementById('deleteOverlay').classList.remove('show');});
   </script>
 </body>
 </html>
