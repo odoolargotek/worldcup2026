@@ -143,6 +143,10 @@ async function openEditModal(g) {
   const pct = g.prize_pct || { p1: 60, p2: 30, p3: 10 };
   const pctP3 = pct.p3 || 0;
 
+  // QR preview existente
+  const existingQR   = g.payment_qr || '';
+  const existingInst = g.payment_instructions || '';
+
   modal.innerHTML = `
   <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:480px;position:relative">
     <button id="closeEditModal" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;color:var(--text-muted);cursor:pointer">\u00d7</button>
@@ -152,6 +156,7 @@ async function openEditModal(g) {
     <div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap">
       <button class="edit-tab-btn active" data-etab="general" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:rgba(245,158,11,0.15);color:var(--gold);cursor:pointer">\ud83d\udcdd General</button>
       <button class="edit-tab-btn" data-etab="montos" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer">\ud83d\udcb0 Montos</button>
+      <button class="edit-tab-btn" data-etab="pago" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer">\ud83d\udcb3 Pago</button>
       <button class="edit-tab-btn" data-etab="participantes" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer">\ud83d\udc65 Participantes</button>
     </div>
 
@@ -207,6 +212,49 @@ async function openEditModal(g) {
       </div>
     </div>
 
+    <!-- TAB: PAGO -->
+    <div id="etab-pago" class="d-none">
+      <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
+        Sube el QR de tu método de pago para que los participantes puedan escanearlo y enviarte el comprobante.
+      </p>
+
+      <!-- Preview QR actual -->
+      <div id="qrPreviewWrap" style="margin-bottom:14px;${existingQR ? '' : 'display:none'}">
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">QR actual:</div>
+        <div style="display:flex;align-items:flex-start;gap:12px">
+          <img id="qrPreviewImg" src="${existingQR}" alt="QR de pago"
+            style="width:120px;height:120px;object-fit:contain;border-radius:10px;border:1px solid var(--border);background:#fff;padding:6px">
+          <button id="removeQrBtn" style="background:rgba(201,52,75,0.15);color:#f5a0ac;border:1px solid rgba(201,52,75,0.3);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer">
+            \ud83d\uddd1\ufe0f Quitar QR
+          </button>
+        </div>
+      </div>
+
+      <!-- Upload nuevo QR -->
+      <div class="mb-3">
+        <label style="font-size:12px;color:var(--text-muted);margin-bottom:6px;display:block">
+          ${existingQR ? 'Reemplazar QR' : 'Subir QR de pago'}
+        </label>
+        <input type="file" id="editQrInput" accept="image/*" class="form-control" style="font-size:12px">
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Formatos: JPG, PNG, WebP. Máx ~600 KB.</div>
+        <div id="qrUploadPreview" style="margin-top:10px;display:none">
+          <div style="font-size:11px;color:#34d399;margin-bottom:4px">\u2705 Nuevo QR seleccionado:</div>
+          <img id="qrUploadImg" src="" alt="Preview" style="width:100px;height:100px;object-fit:contain;border-radius:8px;border:1px solid var(--border);background:#fff;padding:4px">
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <label style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:block">Instrucciones de pago (opcional)</label>
+        <textarea id="editPayInst" class="form-control" rows="3" maxlength="300" style="resize:none"
+          placeholder="Ej: Transferir a cuenta 7XXXXXXX, poner tu nombre en referencia">${escHtml(existingInst)}</textarea>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end">
+        <button id="savePayBtn" class="btn btn-sm btn-success" style="font-weight:700">\ud83d\udcbe Guardar pago</button>
+      </div>
+      <div id="payMsg" style="margin-top:8px;font-size:12px;text-align:right"></div>
+    </div>
+
     <!-- TAB: PARTICIPANTES -->
     <div id="etab-participantes" class="d-none">
       <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">${members.length} participante(s). Puedes expulsar a quien necesites.</p>
@@ -225,7 +273,7 @@ async function openEditModal(g) {
       </div>
     </div>
 
-    <!-- Acciones -->
+    <!-- Acciones (General / Montos) -->
     <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end" id="editModalActions">
       <button id="cancelEditBtn" class="btn btn-outline-light btn-sm">Cancelar</button>
       <button id="saveEditBtn" class="btn btn-warning btn-sm" style="font-weight:700">\ud83d\udcbe Guardar cambios</button>
@@ -240,7 +288,78 @@ async function openEditModal(g) {
   document.getElementById('cancelEditBtn')?.addEventListener('click', () => modal.remove());
   modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
 
-  // Tabs internas
+  // ── Preview al seleccionar nuevo QR ──
+  document.getElementById('editQrInput')?.addEventListener('change', (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 700 * 1024) {
+      alert('La imagen es demasiado grande. Usa una imagen menor a 600 KB.');
+      e.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const wrap = document.getElementById('qrUploadPreview');
+      const img  = document.getElementById('qrUploadImg');
+      if (wrap && img) { img.src = ev.target.result; wrap.style.display = 'block'; }
+    };
+    reader.readAsDataURL(file);
+  });
+
+  // ── Quitar QR existente ──
+  document.getElementById('removeQrBtn')?.addEventListener('click', async () => {
+    if (!confirm('¿Quitar el QR de pago?')) return;
+    try {
+      await updateDoc(doc(db, 'groups', GROUP_ID), { payment_qr: '' });
+      g.payment_qr = '';
+      document.getElementById('qrPreviewWrap').style.display = 'none';
+      document.getElementById('payMsg').innerHTML = '<span style="color:#34d399">\u2705 QR eliminado.</span>';
+    } catch(e) {
+      document.getElementById('payMsg').innerHTML = '<span style="color:#f5a0ac">\u26a0\ufe0f Error al quitar el QR.</span>';
+    }
+  });
+
+  // ── Guardar sección de pago ──
+  document.getElementById('savePayBtn')?.addEventListener('click', async () => {
+    const inst    = document.getElementById('editPayInst')?.value.trim() || '';
+    const file    = document.getElementById('editQrInput')?.files?.[0];
+    const payMsg  = document.getElementById('payMsg');
+    const saveBtn = document.getElementById('savePayBtn');
+
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Guardando...'; }
+
+    try {
+      const updates = { payment_instructions: inst };
+
+      if (file) {
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload  = (e) => resolve(e.target.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+        updates.payment_qr = base64;
+        g.payment_qr = base64;
+        // Actualizar preview en el modal
+        const wrap = document.getElementById('qrPreviewWrap');
+        const img  = document.getElementById('qrPreviewImg');
+        if (wrap && img) { img.src = base64; wrap.style.display = 'block'; }
+        document.getElementById('qrUploadPreview').style.display = 'none';
+        document.getElementById('editQrInput').value = '';
+      }
+
+      await updateDoc(doc(db, 'groups', GROUP_ID), updates);
+      g.payment_instructions = inst;
+      if (payMsg) payMsg.innerHTML = '<span style="color:#34d399">\u2705 Datos de pago guardados correctamente.</span>';
+    } catch(err) {
+      if (payMsg) payMsg.innerHTML = '<span style="color:#f5a0ac">\u26a0\ufe0f Error al guardar. Intenta de nuevo.</span>';
+    } finally {
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '\ud83d\udcbe Guardar pago'; }
+    }
+  });
+
+  // ── Tabs internas ──
+  const ALL_TABS = ['general','montos','pago','participantes'];
   modal.querySelectorAll('.edit-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       modal.querySelectorAll('.edit-tab-btn').forEach(b => {
@@ -252,16 +371,16 @@ async function openEditModal(g) {
       btn.style.color = 'var(--gold)';
       btn.classList.add('active');
       const tab = btn.dataset.etab;
-      ['general','montos','participantes'].forEach(t => {
+      ALL_TABS.forEach(t => {
         document.getElementById(`etab-${t}`)?.classList.toggle('d-none', t !== tab);
       });
-      // ocultar/mostrar botón guardar según tab
+      // Mostrar/ocultar botones de acción según pestaña
       const actions = document.getElementById('editModalActions');
-      if (actions) actions.style.display = tab === 'participantes' ? 'none' : 'flex';
+      if (actions) actions.style.display = (tab === 'participantes' || tab === 'pago') ? 'none' : 'flex';
     });
   });
 
-  // Guardar cambios de configuración
+  // ── Guardar cambios de configuración (General / Montos) ──
   document.getElementById('saveEditBtn')?.addEventListener('click', async () => {
     const name     = document.getElementById('editName')?.value.trim();
     const desc     = document.getElementById('editDesc')?.value.trim();
@@ -512,7 +631,7 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
             <div style="font-size:12px;color:var(--text-muted)">\ud83c\udfc6 ${r.chosenCount}/12 favs \u00b7 \ud83c\udfaf ${r.exactos} exactos \u00b7 \u2705 ${r.resultados} resultados</div>
           </div>
           <div style="text-align:right">
-            <div style="font-size:1.8rem;font-weight:800;color:${i===0?'var(--gold)':i===1?'#9ca3af':i===2?'#d97706':'var(--primary-light)'}">${r.total}</div>
+            <div style="font-size:1.8rem;font-weight:800;color:${i===0?'var(--gold)':i===1?'#9ca3af':i===2?'#d97706':'var(--primary-light)'};">${r.total}</div>
             <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase">pts</div>
           </div>
         </div>
