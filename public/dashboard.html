@@ -16,118 +16,49 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/sponsor.css">
   <style>
-    @keyframes shimmer {
-      0%   { background-position: -400px 0 }
-      100% { background-position:  400px 0 }
-    }
-    .skeleton-card {
-      background: var(--bg-card, #1c2333);
-      border: 1px solid var(--border, rgba(255,255,255,0.07));
-      border-radius: 14px; padding: 18px 20px;
-      display: flex; flex-direction: column; gap: 10px;
-    }
-    .skeleton-line {
-      height: 12px; border-radius: 6px;
-      background: linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.10) 50%,rgba(255,255,255,0.04) 75%);
-      background-size: 400px 100%;
-      animation: shimmer 1.5s ease-in-out infinite;
-    }
-    .skeleton-line.title  { width:55%;height:15px; }
-    .skeleton-line.sub    { width:35%;height:10px;margin-top:2px; }
-    .skeleton-line.badge  { width:28%;height:22px;border-radius:20px;margin-top:4px; }
-    .skeleton-line.btn    { width:100%;height:36px;border-radius:8px;margin-top:6px; }
-    #groupLoadingState { display:flex;flex-direction:column;gap:10px;margin-bottom:16px; }
-    .loading-label {
-      text-align:center;font-size:12px;color:var(--text-muted,#94a3b8);
-      display:flex;align-items:center;justify-content:center;gap:8px;padding:4px 0 8px;
-    }
-    .loading-label .dot {
-      display:inline-block;width:5px;height:5px;border-radius:50%;
-      background:var(--primary-light,#4aafd4);animation:bounce 1.2s ease-in-out infinite;
-    }
-    .loading-label .dot:nth-child(2){animation-delay:0.2s}
-    .loading-label .dot:nth-child(3){animation-delay:0.4s}
+    @keyframes shimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+    .skeleton-card{background:var(--bg-card,#1c2333);border:1px solid var(--border,rgba(255,255,255,0.07));border-radius:14px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
+    .skeleton-line{height:12px;border-radius:6px;background:linear-gradient(90deg,rgba(255,255,255,0.04) 25%,rgba(255,255,255,0.10) 50%,rgba(255,255,255,0.04) 75%);background-size:400px 100%;animation:shimmer 1.5s ease-in-out infinite}
+    .skeleton-line.title{width:55%;height:15px}.skeleton-line.sub{width:35%;height:10px;margin-top:2px}
+    .skeleton-line.badge{width:28%;height:22px;border-radius:20px;margin-top:4px}.skeleton-line.btn{width:100%;height:36px;border-radius:8px;margin-top:6px}
+    #groupLoadingState{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+    .loading-label{text-align:center;font-size:12px;color:var(--text-muted,#94a3b8);display:flex;align-items:center;justify-content:center;gap:8px;padding:4px 0 8px}
+    .loading-label .dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--primary-light,#4aafd4);animation:bounce 1.2s ease-in-out infinite}
+    .loading-label .dot:nth-child(2){animation-delay:0.2s}.loading-label .dot:nth-child(3){animation-delay:0.4s}
     @keyframes bounce{0%,80%,100%{transform:scale(0.6);opacity:0.4}40%{transform:scale(1);opacity:1}}
     @media(prefers-reduced-motion:reduce){.skeleton-line,.dot{animation:none!important}}
-
-    #nicknameBanner {
-      display:none;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.35);
-      border-radius:12px;padding:14px 16px;margin-bottom:20px;
-    }
+    #nicknameBanner{display:none;background:rgba(245,158,11,0.10);border:1px solid rgba(245,158,11,0.35);border-radius:12px;padding:14px 16px;margin-bottom:20px}
     #nicknameBanner .nick-title{font-size:13px;font-weight:700;color:#f59e0b;margin-bottom:4px}
-    #nicknameBanner .nick-sub  {font-size:12px;color:var(--text-muted,#94a3b8);margin-bottom:10px}
-    #nicknameBanner .nick-row  {display:flex;gap:8px;align-items:center}
-    #nicknameInput {
-      flex:1;font-size:14px;font-weight:600;
-      background:rgba(255,255,255,0.05);border:1px solid rgba(245,158,11,0.4);
-      border-radius:8px;padding:8px 12px;color:inherit;
-    }
+    #nicknameBanner .nick-sub{font-size:12px;color:var(--text-muted,#94a3b8);margin-bottom:10px}
+    #nicknameBanner .nick-row{display:flex;gap:8px;align-items:center}
+    #nicknameInput{flex:1;font-size:14px;font-weight:600;background:rgba(255,255,255,0.05);border:1px solid rgba(245,158,11,0.4);border-radius:8px;padding:8px 12px;color:inherit}
     #nicknameInput:focus{outline:none;border-color:#f59e0b}
-    #saveNicknameBtn {
-      background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.5);
-      border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;
-      color:#f59e0b;cursor:pointer;white-space:nowrap;transition:background 0.15s;
-    }
-    #saveNicknameBtn:hover{background:rgba(245,158,11,0.35)}
-    #saveNicknameBtn:disabled{opacity:0.5;cursor:default}
+    #saveNicknameBtn{background:rgba(245,158,11,0.2);border:1px solid rgba(245,158,11,0.5);border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;color:#f59e0b;cursor:pointer;white-space:nowrap;transition:background 0.15s}
+    #saveNicknameBtn:hover{background:rgba(245,158,11,0.35)}#saveNicknameBtn:disabled{opacity:0.5;cursor:default}
     #nicknameMsg{font-size:12px;margin-top:6px;min-height:16px}
-
-    #tab-tv{display:none}
-    #tv-nav-item{display:none}
-    .tv-match-card {
-      background:var(--bg-card,#1c2333);border:1px solid var(--border,rgba(255,255,255,0.07));
-      border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;
-      transition:border-color 0.2s;
-    }
+    #tab-tv{display:none}#tv-nav-item{display:none}
+    .tv-match-card{background:var(--bg-card,#1c2333);border:1px solid var(--border,rgba(255,255,255,0.07));border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;transition:border-color 0.2s}
     .tv-match-card:hover{border-color:rgba(29,144,198,0.5)}
     .tv-match-title{font-size:0.98rem;font-weight:700;line-height:1.3}
-    .tv-btn {
-      display:block;width:100%;padding:9px 0;border-radius:8px;font-size:13px;font-weight:700;
-      text-align:center;text-decoration:none;border:none;cursor:pointer;transition:opacity 0.15s;
-    }
+    .tv-btn{display:block;width:100%;padding:9px 0;border-radius:8px;font-size:13px;font-weight:700;text-align:center;text-decoration:none;border:none;cursor:pointer;transition:opacity 0.15s}
     .tv-btn:hover{opacity:0.85;text-decoration:none}
-    .tv-btn-primary  {background:#1D90C6;color:#fff}
+    .tv-btn-primary{background:#1D90C6;color:#fff}
     .tv-btn-secondary{background:rgba(29,144,198,0.15);color:#4aafd4;border:1px solid rgba(29,144,198,0.4)}
-    .tv-badge-live    {background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:0.5px}
+    .tv-badge-live{background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:0.5px}
     .tv-badge-upcoming{background:rgba(245,158,11,0.2);color:#f59e0b;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px}
-    .tv-badge-cat     {background:rgba(29,144,198,0.15);color:#4aafd4;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px}
-
-    /* Player overlay */
-    #playerOverlay {
-      display:none;position:fixed;inset:0;z-index:9999;
-      background:rgba(0,0,0,0.92);align-items:center;justify-content:center;
-    }
+    .tv-badge-cat{background:rgba(29,144,198,0.15);color:#4aafd4;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px}
+    #playerOverlay{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.92);align-items:center;justify-content:center}
     #playerOverlay.show{display:flex}
-    #playerBox {
-      width:100%;max-width:860px;background:#0d1117;
-      border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);
-      display:flex;flex-direction:column;
-    }
-    #playerHeader {
-      display:flex;align-items:center;justify-content:space-between;
-      padding:12px 16px;background:rgba(29,144,198,0.12);border-bottom:1px solid rgba(255,255,255,0.07);
-    }
+    #playerBox{width:100%;max-width:860px;background:#0d1117;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);display:flex;flex-direction:column}
+    #playerHeader{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(29,144,198,0.12);border-bottom:1px solid rgba(255,255,255,0.07)}
     #playerTitle{font-weight:700;font-size:14px;color:#e2e8f0}
-    #playerClose {
-      background:rgba(255,255,255,0.08);border:none;color:#e2e8f0;
-      border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:16px;line-height:1;
-    }
+    #playerClose{background:rgba(255,255,255,0.08);border:none;color:#e2e8f0;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:16px;line-height:1}
     #playerClose:hover{background:rgba(255,255,255,0.16)}
-    #playerFrame{
-      width:100%;aspect-ratio:16/9;border:none;
-      background:#000;
-    }
-    #playerChannels{
-      display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;
-      background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,255,255,0.07);
-    }
-    .player-ch-btn {
-      padding:6px 14px;border-radius:7px;font-size:12px;font-weight:700;
-      cursor:pointer;border:none;transition:background 0.15s;
-    }
+    #playerFrame{width:100%;aspect-ratio:16/9;border:none;background:#000}
+    #playerChannels{display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;background:rgba(0,0,0,0.3);border-top:1px solid rgba(255,255,255,0.07)}
+    .player-ch-btn{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:background 0.15s}
     .player-ch-btn.active{background:#1D90C6;color:#fff}
     .player-ch-btn:not(.active){background:rgba(29,144,198,0.15);color:#4aafd4;border:1px solid rgba(29,144,198,0.35)}
-
     #dashTabs{margin-bottom:20px}
     #dashTabs .nav-link{color:var(--text-muted,#94a3b8);font-size:14px;font-weight:600;border:none;padding:8px 16px;border-radius:8px}
     #dashTabs .nav-link.active{background:rgba(29,144,198,0.15);color:#4aafd4}
@@ -136,12 +67,9 @@
 </head>
 <body>
   <div class="field-pattern"></div>
-
   <nav class="navbar">
     <div class="navbar-brand">
-      <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1"
-           alt="Largotek" style="height:34px;object-fit:contain;cursor:pointer;flex-shrink:0"
-           onclick="window.open('https://www.largotek.com','_blank')">
+      <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek" style="height:34px;object-fit:contain;cursor:pointer;flex-shrink:0" onclick="window.open('https://www.largotek.com','_blank')">
       <div>
         <div style="font-weight:800">⚽ WC2026 — Mis Comparsas</div>
         <div class="navbar-powered">by Largotek</div>
@@ -152,19 +80,14 @@
       <button id="logoutBtn" class="btn btn-outline-light btn-sm">Salir</button>
     </div>
   </nav>
-
   <div style="background:rgba(201,52,75,0.07);border-bottom:1px solid rgba(201,52,75,0.2);padding:6px 16px;text-align:center;font-size:11px;color:#f5a0ac">
     ⚠️ Juego de entretenimiento privado. No es un sitio de apuestas. No se administra ni garantiza premios.
     <a href="legal.html" target="_blank" style="color:#f5a0ac;text-decoration:underline;margin-left:6px">Aviso legal completo</a>
   </div>
-
   <div class="sponsor-banner" style="cursor:pointer" onclick="window.open('https://www.largotek.com','_blank')">
     <div class="sponsor-banner-accent" style="background:#1D90C6"></div>
     <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
-    <div class="sponsor-banner-body">
-      <span class="sponsor-banner-name">Largotek</span>
-      <span class="sponsor-banner-tagline">Soluciones Digitales</span>
-    </div>
+    <div class="sponsor-banner-body"><span class="sponsor-banner-name">Largotek</span><span class="sponsor-banner-tagline">Soluciones Digitales</span></div>
     <div class="sponsor-banner-dot" style="background:#1D90C6"></div>
   </div>
 
@@ -173,14 +96,9 @@
       <h5 class="mb-0" style="font-weight:800">🏆 Mis comparsas</h5>
       <span id="userEmail" style="color:var(--text-muted);font-size:0.85rem"></span>
     </div>
-
     <ul class="nav" id="dashTabs">
-      <li class="nav-item">
-        <button class="nav-link active" id="tab-comparsas-btn" onclick="switchDashTab('comparsas')">🏆 Comparsas</button>
-      </li>
-      <li class="nav-item" id="tv-nav-item">
-        <button class="nav-link" id="tab-tv-btn" onclick="switchDashTab('tv')">📺 Ver en vivo</button>
-      </li>
+      <li class="nav-item"><button class="nav-link active" id="tab-comparsas-btn" onclick="switchDashTab('comparsas')">🏆 Comparsas</button></li>
+      <li class="nav-item" id="tv-nav-item"><button class="nav-link" id="tab-tv-btn" onclick="switchDashTab('tv')">📺 Ver en vivo</button></li>
     </ul>
 
     <!-- TAB: Comparsas -->
@@ -194,80 +112,44 @@
         </div>
         <div id="nicknameMsg"></div>
       </div>
-
       <div id="groupLoadingState">
-        <div class="loading-label">
-          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-          Cargando tus comparsas, espera un momento...
-        </div>
-        <div class="skeleton-card">
-          <div class="skeleton-line title"></div><div class="skeleton-line sub"></div>
-          <div class="skeleton-line badge"></div><div class="skeleton-line btn"></div>
-        </div>
-        <div class="skeleton-card">
-          <div class="skeleton-line title" style="width:45%"></div><div class="skeleton-line sub" style="width:30%"></div>
-          <div class="skeleton-line badge"></div><div class="skeleton-line btn"></div>
-        </div>
+        <div class="loading-label"><span class="dot"></span><span class="dot"></span><span class="dot"></span>Cargando tus comparsas, espera un momento...</div>
+        <div class="skeleton-card"><div class="skeleton-line title"></div><div class="skeleton-line sub"></div><div class="skeleton-line badge"></div><div class="skeleton-line btn"></div></div>
+        <div class="skeleton-card"><div class="skeleton-line title" style="width:45%"></div><div class="skeleton-line sub" style="width:30%"></div><div class="skeleton-line badge"></div><div class="skeleton-line btn"></div></div>
       </div>
-
       <div id="groupList" class="row g-3 mb-4" style="display:none"></div>
-
       <div class="row g-3">
-        <div class="col-md-6">
-          <div class="card p-4">
-            <h6 style="color:var(--primary-light);font-weight:700" class="mb-3">➕ Crear comparsa</h6>
-            <input type="text" id="newGroupName" class="form-control mb-2" placeholder="Nombre de la comparsa">
-            <select id="newGroupStage" class="form-select mb-2">
-              <option value="">-- Etapa de inicio --</option>
-              <option value="Grupos">Fase de Grupos</option>
-              <option value="Octavos">Desde Octavos</option>
-              <option value="Cuartos">Desde Cuartos</option>
-              <option value="Semifinal">Desde Semifinal</option>
-              <option value="Final">Solo Final</option>
-            </select>
-            <select id="newGroupCurrency" class="form-select mb-2">
-              <option value="USD">💵 USD — Dólares americanos ($)</option>
-              <option value="BOB">🇧🇴 BOB — Bolivianos (Bs.)</option>
-            </select>
-            <select id="newGroupType" class="form-select mb-2">
-              <option value="open">🌐 Abierta — Pozo acumulable</option>
-              <option value="closed">🔒 Cerrada — Premio fijo</option>
-            </select>
-            <div id="openFields">
-              <input type="number" id="newGroupFeeOpen" class="form-control mb-2" placeholder="Cuota por participante">
-            </div>
-            <div id="closedFields" class="d-none">
-              <input type="number" id="newGroupPrizeClosed" class="form-control mb-2" placeholder="Premio total fijo">
-              <input type="number" id="newGroupFee" class="form-control mb-2" placeholder="Cuota por participante (opcional)">
-              <input type="number" id="newGroupMax" class="form-control mb-2" placeholder="Máx. participantes" min="2">
-            </div>
-            <select id="newGroupDist" class="form-select mb-2">
-              <option value="winner">🥇 Todo al 1° lugar (100%)</option>
-              <option value="top2">🥇🥈 Top 2: 70% / 30%</option>
-              <option value="top3">🥇🥈🥉 Top 3: 60% / 30% / 10%</option>
-              <option value="custom">⚙️ Personalizado</option>
-            </select>
-            <div id="customDistFields" class="d-none mb-2">
-              <div class="d-flex gap-2">
-                <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥇 1° %</label><input type="number" id="distP1" class="form-control" placeholder="60"></div>
-                <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥈 2° %</label><input type="number" id="distP2" class="form-control" placeholder="30"></div>
-                <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥉 3° %</label><input type="number" id="distP3" class="form-control" placeholder="10"></div>
-              </div>
-              <div id="distError" style="font-size:11px;color:var(--accent);margin-top:4px"></div>
-            </div>
-            <button id="createGroupBtn" class="btn btn-success w-100 mt-1">⚽ Crear comparsa</button>
-            <div id="createMsg" class="mt-2"></div>
+        <div class="col-md-6"><div class="card p-4">
+          <h6 style="color:var(--primary-light);font-weight:700" class="mb-3">➕ Crear comparsa</h6>
+          <input type="text" id="newGroupName" class="form-control mb-2" placeholder="Nombre de la comparsa">
+          <select id="newGroupStage" class="form-select mb-2"><option value="">-- Etapa de inicio --</option><option value="Grupos">Fase de Grupos</option><option value="Octavos">Desde Octavos</option><option value="Cuartos">Desde Cuartos</option><option value="Semifinal">Desde Semifinal</option><option value="Final">Solo Final</option></select>
+          <select id="newGroupCurrency" class="form-select mb-2"><option value="USD">💵 USD — Dólares americanos ($)</option><option value="BOB">🇧🇴 BOB — Bolivianos (Bs.)</option></select>
+          <select id="newGroupType" class="form-select mb-2"><option value="open">🌐 Abierta — Pozo acumulable</option><option value="closed">🔒 Cerrada — Premio fijo</option></select>
+          <div id="openFields"><input type="number" id="newGroupFeeOpen" class="form-control mb-2" placeholder="Cuota por participante"></div>
+          <div id="closedFields" class="d-none">
+            <input type="number" id="newGroupPrizeClosed" class="form-control mb-2" placeholder="Premio total fijo">
+            <input type="number" id="newGroupFee" class="form-control mb-2" placeholder="Cuota por participante (opcional)">
+            <input type="number" id="newGroupMax" class="form-control mb-2" placeholder="Máx. participantes" min="2">
           </div>
-        </div>
-        <div class="col-md-6">
-          <div class="card p-4">
-            <h6 style="color:var(--gold);font-weight:700" class="mb-3">🔗 Unirse a comparsa</h6>
-            <p style="font-size:0.83rem;color:var(--text-muted)">Pide el código de 6 letras al dueño e ingrésalo aquí.</p>
-            <input type="text" id="joinCode" class="form-control mb-3" placeholder="Código (ej: AB3X7Z)" style="letter-spacing:3px;font-weight:700;text-transform:uppercase">
-            <button id="joinGroupBtn" class="btn btn-warning w-100">🔗 Unirse</button>
-            <div id="joinMsg" class="mt-2"></div>
+          <select id="newGroupDist" class="form-select mb-2"><option value="winner">🥇 Todo al 1° lugar (100%)</option><option value="top2">🥇🥈 Top 2: 70% / 30%</option><option value="top3">🥇🥈🥉 Top 3: 60% / 30% / 10%</option><option value="custom">⚙️ Personalizado</option></select>
+          <div id="customDistFields" class="d-none mb-2">
+            <div class="d-flex gap-2">
+              <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥇 1° %</label><input type="number" id="distP1" class="form-control" placeholder="60"></div>
+              <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥈 2° %</label><input type="number" id="distP2" class="form-control" placeholder="30"></div>
+              <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥉 3° %</label><input type="number" id="distP3" class="form-control" placeholder="10"></div>
+            </div>
+            <div id="distError" style="font-size:11px;color:var(--accent);margin-top:4px"></div>
           </div>
-        </div>
+          <button id="createGroupBtn" class="btn btn-success w-100 mt-1">⚽ Crear comparsa</button>
+          <div id="createMsg" class="mt-2"></div>
+        </div></div>
+        <div class="col-md-6"><div class="card p-4">
+          <h6 style="color:var(--gold);font-weight:700" class="mb-3">🔗 Unirse a comparsa</h6>
+          <p style="font-size:0.83rem;color:var(--text-muted)">Pide el código de 6 letras al dueño e ingrésalo aquí.</p>
+          <input type="text" id="joinCode" class="form-control mb-3" placeholder="Código (ej: AB3X7Z)" style="letter-spacing:3px;font-weight:700;text-transform:uppercase">
+          <button id="joinGroupBtn" class="btn btn-warning w-100">🔗 Unirse</button>
+          <div id="joinMsg" class="mt-2"></div>
+        </div></div>
       </div>
     </div><!-- /tab-comparsas -->
 
@@ -278,10 +160,7 @@
         <p style="font-size:12px;color:var(--text-muted);margin:0">Haz clic en “Ver partido” para ver el stream dentro de la página.</p>
       </div>
       <div id="tvMatchesLoading" style="text-align:center;padding:40px 0;color:var(--text-muted);font-size:13px">
-        <div class="loading-label" style="justify-content:center">
-          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-          Cargando partidos...
-        </div>
+        <div class="loading-label" style="justify-content:center"><span class="dot"></span><span class="dot"></span><span class="dot"></span>Cargando partidos...</div>
       </div>
       <div id="tvMatchesGrid" class="row g-3"></div>
       <div id="tvMatchesError" style="display:none;text-align:center;padding:30px 0">
@@ -290,16 +169,12 @@
         <button onclick="retryTvLoad()" style="background:rgba(29,144,198,0.2);color:#4aafd4;border:1px solid rgba(29,144,198,0.4);border-radius:8px;padding:7px 18px;font-size:13px;font-weight:700;cursor:pointer">🔄 Reintentar</button>
       </div>
     </div>
-
   </div><!-- /container -->
 
   <!-- PLAYER OVERLAY -->
   <div id="playerOverlay">
     <div id="playerBox">
-      <div id="playerHeader">
-        <span id="playerTitle"></span>
-        <button id="playerClose" onclick="closePlayer()">×</button>
-      </div>
+      <div id="playerHeader"><span id="playerTitle"></span><button id="playerClose" onclick="closePlayer()">×</button></div>
       <iframe id="playerFrame" allowfullscreen allow="autoplay; encrypted-media" scrolling="no"></iframe>
       <div id="playerChannels"></div>
     </div>
@@ -309,10 +184,7 @@
   <div id="favoriteOverlay" class="native-overlay">
     <div class="ov-box">
       <div class="ov-header">
-        <div>
-          <div style="font-weight:700;font-size:1.05rem">🏆 Elige tu equipo favorito</div>
-          <div style="font-size:12px;color:var(--text-muted)">Puedes cambiarlo luego (con penalidad de -3 pts)</div>
-        </div>
+        <div><div style="font-weight:700;font-size:1.05rem">🏆 Elige tu equipo favorito</div><div style="font-size:12px;color:var(--text-muted)">Puedes cambiarlo luego (con penalidad de -3 pts)</div></div>
         <button class="ov-close" id="closeFavoriteOverlay">×</button>
       </div>
       <div class="ov-body">
@@ -343,25 +215,19 @@
             <li>No se puede recuperar después</li>
           </ul>
         </div>
-        <div style="margin-bottom:12px;font-size:0.9rem">Vas a eliminar la comparsa:<br>
-          <strong id="deleteGroupName" style="color:var(--gold);font-size:1rem"></strong></div>
+        <div style="margin-bottom:12px;font-size:0.9rem">Vas a eliminar la comparsa:<br><strong id="deleteGroupName" style="color:var(--gold);font-size:1rem"></strong></div>
         <label style="font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;display:block">Para confirmar, escribe exactamente el nombre:</label>
-        <input type="text" id="deleteConfirmInput" class="form-control"
-          placeholder="Escribe el nombre aquí..." autocomplete="off" autocorrect="off" spellcheck="false">
+        <input type="text" id="deleteConfirmInput" class="form-control" placeholder="Escribe el nombre aquí..." autocomplete="off" autocorrect="off" spellcheck="false">
       </div>
       <div class="ov-footer" style="border-color:rgba(201,52,75,0.3)">
-        <button id="confirmDeleteBtn" class="btn w-100" disabled
-          style="background:rgba(201,52,75,0.2);color:#f5a0ac;border:1px solid rgba(201,52,75,0.5);font-weight:700">
-          🗑️ Sí, eliminar definitivamente
-        </button>
+        <button id="confirmDeleteBtn" class="btn w-100" disabled style="background:rgba(201,52,75,0.2);color:#f5a0ac;border:1px solid rgba(201,52,75,0.5);font-weight:700">🗑️ Sí, eliminar definitivamente</button>
         <button id="cancelDeleteBtn" class="btn btn-outline-light w-100" style="font-size:13px">Cancelar</button>
       </div>
     </div>
   </div>
 
   <div class="footer-brand">
-    ⚽ WC2026 &nbsp;— Desarrollado por
-    <strong style="color:var(--primary-light)">Largotek</strong>
+    ⚽ WC2026 &nbsp;— Desarrollado por <strong style="color:var(--primary-light)">Largotek</strong>
     <div style="margin-top:6px;font-size:10px;color:rgba(148,163,184,0.4)">
       Juego de entretenimiento privado — No es un sitio de apuestas —
       <a href="legal.html" target="_blank" style="color:rgba(148,163,184,0.4);text-decoration:underline">Términos de uso</a>
@@ -373,12 +239,10 @@
   <script type="module" src="js/auth.js"></script>
   <script type="module" src="js/groups.js?v=5"></script>
 
-  <!-- Banner apodo + TV access check -->
   <script type="module">
     import { auth, db } from './js/firebase-config.js';
     import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
     import { doc, getDoc, setDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
-
     onAuthStateChanged(auth, async (user) => {
       if (!user) return;
       try {
@@ -388,45 +252,39 @@
         if (data.tv_access === true) document.getElementById('tv-nav-item').style.display='block';
       } catch(e){}
     });
-
     document.getElementById('saveNicknameBtn').addEventListener('click', async () => {
-      const input=document.getElementById('nicknameInput'), msg=document.getElementById('nicknameMsg'), btn=document.getElementById('saveNicknameBtn');
+      const input=document.getElementById('nicknameInput'),msg=document.getElementById('nicknameMsg'),btn=document.getElementById('saveNicknameBtn');
       const name=input.value.trim();
       if(!name){msg.innerHTML='<span style="color:#f5a0ac">⚠️ Escribe un nombre o apodo primero.</span>';return;}
       btn.disabled=true;btn.textContent='Guardando...';
       try{
-        const user=auth.currentUser;
-        if(!user)throw new Error('no user');
+        const user=auth.currentUser;if(!user)throw new Error('no user');
         const ref=doc(db,'users',user.uid),snap=await getDoc(ref);
         if(snap.exists())await updateDoc(ref,{display_name:name,email:user.email});
         else await setDoc(ref,{uid:user.uid,display_name:name,email:user.email,created_at:new Date()});
         msg.innerHTML='<span style="color:#34d399">✅ ¡Listo! Ya aparecerás como <strong>'+name+'</strong>.</span>';
         setTimeout(()=>{document.getElementById('nicknameBanner').style.display='none';},2500);
-      }catch(e){
-        msg.innerHTML='<span style="color:#f5a0ac">⚠️ Error al guardar.</span>';
-        btn.disabled=false;btn.textContent='✅ Guardar';
-      }
+      }catch(e){msg.innerHTML='<span style="color:#f5a0ac">⚠️ Error al guardar.</span>';btn.disabled=false;btn.textContent='✅ Guardar';}
     });
     document.getElementById('nicknameInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('saveNicknameBtn').click();});
   </script>
 
-  <!-- TV Tab -->
   <script>
     let tvLoaded = false;
 
     window.switchDashTab = function(tab) {
       document.getElementById('tab-comparsas').style.display = tab==='comparsas'?'':'none';
       document.getElementById('tab-tv').style.display        = tab==='tv'?'':'none';
-      document.getElementById('tab-comparsas-btn').classList.toggle('active', tab==='comparsas');
-      document.getElementById('tab-tv-btn').classList.toggle('active', tab==='tv');
+      document.getElementById('tab-comparsas-btn').classList.toggle('active',tab==='comparsas');
+      document.getElementById('tab-tv-btn').classList.toggle('active',tab==='tv');
       if (tab==='tv' && !tvLoaded) loadTvMatches();
     };
 
     window.retryTvLoad = function() {
-      tvLoaded = false;
-      document.getElementById('tvMatchesError').style.display   = 'none';
-      document.getElementById('tvMatchesLoading').style.display = '';
-      document.getElementById('tvMatchesGrid').innerHTML = '';
+      tvLoaded=false;
+      document.getElementById('tvMatchesError').style.display='none';
+      document.getElementById('tvMatchesLoading').style.display='';
+      document.getElementById('tvMatchesGrid').innerHTML='';
       loadTvMatches();
     };
 
@@ -436,115 +294,86 @@
       const loading=document.getElementById('tvMatchesLoading');
       const errDiv=document.getElementById('tvMatchesError');
       const errDetail=document.getElementById('tvErrorDetail');
-      try {
-        const res = await fetch('https://streamtp.top/api/matches.json', {cache:'no-cache'});
-        if (!res.ok) throw new Error('HTTP '+res.status);
-        const data = await res.json();
-        loading.style.display = 'none';
-        // streamtp returns { matches: [...], count, extractedAt }
-        const matches = Array.isArray(data) ? data : (data.matches || []);
-        if (!matches.length) {
-          grid.innerHTML='<div class="col-12" style="text-align:center;padding:30px 0;color:var(--text-muted);font-size:13px">No hay partidos disponibles en este momento.</div>';
-          return;
-        }
-        grid.innerHTML = matches.map(m => buildTvCard(m)).join('');
-      } catch(e) {
-        loading.style.display = 'none';
-        errDiv.style.display  = '';
-        errDetail.textContent = e.message;
+
+      // Intentar primero el archivo cacheado en nuestro propio hosting (sin CORS)
+      // Si está vacío, intentar directo a streamtp (funciona desde el browser del usuario)
+      const sources = [
+        '/data/matches.json',
+        'https://streamtp.top/api/matches.json'
+      ];
+
+      let matches = null;
+      let lastError = '';
+
+      for (const url of sources) {
+        try {
+          const res = await fetch(url, {cache:'no-cache'});
+          if (!res.ok) { lastError = 'HTTP '+res.status+' ('+url+')'; continue; }
+          const data = await res.json();
+          const arr = Array.isArray(data) ? data : (data.matches || []);
+          if (arr.length > 0) { matches = arr; break; }
+          lastError = 'Sin partidos en '+url;
+        } catch(e) { lastError = e.message+' ('+url+')'; }
       }
+
+      loading.style.display = 'none';
+
+      if (!matches || !matches.length) {
+        errDiv.style.display='';
+        errDetail.textContent = lastError || 'No hay partidos disponibles.';
+        return;
+      }
+
+      grid.innerHTML = matches.map(m => buildTvCard(m)).join('');
     }
 
     function buildTvCard(m) {
-      // streamtp structure: { title, time, category, status, streams:[{streamId,language,flag,embedUrl}] }
-      const title    = m.title || 'Partido';
-      const time     = m.time  || '';
+      const title    = m.title    || 'Partido';
+      const time     = m.time     || '';
       const category = m.category || '';
       const isLive   = m.status === 'live' || m.status === 'en vivo';
       const streams  = Array.isArray(m.streams) ? m.streams : [];
       const mainUrl  = streams.length ? streams[0].embedUrl : null;
-      const flag     = streams.length ? (streams[0].flag||'🇦🇴') : '';
-
-      const statusBadge = isLive
-        ? '<span class="tv-badge-live">● EN VIVO</span>'
-        : (time ? `<span class="tv-badge-upcoming">⏰ ${time}</span>` : '');
+      const flag     = streams.length ? (streams[0].flag||'') : '';
+      const statusBadge = isLive ? '<span class="tv-badge-live">● EN VIVO</span>' : (time ? `<span class="tv-badge-upcoming">⏰ ${time}</span>` : '');
       const catBadge = category ? `<span class="tv-badge-cat">${category}</span>` : '';
-
-      const streamsJson = JSON.stringify(streams).replace(/"/g,'&quot;');
-
       const watchBtn = mainUrl
         ? `<button class="tv-btn tv-btn-primary" onclick='openPlayer(${JSON.stringify(title)},${JSON.stringify(streams)})'>📺 Ver partido ${flag}</button>`
         : `<span style="font-size:12px;color:var(--text-muted)">Sin enlace disponible</span>`;
-
       return `
       <div class="col-12 col-sm-6 col-lg-4">
         <div class="tv-match-card">
-          <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center">
-            ${catBadge}${statusBadge}
-          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center">${catBadge}${statusBadge}</div>
           <div class="tv-match-title">${title}</div>
           ${watchBtn}
         </div>
       </div>`;
     }
 
-    // Player
     window.openPlayer = function(title, streams) {
-      const overlay = document.getElementById('playerOverlay');
-      const frame   = document.getElementById('playerFrame');
-      const titleEl = document.getElementById('playerTitle');
-      const chEl    = document.getElementById('playerChannels');
-      titleEl.textContent = title;
-      // load first stream
+      const overlay=document.getElementById('playerOverlay');
+      const frame=document.getElementById('playerFrame');
+      document.getElementById('playerTitle').textContent=title;
+      const chEl=document.getElementById('playerChannels');
       if (streams && streams.length) {
-        frame.src = streams[0].embedUrl;
-        chEl.innerHTML = streams.map((s,i) => {
-          const label = (s.flag||'') + ' ' + (s.language||s.streamId||('Canal '+(i+1)));
+        frame.src=streams[0].embedUrl;
+        chEl.innerHTML=streams.map((s,i)=>{
+          const label=(s.flag||'')+' '+(s.language||s.streamId||('Canal '+(i+1)));
           return `<button class="player-ch-btn ${i===0?'active':''}" onclick="switchChannel(this,'${s.embedUrl}')">${label}</button>`;
         }).join('');
       }
       overlay.classList.add('show');
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow='hidden';
     };
+    window.switchChannel=function(btn,url){document.querySelectorAll('.player-ch-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById('playerFrame').src=url;};
+    window.closePlayer=function(){document.getElementById('playerOverlay').classList.remove('show');document.getElementById('playerFrame').src='';document.body.style.overflow='';};
+    document.getElementById('playerOverlay').addEventListener('click',function(e){if(e.target===this)closePlayer();});
 
-    window.switchChannel = function(btn, url) {
-      document.querySelectorAll('.player-ch-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('playerFrame').src = url;
-    };
-
-    window.closePlayer = function() {
-      document.getElementById('playerOverlay').classList.remove('show');
-      document.getElementById('playerFrame').src = '';
-      document.body.style.overflow = '';
-    };
-
-    document.getElementById('playerOverlay').addEventListener('click', function(e){
-      if (e.target === this) closePlayer();
-    });
-  </script>
-
-  <script>
-    window.hideGroupsLoading = function() {
-      var loading=document.getElementById('groupLoadingState'),list=document.getElementById('groupList');
-      if(loading)loading.style.display='none';
-      if(list)list.style.display='';
-    };
-    setTimeout(function(){
-      var loading=document.getElementById('groupLoadingState');
-      if(loading&&loading.style.display!=='none')window.hideGroupsLoading();
-    },5000);
-    document.getElementById('newGroupType').addEventListener('change',function(){
-      var isClosed=this.value==='closed';
-      document.getElementById('openFields').classList.toggle('d-none',isClosed);
-      document.getElementById('closedFields').classList.toggle('d-none',!isClosed);
-    });
-    document.getElementById('newGroupDist').addEventListener('change',function(){
-      document.getElementById('customDistFields').classList.toggle('d-none',this.value!=='custom');
-    });
-    ['favoriteOverlay','deleteOverlay'].forEach(function(id){
-      document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});
-    });
+    window.hideGroupsLoading=function(){var l=document.getElementById('groupLoadingState'),g=document.getElementById('groupList');if(l)l.style.display='none';if(g)g.style.display='';};
+    setTimeout(function(){var l=document.getElementById('groupLoadingState');if(l&&l.style.display!=='none')window.hideGroupsLoading();},5000);
+    document.getElementById('newGroupType').addEventListener('change',function(){var c=this.value==='closed';document.getElementById('openFields').classList.toggle('d-none',c);document.getElementById('closedFields').classList.toggle('d-none',!c);});
+    document.getElementById('newGroupDist').addEventListener('change',function(){document.getElementById('customDistFields').classList.toggle('d-none',this.value!=='custom');});
+    ['favoriteOverlay','deleteOverlay'].forEach(function(id){document.getElementById(id).addEventListener('click',function(e){if(e.target===this)this.classList.remove('show');});});
     document.getElementById('closeFavoriteOverlay').addEventListener('click',function(){document.getElementById('favoriteOverlay').classList.remove('show');});
     document.getElementById('closeDeleteOverlay').addEventListener('click',function(){document.getElementById('deleteOverlay').classList.remove('show');});
     document.getElementById('cancelDeleteBtn').addEventListener('click',function(){document.getElementById('deleteOverlay').classList.remove('show');});
