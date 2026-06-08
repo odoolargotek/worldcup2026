@@ -2,7 +2,7 @@
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
-  doc, getDoc, updateDoc, collection, getDocs, query, where
+  doc, getDoc, updateDoc, collection, getDocs, query, where, addDoc, serverTimestamp
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
 const params   = new URLSearchParams(window.location.search);
@@ -42,6 +42,21 @@ function toBase64(file) {
 
 // Límite ~800 KB en base64 (~600 KB imagen real)
 const MAX_B64 = 800 * 1024;
+
+// ─── HELPER: escribir notificación en Firestore → dispara Cloud Function FCM ─
+async function sendPaymentNotification(uid, { title, body, type }) {
+  try {
+    await addDoc(collection(db, 'notifications', uid, 'items'), {
+      title,
+      body,
+      type:     type || 'payment',
+      group_id: GROUP_ID || '',
+      created_at: serverTimestamp(),
+    });
+  } catch (e) {
+    console.warn('[payment] No se pudo escribir notificación:', e.message);
+  }
+}
 
 export async function renderPayment(containerEl) {
   if (!GROUP_ID || !containerEl) return;
@@ -296,8 +311,15 @@ function attachPaymentListeners(members, sym, fee) {
           'payment.status':       'confirmed',
           'payment.confirmed_at': new Date().toISOString()
         });
+        const m = members.find(x => x.uid === uid);
+        const groupName = groupData?.name || 'tu comparsa';
+        // Notificar al participante por FCM
+        await sendPaymentNotification(uid, {
+          title: '✅ ¡Pago confirmado!',
+          body:  `El administrador confirmó tu pago en ${groupName}.`,
+          type:  'payment_confirmed',
+        });
         const row = document.getElementById(`pay-row-${uid}`);
-        const m   = members.find(x => x.uid === uid);
         if (row && m) { m.payment = { ...m.payment, status: 'confirmed' }; row.outerHTML = renderAdminMemberRow(m, sym, fee); }
       } catch(e) { btn.disabled = false; btn.textContent = btn.classList.contains('manual-confirm-btn') ? '✅ Marcar como pagado' : '✅ Confirmar pago'; }
     });
@@ -314,8 +336,15 @@ function attachPaymentListeners(members, sym, fee) {
           'payment.status':  'rejected',
           'payment.receipt': ''
         });
+        const m = members.find(x => x.uid === uid);
+        const groupName = groupData?.name || 'tu comparsa';
+        // Notificar al participante por FCM
+        await sendPaymentNotification(uid, {
+          title: '❌ Comprobante rechazado',
+          body:  `El administrador rechazó tu comprobante en ${groupName}. Por favor sube uno nuevo.`,
+          type:  'payment_rejected',
+        });
         const row = document.getElementById(`pay-row-${uid}`);
-        const m   = members.find(x => x.uid === uid);
         if (row && m) { m.payment = { status: 'rejected', receipt: '' }; row.outerHTML = renderAdminMemberRow(m, sym, fee); }
       } catch(e) { btn.disabled = false; }
     });

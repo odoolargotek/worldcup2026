@@ -1,7 +1,7 @@
 // functions/index.js — Cloud Functions WC2026 Comparsa
-// Módulos: FCM recordatorios, resultado cargado, sync API-Football, seed matches
+// Módulos: FCM recordatorios, resultado cargado, sync API-Football, seed matches, notificaciones de pago
 
-const { onDocumentUpdated } = require('firebase-functions/v2/firestore');
+const { onDocumentUpdated, onDocumentCreated } = require('firebase-functions/v2/firestore');
 const { onSchedule }        = require('firebase-functions/v2/scheduler');
 const { onRequest }         = require('firebase-functions/v2/https');
 const { defineSecret }      = require('firebase-functions/params');
@@ -322,5 +322,61 @@ exports.seedMatchesFromApi = onRequest(
       console.error('[SEED] Error:', err.message);
       return res.status(500).json({ ok: false, error: err.message });
     }
+  }
+);
+
+// =====================================================
+// 5. NOTIFICACIONES DE PAGO
+//    Trigger: notifications/{uid}/items/{notifId} onCreate
+//    Escrito por payment.js al confirmar o rechazar pago.
+//    Envía FCM push al usuario afectado.
+// =====================================================
+exports.onPaymentNotification = onDocumentCreated(
+  'notifications/{uid}/items/{notifId}',
+  async (event) => {
+    const notif = event.data.data();
+    const uid   = event.params.uid;
+
+    if (!notif || !notif.title) {
+      console.warn(`[PAY-NOTIF] Doc vacío para uid=${uid}`);
+      return null;
+    }
+
+    // Buscar FCM tokens del usuario
+    const tokSnap = await db.collection('fcm_tokens')
+      .where('user_uid', '==', uid)
+      .get();
+
+    const tokens = tokSnap.docs.map(d => d.data().token).filter(Boolean);
+    if (tokens.length === 0) {
+      console.log(`[PAY-NOTIF] Sin tokens FCM para uid=${uid}`);
+      return null;
+    }
+
+    const groupUrl = notif.group_id
+      ? `https://worldcup2026-8f27b.web.app/group.html?gid=${notif.group_id}&tab=pagos`
+      : 'https://worldcup2026-8f27b.web.app';
+
+    try {
+      const result = await fcm.sendEachForMulticast({
+        tokens,
+        notification: {
+          title: notif.title,
+          body:  notif.body || '',
+          icon:  'https://worldcup2026-8f27b.web.app/icons/icon-192.png',
+        },
+        data: {
+          url:      groupUrl,
+          type:     notif.type || 'payment',
+          group_id: notif.group_id || '',
+        },
+        webpush: { fcmOptions: { link: groupUrl } },
+      });
+      console.log(`[PAY-NOTIF] uid=${uid} → ${result.successCount}/${tokens.length} enviados`);
+    } catch (err) {
+      console.error(`[PAY-NOTIF] Error enviando a uid=${uid}:`, err.message);
+    }
+
+    return null;
   }
 );
