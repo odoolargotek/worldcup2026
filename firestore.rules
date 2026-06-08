@@ -50,5 +50,14 @@ service cloud.firestore {
       allow create, update: if request.auth != null &&
                                request.resource.data.user_uid == request.auth.uid;
     }
+
+    // Notificaciones de pago: el cliente (admin del grupo) crea el doc
+    // que dispara la Cloud Function onPaymentNotification vía FCM.
+    // Solo el usuario destinatario puede leer sus propias notificaciones.
+    match /notifications/{uid}/items/{notifId} {
+      allow create: if request.auth != null;
+      allow read:   if request.auth.uid == uid;
+    }
+
   }
 }
