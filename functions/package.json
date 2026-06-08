@@ -1,20 +1,14 @@
 {
-  "name": "functions",
-  "description": "Cloud Functions for Firebase",
+  "name": "worldcup2026-functions",
+  "description": "Cloud Functions for WC2026",
   "scripts": {
-    "serve": "firebase emulators:start --only functions",
-    "shell": "firebase functions:shell",
-    "start": "npm run shell",
-    "deploy": "firebase deploy --only functions",
-    "logs": "firebase functions:log"
+    "deploy": "firebase deploy --only functions"
   },
   "engines": { "node": "20" },
   "main": "index.js",
   "dependencies": {
-    "axios": "^1.6.0",
     "firebase-admin": "^12.0.0",
     "firebase-functions": "^5.0.0",
-    "xml2js": "^0.6.2"
-  },
-  "private": true
+    "node-fetch": "^2.7.0"
+  }
 }
