@@ -1,60 +1,10 @@
 // news.js — Noticias del Mundial 2026
-// Proxy: corsproxy.io (funciona desde browser sin deploy)
-// Para cambiar a Cloud Function propia: firebase deploy --only functions:newsProxy
-//   y luego cambiar USE_CF = true
+// IMPORTANTE: Para activar noticias reales ejecutar:
+//   firebase deploy --only functions:newsProxy
+// y luego cambiar USE_CF = true
 
 const USE_CF = false;
 const CF_URL = 'https://us-central1-worldcup2026-8f27b.cloudfunctions.net/newsProxy';
-const PROXY  = 'https://corsproxy.io/?url=';
-
-const FEEDS = [
-  { url: 'https://www.espn.com/espn/rss/soccer/news',        label: 'ESPN' },
-  { url: 'https://feeds.bbci.co.uk/sport/football/rss.xml',  label: 'BBC Sport' },
-  { url: 'https://www.skysports.com/rss/12040',              label: 'Sky Sports' },
-];
-const KEYWORDS = ['world cup','mundial','2026','fifa','wc2026','copa del mundo'];
-
-function timeAgo(dateStr) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const m = Math.floor(diff / 60000);
-  if (m < 1)  return 'ahora';
-  if (m < 60) return `hace ${m} min`;
-  const h = Math.floor(m / 60);
-  if (h < 24) return `hace ${h}h`;
-  return `hace ${Math.floor(h / 24)}d`;
-}
-
-function parseXML(xmlStr, label) {
-  const parser = new DOMParser();
-  const doc    = parser.parseFromString(xmlStr, 'text/xml');
-  return [...doc.querySelectorAll('item')].map(item => {
-    const mediaNS = 'http://search.yahoo.com/mrss/';
-    const thumb =
-      item.querySelector('enclosure')?.getAttribute('url') ||
-      item.getElementsByTagNameNS(mediaNS, 'thumbnail')[0]?.getAttribute('url') ||
-      item.getElementsByTagNameNS(mediaNS, 'content')[0]?.getAttribute('url') ||
-      null;
-    return {
-      title:   item.querySelector('title')?.textContent   || '',
-      link:    item.querySelector('link')?.textContent    || '#',
-      source:  label,
-      pubDate: item.querySelector('pubDate')?.textContent || '',
-      thumb,
-    };
-  });
-}
-
-async function fetchViaProxy() {
-  const all = [];
-  await Promise.allSettled(FEEDS.map(async ({ url, label }) => {
-    try {
-      const res = await fetch(PROXY + encodeURIComponent(url), { signal: AbortSignal.timeout(9000) });
-      const xml = await res.text();
-      all.push(...parseXML(xml, label));
-    } catch (_) {}
-  }));
-  return all;
-}
 
 async function fetchViaCloudFunction() {
   try {
@@ -64,18 +14,14 @@ async function fetchViaCloudFunction() {
   } catch (_) { return []; }
 }
 
-async function fetchNews() {
-  const items = USE_CF ? await fetchViaCloudFunction() : await fetchViaProxy();
-  const filtered = items.filter(i => {
-    const t = (i.title + ' ' + (i.desc || '')).toLowerCase();
-    return KEYWORDS.some(k => t.includes(k));
-  });
-  const pool = filtered.length >= 3 ? filtered : items;
-  const seen = new Set();
-  return pool
-    .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
-    .filter(i => { const k = i.title.slice(0,60); if (seen.has(k)) return false; seen.add(k); return true; })
-    .slice(0, 25);
+function timeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1)  return 'ahora';
+  if (m < 60) return `hace ${m} min`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `hace ${h}h`;
+  return `hace ${Math.floor(h / 24)}d`;
 }
 
 function renderCard(item) {
@@ -99,7 +45,7 @@ function renderCard(item) {
 }
 
 function renderSkeleton() {
-  return [1,2,3,4,5].map(() => `
+  return [1,2,3].map(() => `
     <div class="news-card news-skeleton">
       <div class="news-thumb-placeholder skeleton-box"></div>
       <div class="news-body">
@@ -108,6 +54,38 @@ function renderSkeleton() {
         <div class="skeleton-line w55"></div>
       </div>
     </div>`).join('');
+}
+
+function renderFallback() {
+  const sources = [
+    { name: 'FIFA — Sitio oficial Mundial 2026', url: 'https://www.fifa.com/fifaplus/es/tournaments/mens/worldcup/canadamexicousa2026', icon: '🏆' },
+    { name: 'ESPN Deportes — Fútbol', url: 'https://www.espndeportes.espn.com/futbol', icon: '📺' },
+    { name: 'Marca — Mundial 2026', url: 'https://www.marca.com/futbol/mundial/', icon: '📰' },
+    { name: 'AS — Copa del Mundo', url: 'https://as.com/futbol/mundial/', icon: '⚽' },
+    { name: 'BBC Sport — World Cup 2026', url: 'https://www.bbc.com/sport/football/world-cup', icon: '🎥' },
+    { name: 'Goal.com — Noticias', url: 'https://www.goal.com/es', icon: '🌟' },
+  ];
+  return `
+    <div style="background:linear-gradient(135deg,rgba(74,175,212,0.06),rgba(245,158,11,0.04));border:1px solid rgba(74,175,212,0.2);border-radius:14px;padding:20px;margin-bottom:16px;text-align:center">
+      <div style="font-size:2rem;margin-bottom:8px">📰</div>
+      <div style="font-weight:700;font-size:0.95rem;margin-bottom:6px">Noticias en tiempo real</div>
+      <div style="font-size:12px;color:var(--text-muted);max-width:300px;margin:0 auto;line-height:1.6">
+        Para activar noticias automáticas ejecuta<br>
+        <code style="background:var(--bg-card2);padding:2px 8px;border-radius:4px;font-size:11px">firebase deploy --only functions:newsProxy</code>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">🔗 Fuentes del Mundial 2026</div>
+    ${sources.map(s => `
+      <a href="${s.url}" target="_blank" rel="noopener" class="news-card-link">
+        <div class="news-card" style="padding:14px 16px">
+          <div class="news-thumb-placeholder" style="font-size:1.4rem">${s.icon}</div>
+          <div class="news-body">
+            <div class="news-title" style="-webkit-line-clamp:1">${s.name}</div>
+            <div style="font-size:11px;color:var(--text-muted)">Abrir en nueva pestaña</div>
+          </div>
+          <span class="news-ext">↗️</span>
+        </div>
+      </a>`).join('')}`;
 }
 
 function injectStyles() {
@@ -139,15 +117,18 @@ export async function renderNews() {
   const el = document.getElementById('newsTab');
   if (!el) return;
   injectStyles();
+
   el.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
       <div>
         <div style="font-size:1.1rem;font-weight:800">📰 Noticias del Mundial</div>
-        <div style="font-size:12px;color:var(--text-muted)" id="newsLastUpdate">Cargando...</div>
+        <div style="font-size:12px;color:var(--text-muted)" id="newsLastUpdate">${USE_CF ? 'Cargando...' : 'Links directos'}</div>
       </div>
-      <button id="refreshNewsBtn" class="btn btn-outline-light btn-sm" style="font-size:11px">🔄 Actualizar</button>
+      ${USE_CF ? '<button id="refreshNewsBtn" class="btn btn-outline-light btn-sm" style="font-size:11px">🔄 Actualizar</button>' : ''}
     </div>
-    <div id="newsListEl">${renderSkeleton()}</div>`;
+    <div id="newsListEl">${USE_CF ? renderSkeleton() : renderFallback()}</div>`;
+
+  if (!USE_CF) return; // modo fallback: solo links, no hay que cargar nada
 
   async function load() {
     const listEl = document.getElementById('newsListEl');
@@ -155,17 +136,13 @@ export async function renderNews() {
     const btn = document.getElementById('refreshNewsBtn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳...'; }
     if (listEl) listEl.innerHTML = renderSkeleton();
-    const items = await fetchNews();
+    const items = await fetchViaCloudFunction();
     if (!listEl) return;
     listEl.innerHTML = items.length
       ? items.map(renderCard).join('')
-      : `<div style="text-align:center;padding:40px 0;color:var(--text-muted)">
-           <div style="font-size:2.5rem;margin-bottom:10px">😕</div>
-           <div style="font-weight:600">No se pudieron cargar las noticias</div>
-           <div style="font-size:12px;margin-top:6px">Revisa tu conexión e intenta de nuevo</div>
-         </div>`;
+      : renderFallback();
     const now = new Date().toLocaleTimeString('es', { hour:'2-digit', minute:'2-digit' });
-    if (updateEl) updateEl.textContent = `${items.length} noticias · ${now}`;
+    if (updateEl) updateEl.textContent = items.length ? `${items.length} noticias · ${now}` : 'Sin datos';
     if (btn) { btn.disabled = false; btn.textContent = '🔄 Actualizar'; }
   }
 
