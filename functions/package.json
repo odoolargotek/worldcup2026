@@ -1,6 +1,6 @@
 {
-  "name": "worldcup2026-functions",
-  "description": "Cloud Functions para WC2026 Polla Mundialera",
+  "name": "functions",
+  "description": "Cloud Functions for Firebase",
   "scripts": {
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",
@@ -11,8 +11,10 @@
   "engines": { "node": "20" },
   "main": "index.js",
   "dependencies": {
-    "firebase-admin":     "^12.0.0",
+    "axios": "^1.6.0",
+    "firebase-admin": "^12.0.0",
     "firebase-functions": "^5.0.0",
-    "axios":             "^1.7.0"
-  }
+    "xml2js": "^0.6.2"
+  },
+  "private": true
 }

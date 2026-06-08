@@ -1,21 +1,5 @@
-// news.js — Noticias del Mundial 2026 via RSS feeds deportivos
-const RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
-
-// Feeds RSS públicos de medios deportivos que rss2json acepta
-const FEEDS = [
-  { url: 'https://www.espn.com/espn/rss/soccer/news', label: 'ESPN' },
-  { url: 'https://e00-marca.uecdn.es/rss/futbol/mundial.xml', label: 'Marca' },
-  { url: 'https://feeds.bbci.co.uk/sport/football/rss.xml', label: 'BBC Sport' },
-  { url: 'https://www.skysports.com/rss/12040', label: 'Sky Sports' },
-];
-
-// Keywords para filtrar noticias del Mundial 2026
-const KEYWORDS = ['world cup','mundial','2026','fifa','wc2026','copa del mundo'];
-
-function isWorldCup(item) {
-  const text = (item.title + ' ' + (item.description || '')).toLowerCase();
-  return KEYWORDS.some(k => text.includes(k));
-}
+// news.js — Noticias del Mundial 2026 via Cloud Function proxy
+const NEWS_ENDPOINT = 'https://us-central1-worldcup2026-8f27b.cloudfunctions.net/newsProxy';
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -27,49 +11,17 @@ function timeAgo(dateStr) {
   return `hace ${Math.floor(h / 24)}d`;
 }
 
-async function fetchFeed(feed) {
-  try {
-    const res  = await fetch(RSS2JSON + encodeURIComponent(feed.url) + '&count=30');
-    const json = await res.json();
-    if (json.status === 'ok' && json.items?.length > 0) {
-      return json.items.map(item => ({
-        title:   item.title || '',
-        link:    item.link  || '#',
-        source:  feed.label,
-        pubDate: item.pubDate || '',
-        thumb:   item.thumbnail || item.enclosure?.link || null,
-      }));
-    }
-  } catch (_) {}
-  return [];
-}
-
 async function fetchNews() {
-  // Intentar todos los feeds en paralelo
-  const results = await Promise.allSettled(FEEDS.map(f => fetchFeed(f)));
-  let all = [];
-  results.forEach(r => { if (r.status === 'fulfilled') all = all.concat(r.value); });
-
-  // Filtrar Mundial 2026 si hay suficientes; si no, mostrar todo (fútbol)
-  const filtered = all.filter(isWorldCup);
-  const items = filtered.length >= 3 ? filtered : all;
-
-  // Ordenar por fecha más reciente y deduplicar por título
-  const seen = new Set();
-  return items
-    .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
-    .filter(item => {
-      const key = item.title.slice(0, 60);
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    })
-    .slice(0, 25);
+  try {
+    const res  = await fetch(NEWS_ENDPOINT);
+    const json = await res.json();
+    return json.ok ? json.items : [];
+  } catch (_) { return []; }
 }
 
 function renderCard(item) {
   const ago   = timeAgo(item.pubDate);
-  const title = item.title.replace(/ - [^-]+$/, '');
+  const title = item.title.replace(/ - [^-]+$/, '').replace(/ \| [^|]+$/, '');
   return `
     <a href="${item.link}" target="_blank" rel="noopener" class="news-card-link">
       <div class="news-card">

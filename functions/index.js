@@ -1,6 +1,4 @@
 // functions/index.js — Cloud Functions WC2026 Comparsa
-// Módulos: FCM recordatorios, resultado cargado, sync API-Football, seed matches, notificaciones de pago
-
 const { onDocumentUpdated, onDocumentCreated } = require('firebase-functions/v2/firestore');
 const { onSchedule }        = require('firebase-functions/v2/scheduler');
 const { onRequest }         = require('firebase-functions/v2/https');
@@ -9,24 +7,16 @@ const { initializeApp }     = require('firebase-admin/app');
 const { getFirestore }      = require('firebase-admin/firestore');
 const { getMessaging }      = require('firebase-admin/messaging');
 const axios                 = require('axios');
+const xml2js                = require('xml2js');
 
 initializeApp();
 const db  = getFirestore();
 const fcm = getMessaging();
 
-// ─────────────────────────────────────────────────────────
-// SECRET: guarda la key con:
-//   firebase functions:secrets:set API_FOOTBALL_KEY
-// ─────────────────────────────────────────────────────────
 const API_FOOTBALL_KEY = defineSecret('API_FOOTBALL_KEY');
-
-// ID del Mundial 2026 en API-Football (league=1, season=2026)
 const WC_LEAGUE_ID = 1;
 const WC_SEASON    = 2026;
 
-// ─────────────────────────────────────────────────────────
-// HELPER: cliente Axios para API-Football v3
-// ─────────────────────────────────────────────────────────
 function apiClient(key) {
   return axios.create({
     baseURL: 'https://v3.football.api-sports.io',
@@ -35,12 +25,6 @@ function apiClient(key) {
   });
 }
 
-// ─────────────────────────────────────────────────────────
-// HELPER: calcular puntos de un pronóstico
-//   Score exacto  → 6 pts
-//   Resultado OK  → 3 pts
-//   Fallo         → 0 pts
-// ─────────────────────────────────────────────────────────
 function calcPoints(home, away, predHome, predAway) {
   if (home === predHome && away === predAway) return 6;
   const matchSign = Math.sign(home - away);
@@ -50,8 +34,70 @@ function calcPoints(home, away, predHome, predAway) {
 }
 
 // =====================================================
+// 0. NEWS PROXY — RSS del Mundial sin CORS
+//    GET https://<region>-worldcup2026-8f27b.cloudfunctions.net/newsProxy
+// =====================================================
+const NEWS_FEEDS = [
+  'https://www.espn.com/espn/rss/soccer/news',
+  'https://www.marca.com/rss/futbol/mundial.xml',
+  'https://feeds.bbci.co.uk/sport/football/rss.xml',
+  'https://www.football365.com/feed',
+];
+
+exports.newsProxy = onRequest({ cors: true }, async (req, res) => {
+  const KEYWORDS = ['world cup','mundial','2026','fifa','wc2026','copa del mundo'];
+
+  function matchesKeyword(item) {
+    const text = ((item.title?.[0] || '') + ' ' + (item.description?.[0] || '')).toLowerCase();
+    return KEYWORDS.some(k => text.includes(k));
+  }
+
+  const parser = new xml2js.Parser({ explicitArray: true, ignoreAttrs: false });
+  const items  = [];
+
+  await Promise.allSettled(NEWS_FEEDS.map(async (feedUrl) => {
+    try {
+      const r    = await axios.get(feedUrl, { timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+      const parsed = await parser.parseStringPromise(r.data);
+      const channel = parsed?.rss?.channel?.[0];
+      const source  = channel?.title?.[0] || feedUrl;
+      const feedItems = channel?.item || [];
+      feedItems.forEach(item => {
+        const enclosure = item.enclosure?.[0]?.$;
+        const thumb = enclosure?.url || item['media:thumbnail']?.[0]?.$?.url || null;
+        items.push({
+          title:   item.title?.[0] || '',
+          link:    item.link?.[0]  || '#',
+          source,
+          pubDate: item.pubDate?.[0] || '',
+          thumb,
+        });
+      });
+    } catch (_) {}
+  }));
+
+  // Filtrar por Mundial 2026; si no hay suficientes, mostrar todo fútbol
+  const filtered = items.filter(matchesKeyword);
+  const result   = filtered.length >= 3 ? filtered : items;
+
+  // Deduplicar y ordenar
+  const seen = new Set();
+  const final = result
+    .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
+    .filter(item => {
+      const key = item.title.slice(0, 60);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 25);
+
+  res.set('Cache-Control', 'public, max-age=300'); // cache 5 min
+  res.json({ ok: true, items: final });
+});
+
+// =====================================================
 // 1. RECORDATORIO: 2h antes del primer partido del día
-//    Cron: cada hora en punto
 // =====================================================
 exports.scheduleMatchReminders = onSchedule('every 60 minutes', async () => {
   const now    = new Date();
@@ -101,14 +147,12 @@ exports.scheduleMatchReminders = onSchedule('every 60 minutes', async () => {
       data: { url: 'https://worldcup2026-8f27b.web.app', match_id: matchDoc.id },
       webpush: { fcmOptions: { link: 'https://worldcup2026-8f27b.web.app' } },
     });
-
-    console.log(`[FCM] Recordatorio: ${m.home_team} vs ${m.away_team} → ${tokens.length} usuarios`);
   }
   return null;
 });
 
 // =====================================================
-// 2. RESULTADO CARGADO: cuando admin actualiza home_score
+// 2. RESULTADO CARGADO
 // =====================================================
 exports.onResultLoaded = onDocumentUpdated('matches/{matchId}', async (event) => {
   const before = event.data.before.data();
@@ -158,28 +202,22 @@ exports.onResultLoaded = onDocumentUpdated('matches/{matchId}', async (event) =>
       webpush: { fcmOptions: { link: 'https://worldcup2026-8f27b.web.app' } },
     });
   }
-
-  console.log(`[FCM] Resultado: ${m.home_team} ${m.home_score}-${m.away_score} ${m.away_team} → ${allTokens.length} usuarios`);
   return null;
 });
 
 // =====================================================
-// 3. SYNC RESULTADOS: cron cada 3 minutos (días de
-//    partido). Actualiza home_score/away_score desde
-//    API-Football y recalcula puntos de pronósticos.
+// 3. SYNC RESULTADOS cada 3 min
 // =====================================================
 exports.syncMatchResults = onSchedule(
   { schedule: 'every 3 minutes', secrets: [API_FOOTBALL_KEY] },
   async () => {
     const key = API_FOOTBALL_KEY.value();
-    if (!key) { console.warn('[SYNC] API_FOOTBALL_KEY no configurada'); return; }
+    if (!key) return;
 
     const api = apiClient(key);
     const now = new Date();
-
-    // Ventana: partidos entre hace 3h y en 10 min (en curso o recién terminados)
-    const from3h   = new Date(now.getTime() - 3 * 60 * 60 * 1000);
-    const plus10m  = new Date(now.getTime() + 10 * 60 * 1000);
+    const from3h  = new Date(now.getTime() - 3 * 60 * 60 * 1000);
+    const plus10m = new Date(now.getTime() + 10 * 60 * 1000);
 
     const snap = await db.collection('matches')
       .where('kickoff', '>=', from3h)
@@ -187,57 +225,41 @@ exports.syncMatchResults = onSchedule(
       .where('finished', '!=', true)
       .get();
 
-    if (snap.empty) { console.log('[SYNC] Sin partidos activos en ventana'); return; }
-    console.log(`[SYNC] Partidos a revisar: ${snap.size}`);
+    if (snap.empty) return;
 
     for (const doc of snap.docs) {
-      const match      = doc.data();
-      const fixtureId  = match.api_fixture_id;
-      if (!fixtureId) { console.warn(`[SYNC] ${doc.id} sin api_fixture_id, saltando`); continue; }
+      const match     = doc.data();
+      const fixtureId = match.api_fixture_id;
+      if (!fixtureId) continue;
 
       try {
-        const res     = await api.get('/fixtures', { params: { id: fixtureId } });
-        const fixture = res.data?.response?.[0];
+        const res      = await api.get('/fixtures', { params: { id: fixtureId } });
+        const fixture  = res.data?.response?.[0];
         if (!fixture) continue;
 
-        const status   = fixture.fixture.status.short; // NS, 1H, HT, 2H, ET, PEN, FT, AET
+        const status    = fixture.fixture.status.short;
         const homeGoals = fixture.goals.home ?? null;
         const awayGoals = fixture.goals.away ?? null;
         const finished  = ['FT', 'AET', 'PEN'].includes(status);
 
-        // Actualizar marcador en Firestore
         await doc.ref.update({
-          home_score: homeGoals,
-          away_score: awayGoals,
-          match_status: status,
-          finished: finished,
-          last_synced: new Date(),
+          home_score: homeGoals, away_score: awayGoals,
+          match_status: status, finished, last_synced: new Date(),
         });
 
-        console.log(`[SYNC] ${match.home_team} ${homeGoals}-${awayGoals} ${match.away_team} [${status}]`);
-
-        // Solo recalcular puntos cuando el partido terminó
         if (!finished) continue;
 
-        // Leer pronósticos de este partido
         const predsSnap = await db.collection('predictions')
-          .where('match_id', '==', doc.id)
-          .get();
-
+          .where('match_id', '==', doc.id).get();
         if (predsSnap.empty) continue;
 
         const batch = db.batch();
         predsSnap.forEach(predDoc => {
           const pred = predDoc.data();
           const pts  = calcPoints(homeGoals, awayGoals, pred.pred_home, pred.pred_away);
-          batch.update(predDoc.ref, {
-            points:        pts,
-            points_synced: true,
-          });
+          batch.update(predDoc.ref, { points: pts, points_synced: true });
         });
         await batch.commit();
-        console.log(`[SYNC] Puntos recalculados para ${predsSnap.size} pronósticos de ${doc.id}`);
-
       } catch (err) {
         console.error(`[SYNC] Error en fixture ${fixtureId}:`, err.message);
       }
@@ -246,80 +268,47 @@ exports.syncMatchResults = onSchedule(
 );
 
 // =====================================================
-// 4. SEED MATCHES: HTTP endpoint para cargar/actualizar
-//    el calendario del Mundial 2026 desde API-Football
-//    Llamar UNA sola vez:
-//      POST https://<region>-worldcup2026-8f27b.cloudfunctions.net/seedMatchesFromApi
-//    Requiere header: x-seed-token: <valor de SEED_SECRET>
+// 4. SEED MATCHES
 // =====================================================
 exports.seedMatchesFromApi = onRequest(
   { secrets: [API_FOOTBALL_KEY] },
   async (req, res) => {
-    // Protección mínima contra llamadas accidentales
-    const seedToken = req.headers['x-seed-token'];
-    if (seedToken !== 'WC2026_SEED_OK') {
-      return res.status(403).send('Forbidden: header x-seed-token inválido');
-    }
+    if (req.headers['x-seed-token'] !== 'WC2026_SEED_OK')
+      return res.status(403).send('Forbidden');
 
     const key = API_FOOTBALL_KEY.value();
     if (!key) return res.status(500).send('API_FOOTBALL_KEY no configurada');
 
     const api = apiClient(key);
-
     try {
-      // Traer todos los fixtures del Mundial 2026
-      const apiRes = await api.get('/fixtures', {
-        params: { league: WC_LEAGUE_ID, season: WC_SEASON },
-      });
-
+      const apiRes   = await api.get('/fixtures', { params: { league: WC_LEAGUE_ID, season: WC_SEASON } });
       const fixtures = apiRes.data?.response;
-      if (!fixtures || fixtures.length === 0) {
-        return res.status(404).send('Sin fixtures retornados por la API');
-      }
+      if (!fixtures?.length) return res.status(404).send('Sin fixtures');
 
-      const batchSize = 400; // Firestore batch limit ~500
       let processed = 0;
-
-      for (let i = 0; i < fixtures.length; i += batchSize) {
-        const chunk   = fixtures.slice(i, i + batchSize);
-        const batch   = db.batch();
-
-        chunk.forEach(f => {
-          const fId    = String(f.fixture.id);
-          const docRef = db.collection('matches').doc(fId);
-
-          // Mapeo al esquema de tu colección matches
-          batch.set(docRef, {
+      for (let i = 0; i < fixtures.length; i += 400) {
+        const batch = db.batch();
+        fixtures.slice(i, i + 400).forEach(f => {
+          const fId = String(f.fixture.id);
+          batch.set(db.collection('matches').doc(fId), {
             api_fixture_id: fId,
-            home_team:      f.teams.home.name,
-            away_team:      f.teams.away.name,
-            home_flag:      f.teams.home.logo,   // URL del logo/bandera
-            away_flag:      f.teams.away.logo,
-            kickoff:        new Date(f.fixture.date), // Firestore convierte a Timestamp
-            phase:          f.league.round,
-            city:           f.fixture.venue?.city || '',
-            stadium:        f.fixture.venue?.name || '',
-            home_score:     f.goals.home,         // null si no ha jugado
-            away_score:     f.goals.away,
-            match_status:   f.fixture.status.short,
-            finished:       ['FT', 'AET', 'PEN'].includes(f.fixture.status.short),
-            last_synced:    new Date(),
-          }, { merge: true }); // merge: no sobreescribe pronósticos si ya existen
+            home_team: f.teams.home.name, away_team: f.teams.away.name,
+            home_flag: f.teams.home.logo, away_flag: f.teams.away.logo,
+            kickoff:   new Date(f.fixture.date),
+            phase:     f.league.round,
+            city:      f.fixture.venue?.city || '',
+            stadium:   f.fixture.venue?.name || '',
+            home_score: f.goals.home, away_score: f.goals.away,
+            match_status: f.fixture.status.short,
+            finished: ['FT','AET','PEN'].includes(f.fixture.status.short),
+            last_synced: new Date(),
+          }, { merge: true });
         });
-
         await batch.commit();
-        processed += chunk.length;
+        processed += Math.min(400, fixtures.length - i);
       }
-
-      console.log(`[SEED] ${processed} fixtures cargados en Firestore`);
-      return res.status(200).json({
-        ok: true,
-        fixtures_loaded: processed,
-        message: `${processed} partidos cargados/actualizados en matches`,
-      });
-
+      return res.status(200).json({ ok: true, fixtures_loaded: processed });
     } catch (err) {
-      console.error('[SEED] Error:', err.message);
       return res.status(500).json({ ok: false, error: err.message });
     }
   }
@@ -327,56 +316,32 @@ exports.seedMatchesFromApi = onRequest(
 
 // =====================================================
 // 5. NOTIFICACIONES DE PAGO
-//    Trigger: notifications/{uid}/items/{notifId} onCreate
-//    Escrito por payment.js al confirmar o rechazar pago.
-//    Envía FCM push al usuario afectado.
 // =====================================================
 exports.onPaymentNotification = onDocumentCreated(
   'notifications/{uid}/items/{notifId}',
   async (event) => {
     const notif = event.data.data();
     const uid   = event.params.uid;
+    if (!notif?.title) return null;
 
-    if (!notif || !notif.title) {
-      console.warn(`[PAY-NOTIF] Doc vacío para uid=${uid}`);
-      return null;
-    }
-
-    // Buscar FCM tokens del usuario
-    const tokSnap = await db.collection('fcm_tokens')
-      .where('user_uid', '==', uid)
-      .get();
-
-    const tokens = tokSnap.docs.map(d => d.data().token).filter(Boolean);
-    if (tokens.length === 0) {
-      console.log(`[PAY-NOTIF] Sin tokens FCM para uid=${uid}`);
-      return null;
-    }
+    const tokSnap = await db.collection('fcm_tokens').where('user_uid', '==', uid).get();
+    const tokens  = tokSnap.docs.map(d => d.data().token).filter(Boolean);
+    if (!tokens.length) return null;
 
     const groupUrl = notif.group_id
       ? `https://worldcup2026-8f27b.web.app/group.html?gid=${notif.group_id}&tab=pagos`
       : 'https://worldcup2026-8f27b.web.app';
 
     try {
-      const result = await fcm.sendEachForMulticast({
+      await fcm.sendEachForMulticast({
         tokens,
-        notification: {
-          title: notif.title,
-          body:  notif.body || '',
-          icon:  'https://worldcup2026-8f27b.web.app/icons/icon-192.png',
-        },
-        data: {
-          url:      groupUrl,
-          type:     notif.type || 'payment',
-          group_id: notif.group_id || '',
-        },
+        notification: { title: notif.title, body: notif.body || '', icon: 'https://worldcup2026-8f27b.web.app/icons/icon-192.png' },
+        data: { url: groupUrl, type: notif.type || 'payment', group_id: notif.group_id || '' },
         webpush: { fcmOptions: { link: groupUrl } },
       });
-      console.log(`[PAY-NOTIF] uid=${uid} → ${result.successCount}/${tokens.length} enviados`);
     } catch (err) {
-      console.error(`[PAY-NOTIF] Error enviando a uid=${uid}:`, err.message);
+      console.error(`[PAY-NOTIF] Error uid=${uid}:`, err.message);
     }
-
     return null;
   }
 );
