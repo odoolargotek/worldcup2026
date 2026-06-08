@@ -13,7 +13,6 @@ const db  = getFirestore();
 const fcm = getMessaging();
 
 // TheSportsDB — gratuita, sin key, cubre Mundial 2026
-// League ID 4429 = FIFA World Cup
 const TSDB = axios.create({
   baseURL: 'https://www.thesportsdb.com/api/v1/json/3',
   timeout: 10000,
@@ -27,8 +26,6 @@ function calcPoints(home, away, predHome, predAway) {
   return 0;
 }
 
-// Normaliza nombres de equipos para comparar
-// ej: "México" === "Mexico", "USA" === "United States"
 const ALIASES = {
   'mexico': ['mexico','méxico'],
   'usa':    ['usa','united states','united states of america','estados unidos'],
@@ -61,14 +58,15 @@ function teamsMatch(a, b) {
 // 0. NEWS PROXY — RSS del Mundial sin CORS
 // =====================================================
 const NEWS_FEEDS = [
-  { url: 'https://www.espn.com/espn/rss/soccer/news',       label: 'ESPN' },
-  { url: 'https://www.marca.com/rss/futbol/mundial.xml',    label: 'Marca' },
-  { url: 'https://feeds.bbci.co.uk/sport/football/rss.xml', label: 'BBC Sport' },
-  { url: 'https://www.football365.com/feed',                label: 'Football365' },
+  { url: 'https://www.marca.com/rss/futbol/mundial.xml',                    label: 'Marca' },
+  { url: 'https://feeds.bbci.co.uk/sport/football/rss.xml',                label: 'BBC Sport' },
+  { url: 'https://www.espndeportes.espn.com/espndeportes/rss/noticias',    label: 'ESPN Deportes' },
+  { url: 'https://as.com/rss/tags/mundial_2026.xml',                        label: 'AS' },
+  { url: 'https://www.football365.com/feed',                               label: 'Football365' },
 ];
 
 exports.newsProxy = onRequest(
-  { timeoutSeconds: 20, memory: '256MiB' },
+  { timeoutSeconds: 25, memory: '256MiB' },
   async (req, res) => {
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -84,7 +82,10 @@ exports.newsProxy = onRequest(
     const items  = [];
     await Promise.allSettled(NEWS_FEEDS.map(async ({ url, label }) => {
       try {
-        const r      = await axios.get(url, { timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+        const r      = await axios.get(url, { timeout: 8000, headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+          'Accept': 'application/rss+xml, application/xml, text/xml, */*',
+        }});
         const parsed = await parser.parseStringPromise(r.data);
         const ch     = parsed?.rss?.channel?.[0];
         (ch?.item || []).forEach(item => {
@@ -92,6 +93,7 @@ exports.newsProxy = onRequest(
           const thumb = enc?.url || item['media:thumbnail']?.[0]?.$?.url || item['media:content']?.[0]?.$?.url || null;
           items.push({ title: item.title?.[0]||'', link: item.link?.[0]||'#', source: label, pubDate: item.pubDate?.[0]||'', thumb });
         });
+        console.log(`[NEWS] ${label}: ${ch?.item?.length||0} items`);
       } catch(e) { console.warn(`[NEWS] ${label}: ${e.message}`); }
     }));
     const filtered = items.filter(matchesKeyword);
@@ -100,9 +102,9 @@ exports.newsProxy = onRequest(
     const final    = pool
       .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
       .filter(i => { const k = i.title.slice(0,60); if (seen.has(k)) return false; seen.add(k); return true; })
-      .slice(0, 25);
+      .slice(0, 30);
     res.set('Cache-Control', 'public, max-age=300');
-    res.json({ ok: true, items: final });
+    res.json({ ok: true, items: final, sources: NEWS_FEEDS.map(f => f.label) });
   }
 );
 
@@ -194,23 +196,18 @@ exports.syncMatchResults = onSchedule(
     const now    = new Date();
     const from4h = new Date(now.getTime() - 4*60*60*1000);
     const plus1h = new Date(now.getTime() + 60*60*1000);
-
-    // Traer partidos en ventana activa (en juego o recién terminados)
     const snap = await db.collection('matches')
       .where('kickoff', '>=', from4h)
       .where('kickoff', '<=', plus1h)
       .where('finished', '!=', true)
       .get();
     if (snap.empty) return null;
-
-    // Obtener todos los eventos del día de hoy y ayer desde TheSportsDB
     const dates = [...new Set(
       snap.docs.map(d => {
         const ko = d.data().kickoff?.toDate?.() || new Date(d.data().kickoff);
         return ko.toISOString().slice(0, 10);
       })
     )];
-
     const tsdbEvents = [];
     for (const date of dates) {
       try {
@@ -220,45 +217,28 @@ exports.syncMatchResults = onSchedule(
       } catch(e) { console.warn(`[SYNC] TSDB ${date}: ${e.message}`); }
     }
     if (!tsdbEvents.length) { console.log('[SYNC] Sin eventos en TheSportsDB hoy'); return null; }
-
     for (const doc of snap.docs) {
       const match = doc.data();
-      // Buscar el evento correspondiente por nombre de equipos
       const event = tsdbEvents.find(e =>
         teamsMatch(e.strHomeTeam, match.home_team) &&
         teamsMatch(e.strAwayTeam, match.away_team)
       );
       if (!event) continue;
-
       const homeGoals = event.intHomeScore !== null && event.intHomeScore !== '' ? parseInt(event.intHomeScore) : null;
       const awayGoals = event.intAwayScore !== null && event.intAwayScore !== '' ? parseInt(event.intAwayScore) : null;
       const status    = event.strStatus || '';
-      const finished  = status === 'Match Finished' || status === 'FT' || status === 'AOT' || status === 'PEN';
-
-      if (homeGoals === null && awayGoals === null) continue; // aún no empezó
-
-      await doc.ref.update({
-        home_score:   homeGoals,
-        away_score:   awayGoals,
-        match_status: finished ? 'FT' : 'LIVE',
-        finished,
-        last_synced:  new Date(),
-      });
+      const finished  = ['Match Finished','FT','AOT','PEN'].includes(status);
+      if (homeGoals === null && awayGoals === null) continue;
+      await doc.ref.update({ home_score: homeGoals, away_score: awayGoals, match_status: finished ? 'FT' : 'LIVE', finished, last_synced: new Date() });
       console.log(`[SYNC] ${match.home_team} ${homeGoals}-${awayGoals} ${match.away_team} (${status})`);
-
       if (!finished) continue;
-
-      // Calcular puntos de pronósticos
       const predsSnap = await db.collection('predictions').where('match_id', '==', doc.id).get();
       if (predsSnap.empty) continue;
       const batch = db.batch();
       predsSnap.forEach(predDoc => {
         const p = predDoc.data();
         if (p.points_synced) return;
-        batch.update(predDoc.ref, {
-          points: calcPoints(homeGoals, awayGoals, p.pred_home, p.pred_away),
-          points_synced: true,
-        });
+        batch.update(predDoc.ref, { points: calcPoints(homeGoals, awayGoals, p.pred_home, p.pred_away), points_synced: true });
       });
       await batch.commit();
     }
