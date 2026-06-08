@@ -2,7 +2,6 @@
 const { onDocumentUpdated, onDocumentCreated } = require('firebase-functions/v2/firestore');
 const { onSchedule }        = require('firebase-functions/v2/scheduler');
 const { onRequest }         = require('firebase-functions/v2/https');
-const { defineSecret }      = require('firebase-functions/params');
 const { initializeApp }     = require('firebase-admin/app');
 const { getFirestore }      = require('firebase-admin/firestore');
 const { getMessaging }      = require('firebase-admin/messaging');
@@ -13,17 +12,12 @@ initializeApp();
 const db  = getFirestore();
 const fcm = getMessaging();
 
-const API_FOOTBALL_KEY = defineSecret('API_FOOTBALL_KEY');
-const WC_LEAGUE_ID = 1;
-const WC_SEASON    = 2026;
-
-function apiClient(key) {
-  return axios.create({
-    baseURL: 'https://v3.football.api-sports.io',
-    headers: { 'x-apisports-key': key },
-    timeout: 10000,
-  });
-}
+// TheSportsDB — gratuita, sin key, cubre Mundial 2026
+// League ID 4429 = FIFA World Cup
+const TSDB = axios.create({
+  baseURL: 'https://www.thesportsdb.com/api/v1/json/3',
+  timeout: 10000,
+});
 
 function calcPoints(home, away, predHome, predAway) {
   if (home === predHome && away === predAway) return 6;
@@ -31,6 +25,36 @@ function calcPoints(home, away, predHome, predAway) {
   const predSign  = Math.sign(predHome - predAway);
   if (matchSign === predSign) return 3;
   return 0;
+}
+
+// Normaliza nombres de equipos para comparar
+// ej: "México" === "Mexico", "USA" === "United States"
+const ALIASES = {
+  'mexico': ['mexico','méxico'],
+  'usa':    ['usa','united states','united states of america','estados unidos'],
+  'south korea': ['south korea','corea del sur','korea republic'],
+  'czechia': ['czechia','chequia','czech republic'],
+  'ivory coast': ['ivory coast','costa de marfil','côte d\'ivoire'],
+  'dr congo': ['dr congo','rd congo','congo dr','democratic republic of congo'],
+  'england': ['england','inglaterra'],
+  'scotland': ['scotland','escocia'],
+  'netherlands': ['netherlands','países bajos','holland'],
+  'saudi arabia': ['saudi arabia','arabia saudita','saudi'],
+  'cape verde': ['cape verde','cabo verde'],
+  'bosnia': ['bosnia','bosnia y herzegovina','bosnia and herzegovina'],
+  'new zealand': ['new zealand','nueva zelanda'],
+};
+
+function normalize(name) {
+  const n = (name || '').toLowerCase().trim();
+  for (const [canonical, variants] of Object.entries(ALIASES)) {
+    if (variants.includes(n)) return canonical;
+  }
+  return n;
+}
+
+function teamsMatch(a, b) {
+  return normalize(a) === normalize(b);
 }
 
 // =====================================================
@@ -46,7 +70,6 @@ const NEWS_FEEDS = [
 exports.newsProxy = onRequest(
   { timeoutSeconds: 20, memory: '256MiB' },
   async (req, res) => {
-    // CORS manual — obligatorio para Cloud Functions v2
     res.set('Access-Control-Allow-Origin', '*');
     res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type');
@@ -57,45 +80,27 @@ exports.newsProxy = onRequest(
       const text = ((item.title?.[0]||'') + ' ' + (item.description?.[0]||'')).toLowerCase();
       return KEYWORDS.some(k => text.includes(k));
     }
-
     const parser = new xml2js.Parser({ explicitArray: true, ignoreAttrs: false });
     const items  = [];
-
     await Promise.allSettled(NEWS_FEEDS.map(async ({ url, label }) => {
       try {
-        const r       = await axios.get(url, { timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } });
-        const parsed  = await parser.parseStringPromise(r.data);
-        const channel = parsed?.rss?.channel?.[0];
-        const source  = label;
-        (channel?.item || []).forEach(item => {
-          const enclosure = item.enclosure?.[0]?.$;
-          const thumb = enclosure?.url
-            || item['media:thumbnail']?.[0]?.$?.url
-            || item['media:content']?.[0]?.$?.url
-            || null;
-          items.push({
-            title:   item.title?.[0]   || '',
-            link:    item.link?.[0]    || '#',
-            source,
-            pubDate: item.pubDate?.[0] || '',
-            thumb,
-          });
+        const r      = await axios.get(url, { timeout: 8000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+        const parsed = await parser.parseStringPromise(r.data);
+        const ch     = parsed?.rss?.channel?.[0];
+        (ch?.item || []).forEach(item => {
+          const enc   = item.enclosure?.[0]?.$;
+          const thumb = enc?.url || item['media:thumbnail']?.[0]?.$?.url || item['media:content']?.[0]?.$?.url || null;
+          items.push({ title: item.title?.[0]||'', link: item.link?.[0]||'#', source: label, pubDate: item.pubDate?.[0]||'', thumb });
         });
       } catch(e) { console.warn(`[NEWS] ${label}: ${e.message}`); }
     }));
-
     const filtered = items.filter(matchesKeyword);
     const pool     = filtered.length >= 3 ? filtered : items;
     const seen     = new Set();
     const final    = pool
       .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
-      .filter(item => {
-        const key = item.title.slice(0, 60);
-        if (seen.has(key)) return false;
-        seen.add(key); return true;
-      })
+      .filter(i => { const k = i.title.slice(0,60); if (seen.has(k)) return false; seen.add(k); return true; })
       .slice(0, 25);
-
     res.set('Cache-Control', 'public, max-age=300');
     res.json({ ok: true, items: final });
   }
@@ -142,7 +147,7 @@ exports.scheduleMatchReminders = onSchedule('every 60 minutes', async () => {
 });
 
 // =====================================================
-// 2. RESULTADO CARGADO
+// 2. RESULTADO CARGADO → notificar usuarios
 // =====================================================
 exports.onResultLoaded = onDocumentUpdated('matches/{matchId}', async (event) => {
   const before = event.data.before.data();
@@ -181,88 +186,88 @@ exports.onResultLoaded = onDocumentUpdated('matches/{matchId}', async (event) =>
 });
 
 // =====================================================
-// 3. SYNC RESULTADOS cada 3 min
+// 3. SYNC RESULTADOS cada 5 min — TheSportsDB (gratis)
 // =====================================================
 exports.syncMatchResults = onSchedule(
-  { schedule: 'every 3 minutes', secrets: [API_FOOTBALL_KEY] },
+  { schedule: 'every 5 minutes', memory: '256MiB', timeoutSeconds: 60 },
   async () => {
-    const key = API_FOOTBALL_KEY.value();
-    if (!key) return;
-    const api    = apiClient(key);
     const now    = new Date();
-    const from3h  = new Date(now.getTime() - 3*60*60*1000);
-    const plus10m = new Date(now.getTime() + 10*60*1000);
+    const from4h = new Date(now.getTime() - 4*60*60*1000);
+    const plus1h = new Date(now.getTime() + 60*60*1000);
+
+    // Traer partidos en ventana activa (en juego o recién terminados)
     const snap = await db.collection('matches')
-      .where('kickoff', '>=', from3h).where('kickoff', '<=', plus10m)
-      .where('finished', '!=', true).get();
-    if (snap.empty) return;
+      .where('kickoff', '>=', from4h)
+      .where('kickoff', '<=', plus1h)
+      .where('finished', '!=', true)
+      .get();
+    if (snap.empty) return null;
+
+    // Obtener todos los eventos del día de hoy y ayer desde TheSportsDB
+    const dates = [...new Set(
+      snap.docs.map(d => {
+        const ko = d.data().kickoff?.toDate?.() || new Date(d.data().kickoff);
+        return ko.toISOString().slice(0, 10);
+      })
+    )];
+
+    const tsdbEvents = [];
+    for (const date of dates) {
+      try {
+        const r = await TSDB.get(`/eventsday.php?d=${date}&l=FIFA%20World%20Cup`);
+        const evs = r.data?.events || [];
+        tsdbEvents.push(...evs);
+      } catch(e) { console.warn(`[SYNC] TSDB ${date}: ${e.message}`); }
+    }
+    if (!tsdbEvents.length) { console.log('[SYNC] Sin eventos en TheSportsDB hoy'); return null; }
+
     for (const doc of snap.docs) {
       const match = doc.data();
-      if (!match.api_fixture_id) continue;
-      try {
-        const res     = await api.get('/fixtures', { params: { id: match.api_fixture_id } });
-        const fixture = res.data?.response?.[0];
-        if (!fixture) continue;
-        const status    = fixture.fixture.status.short;
-        const homeGoals = fixture.goals.home ?? null;
-        const awayGoals = fixture.goals.away ?? null;
-        const finished  = ['FT','AET','PEN'].includes(status);
-        await doc.ref.update({ home_score: homeGoals, away_score: awayGoals, match_status: status, finished, last_synced: new Date() });
-        if (!finished) continue;
-        const predsSnap = await db.collection('predictions').where('match_id', '==', doc.id).get();
-        if (predsSnap.empty) continue;
-        const batch = db.batch();
-        predsSnap.forEach(predDoc => {
-          const p = predDoc.data();
-          batch.update(predDoc.ref, { points: calcPoints(homeGoals, awayGoals, p.pred_home, p.pred_away), points_synced: true });
+      // Buscar el evento correspondiente por nombre de equipos
+      const event = tsdbEvents.find(e =>
+        teamsMatch(e.strHomeTeam, match.home_team) &&
+        teamsMatch(e.strAwayTeam, match.away_team)
+      );
+      if (!event) continue;
+
+      const homeGoals = event.intHomeScore !== null && event.intHomeScore !== '' ? parseInt(event.intHomeScore) : null;
+      const awayGoals = event.intAwayScore !== null && event.intAwayScore !== '' ? parseInt(event.intAwayScore) : null;
+      const status    = event.strStatus || '';
+      const finished  = status === 'Match Finished' || status === 'FT' || status === 'AOT' || status === 'PEN';
+
+      if (homeGoals === null && awayGoals === null) continue; // aún no empezó
+
+      await doc.ref.update({
+        home_score:   homeGoals,
+        away_score:   awayGoals,
+        match_status: finished ? 'FT' : 'LIVE',
+        finished,
+        last_synced:  new Date(),
+      });
+      console.log(`[SYNC] ${match.home_team} ${homeGoals}-${awayGoals} ${match.away_team} (${status})`);
+
+      if (!finished) continue;
+
+      // Calcular puntos de pronósticos
+      const predsSnap = await db.collection('predictions').where('match_id', '==', doc.id).get();
+      if (predsSnap.empty) continue;
+      const batch = db.batch();
+      predsSnap.forEach(predDoc => {
+        const p = predDoc.data();
+        if (p.points_synced) return;
+        batch.update(predDoc.ref, {
+          points: calcPoints(homeGoals, awayGoals, p.pred_home, p.pred_away),
+          points_synced: true,
         });
-        await batch.commit();
-      } catch(err) { console.error(`[SYNC] ${match.api_fixture_id}:`, err.message); }
+      });
+      await batch.commit();
     }
+    return null;
   }
 );
 
 // =====================================================
-// 4. SEED MATCHES
-// =====================================================
-exports.seedMatchesFromApi = onRequest(
-  { secrets: [API_FOOTBALL_KEY] },
-  async (req, res) => {
-    if (req.headers['x-seed-token'] !== 'WC2026_SEED_OK') return res.status(403).send('Forbidden');
-    const key = API_FOOTBALL_KEY.value();
-    if (!key) return res.status(500).send('API_FOOTBALL_KEY no configurada');
-    const api = apiClient(key);
-    try {
-      const apiRes   = await api.get('/fixtures', { params: { league: WC_LEAGUE_ID, season: WC_SEASON } });
-      const fixtures = apiRes.data?.response;
-      if (!fixtures?.length) return res.status(404).send('Sin fixtures');
-      let processed = 0;
-      for (let i = 0; i < fixtures.length; i += 400) {
-        const batch = db.batch();
-        fixtures.slice(i,i+400).forEach(f => {
-          const fId = String(f.fixture.id);
-          batch.set(db.collection('matches').doc(fId), {
-            api_fixture_id: fId,
-            home_team: f.teams.home.name, away_team: f.teams.away.name,
-            home_flag: f.teams.home.logo, away_flag: f.teams.away.logo,
-            kickoff: new Date(f.fixture.date), phase: f.league.round,
-            city: f.fixture.venue?.city||'', stadium: f.fixture.venue?.name||'',
-            home_score: f.goals.home, away_score: f.goals.away,
-            match_status: f.fixture.status.short,
-            finished: ['FT','AET','PEN'].includes(f.fixture.status.short),
-            last_synced: new Date(),
-          }, { merge: true });
-        });
-        await batch.commit();
-        processed += Math.min(400, fixtures.length - i);
-      }
-      return res.status(200).json({ ok: true, fixtures_loaded: processed });
-    } catch(err) { return res.status(500).json({ ok: false, error: err.message }); }
-  }
-);
-
-// =====================================================
-// 5. NOTIFICACIONES DE PAGO
+// 4. NOTIFICACIONES DE PAGO
 // =====================================================
 exports.onPaymentNotification = onDocumentCreated(
   'notifications/{uid}/items/{notifId}',
