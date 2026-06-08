@@ -44,15 +44,17 @@
     .tv-stat-label { font-size: 10px; color: var(--text-muted); }
     /* Sync buttons */
     .sync-card { border: 1px solid rgba(74,175,212,0.35); background: rgba(74,175,212,0.05); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
-    .sync-card.green { border-color: rgba(52,211,153,0.35); background: rgba(52,211,153,0.05); }
+    .sync-card.green  { border-color: rgba(52,211,153,0.35);  background: rgba(52,211,153,0.05); }
     .sync-card.purple { border-color: rgba(167,139,250,0.35); background: rgba(167,139,250,0.05); }
+    .sync-card.orange { border-color: rgba(251,146,60,0.35);  background: rgba(251,146,60,0.05); }
     .sync-btn { font-weight: 700; font-size: 0.92rem; padding: 10px 22px; border-radius: 10px; border: none; cursor: pointer; transition: opacity .2s, transform .1s; white-space: nowrap; }
     .sync-btn:active { transform: scale(0.97); }
     .sync-btn:disabled { opacity: 0.55; cursor: not-allowed; }
     .sync-btn-blue   { background: linear-gradient(135deg,#1D90C6,#4aafd4); color: #fff; }
     .sync-btn-green  { background: linear-gradient(135deg,#059669,#34d399); color: #fff; }
     .sync-btn-purple { background: linear-gradient(135deg,#7c3aed,#a78bfa); color: #fff; }
-    .sync-log { font-size: 12px; margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: rgba(0,0,0,0.25); color: var(--text-muted); display: none; max-height: 160px; overflow-y: auto; white-space: pre-wrap; }
+    .sync-btn-orange { background: linear-gradient(135deg,#d97706,#fb923c); color: #fff; }
+    .sync-log { font-size: 12px; margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: rgba(0,0,0,0.25); color: var(--text-muted); display: none; max-height: 200px; overflow-y: auto; white-space: pre-wrap; }
     .sync-log.visible { display: block; }
   </style>
 </head>
@@ -78,7 +80,7 @@
       <li class="nav-item"><button class="nav-link" data-atab="tvaccess">📺 Acceso TV</button></li>
     </ul>
 
-    <!-- ══ TAB RESULTADOS ══ -->
+    <!-- TAB RESULTADOS -->
     <div id="atab-results">
       <div class="mb-4">
         <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">⚡ Sincronización automática — TheSportsDB</div>
@@ -119,15 +121,9 @@
             <label class="form-label">Partido pendiente</label>
             <select id="matchSelect" class="form-select mb-3"></select>
             <div class="d-flex gap-3 mb-3">
-              <div>
-                <label class="form-label">Goles Local</label>
-                <input type="number" id="resultHome" min="0" class="form-control score-input">
-              </div>
+              <div><label class="form-label">Goles Local</label><input type="number" id="resultHome" min="0" class="form-control score-input"></div>
               <div class="d-flex align-items-end pb-2" style="color:var(--text-muted);font-size:1.5rem">–</div>
-              <div>
-                <label class="form-label">Goles Visita</label>
-                <input type="number" id="resultAway" min="0" class="form-control score-input">
-              </div>
+              <div><label class="form-label">Goles Visita</label><input type="number" id="resultAway" min="0" class="form-control score-input"></div>
             </div>
             <button id="saveResultBtn" class="btn btn-warning w-100">✅ Guardar y calcular puntos</button>
             <div id="adminMsg" class="mt-3"></div>
@@ -146,21 +142,38 @@
       </div>
     </div>
 
-    <!-- ══ TAB PARTIDOS ══ -->
+    <!-- TAB PARTIDOS -->
     <div id="atab-matches" class="d-none">
+
+      <!-- 🔧 CORREGIR NOMBRES DUPLICADOS -->
+      <div class="sync-card orange mb-4">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+          <div style="font-size:2rem">🔧</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:800;font-size:0.95rem;color:#fb923c">🔧 Corregir nombres duplicados</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
+              Normaliza nombres inconsistentes (ej: "Catar" → "Qatar", "Estados Unidos" → "USA", "Türkiye" → "Turquía").
+              <strong style="color:#fb923c">No borra partidos ni pronósticos.</strong> Solo corrige el texto.
+            </div>
+          </div>
+          <button id="btnFixNames" class="sync-btn sync-btn-orange">🔧 Corregir ahora</button>
+        </div>
+        <div id="logFixNames" class="sync-log"></div>
+      </div>
+
+      <!-- CARGAR CALENDARIO -->
       <div class="card p-4 mb-4" style="border-color:rgba(29,144,198,0.4);background:rgba(29,144,198,0.05)">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
           <div>
             <h6 style="color:#4aafd4;font-weight:700;margin:0">⚡ Cargar calendario completo</h6>
             <p style="font-size:0.82rem;color:var(--text-muted);margin:4px 0 0">Inserta los 72 partidos de fase de grupos del Mundial 2026. Los partidos ya existentes no se duplican.</p>
           </div>
-          <button id="bulkLoadBtn" class="btn" style="background:#1D90C6;color:#fff;font-weight:700;white-space:nowrap">
-            ⚡ Cargar todos los partidos
-          </button>
+          <button id="bulkLoadBtn" class="btn" style="background:#1D90C6;color:#fff;font-weight:700;white-space:nowrap">⚡ Cargar todos los partidos</button>
         </div>
         <div id="bulkMsg" class="mt-3"></div>
       </div>
 
+      <!-- AGREGAR PARTIDO -->
       <div class="card p-4 mb-4">
         <h6 style="color:var(--green-light);font-weight:700" class="mb-3">➕ Agregar Partido</h6>
         <div class="row g-2">
@@ -186,6 +199,7 @@
         <div id="addMatchMsg" class="mt-2"></div>
       </div>
 
+      <!-- LISTA PARTIDOS -->
       <div class="card p-4">
         <div class="d-flex align-items-center justify-content-between mb-3">
           <h6 style="color:var(--gold);font-weight:700;margin:0">📋 Todos los partidos</h6>
@@ -195,7 +209,7 @@
       </div>
     </div>
 
-    <!-- ══ TAB COMPARSAS ══ -->
+    <!-- TAB COMPARSAS -->
     <div id="atab-groupsmgr" class="d-none">
       <div class="card p-4">
         <h6 style="color:var(--gold);font-weight:700" class="mb-3">👥 Comparsas activas</h6>
@@ -203,10 +217,8 @@
       </div>
     </div>
 
-    <!-- ══ TAB ACCESO TV ══ -->
+    <!-- TAB ACCESO TV -->
     <div id="atab-tvaccess" class="d-none">
-
-      <!-- 📡 SYNC CANALES DE STREAMING -->
       <div class="sync-card purple mb-4">
         <div class="d-flex align-items-center gap-3 flex-wrap">
           <div style="font-size:2rem">📡</div>
@@ -220,11 +232,9 @@
           <button id="btnSyncStreaming" class="sync-btn sync-btn-purple">📡 Actualizar canales hoy</button>
         </div>
         <div id="logSyncStreaming" class="sync-log"></div>
-        <!-- Última sincronización -->
         <div id="streamingLastSync" style="margin-top:10px;font-size:11px;color:var(--text-muted)"></div>
       </div>
 
-      <!-- GESTIÓN ACCESO TV -->
       <div class="card p-4">
         <h6 style="color:#4aafd4;font-weight:700" class="mb-1">📺 Gestión de acceso TV</h6>
         <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:20px">Solo los usuarios con acceso habilitado verán la pestaña "Ver en vivo" en su dashboard.</p>
@@ -246,37 +256,18 @@
   <div class="modal fade" id="deleteAllModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content" style="background:var(--bg-card);border:1px solid #ef4444;color:var(--text)">
-        <div class="modal-header" style="border-color:#ef4444">
-          <h5 class="modal-title" style="color:#f87171">⚠️ Borrar TODOS los partidos</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <p style="color:var(--text-muted)">Se eliminarán <strong style="color:#f87171">todos los partidos</strong> de Firestore junto con sus pronósticos asociados.</p>
-          <p style="color:#fca5a5;font-size:0.85rem">Esta acción es <strong>irreversible</strong>.</p>
-        </div>
-        <div class="modal-footer" style="border-color:#ef4444">
-          <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" id="confirmDeleteAllBtn" class="btn btn-danger">🗑️ Borrar todos definitivamente</button>
-        </div>
+        <div class="modal-header" style="border-color:#ef4444"><h5 class="modal-title" style="color:#f87171">⚠️ Borrar TODOS los partidos</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body"><p style="color:var(--text-muted)">Se eliminarán <strong style="color:#f87171">todos los partidos</strong> de Firestore junto con sus pronósticos.</p><p style="color:#fca5a5;font-size:0.85rem">Esta acción es <strong>irreversible</strong>.</p></div>
+        <div class="modal-footer" style="border-color:#ef4444"><button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Cancelar</button><button type="button" id="confirmDeleteAllBtn" class="btn btn-danger">🗑️ Borrar todos definitivamente</button></div>
       </div>
     </div>
   </div>
-
   <div class="modal fade" id="confirmDeleteModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content" style="background:var(--bg-card);border:1px solid #ef4444;color:var(--text)">
-        <div class="modal-header" style="border-color:#ef4444">
-          <h5 class="modal-title" style="color:#f87171">⚠️ Confirmar eliminación</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <p id="confirmDeleteMsg" style="color:var(--text-muted)"></p>
-          <p style="color:#fca5a5;font-size:0.85rem">Esta acción es <strong>irreversible</strong>. Se eliminarán también todos los miembros y pronósticos asociados.</p>
-        </div>
-        <div class="modal-footer" style="border-color:#ef4444">
-          <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Cancelar</button>
-          <button type="button" id="confirmDeleteBtn" class="btn btn-danger">🗑️ Eliminar definitivamente</button>
-        </div>
+        <div class="modal-header" style="border-color:#ef4444"><h5 class="modal-title" style="color:#f87171">⚠️ Confirmar eliminación</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body"><p id="confirmDeleteMsg" style="color:var(--text-muted)"></p><p style="color:#fca5a5;font-size:0.85rem">Esta acción es <strong>irreversible</strong>. Se eliminarán también todos los miembros y pronósticos asociados.</p></div>
+        <div class="modal-footer" style="border-color:#ef4444"><button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Cancelar</button><button type="button" id="confirmDeleteBtn" class="btn btn-danger">🗑️ Eliminar definitivamente</button></div>
       </div>
     </div>
   </div>
@@ -291,59 +282,56 @@
   <script type="module" src="js/auth.js"></script>
   <script type="module" src="js/admin.js"></script>
 
-  <!-- ══ SYNC RESULTADOS + GRUPOS ══ -->
+  <!-- FIX NOMBRES -->
+  <script type="module">
+    import { fixTeamNames } from './js/fix-team-names.js';
+    document.getElementById('btnFixNames').addEventListener('click', async () => {
+      const log = document.getElementById('logFixNames');
+      log.innerHTML = ''; log.classList.add('visible');
+      document.getElementById('btnFixNames').disabled = true;
+      document.getElementById('btnFixNames').textContent = '⏳ Corrigiendo...';
+      function addLine(msg, color) {
+        log.innerHTML += `<span style="color:${color||'var(--text-muted)'}">${msg}</span>\n`;
+        log.scrollTop = log.scrollHeight;
+      }
+      addLine('🔍 Revisando partidos en Firestore...');
+      try {
+        const { checked, fixed } = await fixTeamNames(addLine);
+        if (fixed === 0) addLine('✅ Todos los nombres ya estaban correctos', '#34d399');
+      } catch(e) {
+        addLine(`❌ Error: ${e.message}`, '#f5a0ac');
+      }
+      document.getElementById('btnFixNames').disabled = false;
+      document.getElementById('btnFixNames').textContent = '🔧 Corregir ahora';
+    });
+  </script>
+
+  <!-- SYNC RESULTADOS + GRUPOS -->
   <script type="module">
     import { db } from './js/firebase-config.js';
-    import {
-      collection, getDocs, doc, updateDoc, writeBatch, Timestamp
-    } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
-
+    import { collection, getDocs, doc, updateDoc, writeBatch, Timestamp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
     const TSDB = 'https://www.thesportsdb.com/api/v1/json/3';
-
-    function log(elId, msg, color='var(--text-muted)') {
-      const el=document.getElementById(elId); if(!el) return;
-      el.classList.add('visible');
-      el.innerHTML+=`<span style="color:${color}">${msg}</span>\n`;
-      el.scrollTop=el.scrollHeight;
-    }
-    function clearLog(elId) { const el=document.getElementById(elId); if(el){el.innerHTML='';el.classList.add('visible');} }
-    function setBusy(id,busy,label) { const b=document.getElementById(id); if(b){b.disabled=busy;b.textContent=label;} }
-
-    const ALIASES={
-      'mexico':['mexico','méxico'],'usa':['usa','united states','united states of america','estados unidos'],
-      'south korea':['south korea','corea del sur','korea republic'],'czechia':['czechia','chequia','czech republic'],
-      'ivory coast':['ivory coast','costa de marfil',"côte d'ivoire"],'dr congo':['dr congo','rd congo','congo dr','democratic republic of congo'],
-      'scotland':['scotland','escocia'],'netherlands':['netherlands','países bajos','holland'],
-      'saudi arabia':['saudi arabia','arabia saudita'],'cape verde':['cape verde','cabo verde'],
-      'bosnia':['bosnia','bosnia y herzegovina','bosnia and herzegovina'],'new zealand':['new zealand','nueva zelanda'],
-    };
+    function log(elId,msg,color='var(--text-muted)'){const el=document.getElementById(elId);if(!el)return;el.classList.add('visible');el.innerHTML+=`<span style="color:${color}">${msg}</span>\n`;el.scrollTop=el.scrollHeight;}
+    function clearLog(elId){const el=document.getElementById(elId);if(el){el.innerHTML='';el.classList.add('visible');}}
+    function setBusy(id,busy,label){const b=document.getElementById(id);if(b){b.disabled=busy;b.textContent=label;}}
+    const ALIASES={'mexico':['mexico','méxico'],'usa':['usa','united states','estados unidos','united states of america'],'south korea':['south korea','corea del sur','korea republic'],'czechia':['czechia','chequia','czech republic'],'ivory coast':['ivory coast','costa de marfil',"côte d'ivoire"],'dr congo':['dr congo','rd congo','congo dr','democratic republic of congo'],'scotland':['scotland','escocia'],'netherlands':['netherlands','países bajos','holland'],'saudi arabia':['saudi arabia','arabia saudita'],'cape verde':['cape verde','cabo verde'],'bosnia':['bosnia','bosnia y herzegovina','bosnia and herzegovina'],'new zealand':['new zealand','nueva zelanda'],'turkey':['turkey','turquía','türkiye'],'qatar':['qatar','catar']};
     function norm(n){const s=(n||'').toLowerCase().trim();for(const[c,vs]of Object.entries(ALIASES))if(vs.includes(s))return c;return s;}
     function teamsEq(a,b){return norm(a)===norm(b);}
     function calcPts(h,a,ph,pa){if(h===ph&&a===pa)return 6;return Math.sign(h-a)===Math.sign(ph-pa)?3:0;}
 
-    // BOTÓN 1: Sync resultados
-    document.getElementById('btnSyncMatches').addEventListener('click', async () => {
-      clearLog('logSyncMatches'); setBusy('btnSyncMatches',true,'⏳ Sincronizando...');
+    document.getElementById('btnSyncMatches').addEventListener('click',async()=>{
+      clearLog('logSyncMatches');setBusy('btnSyncMatches',true,'⏳ Sincronizando...');
       log('logSyncMatches','🔍 Buscando partidos activos...');
-      try {
-        const now=new Date(), from4h=new Date(now-4*3600*1000), plus1h=new Date(now+3600*1000);
+      try{
+        const now=new Date(),from4h=new Date(now-4*3600*1000),plus1h=new Date(now+3600*1000);
         const snap=await getDocs(collection(db,'matches'));
-        const active=snap.docs.filter(d=>{
-          const ko=d.data().kickoff?.toDate?.()||new Date(d.data().kickoff);
-          return !d.data().finished&&ko>=from4h&&ko<=plus1h;
-        });
+        const active=snap.docs.filter(d=>{const ko=d.data().kickoff?.toDate?.()||new Date(d.data().kickoff);return !d.data().finished&&ko>=from4h&&ko<=plus1h;});
         if(!active.length){log('logSyncMatches','⚠️ No hay partidos en ventana activa (±4h)','#f5a0ac');setBusy('btnSyncMatches',false,'🔄 Sincronizar partidos');return;}
         log('logSyncMatches',`📋 ${active.length} partido(s) en ventana activa`);
         const dates=[...new Set(active.map(d=>{const ko=d.data().kickoff?.toDate?.()||new Date(d.data().kickoff);return ko.toISOString().slice(0,10);}))]; 
         const events=[];
-        for(const date of dates){
-          log('logSyncMatches',`📡 Consultando TheSportsDB para ${date}...`);
-          const r=await fetch(`${TSDB}/eventsday.php?d=${date}&l=FIFA%20World%20Cup`);
-          const j=await r.json();
-          if(j.events?.length){events.push(...j.events);log('logSyncMatches',`  ✅ ${j.events.length} eventos`,'#34d399');}
-          else log('logSyncMatches',`  ⚠️ Sin eventos para ${date}`,'#f5a0ac');
-        }
-        if(!events.length){log('logSyncMatches','❌ Sin eventos de TheSportsDB','#f5a0ac');setBusy('btnSyncMatches',false,'🔄 Sincronizar partidos');return;}
+        for(const date of dates){log('logSyncMatches',`📡 Consultando TheSportsDB ${date}...`);const r=await fetch(`${TSDB}/eventsday.php?d=${date}&l=FIFA%20World%20Cup`);const j=await r.json();if(j.events?.length){events.push(...j.events);log('logSyncMatches',`  ✅ ${j.events.length} eventos`,'#34d399');}else log('logSyncMatches',`  ⚠️ Sin eventos para ${date}`,'#f5a0ac');}
+        if(!events.length){log('logSyncMatches','❌ Sin eventos','#f5a0ac');setBusy('btnSyncMatches',false,'🔄 Sincronizar partidos');return;}
         let updated=0;
         for(const docSnap of active){
           const m=docSnap.data();
@@ -351,291 +339,102 @@
           if(!ev){log('logSyncMatches',`  ⚠️ Sin match: ${m.home_team} vs ${m.away_team}`);continue;}
           const hg=ev.intHomeScore!==null&&ev.intHomeScore!==''?parseInt(ev.intHomeScore):null;
           const ag=ev.intAwayScore!==null&&ev.intAwayScore!==''?parseInt(ev.intAwayScore):null;
-          if(hg===null&&ag===null){log('logSyncMatches',`  ⏳ Sin marcador aún: ${m.home_team} vs ${m.away_team}`);continue;}
-          const status=ev.strStatus||'';
-          const finished=['Match Finished','FT','AOT','PEN'].includes(status);
+          if(hg===null&&ag===null){log('logSyncMatches',`  ⏳ Sin marcador: ${m.home_team} vs ${m.away_team}`);continue;}
+          const status=ev.strStatus||'',finished=['Match Finished','FT','AOT','PEN'].includes(status);
           await updateDoc(doc(db,'matches',docSnap.id),{home_score:hg,away_score:ag,match_status:finished?'FT':'LIVE',finished,last_synced:Timestamp.now()});
-          log('logSyncMatches',`  ⚽ ${m.home_team} ${hg}–${ag} ${m.away_team} (${status})`,finished?'#34d399':'#4aafd4'); updated++;
-          if(finished){
-            const predsSnap=await getDocs(collection(db,'predictions'));
-            const batch=writeBatch(db); let pts=0;
-            predsSnap.docs.filter(p=>p.data().match_id===docSnap.id&&!p.data().points_synced).forEach(p=>{
-              const points=calcPts(hg,ag,p.data().pred_home,p.data().pred_away);
-              batch.update(p.ref,{points,points_synced:true}); pts++;
-            });
-            if(pts){await batch.commit();log('logSyncMatches',`    🏅 ${pts} pronósticos actualizados`,'#f5a0ac');}
-          }
+          log('logSyncMatches',`  ⚽ ${m.home_team} ${hg}–${ag} ${m.away_team}`,finished?'#34d399':'#4aafd4');updated++;
+          if(finished){const predsSnap=await getDocs(collection(db,'predictions'));const batch=writeBatch(db);let pts=0;predsSnap.docs.filter(p=>p.data().match_id===docSnap.id&&!p.data().points_synced).forEach(p=>{const points=calcPts(hg,ag,p.data().pred_home,p.data().pred_away);batch.update(p.ref,{points,points_synced:true});pts++;});if(pts){await batch.commit();log('logSyncMatches',`    🏅 ${pts} pronósticos`,'#f5a0ac');}}
         }
-        log('logSyncMatches',`\n✅ ${updated} partido(s) actualizados`,'#34d399');
+        log('logSyncMatches',`\n✅ ${updated} actualizado(s)`,'#34d399');
       }catch(e){log('logSyncMatches',`❌ Error: ${e.message}`,'#f5a0ac');}
       setBusy('btnSyncMatches',false,'🔄 Sincronizar partidos');
     });
 
-    // BOTÓN 2: Recalcular grupos
-    document.getElementById('btnSyncGroups').addEventListener('click', async () => {
-      clearLog('logSyncGroups'); setBusy('btnSyncGroups',true,'⏳ Calculando...');
+    document.getElementById('btnSyncGroups').addEventListener('click',async()=>{
+      clearLog('logSyncGroups');setBusy('btnSyncGroups',true,'⏳ Calculando...');
       log('logSyncGroups','📊 Leyendo partidos...');
-      try {
-        const snap=await getDocs(collection(db,'matches'));
-        const standings={};
-        snap.docs.forEach(d=>{
-          const m=d.data();
-          if(m.home_score===null||m.home_score===undefined||!m.finished) return;
-          if(!m.phase?.startsWith('Grupo')) return;
-          const g=m.phase;
-          if(!standings[g]) standings[g]={};
-          [m.home_team,m.away_team].forEach(t=>{if(!standings[g][t])standings[g][t]={pj:0,g:0,e:0,p:0,gf:0,gc:0,pts:0,flag:''};});
-          standings[g][m.home_team].flag=m.home_flag||''; standings[g][m.away_team].flag=m.away_flag||'';
-          const h=m.home_score,a=m.away_score;
-          standings[g][m.home_team].pj++;standings[g][m.away_team].pj++;
-          standings[g][m.home_team].gf+=h;standings[g][m.home_team].gc+=a;
-          standings[g][m.away_team].gf+=a;standings[g][m.away_team].gc+=h;
-          if(h>a){standings[g][m.home_team].g++;standings[g][m.home_team].pts+=3;standings[g][m.away_team].p++;}
-          else if(h<a){standings[g][m.away_team].g++;standings[g][m.away_team].pts+=3;standings[g][m.home_team].p++;}
-          else{standings[g][m.home_team].e++;standings[g][m.home_team].pts++;standings[g][m.away_team].e++;standings[g][m.away_team].pts++;}
-        });
+      try{
+        const snap=await getDocs(collection(db,'matches'));const standings={};
+        snap.docs.forEach(d=>{const m=d.data();if(m.home_score===null||m.home_score===undefined||!m.finished)return;if(!m.phase?.startsWith('Grupo'))return;const g=m.phase;if(!standings[g])standings[g]={};[m.home_team,m.away_team].forEach(t=>{if(!standings[g][t])standings[g][t]={pj:0,g:0,e:0,p:0,gf:0,gc:0,pts:0,flag:''};});standings[g][m.home_team].flag=m.home_flag||'';standings[g][m.away_team].flag=m.away_flag||'';const h=m.home_score,a=m.away_score;standings[g][m.home_team].pj++;standings[g][m.away_team].pj++;standings[g][m.home_team].gf+=h;standings[g][m.home_team].gc+=a;standings[g][m.away_team].gf+=a;standings[g][m.away_team].gc+=h;if(h>a){standings[g][m.home_team].g++;standings[g][m.home_team].pts+=3;standings[g][m.away_team].p++;}else if(h<a){standings[g][m.away_team].g++;standings[g][m.away_team].pts+=3;standings[g][m.home_team].p++;}else{standings[g][m.home_team].e++;standings[g][m.home_team].pts++;standings[g][m.away_team].e++;standings[g][m.away_team].pts++;}});
         const groups=Object.keys(standings).sort();
-        if(!groups.length){log('logSyncGroups','⚠️ No hay partidos terminados aún','#f5a0ac');setBusy('btnSyncGroups',false,'📊 Recalcular grupos');return;}
+        if(!groups.length){log('logSyncGroups','⚠️ No hay partidos terminados','#f5a0ac');setBusy('btnSyncGroups',false,'📊 Recalcular grupos');return;}
         const batch=writeBatch(db);
-        for(const grupo of groups){
-          const teams=Object.entries(standings[grupo]).map(([name,s])=>({name,...s,gd:s.gf-s.gc})).sort((a,b)=>b.pts-a.pts||(b.gd-a.gd)||(b.gf-a.gf));
-          batch.set(doc(db,'standings',grupo.replace(' ','')),{grupo,teams,updated:Timestamp.now()});
-          log('logSyncGroups',`  📋 ${grupo}: ${teams.map(t=>`${t.flag}${t.name} ${t.pts}pts`).join(' · ')}`);
-        }
-        await batch.commit();
-        log('logSyncGroups',`\n✅ ${groups.length} tablas guardadas`,'#34d399');
+        for(const grupo of groups){const teams=Object.entries(standings[grupo]).map(([name,s])=>({name,...s,gd:s.gf-s.gc})).sort((a,b)=>b.pts-a.pts||(b.gd-a.gd)||(b.gf-a.gf));batch.set(doc(db,'standings',grupo.replace(' ','')),{grupo,teams,updated:Timestamp.now()});log('logSyncGroups',`  📋 ${grupo}: ${teams.map(t=>`${t.flag}${t.name} ${t.pts}pts`).join(' · ')}`);
+        }await batch.commit();log('logSyncGroups',`\n✅ ${groups.length} tablas guardadas`,'#34d399');
       }catch(e){log('logSyncGroups',`❌ Error: ${e.message}`,'#f5a0ac');}
       setBusy('btnSyncGroups',false,'📊 Recalcular grupos');
     });
   </script>
 
-  <!-- ══ SYNC CANALES STREAMING ══ -->
+  <!-- SYNC STREAMING -->
   <script type="module">
     import { db } from './js/firebase-config.js';
-    import {
-      collection, getDocs, doc, updateDoc, getDoc, setDoc, Timestamp
-    } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
-
-    const TSDB = 'https://www.thesportsdb.com/api/v1/json/3';
-
-    function slog(msg, color='var(--text-muted)') {
-      const el=document.getElementById('logSyncStreaming'); if(!el) return;
-      el.classList.add('visible');
-      el.innerHTML+=`<span style="color:${color}">${msg}</span>\n`;
-      el.scrollTop=el.scrollHeight;
-    }
-
-    // Mostrar última sincronización al cargar el tab
-    async function loadLastSync() {
-      try {
-        const snap=await getDoc(doc(db,'app_config','streaming_sync'));
-        if(snap.exists()) {
-          const d=snap.data();
-          const ts=d.last_sync?.toDate?.();
-          if(ts) {
-            const fmt=ts.toLocaleString('es-BO',{timeZone:'America/La_Paz',day:'2-digit',month:'short',hour:'numeric',minute:'2-digit',hour12:true});
-            document.getElementById('streamingLastSync').innerHTML=
-              `🕐 Última sincronización: <strong style="color:#a78bfa">${fmt} (Bolivia)</strong> — ${d.matches_updated||0} partido(s) actualizados`;
-          }
-        } else {
-          document.getElementById('streamingLastSync').textContent='🕐 Nunca sincronizado aún';
-        }
-      } catch(_){}
-    }
-
-    // Función principal de sincronización de canales
-    async function syncStreamingChannels() {
-      const el=document.getElementById('logSyncStreaming');
-      el.innerHTML=''; el.classList.add('visible');
-      document.getElementById('btnSyncStreaming').disabled=true;
-      document.getElementById('btnSyncStreaming').textContent='⏳ Actualizando...';
-
-      slog('📡 Consultando partidos de hoy en Firestore...');
-
-      try {
-        const now=new Date();
-        const todayStr=now.toLocaleDateString('en-CA',{timeZone:'America/La_Paz'}); // YYYY-MM-DD Bolivia
-
-        // Obtener todos los partidos de hoy
+    import { collection, getDocs, doc, updateDoc, getDoc, setDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+    const TSDB='https://www.thesportsdb.com/api/v1/json/3';
+    function slog(msg,color='var(--text-muted)'){const el=document.getElementById('logSyncStreaming');if(!el)return;el.classList.add('visible');el.innerHTML+=`<span style="color:${color}">${msg}</span>\n`;el.scrollTop=el.scrollHeight;}
+    async function loadLastSync(){try{const snap=await getDoc(doc(db,'app_config','streaming_sync'));if(snap.exists()){const d=snap.data();const ts=d.last_sync?.toDate?.();if(ts){const fmt=ts.toLocaleString('es-BO',{timeZone:'America/La_Paz',day:'2-digit',month:'short',hour:'numeric',minute:'2-digit',hour12:true});document.getElementById('streamingLastSync').innerHTML=`🕐 Última sync: <strong style="color:#a78bfa">${fmt}</strong> — ${d.matches_updated||0} partido(s)`;}}else{document.getElementById('streamingLastSync').textContent='🕐 Nunca sincronizado';}}catch(_){}}
+    async function syncStreamingChannels(){
+      const el=document.getElementById('logSyncStreaming');el.innerHTML='';el.classList.add('visible');
+      document.getElementById('btnSyncStreaming').disabled=true;document.getElementById('btnSyncStreaming').textContent='⏳ Actualizando...';
+      slog('📡 Consultando partidos de hoy...');
+      try{
+        const now=new Date(),todayStr=now.toLocaleDateString('en-CA',{timeZone:'America/La_Paz'});
         const matchesSnap=await getDocs(collection(db,'matches'));
-        const todayMatches=matchesSnap.docs.filter(d=>{
-          const ko=d.data().kickoff?.toDate?.()||new Date(d.data().kickoff);
-          return ko.toLocaleDateString('en-CA',{timeZone:'America/La_Paz'})===todayStr;
-        });
-
-        if(!todayMatches.length) {
-          slog(`⚠️ No hay partidos programados para hoy (${todayStr} Bolivia)`,'#f5a0ac');
-          document.getElementById('btnSyncStreaming').disabled=false;
-          document.getElementById('btnSyncStreaming').textContent='📡 Actualizar canales hoy';
-          return;
-        }
-        slog(`📋 ${todayMatches.length} partido(s) hoy (${todayStr} Bolivia)`);
-
-        // Consultar TheSportsDB por la fecha de hoy
-        slog(`🌐 Consultando TheSportsDB para ${todayStr}...`);
-        const resp=await fetch(`${TSDB}/eventsday.php?d=${todayStr}&l=FIFA%20World%20Cup`);
-        const json=await resp.json();
-        const events=json.events||[];
-
-        if(!events.length) {
-          slog('⚠️ TheSportsDB no devolvió eventos para hoy','#f5a0ac');
-          document.getElementById('btnSyncStreaming').disabled=false;
-          document.getElementById('btnSyncStreaming').textContent='📡 Actualizar canales hoy';
-          return;
-        }
-        slog(`✅ ${events.length} evento(s) recibidos de TheSportsDB`,'#34d399');
-
-        const ALIASES={
-          'mexico':['mexico','méxico'],'usa':['usa','united states','estados unidos'],
-          'south korea':['south korea','corea del sur','korea republic'],
-        };
-        function norm(n){const s=(n||'').toLowerCase().trim();for(const[c,vs]of Object.entries(ALIASES))if(vs.includes(s))return c;return s;}
-
+        const todayMatches=matchesSnap.docs.filter(d=>{const ko=d.data().kickoff?.toDate?.()||new Date(d.data().kickoff);return ko.toLocaleDateString('en-CA',{timeZone:'America/La_Paz'})===todayStr;});
+        if(!todayMatches.length){slog(`⚠️ Sin partidos hoy (${todayStr} Bolivia)`,'#f5a0ac');document.getElementById('btnSyncStreaming').disabled=false;document.getElementById('btnSyncStreaming').textContent='📡 Actualizar canales hoy';return;}
+        slog(`📋 ${todayMatches.length} partido(s) hoy`);
+        const resp=await fetch(`${TSDB}/eventsday.php?d=${todayStr}&l=FIFA%20World%20Cup`);const json=await resp.json();const events=json.events||[];
+        if(!events.length){slog('⚠️ Sin eventos de TheSportsDB','#f5a0ac');document.getElementById('btnSyncStreaming').disabled=false;document.getElementById('btnSyncStreaming').textContent='📡 Actualizar canales hoy';return;}
+        slog(`✅ ${events.length} evento(s) recibidos`,'#34d399');
+        const NORM={'mexico':['mexico','méxico'],'usa':['usa','united states','estados unidos'],'south korea':['south korea','corea del sur','korea republic']};
+        function norm(n){const s=(n||'').toLowerCase().trim();for(const[c,vs]of Object.entries(NORM))if(vs.includes(s))return c;return s;}
         let updated=0;
-        for(const mDoc of todayMatches) {
+        for(const mDoc of todayMatches){
           const m=mDoc.data();
           const ev=events.find(e=>norm(e.strHomeTeam)===norm(m.home_team)&&norm(e.strAwayTeam)===norm(m.away_team));
-          if(!ev) { slog(`  ⚠️ Sin datos: ${m.home_team} vs ${m.away_team}`); continue; }
-
-          // Canales disponibles en TheSportsDB
-          const channels=[];
-          if(ev.strTVStation) channels.push(ev.strTVStation);
-          if(ev.strVideo)     channels.push(ev.strVideo);     // URL stream si está disponible
-
-          const channelData={
-            channels,
-            tv_station: ev.strTVStation||null,
-            stream_url:  ev.strVideo||null,
-            thumb:       ev.strThumb||null,
-            tsdb_id:     ev.idEvent||null,
-            channels_synced_at: Timestamp.now(),
-          };
-
-          await updateDoc(doc(db,'matches',mDoc.id), channelData);
-          slog(
-            `  📺 ${m.home_flag||''}${m.home_team} vs ${m.away_team}${m.away_flag||''} → ${channels.length?channels.join(', '):'sin canal'}`,
-            channels.length?'#a78bfa':'var(--text-muted)'
-          );
-          updated++;
+          if(!ev){slog(`  ⚠️ Sin datos: ${m.home_team} vs ${m.away_team}`);continue;}
+          const channels=[];if(ev.strTVStation)channels.push(ev.strTVStation);if(ev.strVideo)channels.push(ev.strVideo);
+          await updateDoc(doc(db,'matches',mDoc.id),{channels,tv_station:ev.strTVStation||null,stream_url:ev.strVideo||null,thumb:ev.strThumb||null,tsdb_id:ev.idEvent||null,channels_synced_at:Timestamp.now()});
+          slog(`  📺 ${m.home_team} vs ${m.away_team} → ${channels.length?channels.join(', '):'sin canal'}`,channels.length?'#a78bfa':'var(--text-muted)');updated++;
         }
-
-        // Guardar registro de última sync
-        await setDoc(doc(db,'app_config','streaming_sync'),{
-          last_sync: Timestamp.now(),
-          matches_updated: updated,
-          date_synced: todayStr,
-        });
-
-        slog(`\n✅ ${updated} partido(s) actualizados con canales`,'#34d399');
-        await loadLastSync();
-
-      } catch(err) {
-        slog(`❌ Error: ${err.message}`,'#f5a0ac');
-      }
-
-      document.getElementById('btnSyncStreaming').disabled=false;
-      document.getElementById('btnSyncStreaming').textContent='📡 Actualizar canales hoy';
+        await setDoc(doc(db,'app_config','streaming_sync'),{last_sync:Timestamp.now(),matches_updated:updated,date_synced:todayStr});
+        slog(`\n✅ ${updated} partido(s) con canales actualizados`,'#34d399');await loadLastSync();
+      }catch(err){slog(`❌ Error: ${err.message}`,'#f5a0ac');}
+      document.getElementById('btnSyncStreaming').disabled=false;document.getElementById('btnSyncStreaming').textContent='📡 Actualizar canales hoy';
     }
-
-    document.getElementById('btnSyncStreaming').addEventListener('click', syncStreamingChannels);
-
-    // Cargar último sync cuando se abre el tab TV
+    document.getElementById('btnSyncStreaming').addEventListener('click',syncStreamingChannels);
     const tvDiv=document.getElementById('atab-tvaccess');
-    new MutationObserver(()=>{
-      if(!tvDiv.classList.contains('d-none')) loadLastSync();
-    }).observe(tvDiv,{attributes:true,attributeFilter:['class']});
+    new MutationObserver(()=>{if(!tvDiv.classList.contains('d-none'))loadLastSync();}).observe(tvDiv,{attributes:true,attributeFilter:['class']});
   </script>
 
-  <!-- ══ BULK LOAD ══ -->
+  <!-- BULK LOAD -->
   <script type="module">
     import { bulkLoadMatches } from './js/bulk-matches.js';
-    document.getElementById('bulkLoadBtn').addEventListener('click', async () => {
-      const btn=document.getElementById('bulkLoadBtn');
-      const msg=document.getElementById('bulkMsg');
-      btn.disabled=true; btn.textContent='⏳ Cargando...';
-      msg.innerHTML='<span style="color:#4aafd4">Insertando partidos en Firestore...</span>';
-      try {
-        const {inserted,skipped}=await bulkLoadMatches((done,total)=>{
-          msg.innerHTML=`<span style="color:#4aafd4">⏳ ${done}/${total} partidos insertados...</span>`;
-        });
-        msg.innerHTML=`<span style="color:#34d399">✅ ¡Listo! ${inserted} partidos nuevos. ${skipped} ya existían.</span>`;
-        btn.textContent='✅ Cargado';
-      }catch(e){
-        msg.innerHTML=`<span style="color:#f5a0ac">❌ Error: ${e.message}</span>`;
-        btn.disabled=false; btn.textContent='⚡ Cargar todos los partidos';
-      }
+    document.getElementById('bulkLoadBtn').addEventListener('click',async()=>{
+      const btn=document.getElementById('bulkLoadBtn'),msg=document.getElementById('bulkMsg');
+      btn.disabled=true;btn.textContent='⏳ Cargando...';
+      msg.innerHTML='<span style="color:#4aafd4">Insertando...</span>';
+      try{
+        const{inserted,skipped}=await bulkLoadMatches((done,total)=>{msg.innerHTML=`<span style="color:#4aafd4">⏳ ${done}/${total}...</span>`;});
+        msg.innerHTML=`<span style="color:#34d399">✅ ${inserted} nuevos. ${skipped} ya existían.</span>`;btn.textContent='✅ Cargado';
+      }catch(e){msg.innerHTML=`<span style="color:#f5a0ac">❌ Error: ${e.message}</span>`;btn.disabled=false;btn.textContent='⚡ Cargar todos los partidos';}
     });
   </script>
 
-  <!-- ══ TV ACCESS MANAGEMENT ══ -->
+  <!-- TV ACCESS -->
   <script type="module">
     import { auth, db } from './js/firebase-config.js';
     import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
     import { collection, getDocs, doc, updateDoc } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
-
     let allUsers=[],filterVal='';
     const authReady=new Promise(resolve=>onAuthStateChanged(auth,resolve));
-
-    async function loadAllUsers() {
-      const list=document.getElementById('tvUserList'),stats=document.getElementById('tvStats');
-      list.innerHTML='<div style="color:var(--text-muted);font-size:13px">Cargando usuarios...</div>';
-      try {
-        await authReady;
-        const snap=await getDocs(collection(db,'users'));
-        allUsers=[];
-        snap.forEach(d=>allUsers.push({uid:d.id,...d.data()}));
-        allUsers.sort((a,b)=>(a.display_name||a.email||'').toLowerCase().localeCompare((b.display_name||b.email||'').toLowerCase()));
-        renderStats(stats); renderList(list);
-      }catch(e){list.innerHTML=`<div style="color:#f5a0ac;font-size:13px">Error: ${e.message}</div>`;}
-    }
-
-    function renderStats(el){
-      const total=allUsers.length,active=allUsers.filter(u=>u.tv_access===true).length;
-      el.innerHTML=`
-        <div class="tv-stat"><div class="tv-stat-num" style="color:var(--text)">${total}</div><div class="tv-stat-label">Usuarios</div></div>
-        <div class="tv-stat"><div class="tv-stat-num" style="color:#34d399">${active}</div><div class="tv-stat-label">Con acceso TV</div></div>
-        <div class="tv-stat"><div class="tv-stat-num" style="color:#f5a0ac">${total-active}</div><div class="tv-stat-label">Sin acceso</div></div>`;
-    }
-
-    function renderList(el){
-      const q=filterVal.toLowerCase();
-      const filtered=q?allUsers.filter(u=>(u.display_name||'').toLowerCase().includes(q)||(u.email||'').toLowerCase().includes(q)):allUsers;
-      if(!filtered.length){el.innerHTML=`<div style="color:var(--text-muted);font-size:13px;padding:12px 0">No se encontraron usuarios${q?' con ese criterio':''}.</div>`;return;}
-      const withAccess=filtered.filter(u=>u.tv_access===true);
-      const withoutAccess=filtered.filter(u=>u.tv_access!==true);
-      el.innerHTML='';
-      if(withAccess.length){const t=document.createElement('div');t.className='tv-section-title';t.innerHTML=`✅ Con acceso <span style="color:#34d399;font-size:13px;font-weight:800">(${withAccess.length})</span>`;el.appendChild(t);withAccess.forEach(u=>el.appendChild(buildRow(u,true)));}
-      if(withoutAccess.length){const t=document.createElement('div');t.className='tv-section-title';t.innerHTML=`🚫 Sin acceso <span style="color:#f5a0ac;font-size:13px;font-weight:800">(${withoutAccess.length})</span>`;el.appendChild(t);withoutAccess.forEach(u=>el.appendChild(buildRow(u,false)));}
-    }
-
-    function buildRow(u,hasAccess){
-      const name=u.display_name||u.email||'Sin nombre',email=u.email||'';
-      const div=document.createElement('div');
-      div.className='tv-user-row'+(hasAccess?' has-access':'');div.id='tvrow-'+u.uid;
-      div.innerHTML=`
-        <div class="tv-user-info"><div class="tv-user-name">${name}</div><div class="tv-user-email">${email}</div></div>
-        <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
-          <span class="${hasAccess?'tv-badge-on':'tv-badge-off'}">${hasAccess?'✅ Activo':'🚫 Sin acceso'}</span>
-          <button class="${hasAccess?'tv-toggle-off':'tv-toggle-on'}">${hasAccess?'🚫 Quitar':'✅ Dar acceso'}</button>
-        </div>`;
-      div.querySelector('button').addEventListener('click',()=>toggleAccess(u.uid,hasAccess));
-      return div;
-    }
-
-    async function toggleAccess(uid,currentAccess){
-      const row=document.getElementById('tvrow-'+uid),btn=row?.querySelector('button');
-      if(btn){btn.disabled=true;btn.textContent='⏳';}
-      try {
-        await authReady;
-        await updateDoc(doc(db,'users',uid),{tv_access:!currentAccess});
-        const u=allUsers.find(x=>x.uid===uid);if(u)u.tv_access=!currentAccess;
-        renderStats(document.getElementById('tvStats'));renderList(document.getElementById('tvUserList'));
-      }catch(e){alert('Error: '+e.message);if(btn){btn.disabled=false;btn.textContent=currentAccess?'🚫 Quitar':'✅ Dar acceso';}}
-    }
-
+    async function loadAllUsers(){const list=document.getElementById('tvUserList'),stats=document.getElementById('tvStats');list.innerHTML='<div style="color:var(--text-muted);font-size:13px">Cargando...</div>';try{await authReady;const snap=await getDocs(collection(db,'users'));allUsers=[];snap.forEach(d=>allUsers.push({uid:d.id,...d.data()}));allUsers.sort((a,b)=>(a.display_name||a.email||'').toLowerCase().localeCompare((b.display_name||b.email||'').toLowerCase()));renderStats(stats);renderList(list);}catch(e){list.innerHTML=`<div style="color:#f5a0ac;font-size:13px">Error: ${e.message}</div>`;}}
+    function renderStats(el){const total=allUsers.length,active=allUsers.filter(u=>u.tv_access===true).length;el.innerHTML=`<div class="tv-stat"><div class="tv-stat-num" style="color:var(--text)">${total}</div><div class="tv-stat-label">Usuarios</div></div><div class="tv-stat"><div class="tv-stat-num" style="color:#34d399">${active}</div><div class="tv-stat-label">Con acceso TV</div></div><div class="tv-stat"><div class="tv-stat-num" style="color:#f5a0ac">${total-active}</div><div class="tv-stat-label">Sin acceso</div></div>`;}
+    function renderList(el){const q=filterVal.toLowerCase();const filtered=q?allUsers.filter(u=>(u.display_name||'').toLowerCase().includes(q)||(u.email||'').toLowerCase().includes(q)):allUsers;if(!filtered.length){el.innerHTML=`<div style="color:var(--text-muted);font-size:13px;padding:12px 0">No se encontraron usuarios.</div>`;return;}const withAccess=filtered.filter(u=>u.tv_access===true),withoutAccess=filtered.filter(u=>u.tv_access!==true);el.innerHTML='';if(withAccess.length){const t=document.createElement('div');t.className='tv-section-title';t.innerHTML=`✅ Con acceso <span style="color:#34d399;font-size:13px;font-weight:800">(${withAccess.length})</span>`;el.appendChild(t);withAccess.forEach(u=>el.appendChild(buildRow(u,true)));}if(withoutAccess.length){const t=document.createElement('div');t.className='tv-section-title';t.innerHTML=`🚫 Sin acceso <span style="color:#f5a0ac;font-size:13px;font-weight:800">(${withoutAccess.length})</span>`;el.appendChild(t);withoutAccess.forEach(u=>el.appendChild(buildRow(u,false)));}}
+    function buildRow(u,hasAccess){const name=u.display_name||u.email||'Sin nombre',email=u.email||'';const div=document.createElement('div');div.className='tv-user-row'+(hasAccess?' has-access':'');div.id='tvrow-'+u.uid;div.innerHTML=`<div class="tv-user-info"><div class="tv-user-name">${name}</div><div class="tv-user-email">${email}</div></div><div style="display:flex;align-items:center;gap:10px;flex-shrink:0"><span class="${hasAccess?'tv-badge-on':'tv-badge-off'}">${hasAccess?'✅ Activo':'🚫 Sin acceso'}</span><button class="${hasAccess?'tv-toggle-off':'tv-toggle-on'}">${hasAccess?'🚫 Quitar':'✅ Dar acceso'}</button></div>`;div.querySelector('button').addEventListener('click',()=>toggleAccess(u.uid,hasAccess));return div;}
+    async function toggleAccess(uid,currentAccess){const row=document.getElementById('tvrow-'+uid),btn=row?.querySelector('button');if(btn){btn.disabled=true;btn.textContent='⏳';}try{await authReady;await updateDoc(doc(db,'users',uid),{tv_access:!currentAccess});const u=allUsers.find(x=>x.uid===uid);if(u)u.tv_access=!currentAccess;renderStats(document.getElementById('tvStats'));renderList(document.getElementById('tvUserList'));}catch(e){alert('Error: '+e.message);if(btn){btn.disabled=false;btn.textContent=currentAccess?'🚫 Quitar':'✅ Dar acceso';}}}
     document.getElementById('tvFilterInput').addEventListener('input',e=>{filterVal=e.target.value;renderList(document.getElementById('tvUserList'));});
     document.getElementById('tvClearFilter').addEventListener('click',()=>{document.getElementById('tvFilterInput').value='';filterVal='';renderList(document.getElementById('tvUserList'));});
-
     const tvDiv=document.getElementById('atab-tvaccess');let loaded=false;
     new MutationObserver(()=>{if(!tvDiv.classList.contains('d-none')&&!loaded){loaded=true;loadAllUsers();}}).observe(tvDiv,{attributes:true,attributeFilter:['class']});
   </script>
