@@ -274,28 +274,31 @@
 
   <!-- TV Access management -->
   <script type="module">
-    import { db } from './js/firebase-config.js';
+    import { auth, db } from './js/firebase-config.js';
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
     import {
       collection, getDocs, doc, updateDoc
     } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
-    let allUsers = [];   // cache completo
+    let allUsers  = [];
     let filterVal = '';
+    // Promesa que resuelve cuando Firebase Auth confirma el usuario
+    const authReady = new Promise(resolve => onAuthStateChanged(auth, resolve));
 
-    // ── Cargar TODOS los usuarios ──
     async function loadAllUsers() {
-      const list = document.getElementById('tvUserList');
+      const list  = document.getElementById('tvUserList');
       const stats = document.getElementById('tvStats');
       list.innerHTML = '<div style="color:var(--text-muted);font-size:13px">Cargando usuarios...</div>';
       try {
+        // Esperar auth antes de leer Firestore
+        await authReady;
         const snap = await getDocs(collection(db, 'users'));
         allUsers = [];
         snap.forEach(d => allUsers.push({ uid: d.id, ...d.data() }));
-        allUsers.sort((a, b) => {
-          const na = (a.display_name || a.email || '').toLowerCase();
-          const nb = (b.display_name || b.email || '').toLowerCase();
-          return na.localeCompare(nb);
-        });
+        allUsers.sort((a, b) =>
+          (a.display_name || a.email || '').toLowerCase()
+            .localeCompare((b.display_name || b.email || '').toLowerCase())
+        );
         renderStats(stats);
         renderList(list);
       } catch(e) {
@@ -322,7 +325,7 @@
     }
 
     function renderList(el) {
-      const q = filterVal.toLowerCase();
+      const q        = filterVal.toLowerCase();
       const filtered = q
         ? allUsers.filter(u =>
             (u.display_name || '').toLowerCase().includes(q) ||
@@ -380,19 +383,19 @@
       const btn = row?.querySelector('button');
       if (btn) { btn.disabled = true; btn.textContent = '⏳'; }
       try {
+        // Garantizar que el token Auth esté listo antes del write
+        await authReady;
         await updateDoc(doc(db, 'users', uid), { tv_access: !currentAccess });
-        // Actualizar cache local
         const u = allUsers.find(x => x.uid === uid);
         if (u) u.tv_access = !currentAccess;
         renderStats(document.getElementById('tvStats'));
         renderList(document.getElementById('tvUserList'));
       } catch(e) {
         alert('Error: ' + e.message);
-        if (btn) { btn.disabled = false; }
+        if (btn) { btn.disabled = false; btn.textContent = currentAccess ? '🚫 Quitar' : '✅ Dar acceso'; }
       }
     }
 
-    // Filtro en tiempo real
     document.getElementById('tvFilterInput').addEventListener('input', e => {
       filterVal = e.target.value;
       renderList(document.getElementById('tvUserList'));
@@ -403,9 +406,9 @@
       renderList(document.getElementById('tvUserList'));
     });
 
-    // ✔ MutationObserver: carga cuando admin.js muestra el div
+    // Cargar cuando se muestra el tab
     const tvDiv = document.getElementById('atab-tvaccess');
-    let loaded = false;
+    let loaded  = false;
     new MutationObserver(() => {
       if (!tvDiv.classList.contains('d-none') && !loaded) {
         loaded = true;
