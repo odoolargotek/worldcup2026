@@ -1,17 +1,36 @@
-// matches.js — Partidos agrupados por fase + avisos de vencimiento
+// matches.js — Partidos en tiempo real con onSnapshot
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
-  collection, getDocs, query, orderBy, where
+  collection, onSnapshot, getDocs, query, orderBy, where
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 import { fmtDate, fmtTime } from './time.js';
 
 const params   = new URLSearchParams(window.location.search);
 const GROUP_ID = params.get('gid');
 
+let myPreds    = {};
+let unsub      = null;
+
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
-  await renderMatches(user);
+
+  // Cargar pronósticos del usuario (una sola vez al inicio)
+  const predsSnap = await getDocs(
+    query(collection(db, 'predictions'),
+      where('group_id', '==', GROUP_ID),
+      where('user_uid',  '==', user.uid)
+    )
+  );
+  predsSnap.forEach(d => { myPreds[d.data().match_id] = d.data(); });
+
+  // Escuchar partidos en tiempo real
+  if (unsub) unsub();
+  unsub = onSnapshot(
+    query(collection(db, 'matches'), orderBy('kickoff')),
+    (snap) => renderMatches(snap),
+    (err) => console.error('[matches] onSnapshot error:', err)
+  );
 });
 
 function deadlineBadge(kickoff, isDone, hasMyPred) {
@@ -45,21 +64,10 @@ function deadlineBadge(kickoff, isDone, hasMyPred) {
   }
 }
 
-async function renderMatches(user) {
+function renderMatches(snap) {
   const container = document.getElementById('matchList');
   if (!container) return;
-
-  const snap = await getDocs(query(collection(db, 'matches'), orderBy('kickoff')));
-  const now  = new Date();
-
-  const myPreds = {};
-  const predsSnap = await getDocs(
-    query(collection(db, 'predictions'),
-      where('group_id', '==', GROUP_ID),
-      where('user_uid',  '==', user.uid)
-    )
-  );
-  predsSnap.forEach(d => { myPreds[d.data().match_id] = d.data(); });
+  const now = new Date();
 
   const groups = {};
   snap.forEach(d => {
@@ -84,7 +92,7 @@ async function renderMatches(user) {
 
     groups[phase].forEach(m => {
       const kickoff = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
-      const isDone  = m.home_score !== undefined;
+      const isDone  = m.home_score !== undefined && m.home_score !== null;
       const isOpen  = !isDone && kickoff > now;
       const myPred  = myPreds[m.id];
 
@@ -118,7 +126,6 @@ async function renderMatches(user) {
 
       const borderColor = isDone ? 'var(--gold)' : isOpen ? 'var(--green-light)' : '#475569';
 
-      // ⭐ Usar fmtDate y fmtTime — siempre en hora Bolivia (America/La_Paz)
       const card = document.createElement('div');
       card.className = 'mb-2';
       card.innerHTML = `
@@ -130,12 +137,8 @@ async function renderMatches(user) {
             </div>
             <div style="flex:1;text-align:center">
               <div style="font-size:0.95rem;font-weight:700;color:var(--text-muted)">vs</div>
-              <div style="font-size:0.88rem;color:var(--text);font-weight:600;margin-top:4px">
-                ${fmtDate(kickoff)}
-              </div>
-              <div style="font-size:1rem;font-weight:700;color:var(--gold);margin-top:1px">
-                ${fmtTime(kickoff)}
-              </div>
+              <div style="font-size:0.88rem;color:var(--text);font-weight:600;margin-top:4px">${fmtDate(kickoff)}</div>
+              <div style="font-size:1rem;font-weight:700;color:var(--gold);margin-top:1px">${fmtTime(kickoff)}</div>
               ${m.city ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px">📍 ${m.city}</div>` : ''}
               ${predBadge}
             </div>
