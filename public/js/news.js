@@ -1,10 +1,21 @@
-// news.js — Noticias del Mundial 2026 via rss2json.com
+// news.js — Noticias del Mundial 2026 via RSS feeds deportivos
 const RSS2JSON = 'https://api.rss2json.com/v1/api.json?rss_url=';
+
+// Feeds RSS públicos de medios deportivos que rss2json acepta
 const FEEDS = [
-  'https://news.google.com/rss/search?q=Mundial+2026+FIFA&hl=es-419&gl=US&ceid=US:es-419',
-  'https://news.google.com/rss/search?q=World+Cup+2026&hl=es-419&gl=US&ceid=US:es-419',
-  'https://www.goal.com/feeds/es/news',
+  { url: 'https://www.espn.com/espn/rss/soccer/news', label: 'ESPN' },
+  { url: 'https://e00-marca.uecdn.es/rss/futbol/mundial.xml', label: 'Marca' },
+  { url: 'https://feeds.bbci.co.uk/sport/football/rss.xml', label: 'BBC Sport' },
+  { url: 'https://www.skysports.com/rss/12040', label: 'Sky Sports' },
 ];
+
+// Keywords para filtrar noticias del Mundial 2026
+const KEYWORDS = ['world cup','mundial','2026','fifa','wc2026','copa del mundo'];
+
+function isWorldCup(item) {
+  const text = (item.title + ' ' + (item.description || '')).toLowerCase();
+  return KEYWORDS.some(k => text.includes(k));
+}
 
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -16,23 +27,44 @@ function timeAgo(dateStr) {
   return `hace ${Math.floor(h / 24)}d`;
 }
 
-async function fetchNews() {
-  for (const feed of FEEDS) {
-    try {
-      const res  = await fetch(RSS2JSON + encodeURIComponent(feed) + '&count=20');
-      const json = await res.json();
-      if (json.status === 'ok' && json.items?.length > 0) {
-        return json.items.map(item => ({
-          title:   item.title || '',
-          link:    item.link  || '#',
-          source:  item.author || json.feed?.title || 'Google News',
-          pubDate: item.pubDate || '',
-          thumb:   item.thumbnail || item.enclosure?.link || null,
-        }));
-      }
-    } catch (_) {}
-  }
+async function fetchFeed(feed) {
+  try {
+    const res  = await fetch(RSS2JSON + encodeURIComponent(feed.url) + '&count=30');
+    const json = await res.json();
+    if (json.status === 'ok' && json.items?.length > 0) {
+      return json.items.map(item => ({
+        title:   item.title || '',
+        link:    item.link  || '#',
+        source:  feed.label,
+        pubDate: item.pubDate || '',
+        thumb:   item.thumbnail || item.enclosure?.link || null,
+      }));
+    }
+  } catch (_) {}
   return [];
+}
+
+async function fetchNews() {
+  // Intentar todos los feeds en paralelo
+  const results = await Promise.allSettled(FEEDS.map(f => fetchFeed(f)));
+  let all = [];
+  results.forEach(r => { if (r.status === 'fulfilled') all = all.concat(r.value); });
+
+  // Filtrar Mundial 2026 si hay suficientes; si no, mostrar todo (fútbol)
+  const filtered = all.filter(isWorldCup);
+  const items = filtered.length >= 3 ? filtered : all;
+
+  // Ordenar por fecha más reciente y deduplicar por título
+  const seen = new Set();
+  return items
+    .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
+    .filter(item => {
+      const key = item.title.slice(0, 60);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 25);
 }
 
 function renderCard(item) {
@@ -75,7 +107,7 @@ function injectStyles() {
   s.id = 'news-styles';
   s.textContent = `
     .news-card-link{text-decoration:none;color:inherit;display:block;margin-bottom:10px}
-    .news-card{display:flex;gap:12px;align-items:center;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;transition:border-color .2s,background .2s;position:relative;overflow:hidden}
+    .news-card{display:flex;gap:12px;align-items:center;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;transition:border-color .2s,background .2s;overflow:hidden}
     .news-card:hover{border-color:rgba(74,175,212,.45);background:rgba(74,175,212,.04)}
     .news-thumb{width:64px;height:64px;object-fit:cover;border-radius:8px;flex-shrink:0;background:var(--bg-card2)}
     .news-thumb-placeholder{width:64px;height:64px;border-radius:8px;flex-shrink:0;background:var(--bg-card2);display:flex;align-items:center;justify-content:center;font-size:1.6rem}
