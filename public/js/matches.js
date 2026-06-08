@@ -1,21 +1,21 @@
-// matches.js — Partidos en tiempo real con onSnapshot
+// matches.js — Partidos agrupados por FECHA (no por grupo) para facilitar pronósticos diarios
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
   collection, onSnapshot, getDocs, query, orderBy, where
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
-import { fmtDate, fmtTime } from './time.js';
+import { fmtTime } from './time.js';
 
 const params   = new URLSearchParams(window.location.search);
 const GROUP_ID = params.get('gid');
+const TZ       = 'America/La_Paz';
 
-let myPreds    = {};
-let unsub      = null;
+let myPreds = {};
+let unsub   = null;
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
 
-  // Cargar pronósticos del usuario (una sola vez al inicio)
   const predsSnap = await getDocs(
     query(collection(db, 'predictions'),
       where('group_id', '==', GROUP_ID),
@@ -24,14 +24,40 @@ onAuthStateChanged(auth, async (user) => {
   );
   predsSnap.forEach(d => { myPreds[d.data().match_id] = d.data(); });
 
-  // Escuchar partidos en tiempo real
   if (unsub) unsub();
   unsub = onSnapshot(
     query(collection(db, 'matches'), orderBy('kickoff')),
     (snap) => renderMatches(snap),
-    (err) => console.error('[matches] onSnapshot error:', err)
+    (err)  => console.error('[matches] onSnapshot error:', err)
   );
 });
+
+// ── Helpers de fecha ────────────────────────────────────────────────────────
+
+function toLocalDateKey(date) {
+  // Retorna 'YYYY-MM-DD' en zona Bolivia
+  return date.toLocaleDateString('en-CA', { timeZone: TZ });
+}
+
+function todayKey()    { return toLocalDateKey(new Date()); }
+function tomorrowKey() {
+  const t = new Date(); t.setDate(t.getDate() + 1);
+  return toLocalDateKey(t);
+}
+
+function dateLabel(key) {
+  const tk = todayKey();
+  const mk = tomorrowKey();
+  if (key === tk) return { text: 'Hoy', color: '#34d399', emoji: '📅' };
+  if (key === mk) return { text: 'Mañana', color: '#4aafd4', emoji: '📅' };
+  // Ej: "mar, 11 jun"
+  const [y, m, d] = key.split('-').map(Number);
+  const dateObj = new Date(y, m - 1, d, 12);
+  const label   = dateObj.toLocaleDateString('es-BO', { weekday:'short', day:'2-digit', month:'short' });
+  return { text: label, color: 'var(--gold)', emoji: '📆' };
+}
+
+// ── Badge de urgencia ────────────────────────────────────────────────────────
 
 function deadlineBadge(kickoff, isDone, hasMyPred) {
   if (isDone) return '';
@@ -50,9 +76,9 @@ function deadlineBadge(kickoff, isDone, hasMyPred) {
     const mins = Math.floor((diffHrs - hrs) * 60);
     return `<span style="background:rgba(239,68,68,0.2);color:#fca5a5;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap">🔴 ${hrs}h ${mins}m restantes</span>`;
   } else if (diffHrs <= 24) {
-    const hrs = Math.floor(diffHrs);
+    const hrs       = Math.floor(diffHrs);
     const color     = hasMyPred ? 'rgba(34,197,94,0.15)' : 'rgba(245,158,11,0.2)';
-    const textColor = hasMyPred ? 'var(--green-light)' : 'var(--gold)';
+    const textColor = hasMyPred ? 'var(--green-light)'   : 'var(--gold)';
     const icon      = hasMyPred ? '✅' : '⚠️';
     return `<span style="background:${color};color:${textColor};font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap">${icon} Hoy vence · ${hrs}h</span>`;
   } else {
@@ -64,39 +90,79 @@ function deadlineBadge(kickoff, isDone, hasMyPred) {
   }
 }
 
+// ── Render principal ─────────────────────────────────────────────────────────
+
 function renderMatches(snap) {
   const container = document.getElementById('matchList');
   if (!container) return;
   const now = new Date();
 
-  const groups = {};
+  // Agrupar por fecha local (Bolivia)
+  const byDate = {};
   snap.forEach(d => {
-    const m = d.data();
-    const phase = m.phase || 'Sin fase';
-    if (!groups[phase]) groups[phase] = [];
-    groups[phase].push({ id: d.id, ...m });
+    const m       = d.data();
+    const kickoff = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+    const key     = toLocalDateKey(kickoff);
+    if (!byDate[key]) byDate[key] = [];
+    byDate[key].push({ id: d.id, ...m, _kickoff: kickoff });
   });
 
   container.innerHTML = '';
 
-  Object.keys(groups).sort().forEach(phase => {
+  const tk = todayKey();
+  const sortedKeys = Object.keys(byDate).sort();
+
+  sortedKeys.forEach(key => {
+    const matches = byDate[key].sort((a, b) => a._kickoff - b._kickoff);
+    const lbl     = dateLabel(key);
+    const isToday = key === tk;
+
+    // Contador de pronósticos pendientes en esta fecha
+    const open    = matches.filter(m => {
+      const isDone = m.home_score !== undefined && m.home_score !== null;
+      return !isDone && m._kickoff > now;
+    });
+    const pending = open.filter(m => !myPreds[m.id]).length;
+
+    // Chip de alertas solo si hay partidos abiertos sin pronosticar
+    let alertChip = '';
+    if (isToday && pending > 0) {
+      alertChip = `<span style="background:rgba(239,68,68,0.2);color:#fca5a5;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;margin-left:8px">⚠️ ${pending} sin pronosticar</span>`;
+    } else if (isToday && open.length > 0 && pending === 0) {
+      alertChip = `<span style="background:rgba(34,197,94,0.15);color:#34d399;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;margin-left:8px">✅ Todo pronosticado</span>`;
+    }
+
+    // Encabezado de fecha
     const header = document.createElement('div');
     header.className = 'mb-2 mt-4';
     header.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <div style="flex:1;height:1px;background:var(--border)"></div>
-        <span style="color:var(--gold);font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:2px;white-space:nowrap">⚽ ${phase}</span>
+        <div style="display:flex;align-items:center;gap:4px;white-space:nowrap">
+          <span style="color:${lbl.color};font-size:0.85rem;font-weight:800;text-transform:capitalize;letter-spacing:1px">
+            ${lbl.emoji} ${lbl.text}
+          </span>
+          <span style="color:var(--text-muted);font-size:0.75rem;font-weight:500">
+            · ${matches.length} partido${matches.length > 1 ? 's' : ''}
+          </span>
+          ${alertChip}
+        </div>
         <div style="flex:1;height:1px;background:var(--border)"></div>
       </div>`;
     container.appendChild(header);
 
-    groups[phase].forEach(m => {
-      const kickoff = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+    // Cards de partidos
+    matches.forEach(m => {
+      const kickoff = m._kickoff;
       const isDone  = m.home_score !== undefined && m.home_score !== null;
       const isOpen  = !isDone && kickoff > now;
       const myPred  = myPreds[m.id];
+      const badge   = deadlineBadge(kickoff, isDone, !!myPred);
 
-      const badge = deadlineBadge(kickoff, isDone, !!myPred);
+      // Chip de grupo (pequeño, para no perder el contexto)
+      const phaseChip = m.phase
+        ? `<span style="background:rgba(245,158,11,0.12);color:var(--gold);font-size:9px;font-weight:700;padding:1px 7px;border-radius:20px;letter-spacing:1px">${m.phase}</span>`
+        : '';
 
       let predBadge = '';
       if (myPred) {
@@ -137,9 +203,9 @@ function renderMatches(snap) {
             </div>
             <div style="flex:1;text-align:center">
               <div style="font-size:0.95rem;font-weight:700;color:var(--text-muted)">vs</div>
-              <div style="font-size:0.88rem;color:var(--text);font-weight:600;margin-top:4px">${fmtDate(kickoff)}</div>
-              <div style="font-size:1rem;font-weight:700;color:var(--gold);margin-top:1px">${fmtTime(kickoff)}</div>
+              <div style="font-size:1rem;font-weight:700;color:var(--gold);margin-top:4px">${fmtTime(kickoff)}</div>
               ${m.city ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px">📍 ${m.city}</div>` : ''}
+              ${phaseChip ? `<div style="margin-top:5px">${phaseChip}</div>` : ''}
               ${predBadge}
             </div>
             <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:64px">
