@@ -15,6 +15,62 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/sponsor.css">
+  <style>
+    /* ── Tab scroll wrapper ── */
+    .tabs-scroll-wrapper {
+      position: relative;
+      margin-bottom: 1.2rem;
+    }
+    #mainTabs {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+    #mainTabs::-webkit-scrollbar { display: none; }
+
+    /* Fade derecho */
+    .tabs-fade-right {
+      position: absolute;
+      top: 0; right: 0;
+      width: 60px;
+      height: 100%;
+      pointer-events: none;
+      background: linear-gradient(to right, transparent, var(--bg, #0f172a) 80%);
+      transition: opacity 0.3s;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 6px;
+    }
+    .tabs-fade-right.hidden { opacity: 0; }
+
+    /* Flecha pulsante */
+    .tabs-arrow {
+      font-size: 18px;
+      animation: arrowPulse 1.2s ease-in-out infinite;
+      color: var(--primary-light, #4aafd4);
+      line-height: 1;
+    }
+    @keyframes arrowPulse {
+      0%, 100% { transform: translateX(0);   opacity: 1; }
+      50%       { transform: translateX(4px); opacity: 0.5; }
+    }
+
+    /* Hint "desliza" — solo móvil, solo primera vez */
+    .tabs-hint {
+      font-size: 10px;
+      color: var(--text-muted, #94a3b8);
+      text-align: right;
+      margin-top: -10px;
+      margin-bottom: 8px;
+      padding-right: 4px;
+      opacity: 1;
+      transition: opacity 0.5s;
+    }
+    .tabs-hint.hidden { opacity: 0; pointer-events: none; }
+  </style>
 </head>
 <body>
   <div class="field-pattern"></div>
@@ -91,15 +147,24 @@
 
     <div id="favsInlineSection"></div>
 
-    <ul class="nav nav-tabs mb-4" id="mainTabs" style="flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch">
-      <li class="nav-item" style="white-space:nowrap"><button class="nav-link active" data-tab="matches">📅 Partidos</button></li>
-      <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="ranking">🏆 Ranking</button></li>
-      <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="groups">🏙️ Fase de Grupos</button></li>
-      <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="payment">💳 Pagos</button></li>
-      <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="news">📰 Noticias</button></li>
-      <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="rules">ℹ️ Cómo jugar</button></li>
-      <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="disclaimer">⚖️ Aviso Legal</button></li>
-    </ul>
+    <!-- Tabs con indicador de scroll -->
+    <div class="tabs-scroll-wrapper">
+      <ul class="nav nav-tabs" id="mainTabs">
+        <li class="nav-item" style="white-space:nowrap"><button class="nav-link active" data-tab="matches">📅 Partidos</button></li>
+        <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="ranking">🏆 Ranking</button></li>
+        <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="groups">🏙️ Fase de Grupos</button></li>
+        <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="payment">💳 Pagos</button></li>
+        <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="news">📰 Noticias</button></li>
+        <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="rules">ℹ️ Cómo jugar</button></li>
+        <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="disclaimer">⚖️ Aviso Legal</button></li>
+      </ul>
+      <!-- Indicador fade + flecha derecha -->
+      <div class="tabs-fade-right" id="tabsFadeRight">
+        <span class="tabs-arrow">›</span>
+      </div>
+    </div>
+    <!-- Hint desliza (solo móvil) -->
+    <div class="tabs-hint" id="tabsHint">👆 Desliza para ver más opciones</div>
 
     <div id="matchesTab"><div id="matchList"><div class="text-center py-4" style="color:var(--text-muted)">Cargando partidos...</div></div></div>
     <div id="rankingTab" class="d-none"></div>
@@ -120,11 +185,11 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script type="module" src="js/firebase-config.js"></script>
-  <script type="module" src="js/auth.js"></script>
-  <script type="module" src="js/matches.js?v=3"></script>
-  <script type="module" src="js/standings.js?v=3"></script>
-  <script type="module" src="js/favorite.js?v=3"></script>
+  <script src="js/firebase-config.js" type="module"></script>
+  <script src="js/auth.js" type="module"></script>
+  <script src="js/matches.js?v=3" type="module"></script>
+  <script src="js/standings.js?v=3" type="module"></script>
+  <script src="js/favorite.js?v=3" type="module"></script>
   <script type="module">
     import { renderGroupsTables } from './js/groups-table.js?v=3';
     import { renderNews }         from './js/news.js?v=3';
@@ -139,7 +204,11 @@
     function activateTab(tabName) {
       document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
       const btn = document.querySelector(`[data-tab="${tabName}"]`);
-      if (btn) btn.classList.add('active');
+      if (btn) {
+        btn.classList.add('active');
+        // Scroll suave al tab activo
+        btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
       TABS.forEach(t => document.getElementById(t+'Tab')?.classList.toggle('d-none', t !== tabName));
     }
 
@@ -160,6 +229,45 @@
       activateTab(initTab);
       if (initTab === 'payment') { paymentLoaded = true; renderPayment(document.getElementById('paymentTab')); }
     }
+
+    // ── Indicador de scroll en tabs ──────────────────────────────────
+    const tabsEl   = document.getElementById('mainTabs');
+    const fadeEl   = document.getElementById('tabsFadeRight');
+    const hintEl   = document.getElementById('tabsHint');
+
+    // Leer el color de fondo real para el fade gradient
+    function syncFadeBg() {
+      const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0f172a';
+      fadeEl.style.background = `linear-gradient(to right, transparent, ${bg} 80%)`;
+    }
+    syncFadeBg();
+
+    function updateFade() {
+      const atEnd = tabsEl.scrollLeft + tabsEl.clientWidth >= tabsEl.scrollWidth - 4;
+      fadeEl.classList.toggle('hidden', atEnd);
+      // Ocultar hint tras primer scroll
+      if (tabsEl.scrollLeft > 10 && hintEl) hintEl.classList.add('hidden');
+    }
+
+    tabsEl.addEventListener('scroll', updateFade, { passive: true });
+    window.addEventListener('resize', updateFade);
+
+    // Solo mostrar hint en móvil
+    const isMobile = () => window.innerWidth < 768;
+    if (!isMobile() || tabsEl.scrollWidth <= tabsEl.clientWidth) {
+      if (hintEl) hintEl.classList.add('hidden');
+    }
+
+    // Ocultar hint automáticamente después de 4s
+    setTimeout(() => { if (hintEl) hintEl.classList.add('hidden'); }, 4000);
+
+    // También ocultar fade si no hay overflow
+    setTimeout(updateFade, 200);
+
+    // Re-sincronizar color al cambiar tema
+    document.getElementById('themeToggleBtn')?.addEventListener('click', () => {
+      setTimeout(syncFadeBg, 50);
+    });
   </script>
 </body>
 </html>
