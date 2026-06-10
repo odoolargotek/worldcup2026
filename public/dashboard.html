@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mis Comparsas — WC2026</title>
+  <title>Mis Grupos — WC2026</title>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-6W7JNJCG36"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -59,7 +59,7 @@
     <div class="navbar-brand">
       <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek" style="height:34px;object-fit:contain;cursor:pointer;flex-shrink:0" onclick="window.open('https://www.largotek.com','_blank')">
       <div>
-        <div style="font-weight:800">⚽ WC2026 — Mis Comparsas</div>
+        <div style="font-weight:800">⚽ WC2026 — Mis Grupos</div>
         <div class="navbar-powered">by Largotek</div>
       </div>
     </div>
@@ -81,19 +81,19 @@
 
   <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0" style="font-weight:800">🏆 Mis comparsas</h5>
+      <h5 class="mb-0" style="font-weight:800">🏆 Mis grupos</h5>
       <span id="userEmail" style="color:var(--text-muted);font-size:0.85rem"></span>
     </div>
     <ul class="nav" id="dashTabs">
-      <li class="nav-item"><button class="nav-link active" id="tab-comparsas-btn" onclick="switchDashTab('comparsas')">🏆 Comparsas</button></li>
+      <li class="nav-item"><button class="nav-link active" id="tab-comparsas-btn" onclick="switchDashTab('comparsas')">🏆 Grupos</button></li>
       <li class="nav-item" id="tv-nav-item"><button class="nav-link" id="tab-tv-btn" onclick="switchDashTab('tv')">📺 Ver en vivo</button></li>
     </ul>
 
-    <!-- TAB: Comparsas -->
+    <!-- TAB: Grupos -->
     <div id="tab-comparsas">
       <div id="nicknameBanner">
         <div class="nick-title">👤 ¡Pónle tu nombre o apodo!</div>
-        <div class="nick-sub">Apareces como "Sin nombre" en las comparsas. Escribe cómo quieres que te vean los demás.</div>
+        <div class="nick-sub">Apareces como "Sin nombre" en los grupos. Escribe cómo quieres que te vean los demás.</div>
         <div class="nick-row">
           <input type="text" id="nicknameInput" maxlength="30" placeholder="Tu apodo o nombre..." autocomplete="off" autocorrect="off" spellcheck="false">
           <button id="saveNicknameBtn">✅ Guardar</button>
@@ -101,15 +101,15 @@
         <div id="nicknameMsg"></div>
       </div>
       <div id="groupLoadingState">
-        <div class="loading-label"><span class="dot"></span><span class="dot"></span><span class="dot"></span>Cargando tus comparsas, espera un momento...</div>
+        <div class="loading-label"><span class="dot"></span><span class="dot"></span><span class="dot"></span>Cargando tus grupos, espera un momento...</div>
         <div class="skeleton-card"><div class="skeleton-line title"></div><div class="skeleton-line sub"></div><div class="skeleton-line badge"></div><div class="skeleton-line btn"></div></div>
         <div class="skeleton-card"><div class="skeleton-line title" style="width:45%"></div><div class="skeleton-line sub" style="width:30%"></div><div class="skeleton-line badge"></div><div class="skeleton-line btn"></div></div>
       </div>
       <div id="groupList" class="row g-3 mb-4" style="display:none"></div>
       <div class="row g-3">
         <div class="col-md-6"><div class="card p-4">
-          <h6 style="color:var(--primary-light);font-weight:700" class="mb-3">➕ Crear comparsa</h6>
-          <input type="text" id="newGroupName" class="form-control mb-2" placeholder="Nombre de la comparsa">
+          <h6 style="color:var(--primary-light);font-weight:700" class="mb-3">➕ Crear grupo</h6>
+          <input type="text" id="newGroupName" class="form-control mb-2" placeholder="Nombre del grupo">
           <select id="newGroupStage" class="form-select mb-2"><option value="">-- Etapa de inicio --</option><option value="Grupos">Fase de Grupos</option><option value="Octavos">Desde Octavos</option><option value="Cuartos">Desde Cuartos</option><option value="Semifinal">Desde Semifinal</option><option value="Final">Solo Final</option></select>
           <select id="newGroupCurrency" class="form-select mb-2"><option value="USD">💵 USD — Dólares americanos ($)</option><option value="BOB">🇧🇴 BOB — Bolivianos (Bs.)</option></select>
           <select id="newGroupType" class="form-select mb-2"><option value="open">🌐 Abierta — Pozo acumulable</option><option value="closed">🔒 Cerrada — Premio fijo</option></select>
@@ -128,18 +128,18 @@
             </div>
             <div id="distError" style="font-size:11px;color:var(--accent);margin-top:4px"></div>
           </div>
-          <button id="createGroupBtn" class="btn btn-success w-100 mt-1">⚽ Crear comparsa</button>
+          <button id="createGroupBtn" class="btn btn-success w-100 mt-1">⚽ Crear grupo</button>
           <div id="createMsg" class="mt-2"></div>
         </div></div>
         <div class="col-md-6"><div class="card p-4">
-          <h6 style="color:var(--gold);font-weight:700" class="mb-3">🔗 Unirse a comparsa</h6>
+          <h6 style="color:var(--gold);font-weight:700" class="mb-3">🔗 Unirse a un grupo</h6>
           <p style="font-size:0.83rem;color:var(--text-muted)">Pide el código de 6 letras al dueño e ingrésalo aquí.</p>
           <input type="text" id="joinCode" class="form-control mb-3" placeholder="Código (ej: AB3X7Z)" style="letter-spacing:3px;font-weight:700;text-transform:uppercase">
           <button id="joinGroupBtn" class="btn btn-warning w-100">🔗 Unirse</button>
           <div id="joinMsg" class="mt-2"></div>
         </div></div>
       </div>
-    </div><!-- /tab-comparsas -->
+    </div><!-- /tab-grupos -->
 
     <!-- TAB: Ver en vivo -->
     <div id="tab-tv" style="display:none">
@@ -178,11 +178,11 @@
     </div>
   </div>
 
-  <!-- OVERLAY ELIMINAR COMPARSA -->
+  <!-- OVERLAY ELIMINAR GRUPO -->
   <div id="deleteOverlay" class="native-overlay">
     <div class="ov-box" style="border-color:rgba(201,52,75,0.4)">
       <div class="ov-header" style="border-color:rgba(201,52,75,0.3);background:rgba(201,52,75,0.08)">
-        <h5 style="color:#f5a0ac;margin:0">🗑️ Eliminar comparsa</h5>
+        <h5 style="color:#f5a0ac;margin:0">🗑️ Eliminar grupo</h5>
         <button class="ov-close" id="closeDeleteOverlay">×</button>
       </div>
       <div class="ov-body">
@@ -194,7 +194,7 @@
             <li>No se puede recuperar después</li>
           </ul>
         </div>
-        <div style="margin-bottom:12px;font-size:0.9rem">Vas a eliminar la comparsa:<br><strong id="deleteGroupName" style="color:var(--gold);font-size:1rem"></strong></div>
+        <div style="margin-bottom:12px;font-size:0.9rem">Vas a eliminar el grupo:<br><strong id="deleteGroupName" style="color:var(--gold);font-size:1rem"></strong></div>
         <label style="font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;display:block">Para confirmar, escribe exactamente el nombre:</label>
         <input type="text" id="deleteConfirmInput" class="form-control" placeholder="Escribe el nombre aquí..." autocomplete="off" autocorrect="off" spellcheck="false">
       </div>
@@ -311,7 +311,6 @@
         : (time ? `<span class="tv-badge-upcoming">⏰ ${time}</span>` : '');
       const catBadge = category ? `<span class="tv-badge-cat">${category}</span>` : '';
 
-      // Un botón por canal, cada uno abre en nueva pestaña
       const buttons = streams.length
         ? streams.map((s, i) => {
             const label = (s.flag || '') + ' ' + (i === 0 ? '📺 Ver partido' : (s.language || s.streamId || 'Canal '+(i+1)));
