@@ -16,12 +16,55 @@ async function loadPerplexityData() {
   }
 }
 
+// Alias: cualquiera de estas variantes se normaliza al mismo valor canónico
+const TEAM_ALIASES = {
+  // Chequia / Rep. Checa / República Checa
+  'chequia':           'republica checa',
+  'rep checa':         'republica checa',
+  'rep. checa':        'republica checa',
+  'czech republic':    'republica checa',
+  'czechia':           'republica checa',
+  // EE.UU. / USA / Estados Unidos
+  'eeuu':              'eeuu',
+  'usa':               'eeuu',
+  'estados unidos':    'eeuu',
+  'united states':     'eeuu',
+  // Corea del Sur
+  'corea del sur':     'corea del sur',
+  'korea':             'corea del sur',
+  'south korea':       'corea del sur',
+  // Bosnia
+  'bosnia':            'bosnia herzegovina',
+  'bosnia-herzegovina':'bosnia herzegovina',
+  'bosnia y herzegovina':'bosnia herzegovina',
+  // Países Bajos
+  'paises bajos':      'paises bajos',
+  'holanda':           'paises bajos',
+  'netherlands':       'paises bajos',
+  // RD Congo
+  'rd congo':          'rd congo',
+  'republica democratica del congo': 'rd congo',
+  'dr congo':          'rd congo',
+  // Arabia Saudita
+  'arabia saudita':    'arabia saudita',
+  'arabia saudi':      'arabia saudita',
+  'saudi arabia':      'arabia saudita',
+  // Cabo Verde
+  'cabo verde':        'cabo verde',
+  'cape verde':        'cabo verde',
+  // Costa de Marfil
+  'costa de marfil':   'costa de marfil',
+  "cote d'ivoire":     'costa de marfil',
+  'ivory coast':       'costa de marfil',
+};
+
 function normalize(name) {
-  return (name || '')
+  const base = (name || '')
     .toLowerCase()
     .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9 ]/g, '')
     .trim();
+  return TEAM_ALIASES[base] ?? base;
 }
 
 export async function findPerplexitySuggestion(homeTeam, awayTeam) {
