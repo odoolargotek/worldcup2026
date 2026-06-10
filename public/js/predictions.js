@@ -5,6 +5,7 @@ import {
   doc, getDoc, setDoc
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 import { fmtLong } from './time.js';
+import { findPerplexitySuggestion, renderPerplexityButton } from './perplexity-suggest.js';
 
 const params   = new URLSearchParams(window.location.search);
 const MATCH_ID = params.get('mid');
@@ -28,7 +29,6 @@ onAuthStateChanged(auth, async (user) => {
   document.getElementById('awayFlag').textContent     = m.away_flag || '⚽';
   document.getElementById('homeName').textContent     = m.home_team;
   document.getElementById('awayName').textContent     = m.away_team;
-  // ⭐ Siempre en hora Bolivia
   document.getElementById('matchKickoff').textContent = fmtLong(kickoffDate);
   if (m.city) document.getElementById('matchCity').textContent = '📍 ' + m.city;
 
@@ -39,6 +39,11 @@ onAuthStateChanged(auth, async (user) => {
     lockForm('Este partido ya no acepta pronósticos.');
     return;
   }
+
+  // --- Sugerencia Perplexity ---
+  const suggestion = await findPerplexitySuggestion(m.home_team, m.away_team);
+  renderPerplexityButton(m.home_team, m.away_team, suggestion);
+  // -----------------------------
 
   const predId   = `${GROUP_ID}_${MATCH_ID}_${user.uid}`;
   const predSnap = await getDoc(doc(db, 'predictions', predId));
