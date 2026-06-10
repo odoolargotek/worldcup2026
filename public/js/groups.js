@@ -82,9 +82,7 @@ async function loadGroups(user) {
     // 2. Traer todos los grupos y conteos EN PARALELO
     const memberDocs = snap.docs;
     const [gSnaps, memberCountSnaps] = await Promise.all([
-      // Todos los documentos de grupo a la vez
       Promise.all(memberDocs.map(m => getDoc(doc(db, 'groups', m.data().group_id)))),
-      // Todos los conteos de miembros a la vez
       Promise.all(memberDocs.map(m =>
         getDocs(query(collection(db, 'group_members'), where('group_id', '==', m.data().group_id)))
       ))
@@ -109,6 +107,50 @@ async function loadGroups(user) {
   } finally {
     hideLoading();
   }
+}
+
+function buildPotBadge(g, memberCount, sym) {
+  // Grupos abiertos: pozo = fee × participantes
+  if (g.type !== 'closed' && g.fee && memberCount > 0) {
+    const pot = (g.fee * memberCount).toLocaleString('es', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    const dist = g.prize_pct || DIST_PRESETS[g.prize_distribution] || DIST_PRESETS.winner;
+    const p1   = Math.round((g.fee * memberCount) * dist.p1 / 100);
+    const p1Str = p1.toLocaleString('es', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    return `
+      <div style="
+        background:linear-gradient(135deg,rgba(52,211,153,0.10),rgba(29,144,198,0.08));
+        border:1px solid rgba(52,211,153,0.25);
+        border-radius:10px;padding:8px 12px;margin-top:8px;
+        display:flex;justify-content:space-between;align-items:center;gap:8px;
+        flex-wrap:wrap;
+      ">
+        <div>
+          <div style="font-size:9px;font-weight:700;color:#34d399;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px">💰 Pozo actual</div>
+          <div style="font-size:1.1rem;font-weight:800;color:#34d399;letter-spacing:1px">${sym}${pot}</div>
+        </div>
+        ${dist.p1 > 0 ? `<div style="text-align:right">
+          <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:1px">🥇 1° lugar</div>
+          <div style="font-size:0.9rem;font-weight:700;color:var(--gold)">${sym}${p1Str}</div>
+        </div>` : ''}
+      </div>`;
+  }
+  // Grupos cerrados con premio fijo
+  if (g.type === 'closed' && g.prize) {
+    const prizeStr = Number(g.prize).toLocaleString('es', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    return `
+      <div style="
+        background:linear-gradient(135deg,rgba(245,158,11,0.10),rgba(201,52,75,0.06));
+        border:1px solid rgba(245,158,11,0.25);
+        border-radius:10px;padding:8px 12px;margin-top:8px;
+        display:flex;align-items:center;gap:8px;
+      ">
+        <div>
+          <div style="font-size:9px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px">🏆 Premio fijo</div>
+          <div style="font-size:1.1rem;font-weight:800;color:#f59e0b;letter-spacing:1px">${sym}${prizeStr}</div>
+        </div>
+      </div>`;
+  }
+  return '';
 }
 
 function renderGroupCard(gSnap, memberData, container, user, memberCount) {
@@ -138,7 +180,6 @@ function renderGroupCard(gSnap, memberData, container, user, memberCount) {
     ? `<div style="font-size:12px;color:var(--primary-light);margin-top:4px">\u26bd ${memberData.favorite}</div>`
     : '<div style="font-size:12px;color:var(--accent);margin-top:4px">\u26a0 Sin favorito</div>';
 
-  const prizeText = g.prize ? `\ud83c\udfc6 ${sym}${g.prize}` : g.fee ? `\ud83d\udcb0 Cuota ${sym}${g.fee}` : '';
   const currencyBadge = g.currency
     ? `<span style="font-size:10px;padding:2px 6px;border-radius:20px;background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.25);margin-left:4px">${g.currency}</span>`
     : '';
@@ -152,6 +193,8 @@ function renderGroupCard(gSnap, memberData, container, user, memberCount) {
     \ud83d\udc65 ${memberCount}${maxLabel} participante${memberCount !== 1 ? 's' : ''}
   </span>`;
 
+  const potBadge = buildPotBadge(g, memberCount, sym);
+
   col.innerHTML = `
     <div class="group-card" style="cursor:default">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
@@ -160,8 +203,8 @@ function renderGroupCard(gSnap, memberData, container, user, memberCount) {
       </div>
       <div style="cursor:pointer" onclick="window.location='group.html?gid=${gid}'">
         <h6 style="margin-bottom:2px">${g.name}</h6>
-        <small style="color:var(--primary-light)">${prizeText}</small>
         <div style="margin-top:6px">${memberBadge}</div>
+        ${potBadge}
         ${fav}
         <div style="font-size:11px;color:var(--text-muted);margin-top:6px">C\u00f3digo: <strong style="color:var(--gold);letter-spacing:2px">${code}</strong></div>
       </div>
