@@ -69,36 +69,37 @@ async function loadGroups(user) {
   container.innerHTML = '';
 
   try {
-    // 1. Traer membresías del usuario
     const snap = await getDocs(
       query(collection(db, 'group_members'), where('user_uid', '==', user.uid))
     );
 
     if (snap.empty) {
-      container.innerHTML = '<div class="col-12"><p style="color:var(--text-muted)">\u00a1A\u00fan no perteneces a ninguna comparsa! Crea una o \u00fanete con un c\u00f3digo.</p></div>';
+      container.innerHTML = '<div class="col-12"><p style="color:var(--text-muted)">¡Aún no perteneces a ninguna comparsa! Crea una o únete con un código.</p></div>';
       return;
     }
 
-    // 2. Traer todos los grupos y conteos EN PARALELO
     const memberDocs = snap.docs;
-    const [gSnaps, memberCountSnaps] = await Promise.all([
+    // Traer grupos + todos los miembros de cada grupo EN PARALELO
+    const [gSnaps, memberListSnaps] = await Promise.all([
       Promise.all(memberDocs.map(m => getDoc(doc(db, 'groups', m.data().group_id)))),
       Promise.all(memberDocs.map(m =>
         getDocs(query(collection(db, 'group_members'), where('group_id', '==', m.data().group_id)))
       ))
     ]);
 
-    // 3. Renderizar
     let rendered = 0;
     memberDocs.forEach((memberDoc, i) => {
       const gSnap = gSnaps[i];
       if (!gSnap.exists()) return;
-      renderGroupCard(gSnap, memberDoc.data(), container, user, memberCountSnaps[i].size);
+      const allMembers  = memberListSnaps[i].docs.map(d => d.data());
+      const memberCount = allMembers.length;
+      const paidCount   = allMembers.filter(m => m.payment?.status === 'confirmed').length;
+      renderGroupCard(gSnap, memberDoc.data(), container, user, memberCount, paidCount);
       rendered++;
     });
 
     if (rendered === 0) {
-      container.innerHTML = '<div class="col-12"><p style="color:var(--text-muted)">\u00a1A\u00fan no perteneces a ninguna comparsa! Crea una o \u00fanete con un c\u00f3digo.</p></div>';
+      container.innerHTML = '<div class="col-12"><p style="color:var(--text-muted)">¡Aún no perteneces a ninguna comparsa! Crea una o únete con un código.</p></div>';
     }
 
   } catch (err) {
@@ -109,51 +110,86 @@ async function loadGroups(user) {
   }
 }
 
-function buildPotBadge(g, memberCount, sym) {
-  // Grupos abiertos: pozo = fee × participantes
-  if (g.type !== 'closed' && g.fee && memberCount > 0) {
-    const pot = (g.fee * memberCount).toLocaleString('es', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+function buildPotBadge(g, memberCount, paidCount, sym) {
+  const hasFee   = g.fee && memberCount > 0;
+  const hasPrize = g.type === 'closed' && g.prize;
+
+  // Badge de pagos confirmados
+  const showPayBadge = (hasFee || hasPrize) && memberCount > 0;
+  const allPaid   = paidCount === memberCount;
+  const payColor  = allPaid ? '#34d399' : paidCount > 0 ? '#f59e0b' : '#94a3b8';
+  const payBg     = allPaid ? 'rgba(52,211,153,0.12)' : paidCount > 0 ? 'rgba(245,158,11,0.10)' : 'rgba(148,163,184,0.07)';
+  const payBorder = allPaid ? 'rgba(52,211,153,0.3)'  : paidCount > 0 ? 'rgba(245,158,11,0.3)'  : 'rgba(148,163,184,0.2)';
+  const payIcon   = allPaid ? '✅' : '⏳';
+
+  const payBadgeHtml = showPayBadge ? `
+    <span style="
+      display:inline-flex;align-items:center;gap:4px;
+      font-size:11px;padding:2px 9px;border-radius:20px;
+      background:${payBg};color:${payColor};
+      border:1px solid ${payBorder};font-weight:700;
+      margin-left:6px;
+    ">${payIcon} ${paidCount}/${memberCount} pagado${memberCount !== 1 ? 's' : ''}</span>` : '';
+
+  // Grupos abiertos con cuota
+  if (hasFee && g.type !== 'closed') {
+    const confirmedPot = g.fee * paidCount;
+    const totalPot     = g.fee * memberCount;
+    const potStr  = totalPot.toLocaleString('es', { minimumFractionDigits:0, maximumFractionDigits:2 });
+    const confStr = confirmedPot.toLocaleString('es', { minimumFractionDigits:0, maximumFractionDigits:2 });
     const dist = g.prize_pct || DIST_PRESETS[g.prize_distribution] || DIST_PRESETS.winner;
-    const p1   = Math.round((g.fee * memberCount) * dist.p1 / 100);
-    const p1Str = p1.toLocaleString('es', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    const p1    = Math.round(totalPot * dist.p1 / 100);
+    const p1Str = p1.toLocaleString('es', { minimumFractionDigits:0, maximumFractionDigits:2 });
+
     return `
       <div style="
         background:linear-gradient(135deg,rgba(52,211,153,0.10),rgba(29,144,198,0.08));
         border:1px solid rgba(52,211,153,0.25);
         border-radius:10px;padding:8px 12px;margin-top:8px;
-        display:flex;justify-content:space-between;align-items:center;gap:8px;
-        flex-wrap:wrap;
       ">
-        <div>
-          <div style="font-size:9px;font-weight:700;color:#34d399;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px">💰 Pozo actual</div>
-          <div style="font-size:1.1rem;font-weight:800;color:#34d399;letter-spacing:1px">${sym}${pot}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+          <div>
+            <div style="font-size:9px;font-weight:700;color:#34d399;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px">💰 Pozo proyectado</div>
+            <div style="font-size:1.1rem;font-weight:800;color:#34d399;letter-spacing:1px">${sym}${potStr}</div>
+          </div>
+          ${dist.p1 > 0 ? `<div style="text-align:right">
+            <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:1px">🥇 1° lugar</div>
+            <div style="font-size:0.9rem;font-weight:700;color:var(--gold)">${sym}${p1Str}</div>
+          </div>` : ''}
         </div>
-        ${dist.p1 > 0 ? `<div style="text-align:right">
-          <div style="font-size:9px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:1px">🥇 1° lugar</div>
-          <div style="font-size:0.9rem;font-weight:700;color:var(--gold)">${sym}${p1Str}</div>
-        </div>` : ''}
+        <div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(52,211,153,0.12);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px">
+          <div style="font-size:11px;color:var(--text-muted)">
+            Recaudado: <strong style="color:#34d399">${sym}${confStr}</strong>
+            <span style="color:var(--text-muted)"> de ${sym}${potStr}</span>
+          </div>
+          ${payBadgeHtml}
+        </div>
       </div>`;
   }
+
   // Grupos cerrados con premio fijo
-  if (g.type === 'closed' && g.prize) {
-    const prizeStr = Number(g.prize).toLocaleString('es', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+  if (hasPrize) {
+    const prizeStr = Number(g.prize).toLocaleString('es', { minimumFractionDigits:0, maximumFractionDigits:2 });
     return `
       <div style="
         background:linear-gradient(135deg,rgba(245,158,11,0.10),rgba(201,52,75,0.06));
         border:1px solid rgba(245,158,11,0.25);
         border-radius:10px;padding:8px 12px;margin-top:8px;
-        display:flex;align-items:center;gap:8px;
       ">
-        <div>
-          <div style="font-size:9px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px">🏆 Premio fijo</div>
-          <div style="font-size:1.1rem;font-weight:800;color:#f59e0b;letter-spacing:1px">${sym}${prizeStr}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
+          <div>
+            <div style="font-size:9px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:1px;margin-bottom:1px">🏆 Premio fijo</div>
+            <div style="font-size:1.1rem;font-weight:800;color:#f59e0b;letter-spacing:1px">${sym}${prizeStr}</div>
+          </div>
+          ${payBadgeHtml}
         </div>
       </div>`;
   }
-  return '';
+
+  return payBadgeHtml ? `<div style="margin-top:6px">${payBadgeHtml}</div>` : '';
 }
 
-function renderGroupCard(gSnap, memberData, container, user, memberCount) {
+function renderGroupCard(gSnap, memberData, container, user, memberCount, paidCount) {
   const g    = gSnap.data();
   const gid  = gSnap.id;
   const code = g.code || '';
@@ -161,12 +197,12 @@ function renderGroupCard(gSnap, memberData, container, user, memberCount) {
   const isAdmin = (memberData.role === 'admin') || (g.owner_uid === user.uid);
 
   const typeBadge = g.type === 'closed'
-    ? `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(201,52,75,0.15);color:#f5a0ac;border:1px solid rgba(201,52,75,0.3)">${g.is_open === false ? '\ud83d\udd34 Cerrada' : '\ud83d\udd12 Cupo lim.'}</span>`
-    : `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(29,144,198,0.15);color:#4aafd4;border:1px solid rgba(29,144,198,0.3)">\ud83c\udf10 Abierta</span>`;
+    ? `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(201,52,75,0.15);color:#f5a0ac;border:1px solid rgba(201,52,75,0.3)">${g.is_open === false ? '🔴 Cerrada' : '🔒 Cupo lim.'}</span>`
+    : `<span style="font-size:10px;padding:2px 7px;border-radius:20px;background:rgba(29,144,198,0.15);color:#4aafd4;border:1px solid rgba(29,144,198,0.3)">🌐 Abierta</span>`;
 
   const appUrl    = `${location.origin}/dashboard.html?join=${code}`;
   const waMessage = encodeURIComponent(
-    `\u26bd \u00a1\u00danete a mi comparsa del Mundial 2026! \ud83c\udfc6\n*${g.name}*\n\nEntra aqu\u00ed y usa el c\u00f3digo *${code}*:\n${appUrl}\n\n_Polla Mundialera WC2026 by Largotek_`
+    `⚽ ¡Únete a mi comparsa del Mundial 2026! 🏆\n*${g.name}*\n\nEntra aquí y usa el código *${code}*:\n${appUrl}\n\n_Polla Mundialera WC2026 by Largotek_`
   );
   const waLink = `https://wa.me/?text=${waMessage}`;
 
@@ -177,8 +213,8 @@ function renderGroupCard(gSnap, memberData, container, user, memberCount) {
     ? `<div style="font-size:11px;color:var(--gold);margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">${g.stage}</div>`
     : '';
   const fav = memberData.favorite
-    ? `<div style="font-size:12px;color:var(--primary-light);margin-top:4px">\u26bd ${memberData.favorite}</div>`
-    : '<div style="font-size:12px;color:var(--accent);margin-top:4px">\u26a0 Sin favorito</div>';
+    ? `<div style="font-size:12px;color:var(--primary-light);margin-top:4px">⚽ ${memberData.favorite}</div>`
+    : '<div style="font-size:12px;color:var(--accent);margin-top:4px">⚠ Sin favorito</div>';
 
   const currencyBadge = g.currency
     ? `<span style="font-size:10px;padding:2px 6px;border-radius:20px;background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.25);margin-left:4px">${g.currency}</span>`
@@ -190,10 +226,10 @@ function renderGroupCard(gSnap, memberData, container, user, memberCount) {
   const memberBadge = `<span style="font-size:11px;padding:2px 8px;border-radius:20px;
     background:rgba(52,211,153,0.1);color:${membColor};
     border:1px solid rgba(52,211,153,0.25);display:inline-flex;align-items:center;gap:3px">
-    \ud83d\udc65 ${memberCount}${maxLabel} participante${memberCount !== 1 ? 's' : ''}
+    👥 ${memberCount}${maxLabel} participante${memberCount !== 1 ? 's' : ''}
   </span>`;
 
-  const potBadge = buildPotBadge(g, memberCount, sym);
+  const potBadge = buildPotBadge(g, memberCount, paidCount, sym);
 
   col.innerHTML = `
     <div class="group-card" style="cursor:default">
@@ -206,24 +242,24 @@ function renderGroupCard(gSnap, memberData, container, user, memberCount) {
         <div style="margin-top:6px">${memberBadge}</div>
         ${potBadge}
         ${fav}
-        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">C\u00f3digo: <strong style="color:var(--gold);letter-spacing:2px">${code}</strong></div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Código: <strong style="color:var(--gold);letter-spacing:2px">${code}</strong></div>
       </div>
       <div style="display:flex;gap:8px;margin-top:12px">
         <button class="btn btn-success btn-sm" style="flex:1;font-size:12px;font-weight:700"
-          onclick="event.stopPropagation();window.location='group.html?gid=${gid}'">\ud83c\udfc6 Ver</button>
+          onclick="event.stopPropagation();window.location='group.html?gid=${gid}'">🏆 Ver</button>
         <a href="${waLink}" target="_blank" rel="noopener"
           class="btn btn-sm"
           style="flex:1;font-size:12px;font-weight:700;background:#1D90C6;color:#fff;border:none;border-radius:8px">
-          \ud83d\udce4 Invitar</a>
+          📤 Invitar</a>
         <button class="btn btn-outline-light btn-sm" style="font-size:12px;padding:4px 10px"
-          onclick="event.stopPropagation();copyInviteLink('${appUrl}',this)" title="Copiar link">\ud83d\udccb</button>
+          onclick="event.stopPropagation();copyInviteLink('${appUrl}',this)" title="Copiar link">📋</button>
       </div>
       ${isAdmin ? `
       <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(201,52,75,0.15)">
         <button class="del-btn" style="width:100%;padding:7px 12px;font-size:12px;font-weight:600;
           background:rgba(201,52,75,0.1);color:#f5a0ac;border:1px solid rgba(201,52,75,0.35);
           border-radius:8px;cursor:pointer">
-          \ud83d\uddd1\ufe0f Eliminar comparsa
+          🗑️ Eliminar comparsa
         </button>
       </div>` : ''}
     </div>`;
@@ -240,7 +276,7 @@ function renderGroupCard(gSnap, memberData, container, user, memberCount) {
 window.copyInviteLink = function(url, btn) {
   navigator.clipboard.writeText(url).then(() => {
     const orig = btn.textContent;
-    btn.textContent = '\u2705';
+    btn.textContent = '✅';
     btn.style.color = '#4aafd4';
     setTimeout(() => { btn.textContent = orig; btn.style = ''; }, 2000);
   });
@@ -272,7 +308,7 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
     const p2 = parseInt(document.getElementById('distP2').value) || 0;
     const p3 = parseInt(document.getElementById('distP3').value) || 0;
     if (p1 + p2 + p3 !== 100) {
-      document.getElementById('distError').textContent = '\u26a0\ufe0f Los porcentajes deben sumar 100%';
+      document.getElementById('distError').textContent = '⚠️ Los porcentajes deben sumar 100%';
       return;
     }
     document.getElementById('distError').textContent = '';
@@ -306,13 +342,13 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
     document.getElementById('openFields').classList.remove('d-none');
     document.getElementById('closedFields').classList.add('d-none');
     document.getElementById('customDistFields').classList.add('d-none');
-    showMsg('createMsg', '\u2705 \u00a1Comparsa creada!', 'success');
+    showMsg('createMsg', '✅ ¡Comparsa creada!', 'success');
     openFavoriteOverlay();
   } catch(err) {
-    showMsg('createMsg', '\u274c Error: ' + err.message, 'danger');
+    showMsg('createMsg', '❌ Error: ' + err.message, 'danger');
   } finally {
     btn.disabled = false;
-    btn.textContent = '\u26bd Crear comparsa';
+    btn.textContent = '⚽ Crear comparsa';
   }
 });
 
@@ -324,20 +360,20 @@ document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
 
   const q    = query(collection(db, 'groups'), where('code', '==', code));
   const snap = await getDocs(q);
-  if (snap.empty) { showMsg('joinMsg', '\u274c C\u00f3digo no encontrado.', 'danger'); return; }
+  if (snap.empty) { showMsg('joinMsg', '❌ Código no encontrado.', 'danger'); return; }
 
   const gSnap = snap.docs[0];
   const g     = gSnap.data();
-  if (g.is_open === false) { showMsg('joinMsg', '\ud83d\udd34 Esta comparsa ya est\u00e1 cerrada.', 'danger'); return; }
+  if (g.is_open === false) { showMsg('joinMsg', '🔴 Esta comparsa ya está cerrada.', 'danger'); return; }
 
   const memberId = `${gSnap.id}_${user.uid}`;
   const existing = await getDoc(doc(db, 'group_members', memberId));
-  if (existing.exists()) { showMsg('joinMsg', '\u26a0\ufe0f Ya eres miembro de esta comparsa.', 'warning'); return; }
+  if (existing.exists()) { showMsg('joinMsg', '⚠️ Ya eres miembro de esta comparsa.', 'warning'); return; }
 
   if (g.type === 'closed' && g.max_members) {
     const membersSnap = await getDocs(query(collection(db, 'group_members'), where('group_id', '==', gSnap.id)));
     if (membersSnap.size >= g.max_members) {
-      showMsg('joinMsg', `\ud83d\udd34 La comparsa est\u00e1 llena (m\u00e1x. ${g.max_members}).`, 'danger');
+      showMsg('joinMsg', `🔴 La comparsa está llena (máx. ${g.max_members}).`, 'danger');
       return;
     }
   }
@@ -349,7 +385,7 @@ document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
   pendingGroupId = gSnap.id;
   document.getElementById('joinCode').value = '';
   window.history.replaceState({}, '', location.pathname);
-  showMsg('joinMsg', '\u2705 \u00a1Te uniste!', 'success');
+  showMsg('joinMsg', '✅ ¡Te uniste!', 'success');
   openFavoriteOverlay();
 });
 
@@ -370,7 +406,7 @@ function renderTeams(filter, grid) {
   TEAMS.filter(t => t.toLowerCase().includes(filter.toLowerCase())).forEach(team => {
     const div = document.createElement('div');
     div.className = 'col-6';
-    div.innerHTML = `<button class="btn w-100 team-btn" style="background:var(--bg-card2);color:var(--text);border:1px solid var(--border);font-size:0.85rem;padding:8px 4px">\u26bd ${team}</button>`;
+    div.innerHTML = `<button class="btn w-100 team-btn" style="background:var(--bg-card2);color:var(--text);border:1px solid var(--border);font-size:0.85rem;padding:8px 4px">⚽ ${team}</button>`;
     div.querySelector('button').addEventListener('click', () => {
       grid.querySelectorAll('.team-btn').forEach(b => {
         b.style.cssText = 'background:var(--bg-card2);color:var(--text);border:1px solid var(--border);font-size:0.85rem;padding:8px 4px';
@@ -405,7 +441,7 @@ function setupFavoriteOverlay(user) {
       await loadGroups(user);
     } catch(e) {
       saveBtn.disabled = false;
-      saveBtn.textContent = '\u2705 Confirmar favorito';
+      saveBtn.textContent = '✅ Confirmar favorito';
     }
   });
   skipBtn?.addEventListener('click', async () => {
@@ -447,14 +483,14 @@ function setupDeleteOverlay(user) {
       if (!err.message?.includes('permission')) {
         alert('Error: ' + err.message);
         btn.disabled = false;
-        btn.textContent = '\ud83d\uddd1\ufe0f S\u00ed, eliminar definitivamente';
+        btn.textContent = '🗑️ Sí, eliminar definitivamente';
         return;
       }
     }
     hideOverlay('deleteOverlay');
     _deleteGid = null;
     await loadGroups(_deleteUser);
-    btn.textContent = '\ud83d\uddd1\ufe0f S\u00ed, eliminar definitivamente';
+    btn.textContent = '🗑️ Sí, eliminar definitivamente';
   });
 }
 
