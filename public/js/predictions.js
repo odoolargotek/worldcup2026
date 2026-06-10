@@ -34,16 +34,16 @@ onAuthStateChanged(auth, async (user) => {
 
   startCountdown(kickoffDate);
 
-  const now = new Date();
-  if (kickoffDate <= now || m.home_score !== undefined) {
-    lockForm('Este partido ya no acepta pronósticos.');
-    return;
-  }
-
-  // --- Sugerencia Perplexity ---
+  // --- Sugerencia Perplexity --- SIEMPRE se carga, antes de cualquier lockForm
   const suggestion = await findPerplexitySuggestion(m.home_team, m.away_team);
   renderPerplexityButton(m.home_team, m.away_team, suggestion);
   // -----------------------------
+
+  const now = new Date();
+  if (kickoffDate <= now || (m.home_score !== undefined && m.home_score !== null)) {
+    lockForm('Este partido ya no acepta pronósticos.');
+    return;
+  }
 
   const predId   = `${GROUP_ID}_${MATCH_ID}_${user.uid}`;
   const predSnap = await getDoc(doc(db, 'predictions', predId));
