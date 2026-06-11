@@ -11,7 +11,7 @@ document.querySelectorAll('[data-atab]').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('[data-atab]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    ['results','matches','groupsmgr','tvaccess'].forEach(t => {
+    ['overview','results','matches','groupsmgr','tvaccess'].forEach(t => {
       document.getElementById(`atab-${t}`)?.classList.toggle('d-none', btn.dataset.atab !== t);
     });
     if (btn.dataset.atab === 'matches')   loadAllMatchesList();
@@ -163,7 +163,6 @@ async function loadAllMatchesList() {
       day:'2-digit', month:'short',
       hour:'numeric', minute:'2-digit', hour12: true
     });
-    // Escapar comillas simples en el label para evitar romper el onclick
     const safeLabel = (m.home_team + ' vs ' + m.away_team).replace(/'/g, "\\'");
     html += `
       <div id="matchrow-${d.id}" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">
@@ -178,7 +177,6 @@ async function loadAllMatchesList() {
   });
   container.innerHTML = html;
 
-  // Asignar eventos con addEventListener (evita problemas con onclick en módulos ES)
   container.querySelectorAll('button[data-mid]').forEach(btn => {
     btn.addEventListener('click', async () => {
       const mid   = btn.dataset.mid;
@@ -189,19 +187,14 @@ async function loadAllMatchesList() {
       btn.textContent = '⏳';
 
       try {
-        // Borrar pronósticos uno a uno (evita límite de batch)
         const predsSnap = await getDocs(
           query(collection(db, 'predictions'), where('match_id', '==', mid))
         );
         for (const p of predsSnap.docs) {
           await deleteDoc(p.ref);
         }
-        // Borrar el partido
         await deleteDoc(doc(db, 'matches', mid));
-
-        // Quitar la fila del DOM inmediatamente
         document.getElementById(`matchrow-${mid}`)?.remove();
-
         await loadMatchesAdmin();
         await loadMatchesDone();
       } catch (err) {
@@ -236,7 +229,7 @@ document.getElementById('addMatchBtn')?.addEventListener('click', async () => {
 });
 
 // =============================================
-// BORRAR TODOS — loop individual (evita limite batch)
+// BORRAR TODOS
 // =============================================
 document.getElementById('deleteAllMatchesBtn')?.addEventListener('click', async () => {
   if (!confirm('⚠️ ¿Borrar TODOS los partidos y sus pronósticos? Esta acción es irreversible.')) return;
@@ -349,7 +342,6 @@ async function loadGroupsMgr() {
     container.appendChild(row);
   });
 
-  // Eventos para eliminar comparsa
   container.querySelectorAll('button[data-gid]').forEach(btn => {
     btn.addEventListener('click', () => {
       _deleteGroupId = btn.dataset.gid;
