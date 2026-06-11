@@ -35,7 +35,6 @@ onAuthStateChanged(auth, async (user) => {
 // ── Helpers de fecha ────────────────────────────────────────────────────────
 
 function toLocalDateKey(date) {
-  // Retorna 'YYYY-MM-DD' en zona Bolivia
   return date.toLocaleDateString('en-CA', { timeZone: TZ });
 }
 
@@ -50,7 +49,6 @@ function dateLabel(key) {
   const mk = tomorrowKey();
   if (key === tk) return { text: 'Hoy', color: '#34d399', emoji: '📅' };
   if (key === mk) return { text: 'Mañana', color: '#4aafd4', emoji: '📅' };
-  // Ej: "mar, 11 jun"
   const [y, m, d] = key.split('-').map(Number);
   const dateObj = new Date(y, m - 1, d, 12);
   const label   = dateObj.toLocaleDateString('es-BO', { weekday:'short', day:'2-digit', month:'short' });
@@ -59,12 +57,17 @@ function dateLabel(key) {
 
 // ── Badge de urgencia ────────────────────────────────────────────────────────
 
-function deadlineBadge(kickoff, isDone, hasMyPred) {
-  if (isDone) return '';
+function deadlineBadge(kickoff, isFinal, hasScore, hasMyPred) {
+  if (isFinal) return '';
   const now      = new Date();
   const diffMs   = kickoff - now;
   const diffHrs  = diffMs / 36e5;
   const diffMins = diffMs / 60000;
+
+  // Partido en curso (kickoff pasó pero no cerrado aún)
+  if (diffMs <= 0 && hasScore && !isFinal) {
+    return `<span style="background:rgba(239,68,68,0.25);color:#fca5a5;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;animation:pulse 1s infinite">🔴 EN VIVO</span>`;
+  }
 
   if (diffMs <= 0) {
     return `<span style="background:rgba(100,100,100,0.3);color:#94a3b8;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap">🔒 Cerrado</span>`;
@@ -97,7 +100,6 @@ function renderMatches(snap) {
   if (!container) return;
   const now = new Date();
 
-  // Agrupar por fecha local (Bolivia)
   const byDate = {};
   snap.forEach(d => {
     const m       = d.data();
@@ -117,14 +119,13 @@ function renderMatches(snap) {
     const lbl     = dateLabel(key);
     const isToday = key === tk;
 
-    // Contador de pronósticos pendientes en esta fecha
+    // isDone = tiene score Y está cerrado (finished: true)
     const open    = matches.filter(m => {
-      const isDone = m.home_score !== undefined && m.home_score !== null;
-      return !isDone && m._kickoff > now;
+      const isFinal = m.finished === true;
+      return !isFinal && m._kickoff > now;
     });
     const pending = open.filter(m => !myPreds[m.id]).length;
 
-    // Chip de alertas solo si hay partidos abiertos sin pronosticar
     let alertChip = '';
     if (isToday && pending > 0) {
       alertChip = `<span style="background:rgba(239,68,68,0.2);color:#fca5a5;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;margin-left:8px">⚠️ ${pending} sin pronosticar</span>`;
@@ -132,7 +133,6 @@ function renderMatches(snap) {
       alertChip = `<span style="background:rgba(34,197,94,0.15);color:#34d399;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;margin-left:8px">✅ Todo pronosticado</span>`;
     }
 
-    // Encabezado de fecha
     const header = document.createElement('div');
     header.className = 'mb-2 mt-4';
     header.innerHTML = `
@@ -151,34 +151,48 @@ function renderMatches(snap) {
       </div>`;
     container.appendChild(header);
 
-    // Cards de partidos
     matches.forEach(m => {
-      const kickoff = m._kickoff;
-      const isDone  = m.home_score !== undefined && m.home_score !== null;
-      const isOpen  = !isDone && kickoff > now;
-      const myPred  = myPreds[m.id];
-      const badge   = deadlineBadge(kickoff, isDone, !!myPred);
+      const kickoff  = m._kickoff;
+      // isFinal: partido cerrado definitivamente
+      const isFinal  = m.finished === true;
+      // hasScore: tiene marcador cargado (parcial o final)
+      const hasScore = m.home_score !== undefined && m.home_score !== null;
+      // isLive: kickoff pasó, tiene score pero no está cerrado
+      const isLive   = !isFinal && hasScore && kickoff <= now;
+      // isOpen: aún puede pronosticarse
+      const isOpen   = !isFinal && !hasScore && kickoff > now;
 
-      // Chip de grupo (pequeño, para no perder el contexto)
+      const myPred  = myPreds[m.id];
+      const badge   = deadlineBadge(kickoff, isFinal, hasScore, !!myPred);
+
       const phaseChip = m.phase
         ? `<span style="background:rgba(245,158,11,0.12);color:var(--gold);font-size:9px;font-weight:700;padding:1px 7px;border-radius:20px;letter-spacing:1px">${m.phase}</span>`
         : '';
 
+      // FIX: usa pred_home / pred_away (no home_score / away_score)
       let predBadge = '';
       if (myPred) {
         const pts = myPred.points !== undefined
           ? `<span style="color:var(--gold);font-weight:700"> +${myPred.points}pts</span>` : '';
-        predBadge = `<div style="font-size:12px;color:var(--text-muted);margin-top:5px">🔮 <strong style="color:var(--text)">${myPred.home_score} - ${myPred.away_score}</strong>${pts}</div>`;
+        predBadge = `<div style="font-size:12px;color:var(--text-muted);margin-top:5px">🔮 <strong style="color:var(--text)">${myPred.pred_home} - ${myPred.pred_away}</strong>${pts}</div>`;
       } else if (isOpen) {
         predBadge = `<div style="font-size:11px;color:var(--text-muted);margin-top:5px;font-style:italic">Sin pronóstico aún</div>`;
       }
 
       let actionArea = '';
-      if (isDone) {
+      if (isFinal) {
+        // Partido cerrado: muestra score final
         actionArea = `
           <div style="text-align:center;min-width:64px">
             <div style="font-size:1.6rem;font-weight:800;color:var(--gold);line-height:1">${m.home_score} - ${m.away_score}</div>
             <div style="font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-top:2px">FINAL</div>
+          </div>`;
+      } else if (isLive) {
+        // Partido en curso: muestra score con badge EN VIVO
+        actionArea = `
+          <div style="text-align:center;min-width:64px">
+            <div style="font-size:1.6rem;font-weight:800;color:#34d399;line-height:1">${m.home_score} - ${m.away_score}</div>
+            <div style="font-size:9px;color:#34d399;letter-spacing:1px;margin-top:2px;animation:pulse 1s infinite">EN VIVO</div>
           </div>`;
       } else if (isOpen) {
         actionArea = `<a class="btn btn-sm px-3" href="predict.html?gid=${GROUP_ID}&mid=${m.id}"
@@ -190,7 +204,7 @@ function renderMatches(snap) {
         actionArea = `<span style="font-size:11px;color:var(--text-muted);white-space:nowrap">🔒</span>`;
       }
 
-      const borderColor = isDone ? 'var(--gold)' : isOpen ? 'var(--green-light)' : '#475569';
+      const borderColor = isFinal ? 'var(--gold)' : isLive ? '#34d399' : isOpen ? 'var(--green-light)' : '#475569';
 
       const card = document.createElement('div');
       card.className = 'mb-2';
@@ -208,15 +222,4 @@ function renderMatches(snap) {
               ${phaseChip ? `<div style="margin-top:5px">${phaseChip}</div>` : ''}
               ${predBadge}
             </div>
-            <div style="display:flex;flex-direction:column;align-items:center;gap:4px;width:64px">
-              <span style="font-size:2.2rem;line-height:1">${m.away_flag || '⚽'}</span>
-              <span style="font-size:0.78rem;color:var(--text);font-weight:600;text-align:center;line-height:1.2">${m.away_team}</span>
-            </div>
-            <div style="min-width:72px;text-align:right">${actionArea}</div>
-          </div>
-          ${badge ? `<div style="margin-top:8px;text-align:center">${badge}</div>` : ''}
-        </div>`;
-      container.appendChild(card);
-    });
-  });
-}
+            <div style=
