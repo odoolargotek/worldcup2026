@@ -157,35 +157,61 @@ async function loadAllMatchesList() {
   snap.docs.forEach(d => {
     const m = d.data();
     const kickoff = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
-    const isDone  = m.home_score !== undefined;
+    const isDone  = m.home_score !== undefined && m.home_score !== null;
     const label   = kickoff.toLocaleString('es-BO', {
       timeZone: 'America/La_Paz',
       day:'2-digit', month:'short',
       hour:'numeric', minute:'2-digit', hour12: true
     });
+    // Escapar comillas simples en el label para evitar romper el onclick
+    const safeLabel = (m.home_team + ' vs ' + m.away_team).replace(/'/g, "\\'");
     html += `
-      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">
+      <div id="matchrow-${d.id}" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">
         <span style="font-size:1.2rem">${m.home_flag||'⚽'}</span>
         <span style="flex:1;font-size:0.85rem;font-weight:600">${m.home_team} vs ${m.away_team} ${m.away_flag||''}</span>
         <span style="font-size:0.78rem;color:var(--text-muted)">${m.phase}</span>
         <span style="font-size:0.78rem;color:var(--gold)">${label}</span>
         ${isDone ? `<span style="font-size:0.78rem;color:var(--green-light);font-weight:700">${m.home_score}-${m.away_score}</span>` : '<span style="font-size:0.78rem;color:var(--text-muted)">Pendiente</span>'}
-        <button class="btn btn-sm btn-outline-danger" style="font-size:11px;padding:2px 10px" onclick="deleteMatchConfirm('${d.id}','${m.home_team} vs ${m.away_team}',${isDone})">🗑️</button>
+        <button class="btn btn-sm btn-outline-danger" style="font-size:11px;padding:2px 10px"
+          data-mid="${d.id}" data-label="${safeLabel}">🗑️</button>
       </div>`;
   });
   container.innerHTML = html;
-}
 
-window.deleteMatchConfirm = async function(mid, label, isDone) {
-  const warn = isDone ? ' (tiene resultado cargado)' : '';
-  if (!confirm(`¿Eliminar partido "${label}"${warn}? Se borrarán sus pronósticos.`)) return;
-  const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id','==',mid)));
-  const batch = writeBatch(db);
-  predsSnap.forEach(d => batch.delete(d.ref));
-  batch.delete(doc(db, 'matches', mid));
-  await batch.commit();
-  await loadAllMatchesList();
-};
+  // Asignar eventos con addEventListener (evita problemas con onclick en módulos ES)
+  container.querySelectorAll('button[data-mid]').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const mid   = btn.dataset.mid;
+      const label = btn.dataset.label;
+      if (!confirm(`¿Eliminar partido "${label}"? Se borrarán sus pronósticos.`)) return;
+
+      btn.disabled = true;
+      btn.textContent = '⏳';
+
+      try {
+        // Borrar pronósticos uno a uno (evita límite de batch)
+        const predsSnap = await getDocs(
+          query(collection(db, 'predictions'), where('match_id', '==', mid))
+        );
+        for (const p of predsSnap.docs) {
+          await deleteDoc(p.ref);
+        }
+        // Borrar el partido
+        await deleteDoc(doc(db, 'matches', mid));
+
+        // Quitar la fila del DOM inmediatamente
+        document.getElementById(`matchrow-${mid}`)?.remove();
+
+        await loadMatchesAdmin();
+        await loadMatchesDone();
+      } catch (err) {
+        alert('❌ Error al eliminar: ' + err.message);
+        btn.disabled = false;
+        btn.textContent = '🗑️';
+      }
+    });
+  });
+}
 
 document.getElementById('addMatchBtn')?.addEventListener('click', async () => {
   const home    = document.getElementById('newHomeTeam').value.trim();
@@ -238,8 +264,7 @@ document.getElementById('deleteAllMatchesBtn')?.addEventListener('click', async 
 
   btn.disabled = false;
   btn.textContent = '🗑️ Borrar todos los partidos';
-  list.innerHTML = `<p style="color:var(--green-light)">✅ ${total} partidos eliminados. 
-    <a href="load-matches.html" style="color:var(--gold)">Ir a cargar partidos →</a></p>`;
+  list.innerHTML = `<p style="color:var(--green-light)">✅ ${total} partidos eliminados.</p>`;
   await loadMatchesAdmin();
   await loadMatchesDone();
 });
@@ -318,23 +343,26 @@ async function loadGroupsMgr() {
             ${created ? `&nbsp;·&nbsp; 📅 ${created.toLocaleDateString('es-BO')}` : ''}
           </div>
         </div>
-        <button class="btn btn-sm btn-outline-danger" style="font-size:11px;white-space:nowrap" 
-          onclick="deleteGroupConfirm('${gid}','${g.name.replace(/'/g,"\\'")}')">&#x1F5D1; Eliminar</button>
+        <button class="btn btn-sm btn-outline-danger" style="font-size:11px;white-space:nowrap"
+          data-gid="${gid}" data-gname="${g.name.replace(/"/g,'&quot;')}">&#x1F5D1; Eliminar</button>
       </div>`;
     container.appendChild(row);
+  });
+
+  // Eventos para eliminar comparsa
+  container.querySelectorAll('button[data-gid]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      _deleteGroupId = btn.dataset.gid;
+      document.getElementById('confirmDeleteMsg').textContent =
+        `¿Eliminar la comparsa "${btn.dataset.gname}" con todos sus miembros y pronósticos?`;
+      if (!_deleteModal) _deleteModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
+      _deleteModal.show();
+    });
   });
 }
 
 let _deleteGroupId = null;
 let _deleteModal   = null;
-
-window.deleteGroupConfirm = function(gid, name) {
-  _deleteGroupId = gid;
-  document.getElementById('confirmDeleteMsg').textContent =
-    `¿Eliminar la comparsa "${name}" con todos sus miembros y pronósticos?`;
-  if (!_deleteModal) _deleteModal = new bootstrap.Modal(document.getElementById('confirmDeleteModal'));
-  _deleteModal.show();
-};
 
 document.getElementById('confirmDeleteBtn')?.addEventListener('click', async () => {
   if (!_deleteGroupId) return;
