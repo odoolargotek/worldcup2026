@@ -116,26 +116,42 @@
         </div>
       </div>
 
-      <div class="row g-4">
+      <!-- FILA 1: Cargar + Cerrar -->
+      <div class="row g-4 mb-4">
         <div class="col-md-6">
           <div class="card p-4">
-            <h6 style="color:var(--gold);font-weight:700" class="mb-3">🏆 Cargar Resultado</h6>
-            <label class="form-label">Partido pendiente</label>
+            <h6 style="color:var(--gold);font-weight:700" class="mb-3">📝 Cargar / Actualizar Marcador</h6>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px">Guarda el marcador parcial o final. El partido <strong style="color:#4aafd4">NO se cierra</strong> hasta que uses el botón de abajo.</p>
+            <label class="form-label">Partido abierto (con o sin score)</label>
             <select id="matchSelect" class="form-select mb-3"></select>
             <div class="d-flex gap-3 mb-3">
               <div><label class="form-label">Goles Local</label><input type="number" id="resultHome" min="0" class="form-control score-input"></div>
               <div class="d-flex align-items-end pb-2" style="color:var(--text-muted);font-size:1.5rem">–</div>
               <div><label class="form-label">Goles Visita</label><input type="number" id="resultAway" min="0" class="form-control score-input"></div>
             </div>
-            <button id="saveResultBtn" class="btn btn-warning w-100">✅ Guardar y calcular puntos</button>
+            <button id="saveResultBtn" class="btn btn-warning w-100">💾 Guardar marcador (sin cerrar)</button>
             <div id="adminMsg" class="mt-3"></div>
           </div>
         </div>
         <div class="col-md-6">
+          <div class="card p-4" style="border-color:rgba(52,211,153,0.35);background:rgba(52,211,153,0.04)">
+            <h6 style="color:#34d399;font-weight:700" class="mb-3">🏁 Cerrar partido como FINAL</h6>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px">Solo cierra partidos que ya tienen marcador cargado. Esto calcula favoritos y lo marca como terminado.</p>
+            <label class="form-label">Partido con score listo para cerrar</label>
+            <select id="matchSelectClose" class="form-select mb-3"></select>
+            <button id="closeMatchBtn" class="btn w-100" style="background:linear-gradient(135deg,#059669,#34d399);color:#fff;font-weight:700">🏁 Cerrar partido definitivamente</button>
+            <div id="closeMatchMsg" class="mt-3"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILA 2: Resetear -->
+      <div class="row g-4">
+        <div class="col-md-6">
           <div class="card p-4">
             <h6 style="color:#f87171;font-weight:700" class="mb-3">🔄 Resetear Resultado</h6>
-            <p style="font-size:0.85rem;color:var(--text-muted)">Elimina el resultado de un partido ya cargado y revierte los puntos de pronósticos y favoritos.</p>
-            <label class="form-label">Partido con resultado</label>
+            <p style="font-size:0.85rem;color:var(--text-muted)">Elimina el resultado de un partido ya cerrado y revierte los puntos. El partido vuelve a pendiente.</p>
+            <label class="form-label">Partido cerrado (FINAL)</label>
             <select id="matchSelectDone" class="form-select mb-3"></select>
             <button id="resetResultBtn" class="btn btn-danger w-100">🔄 Resetear resultado</button>
             <div id="resetMsg" class="mt-3"></div>
@@ -308,9 +324,10 @@
     function log(elId,msg,color='var(--text-muted)'){const el=document.getElementById(elId);if(!el)return;el.classList.add('visible');el.innerHTML+=`<span style="color:${color}">${msg}</span>\n`;el.scrollTop=el.scrollHeight;}
     function clearLog(elId){const el=document.getElementById(elId);if(el){el.innerHTML='';el.classList.add('visible');}}
     function setBusy(id,busy,label){const b=document.getElementById(id);if(b){b.disabled=busy;b.textContent=label;}}
-    const ALIASES={'mexico':['mexico','m\u00e9xico'],'usa':['usa','united states','estados unidos','united states of america'],'south korea':['south korea','corea del sur','korea republic'],'czechia':['czechia','chequia','czech republic'],'ivory coast':['ivory coast','costa de marfil',"c\u00f4te d'ivoire"],'dr congo':['dr congo','rd congo','congo dr','democratic republic of congo'],'scotland':['scotland','escocia'],'netherlands':['netherlands','pa\u00edses bajos','holland'],'saudi arabia':['saudi arabia','arabia saudita'],'cape verde':['cape verde','cabo verde'],'bosnia':['bosnia','bosnia y herzegovina','bosnia and herzegovina'],'new zealand':['new zealand','nueva zelanda'],'turkey':['turkey','turqu\u00eda','t\u00fcrkiye'],'qatar':['qatar','catar']};
+    const ALIASES={'mexico':['mexico','méxico'],'usa':['usa','united states','estados unidos','united states of america'],'south korea':['south korea','corea del sur','korea republic'],'czechia':['czechia','chequia','czech republic'],'ivory coast':['ivory coast','costa de marfil',"côte d'ivoire"],'dr congo':['dr congo','rd congo','congo dr','democratic republic of congo'],'scotland':['scotland','escocia'],'netherlands':['netherlands','países bajos','holland'],'saudi arabia':['saudi arabia','arabia saudita'],'cape verde':['cape verde','cabo verde'],'bosnia':['bosnia','bosnia y herzegovina','bosnia and herzegovina'],'new zealand':['new zealand','nueva zelanda'],'turkey':['turkey','turquía','türkiye'],'qatar':['qatar','catar']};
     function norm(n){const s=(n||'').toLowerCase().trim();for(const[c,vs]of Object.entries(ALIASES))if(vs.includes(s))return c;return s;}
     function teamsEq(a,b){return norm(a)===norm(b);}
+    // FIX: usa pred_home/pred_away que es como se guardan los pronósticos
     function calcPts(h,a,ph,pa){if(h===ph&&a===pa)return 6;return Math.sign(h-a)===Math.sign(ph-pa)?3:0;}
 
     document.getElementById('btnSyncMatches').addEventListener('click',async()=>{
@@ -320,7 +337,7 @@
         const now=new Date(),from4h=new Date(now-4*3600*1000),plus1h=new Date(now+3600*1000);
         const snap=await getDocs(collection(db,'matches'));
         const active=snap.docs.filter(d=>{const ko=d.data().kickoff?.toDate?.()||new Date(d.data().kickoff);return !d.data().finished&&ko>=from4h&&ko<=plus1h;});
-        if(!active.length){log('logSyncMatches','⚠️ No hay partidos en ventana activa (\u00b14h)','#f5a0ac');setBusy('btnSyncMatches',false,'🔄 Sincronizar partidos');return;}
+        if(!active.length){log('logSyncMatches','⚠️ No hay partidos en ventana activa (±4h)','#f5a0ac');setBusy('btnSyncMatches',false,'🔄 Sincronizar partidos');return;}
         log('logSyncMatches',`📋 ${active.length} partido(s) en ventana activa`);
         const dates=[...new Set(active.map(d=>{const ko=d.data().kickoff?.toDate?.()||new Date(d.data().kickoff);return ko.toISOString().slice(0,10);}))]; 
         const events=[];
@@ -342,8 +359,17 @@
           if(hg===null&&ag===null){log('logSyncMatches',`  ⏳ Sin marcador: ${m.home_team} vs ${m.away_team}`);continue;}
           const status=ev.strStatus||'',finished=['Match Finished','FT','AOT','PEN'].includes(status);
           await updateDoc(doc(db,'matches',docSnap.id),{home_score:hg,away_score:ag,match_status:finished?'FT':'LIVE',finished,last_synced:Timestamp.now()});
-          log('logSyncMatches',`  ⚽ ${m.home_team} ${hg}\u2013${ag} ${m.away_team}`,finished?'#34d399':'#4aafd4');updated++;
-          if(finished){const predsSnap=await getDocs(collection(db,'predictions'));const batch=writeBatch(db);let pts=0;predsSnap.docs.filter(p=>p.data().match_id===docSnap.id&&!p.data().points_synced).forEach(p=>{const points=calcPts(hg,ag,p.data().pred_home,p.data().pred_away);batch.update(p.ref,{points,points_synced:true});pts++;});if(pts){await batch.commit();log('logSyncMatches',`    🏅 ${pts} pronósticos`,'#f5a0ac');}}
+          log('logSyncMatches',`  ⚽ ${m.home_team} ${hg}–${ag} ${m.away_team}`,finished?'#34d399':'#4aafd4');updated++;
+          if(finished){
+            const predsSnap=await getDocs(collection(db,'predictions'));
+            const batch=writeBatch(db);let pts=0;
+            predsSnap.docs.filter(p=>p.data().match_id===docSnap.id&&!p.data().points_synced).forEach(p=>{
+              // usa pred_home / pred_away
+              const points=calcPts(hg,ag,p.data().pred_home,p.data().pred_away);
+              batch.update(p.ref,{points,points_synced:true});pts++;
+            });
+            if(pts){await batch.commit();log('logSyncMatches',`    🏅 ${pts} pronósticos`,'#f5a0ac');}
+          }
         }
         log('logSyncMatches',`\n✅ ${updated} actualizado(s)`,'#34d399');
       }catch(e){log('logSyncMatches',`❌ Error: ${e.message}`,'#f5a0ac');}
@@ -359,7 +385,7 @@
         const groups=Object.keys(standings).sort();
         if(!groups.length){log('logSyncGroups','⚠️ No hay partidos terminados','#f5a0ac');setBusy('btnSyncGroups',false,'📊 Recalcular grupos');return;}
         const batch=writeBatch(db);
-        for(const grupo of groups){const teams=Object.entries(standings[grupo]).map(([name,s])=>({name,...s,gd:s.gf-s.gc})).sort((a,b)=>b.pts-a.pts||(b.gd-a.gd)||(b.gf-a.gf));batch.set(doc(db,'standings',grupo.replace(' ','')),{grupo,teams,updated:Timestamp.now()});log('logSyncGroups',`  📋 ${grupo}: ${teams.map(t=>`${t.flag}${t.name} ${t.pts}pts`).join(' \u00b7 ')}`);
+        for(const grupo of groups){const teams=Object.entries(standings[grupo]).map(([name,s])=>({name,...s,gd:s.gf-s.gc})).sort((a,b)=>b.pts-a.pts||(b.gd-a.gd)||(b.gf-a.gf));batch.set(doc(db,'standings',grupo.replace(' ','')),{grupo,teams,updated:Timestamp.now()});log('logSyncGroups',`  📋 ${grupo}: ${teams.map(t=>`${t.flag}${t.name} ${t.pts}pts`).join(' · ')}`);
         }await batch.commit();log('logSyncGroups',`\n✅ ${groups.length} tablas guardadas`,'#34d399');
       }catch(e){log('logSyncGroups',`❌ Error: ${e.message}`,'#f5a0ac');}
       setBusy('btnSyncGroups',false,'📊 Recalcular grupos');
@@ -373,7 +399,7 @@
     const TSDB='https://www.thesportsdb.com/api/v1/json/3';
     const WC_LEAGUE_ID='4429';
     function slog(msg,color='var(--text-muted)'){const el=document.getElementById('logSyncStreaming');if(!el)return;el.classList.add('visible');el.innerHTML+=`<span style="color:${color}">${msg}</span>\n`;el.scrollTop=el.scrollHeight;}
-    async function loadLastSync(){try{const snap=await getDoc(doc(db,'app_config','streaming_sync'));if(snap.exists()){const d=snap.data();const ts=d.last_sync?.toDate?.();if(ts){const fmt=ts.toLocaleString('es-BO',{timeZone:'America/La_Paz',day:'2-digit',month:'short',hour:'numeric',minute:'2-digit',hour12:true});document.getElementById('streamingLastSync').innerHTML=`🕐 \u00daltima sync: <strong style="color:#a78bfa">${fmt}</strong> \u2014 ${d.matches_updated||0} partido(s)`;}}else{document.getElementById('streamingLastSync').textContent='🕐 Nunca sincronizado';}}catch(_){}}
+    async function loadLastSync(){try{const snap=await getDoc(doc(db,'app_config','streaming_sync'));if(snap.exists()){const d=snap.data();const ts=d.last_sync?.toDate?.();if(ts){const fmt=ts.toLocaleString('es-BO',{timeZone:'America/La_Paz',day:'2-digit',month:'short',hour:'numeric',minute:'2-digit',hour12:true});document.getElementById('streamingLastSync').innerHTML=`🕐 Última sync: <strong style="color:#a78bfa">${fmt}</strong> — ${d.matches_updated||0} partido(s)`;}}else{document.getElementById('streamingLastSync').textContent='🕐 Nunca sincronizado';}}catch(_){}}
     async function syncStreamingChannels(){
       const el=document.getElementById('logSyncStreaming');el.innerHTML='';el.classList.add('visible');
       document.getElementById('btnSyncStreaming').disabled=true;document.getElementById('btnSyncStreaming').textContent='⏳ Actualizando...';
@@ -388,7 +414,7 @@
         const json=await resp.json();const events=json.events||[];
         if(!events.length){slog('⚠️ Sin eventos de TheSportsDB','#f5a0ac');document.getElementById('btnSyncStreaming').disabled=false;document.getElementById('btnSyncStreaming').textContent='📡 Actualizar canales hoy';return;}
         slog(`✅ ${events.length} evento(s) recibidos`,'#34d399');
-        const NORM={'mexico':['mexico','m\u00e9xico'],'usa':['usa','united states','estados unidos'],'south korea':['south korea','corea del sur','korea republic']};
+        const NORM={'mexico':['mexico','méxico'],'usa':['usa','united states','estados unidos'],'south korea':['south korea','corea del sur','korea republic']};
         function norm(n){const s=(n||'').toLowerCase().trim();for(const[c,vs]of Object.entries(NORM))if(vs.includes(s))return c;return s;}
         let updated=0;
         for(const mDoc of todayMatches){
@@ -397,7 +423,7 @@
           if(!ev){slog(`  ⚠️ Sin datos: ${m.home_team} vs ${m.away_team}`);continue;}
           const channels=[];if(ev.strTVStation)channels.push(ev.strTVStation);if(ev.strVideo)channels.push(ev.strVideo);
           await updateDoc(doc(db,'matches',mDoc.id),{channels,tv_station:ev.strTVStation||null,stream_url:ev.strVideo||null,thumb:ev.strThumb||null,tsdb_id:ev.idEvent||null,channels_synced_at:Timestamp.now()});
-          slog(`  📺 ${m.home_team} vs ${m.away_team} \u2192 ${channels.length?channels.join(', '):'sin canal'}`,channels.length?'#a78bfa':'var(--text-muted)');updated++;
+          slog(`  📺 ${m.home_team} vs ${m.away_team} → ${channels.length?channels.join(', '):'sin canal'}`,channels.length?'#a78bfa':'var(--text-muted)');updated++;
         }
         await setDoc(doc(db,'app_config','streaming_sync'),{last_sync:Timestamp.now(),matches_updated:updated,date_synced:todayStr});
         slog(`\n✅ ${updated} partido(s) con canales actualizados`,'#34d399');await loadLastSync();
@@ -418,7 +444,7 @@
       msg.innerHTML='<span style="color:#4aafd4">Insertando...</span>';
       try{
         const{inserted,skipped}=await bulkLoadMatches((done,total)=>{msg.innerHTML=`<span style="color:#4aafd4">⏳ ${done}/${total}...</span>`;});
-        msg.innerHTML=`<span style="color:#34d399">✅ ${inserted} nuevos. ${skipped} ya exist\u00edan.</span>`;btn.textContent='✅ Cargado';
+        msg.innerHTML=`<span style="color:#34d399">✅ ${inserted} nuevos. ${skipped} ya existían.</span>`;btn.textContent='✅ Cargado';
       }catch(e){msg.innerHTML=`<span style="color:#f5a0ac">❌ Error: ${e.message}</span>`;btn.disabled=false;btn.textContent='⚡ Cargar todos los partidos';}
     });
   </script>
