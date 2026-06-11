@@ -92,6 +92,16 @@ async function loadMatchesDone() {
   }
 }
 
+// ── HELPER: calcula puntos ──
+// Los pronósticos se guardan como home_score / away_score en la colección predictions
+function calcPoints(actualH, actualA, predH, predA) {
+  if (predH === undefined || predH === null || predA === undefined || predA === null) return 0;
+  if (predH === actualH && predA === actualA) return 6;
+  const predOut   = predH > predA ? 'H' : predA > predH ? 'A' : 'D';
+  const actualOut = actualH > actualA ? 'H' : actualA > actualH ? 'A' : 'D';
+  return predOut === actualOut ? 3 : 0;
+}
+
 // ── GUARDAR RESULTADO PARCIAL ──
 document.getElementById('saveResultBtn')?.addEventListener('click', async () => {
   const mid = document.getElementById('matchSelect').value;
@@ -105,14 +115,9 @@ document.getElementById('saveResultBtn')?.addEventListener('click', async () => 
   const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id', '==', mid)));
   const batch = writeBatch(db);
   predsSnap.forEach(predDoc => {
-    const p   = predDoc.data();
-    const ph  = p.pred_home;
-    const pa  = p.pred_away;
-    const predOut   = ph > pa ? 'H' : pa > ph ? 'A' : 'D';
-    const actualOut = hs > as_ ? 'H' : as_ > hs ? 'A' : 'D';
-    let pts = 0;
-    if (ph === hs && pa === as_) pts = 6;
-    else if (predOut === actualOut) pts = 3;
+    const p  = predDoc.data();
+    // Los pronósticos usan home_score / away_score (no pred_home / pred_away)
+    const pts = calcPoints(hs, as_, p.home_score, p.away_score);
     batch.update(predDoc.ref, { points: pts });
   });
   await batch.commit();
@@ -143,13 +148,7 @@ document.getElementById('closeMatchBtn')?.addEventListener('click', async () => 
   const batch = writeBatch(db);
   predsSnap.forEach(predDoc => {
     const p  = predDoc.data();
-    const ph = p.pred_home;
-    const pa = p.pred_away;
-    const predOut   = ph > pa ? 'H' : pa > ph ? 'A' : 'D';
-    const actualOut = hs > as_ ? 'H' : as_ > hs ? 'A' : 'D';
-    let pts = 0;
-    if (ph === hs && pa === as_) pts = 6;
-    else if (predOut === actualOut) pts = 3;
+    const pts = calcPoints(hs, as_, p.home_score, p.away_score);
     batch.update(predDoc.ref, { points: pts, points_synced: true });
   });
 
@@ -192,20 +191,15 @@ document.getElementById('recalcPtsBtn')?.addEventListener('click', async () => {
     return;
   }
 
+  // Busca TODOS los pronósticos del partido (sin filtrar por group_id)
   const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id', '==', mid)));
   const batch = writeBatch(db);
   let recalcCount = 0;
-  const actualOut = hs > as_ ? 'H' : as_ > hs ? 'A' : 'D';
 
   predsSnap.forEach(predDoc => {
     const p  = predDoc.data();
-    const ph = p.pred_home;
-    const pa = p.pred_away;
-    if (ph === undefined || pa === undefined) return;
-    const predOut = ph > pa ? 'H' : pa > ph ? 'A' : 'D';
-    let pts = 0;
-    if (ph === hs && pa === as_) pts = 6;
-    else if (predOut === actualOut) pts = 3;
+    // Pronósticos usan home_score / away_score
+    const pts = calcPoints(hs, as_, p.home_score, p.away_score);
     batch.update(predDoc.ref, { points: pts, points_synced: true });
     recalcCount++;
   });
