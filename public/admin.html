@@ -136,7 +136,7 @@
         <div class="col-md-6">
           <div class="card p-4" style="border-color:rgba(52,211,153,0.35);background:rgba(52,211,153,0.04)">
             <h6 style="color:#34d399;font-weight:700" class="mb-3">🏁 Cerrar partido como FINAL</h6>
-            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px">Solo cierra partidos que ya tienen marcador cargado. Esto calcula favoritos y lo marca como terminado.</p>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px">Solo cierra partidos que ya tienen marcador cargado. Calcula puntos de pronósticos y favoritos.</p>
             <label class="form-label">Partido con score listo para cerrar</label>
             <select id="matchSelectClose" class="form-select mb-3"></select>
             <button id="closeMatchBtn" class="btn w-100" style="background:linear-gradient(135deg,#059669,#34d399);color:#fff;font-weight:700">🏁 Cerrar partido definitivamente</button>
@@ -145,8 +145,18 @@
         </div>
       </div>
 
-      <!-- FILA 2: Resetear -->
-      <div class="row g-4">
+      <!-- FILA 2: Recalcular puntos + Resetear -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-6">
+          <div class="card p-4" style="border-color:rgba(167,139,250,0.35);background:rgba(167,139,250,0.04)">
+            <h6 style="color:#a78bfa;font-weight:700" class="mb-3">🔁 Recalcular puntos de partido cerrado</h6>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px">Vuelve a calcular los puntos de todos los pronósticos de un partido ya cerrado. Útil si los puntos quedaron en 0 por un bug anterior.</p>
+            <label class="form-label">Partido cerrado (FINAL)</label>
+            <select id="matchSelectRecalc" class="form-select mb-3"></select>
+            <button id="recalcPtsBtn" class="btn w-100" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;font-weight:700">🔁 Recalcular puntos ahora</button>
+            <div id="recalcMsg" class="mt-3"></div>
+          </div>
+        </div>
         <div class="col-md-6">
           <div class="card p-4">
             <h6 style="color:#f87171;font-weight:700" class="mb-3">🔄 Resetear Resultado</h6>
@@ -327,7 +337,6 @@
     const ALIASES={'mexico':['mexico','méxico'],'usa':['usa','united states','estados unidos','united states of america'],'south korea':['south korea','corea del sur','korea republic'],'czechia':['czechia','chequia','czech republic'],'ivory coast':['ivory coast','costa de marfil',"côte d'ivoire"],'dr congo':['dr congo','rd congo','congo dr','democratic republic of congo'],'scotland':['scotland','escocia'],'netherlands':['netherlands','países bajos','holland'],'saudi arabia':['saudi arabia','arabia saudita'],'cape verde':['cape verde','cabo verde'],'bosnia':['bosnia','bosnia y herzegovina','bosnia and herzegovina'],'new zealand':['new zealand','nueva zelanda'],'turkey':['turkey','turquía','türkiye'],'qatar':['qatar','catar']};
     function norm(n){const s=(n||'').toLowerCase().trim();for(const[c,vs]of Object.entries(ALIASES))if(vs.includes(s))return c;return s;}
     function teamsEq(a,b){return norm(a)===norm(b);}
-    // FIX: usa pred_home/pred_away que es como se guardan los pronósticos
     function calcPts(h,a,ph,pa){if(h===ph&&a===pa)return 6;return Math.sign(h-a)===Math.sign(ph-pa)?3:0;}
 
     document.getElementById('btnSyncMatches').addEventListener('click',async()=>{
@@ -339,7 +348,7 @@
         const active=snap.docs.filter(d=>{const ko=d.data().kickoff?.toDate?.()||new Date(d.data().kickoff);return !d.data().finished&&ko>=from4h&&ko<=plus1h;});
         if(!active.length){log('logSyncMatches','⚠️ No hay partidos en ventana activa (±4h)','#f5a0ac');setBusy('btnSyncMatches',false,'🔄 Sincronizar partidos');return;}
         log('logSyncMatches',`📋 ${active.length} partido(s) en ventana activa`);
-        const dates=[...new Set(active.map(d=>{const ko=d.data().kickoff?.toDate?.()||new Date(d.data().kickoff);return ko.toISOString().slice(0,10);}))]; 
+        const dates=[...new Set(active.map(d=>{const ko=d.data().kickoff?.toDate?.()||new Date(d.data().kickoff);return ko.toISOString().slice(0,10);}))];
         const events=[];
         for(const date of dates){
           log('logSyncMatches',`📡 Consultando TheSportsDB ${date}...`);
@@ -364,7 +373,6 @@
             const predsSnap=await getDocs(collection(db,'predictions'));
             const batch=writeBatch(db);let pts=0;
             predsSnap.docs.filter(p=>p.data().match_id===docSnap.id&&!p.data().points_synced).forEach(p=>{
-              // usa pred_home / pred_away
               const points=calcPts(hg,ag,p.data().pred_home,p.data().pred_away);
               batch.update(p.ref,{points,points_synced:true});pts++;
             });
@@ -385,8 +393,8 @@
         const groups=Object.keys(standings).sort();
         if(!groups.length){log('logSyncGroups','⚠️ No hay partidos terminados','#f5a0ac');setBusy('btnSyncGroups',false,'📊 Recalcular grupos');return;}
         const batch=writeBatch(db);
-        for(const grupo of groups){const teams=Object.entries(standings[grupo]).map(([name,s])=>({name,...s,gd:s.gf-s.gc})).sort((a,b)=>b.pts-a.pts||(b.gd-a.gd)||(b.gf-a.gf));batch.set(doc(db,'standings',grupo.replace(' ','')),{grupo,teams,updated:Timestamp.now()});log('logSyncGroups',`  📋 ${grupo}: ${teams.map(t=>`${t.flag}${t.name} ${t.pts}pts`).join(' · ')}`);
-        }await batch.commit();log('logSyncGroups',`\n✅ ${groups.length} tablas guardadas`,'#34d399');
+        for(const grupo of groups){const teams=Object.entries(standings[grupo]).map(([name,s])=>({name,...s,gd:s.gf-s.gc})).sort((a,b)=>b.pts-a.pts||(b.gd-a.gd)||(b.gf-a.gf));batch.set(doc(db,'standings',grupo.replace(' ','')),{grupo,teams,updated:Timestamp.now()});log('logSyncGroups',`  📋 ${grupo}: ${teams.map(t=>`${t.flag}${t.name} ${t.pts}pts`).join(' · ')}`);}
+        await batch.commit();log('logSyncGroups',`\n✅ ${groups.length} tablas guardadas`,'#34d399');
       }catch(e){log('logSyncGroups',`❌ Error: ${e.message}`,'#f5a0ac');}
       setBusy('btnSyncGroups',false,'📊 Recalcular grupos');
     });
