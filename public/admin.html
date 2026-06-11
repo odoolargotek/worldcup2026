@@ -15,15 +15,11 @@
   <link rel="stylesheet" href="css/style.css">
   <style>
     .tv-user-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px;
-      border-radius: 10px;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px; border-radius: 10px;
       background: rgba(255,255,255,0.03);
       border: 1px solid var(--border, rgba(255,255,255,0.07));
-      margin-bottom: 8px;
-      gap: 12px;
+      margin-bottom: 8px; gap: 12px;
     }
     .tv-user-row.has-access { border-color: rgba(52,211,153,0.2); background: rgba(52,211,153,0.04); }
     .tv-user-info { flex: 1; min-width: 0; }
@@ -42,7 +38,6 @@
     .tv-stat { background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 10px; padding: 8px 16px; text-align: center; flex: 1; min-width: 80px; }
     .tv-stat-num { font-size: 1.4rem; font-weight: 800; }
     .tv-stat-label { font-size: 10px; color: var(--text-muted); }
-    /* Sync buttons */
     .sync-card { border: 1px solid rgba(74,175,212,0.35); background: rgba(74,175,212,0.05); border-radius: 14px; padding: 20px; margin-bottom: 16px; }
     .sync-card.green  { border-color: rgba(52,211,153,0.35);  background: rgba(52,211,153,0.05); }
     .sync-card.purple { border-color: rgba(167,139,250,0.35); background: rgba(167,139,250,0.05); }
@@ -56,6 +51,7 @@
     .sync-btn-orange { background: linear-gradient(135deg,#d97706,#fb923c); color: #fff; }
     .sync-log { font-size: 12px; margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: rgba(0,0,0,0.25); color: var(--text-muted); display: none; max-height: 200px; overflow-y: auto; white-space: pre-wrap; }
     .sync-log.visible { display: block; }
+    .section-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
   </style>
 </head>
 <body>
@@ -74,14 +70,20 @@
   <div class="container py-4">
 
     <ul class="nav nav-tabs mb-4">
-      <li class="nav-item"><button class="nav-link active" data-atab="results">🏆 Resultados</button></li>
+      <li class="nav-item"><button class="nav-link active" data-atab="overview">📊 Dashboard</button></li>
+      <li class="nav-item"><button class="nav-link" data-atab="results">🏆 Resultados</button></li>
       <li class="nav-item"><button class="nav-link" data-atab="matches">⚽ Partidos</button></li>
       <li class="nav-item"><button class="nav-link" data-atab="groupsmgr">👥 Comparsas</button></li>
       <li class="nav-item"><button class="nav-link" data-atab="tvaccess">📺 Acceso TV</button></li>
     </ul>
 
+    <!-- TAB DASHBOARD -->
+    <div id="atab-overview">
+      <div id="atab-dashboard"><div style="color:var(--text-muted);text-align:center;padding:40px">⏳ Cargando...</div></div>
+    </div>
+
     <!-- TAB RESULTADOS -->
-    <div id="atab-results">
+    <div id="atab-results" class="d-none">
       <div class="mb-4">
         <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">⚡ Sincronización automática — TheSportsDB</div>
         <div class="row g-3">
@@ -144,16 +146,13 @@
 
     <!-- TAB PARTIDOS -->
     <div id="atab-matches" class="d-none">
-
-      <!-- 🔧 CORREGIR NOMBRES DUPLICADOS -->
       <div class="sync-card orange mb-4">
         <div class="d-flex align-items-center gap-3 flex-wrap">
           <div style="font-size:2rem">🔧</div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:800;font-size:0.95rem;color:#fb923c">🔧 Corregir nombres duplicados</div>
             <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
-              Normaliza nombres inconsistentes (ej: "Catar" → "Qatar", "Estados Unidos" → "USA", "Türkiye" → "Turquía").
-              <strong style="color:#fb923c">No borra partidos ni pronósticos.</strong> Solo corrige el texto.
+              Normaliza nombres inconsistentes. <strong style="color:#fb923c">No borra partidos ni pronósticos.</strong>
             </div>
           </div>
           <button id="btnFixNames" class="sync-btn sync-btn-orange">🔧 Corregir ahora</button>
@@ -161,7 +160,6 @@
         <div id="logFixNames" class="sync-log"></div>
       </div>
 
-      <!-- CARGAR CALENDARIO -->
       <div class="card p-4 mb-4" style="border-color:rgba(29,144,198,0.4);background:rgba(29,144,198,0.05)">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
           <div>
@@ -173,7 +171,6 @@
         <div id="bulkMsg" class="mt-3"></div>
       </div>
 
-      <!-- AGREGAR PARTIDO -->
       <div class="card p-4 mb-4">
         <h6 style="color:var(--green-light);font-weight:700" class="mb-3">➕ Agregar Partido</h6>
         <div class="row g-2">
@@ -199,7 +196,6 @@
         <div id="addMatchMsg" class="mt-2"></div>
       </div>
 
-      <!-- LISTA PARTIDOS -->
       <div class="card p-4">
         <div class="d-flex align-items-center justify-content-between mb-3">
           <h6 style="color:var(--gold);font-weight:700;margin:0">📋 Todos los partidos</h6>
@@ -253,20 +249,11 @@
   </div>
 
   <!-- Modales -->
-  <div class="modal fade" id="deleteAllModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="background:var(--bg-card);border:1px solid #ef4444;color:var(--text)">
-        <div class="modal-header" style="border-color:#ef4444"><h5 class="modal-title" style="color:#f87171">⚠️ Borrar TODOS los partidos</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body"><p style="color:var(--text-muted)">Se eliminarán <strong style="color:#f87171">todos los partidos</strong> de Firestore junto con sus pronósticos.</p><p style="color:#fca5a5;font-size:0.85rem">Esta acción es <strong>irreversible</strong>.</p></div>
-        <div class="modal-footer" style="border-color:#ef4444"><button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Cancelar</button><button type="button" id="confirmDeleteAllBtn" class="btn btn-danger">🗑️ Borrar todos definitivamente</button></div>
-      </div>
-    </div>
-  </div>
   <div class="modal fade" id="confirmDeleteModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content" style="background:var(--bg-card);border:1px solid #ef4444;color:var(--text)">
         <div class="modal-header" style="border-color:#ef4444"><h5 class="modal-title" style="color:#f87171">⚠️ Confirmar eliminación</h5><button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button></div>
-        <div class="modal-body"><p id="confirmDeleteMsg" style="color:var(--text-muted)"></p><p style="color:#fca5a5;font-size:0.85rem">Esta acción es <strong>irreversible</strong>. Se eliminarán también todos los miembros y pronósticos asociados.</p></div>
+        <div class="modal-body"><p id="confirmDeleteMsg" style="color:var(--text-muted)"></p><p style="color:#fca5a5;font-size:0.85rem">Esta acción es <strong>irreversible</strong>.</p></div>
         <div class="modal-footer" style="border-color:#ef4444"><button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Cancelar</button><button type="button" id="confirmDeleteBtn" class="btn btn-danger">🗑️ Eliminar definitivamente</button></div>
       </div>
     </div>
@@ -281,6 +268,12 @@
   <script type="module" src="js/firebase-config.js"></script>
   <script type="module" src="js/auth.js"></script>
   <script type="module" src="js/admin.js"></script>
+
+  <!-- DASHBOARD -->
+  <script type="module">
+    import { loadAdminDashboard } from './js/admin-dashboard.js';
+    loadAdminDashboard();
+  </script>
 
   <!-- FIX NOMBRES -->
   <script type="module">
