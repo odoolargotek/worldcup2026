@@ -25,35 +25,59 @@ document.querySelectorAll('[data-atab]').forEach(btn => {
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
   await loadMatchesAdmin();
+  await loadMatchesInProgress();
   await loadMatchesDone();
 });
 
+// Partidos SIN resultado (abiertos para pronósticos)
 async function loadMatchesAdmin() {
   const snap = await getDocs(query(collection(db, 'matches'), orderBy('kickoff')));
   const sel  = document.getElementById('matchSelect');
   if (!sel) return;
-  const pending = snap.docs.filter(d => d.data().home_score === undefined);
-  sel.innerHTML = pending.length
-    ? pending.map(d => {
+  // Muestra todos los que NO estén cerrados (finished != true), con o sin score
+  const open = snap.docs.filter(d => !d.data().finished);
+  sel.innerHTML = open.length
+    ? open.map(d => {
         const m = d.data();
-        return `<option value="${d.id}">${m.home_flag||''} ${m.home_team} vs ${m.away_team} ${m.away_flag||''} — ${m.phase}</option>`;
+        const hasScore = m.home_score !== undefined && m.home_score !== null;
+        const scoreLabel = hasScore ? ` [${m.home_score}-${m.away_score}]` : '';
+        return `<option value="${d.id}">${m.home_flag||''} ${m.home_team}${scoreLabel} vs ${m.away_team} ${m.away_flag||''} — ${m.phase}</option>`;
       }).join('')
-    : '<option>No hay partidos pendientes</option>';
+    : '<option>No hay partidos abiertos</option>';
 }
 
+// Partidos EN PROGRESO (tienen score pero no están cerrados) — para cerrarlos
+async function loadMatchesInProgress() {
+  const snap = await getDocs(query(collection(db, 'matches'), orderBy('kickoff')));
+  const sel  = document.getElementById('matchSelectClose');
+  if (!sel) return;
+  const inProgress = snap.docs.filter(d => {
+    const m = d.data();
+    return !m.finished && m.home_score !== undefined && m.home_score !== null;
+  });
+  sel.innerHTML = inProgress.length
+    ? inProgress.map(d => {
+        const m = d.data();
+        return `<option value="${d.id}">${m.home_flag||''} ${m.home_team} ${m.home_score}-${m.away_score} ${m.away_team} ${m.away_flag||''} — ${m.phase}</option>`;
+      }).join('')
+    : '<option value="">Sin partidos listos para cerrar</option>';
+}
+
+// Partidos ya CERRADOS (finished = true)
 async function loadMatchesDone() {
   const snap = await getDocs(query(collection(db, 'matches'), orderBy('kickoff')));
   const sel  = document.getElementById('matchSelectDone');
   if (!sel) return;
-  const done = snap.docs.filter(d => d.data().home_score !== undefined);
+  const done = snap.docs.filter(d => d.data().finished === true);
   sel.innerHTML = done.length
     ? done.map(d => {
         const m = d.data();
         return `<option value="${d.id}">${m.home_flag||''} ${m.home_team} ${m.home_score}-${m.away_score} ${m.away_team} ${m.away_flag||''} — ${m.phase}</option>`;
       }).join('')
-    : '<option>Sin partidos con resultado</option>';
+    : '<option>Sin partidos cerrados</option>';
 }
 
+// ── GUARDAR RESULTADO PARCIAL (no cierra el partido) ──
 document.getElementById('saveResultBtn')?.addEventListener('click', async () => {
   const mid = document.getElementById('matchSelect').value;
   const hs  = parseInt(document.getElementById('resultHome').value);
@@ -62,13 +86,11 @@ document.getElementById('saveResultBtn')?.addEventListener('click', async () => 
   if (!mid || isNaN(hs) || isNaN(as_)) { msg.innerHTML = badge('Completa el resultado','danger'); return; }
 
   const matchRef  = doc(db, 'matches', mid);
-  const matchSnap = await getDoc(matchRef);
-  const matchData = matchSnap.data();
-  const outcome   = hs > as_ ? 'H' : as_ > hs ? 'A' : 'D';
-  const phase     = matchData.phase || '';
-
+  // Solo guarda el marcador, NO toca finished
   await updateDoc(matchRef, { home_score: hs, away_score: as_ });
 
+  // Calcula puntos parciales en pronósticos
+  const outcome   = hs > as_ ? 'H' : as_ > hs ? 'A' : 'D';
   const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id','==',mid)));
   const batch = writeBatch(db);
   predsSnap.forEach(predDoc => {
@@ -81,11 +103,36 @@ document.getElementById('saveResultBtn')?.addEventListener('click', async () => 
   });
   await batch.commit();
 
+  msg.innerHTML = `<div class="mt-2 p-2 rounded" style="background:rgba(74,175,212,0.12);border:1px solid #4aafd4;color:#4aafd4">
+    📊 Marcador actualizado — ${predsSnap.size} pronósticos recalculados (partido aún abierto)
+  </div>`;
+  await loadMatchesAdmin();
+  await loadMatchesInProgress();
+});
+
+// ── CERRAR PARTIDO (finished = true, calcula favoritos) ──
+document.getElementById('closeMatchBtn')?.addEventListener('click', async () => {
+  const mid = document.getElementById('matchSelectClose').value;
+  const msg = document.getElementById('closeMatchMsg');
+  if (!mid) { msg.innerHTML = badge('Selecciona un partido','danger'); return; }
+  if (!confirm('¿Cerrar este partido como FINAL? Ya no aparecerá en la lista de abiertos.')) return;
+
+  const matchRef  = doc(db, 'matches', mid);
+  const matchSnap = await getDoc(matchRef);
+  const matchData = matchSnap.data();
+  const hs    = matchData.home_score;
+  const as_   = matchData.away_score;
+  const phase = matchData.phase || '';
+
+  // Marcar como cerrado
+  await updateDoc(matchRef, { finished: true, match_status: 'FT' });
+
+  // Calcular favoritos
   const allMembersSnap = await getDocs(collection(db, 'group_members'));
   const favBatch = writeBatch(db);
   let favCount = 0;
   allMembersSnap.forEach(mDoc => {
-    const m    = mDoc.data();
+    const m = mDoc.data();
     const favs = m.favorites || {};
     const favTeam = favs[phase];
     let favPts = 0;
@@ -100,17 +147,19 @@ document.getElementById('saveResultBtn')?.addEventListener('click', async () => 
   await favBatch.commit();
 
   msg.innerHTML = `<div class="mt-2 p-2 rounded" style="background:rgba(22,163,74,0.15);border:1px solid var(--green);color:var(--green-light)">
-    ✅ Resultado guardado — ${predsSnap.size} pronósticos — ${favCount} favoritos actualizados
+    ✅ Partido cerrado como FINAL — ${favCount} favoritos actualizados
   </div>`;
   await loadMatchesAdmin();
+  await loadMatchesInProgress();
   await loadMatchesDone();
 });
 
+// ── RESETEAR RESULTADO (vuelve a pendiente) ──
 document.getElementById('resetResultBtn')?.addEventListener('click', async () => {
   const mid = document.getElementById('matchSelectDone').value;
   const msg = document.getElementById('resetMsg');
   if (!mid) return;
-  if (!confirm('¿Resetear resultado de este partido? Se revertirán los puntos.')) return;
+  if (!confirm('¿Resetear resultado? Se revertirán puntos y el partido quedará como pendiente.')) return;
 
   const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id','==',mid)));
   const matchSnap = await getDoc(doc(db, 'matches', mid));
@@ -135,10 +184,11 @@ document.getElementById('resetResultBtn')?.addEventListener('click', async () =>
     }
   });
   await batch.commit();
-  await updateDoc(doc(db, 'matches', mid), { home_score: null, away_score: null });
+  await updateDoc(doc(db, 'matches', mid), { home_score: null, away_score: null, finished: false, match_status: '' });
 
-  msg.innerHTML = `<div style="color:#fbbf24">🔄 Resultado reseteado correctamente</div>`;
+  msg.innerHTML = `<div style="color:#fbbf24">🔄 Resultado reseteado — partido vuelve a pendiente</div>`;
   await loadMatchesAdmin();
+  await loadMatchesInProgress();
   await loadMatchesDone();
 });
 
@@ -157,20 +207,26 @@ async function loadAllMatchesList() {
   snap.docs.forEach(d => {
     const m = d.data();
     const kickoff = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
-    const isDone  = m.home_score !== undefined && m.home_score !== null;
+    const isDone    = m.finished === true;
+    const hasScore  = m.home_score !== undefined && m.home_score !== null;
     const label   = kickoff.toLocaleString('es-BO', {
       timeZone: 'America/La_Paz',
       day:'2-digit', month:'short',
       hour:'numeric', minute:'2-digit', hour12: true
     });
     const safeLabel = (m.home_team + ' vs ' + m.away_team).replace(/'/g, "\\'");
+    const statusBadge = isDone
+      ? `<span style="font-size:0.75rem;background:rgba(52,211,153,0.12);color:#34d399;border-radius:20px;padding:2px 8px;font-weight:700">FINAL ${m.home_score}-${m.away_score}</span>`
+      : hasScore
+        ? `<span style="font-size:0.75rem;background:rgba(74,175,212,0.12);color:#4aafd4;border-radius:20px;padding:2px 8px;font-weight:700">EN JUEGO ${m.home_score}-${m.away_score}</span>`
+        : `<span style="font-size:0.75rem;color:var(--text-muted)">Pendiente</span>`;
     html += `
       <div id="matchrow-${d.id}" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">
         <span style="font-size:1.2rem">${m.home_flag||'⚽'}</span>
         <span style="flex:1;font-size:0.85rem;font-weight:600">${m.home_team} vs ${m.away_team} ${m.away_flag||''}</span>
         <span style="font-size:0.78rem;color:var(--text-muted)">${m.phase}</span>
         <span style="font-size:0.78rem;color:var(--gold)">${label}</span>
-        ${isDone ? `<span style="font-size:0.78rem;color:var(--green-light);font-weight:700">${m.home_score}-${m.away_score}</span>` : '<span style="font-size:0.78rem;color:var(--text-muted)">Pendiente</span>'}
+        ${statusBadge}
         <button class="btn btn-sm btn-outline-danger" style="font-size:11px;padding:2px 10px"
           data-mid="${d.id}" data-label="${safeLabel}">🗑️</button>
       </div>`;
@@ -182,25 +238,18 @@ async function loadAllMatchesList() {
       const mid   = btn.dataset.mid;
       const label = btn.dataset.label;
       if (!confirm(`¿Eliminar partido "${label}"? Se borrarán sus pronósticos.`)) return;
-
-      btn.disabled = true;
-      btn.textContent = '⏳';
-
+      btn.disabled = true; btn.textContent = '⏳';
       try {
-        const predsSnap = await getDocs(
-          query(collection(db, 'predictions'), where('match_id', '==', mid))
-        );
-        for (const p of predsSnap.docs) {
-          await deleteDoc(p.ref);
-        }
+        const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id', '==', mid)));
+        for (const p of predsSnap.docs) await deleteDoc(p.ref);
         await deleteDoc(doc(db, 'matches', mid));
         document.getElementById(`matchrow-${mid}`)?.remove();
         await loadMatchesAdmin();
+        await loadMatchesInProgress();
         await loadMatchesDone();
       } catch (err) {
         alert('❌ Error al eliminar: ' + err.message);
-        btn.disabled = false;
-        btn.textContent = '🗑️';
+        btn.disabled = false; btn.textContent = '🗑️';
       }
     });
   });
@@ -219,7 +268,7 @@ document.getElementById('addMatchBtn')?.addEventListener('click', async () => {
   await addDoc(collection(db, 'matches'), {
     home_team: home, home_flag: homeFlag,
     away_team: away, away_flag: awayFlag,
-    kickoff: new Date(kickoff), phase, city
+    kickoff: new Date(kickoff), phase, city, finished: false
   });
   msg.innerHTML = badge('✅ Partido agregado','success');
   ['newHomeTeam','newHomeFlag','newAwayTeam','newAwayFlag','newKickoff','newCity'].forEach(id => {
@@ -233,32 +282,22 @@ document.getElementById('addMatchBtn')?.addEventListener('click', async () => {
 // =============================================
 document.getElementById('deleteAllMatchesBtn')?.addEventListener('click', async () => {
   if (!confirm('⚠️ ¿Borrar TODOS los partidos y sus pronósticos? Esta acción es irreversible.')) return;
-
   const btn = document.getElementById('deleteAllMatchesBtn');
   const list = document.getElementById('allMatchesList');
-  btn.disabled = true;
-  btn.textContent = '⏳ Borrando...';
-
+  btn.disabled = true; btn.textContent = '⏳ Borrando...';
   const matchesSnap = await getDocs(collection(db, 'matches'));
-  let total = matchesSnap.size;
-  let done  = 0;
-
+  let total = matchesSnap.size, done = 0;
   for (const mDoc of matchesSnap.docs) {
-    const predsSnap = await getDocs(
-      query(collection(db, 'predictions'), where('match_id','==', mDoc.id))
-    );
-    for (const p of predsSnap.docs) {
-      await deleteDoc(p.ref);
-    }
+    const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id','==', mDoc.id)));
+    for (const p of predsSnap.docs) await deleteDoc(p.ref);
     await deleteDoc(mDoc.ref);
     done++;
     list.innerHTML = `<p style="color:var(--text-muted)">⏳ Borrando ${done}/${total}...</p>`;
   }
-
-  btn.disabled = false;
-  btn.textContent = '🗑️ Borrar todos los partidos';
+  btn.disabled = false; btn.textContent = '🗑️ Borrar todos los partidos';
   list.innerHTML = `<p style="color:var(--green-light)">✅ ${total} partidos eliminados.</p>`;
   await loadMatchesAdmin();
+  await loadMatchesInProgress();
   await loadMatchesDone();
 });
 
@@ -360,7 +399,6 @@ document.getElementById('confirmDeleteBtn')?.addEventListener('click', async () 
   if (!_deleteGroupId) return;
   const btn = document.getElementById('confirmDeleteBtn');
   btn.disabled = true; btn.textContent = 'Eliminando...';
-
   const batch = writeBatch(db);
   const memSnap  = await getDocs(query(collection(db, 'group_members'), where('group_id','==',_deleteGroupId)));
   memSnap.forEach(d => batch.delete(d.ref));
@@ -368,7 +406,6 @@ document.getElementById('confirmDeleteBtn')?.addEventListener('click', async () 
   predSnap.forEach(d => batch.delete(d.ref));
   batch.delete(doc(db, 'groups', _deleteGroupId));
   await batch.commit();
-
   _deleteModal.hide();
   btn.disabled = false; btn.textContent = '🗑️ Eliminar definitivamente';
   _deleteGroupId = null;
