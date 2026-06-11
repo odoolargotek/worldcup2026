@@ -1,7 +1,7 @@
 // admin-dashboard.js — Dashboard de métricas para el panel admin
 import { db } from './firebase-config.js';
 import {
-  collection, getDocs, query, orderBy, limit, where
+  collection, getDocs, query, orderBy
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
 export async function loadAdminDashboard() {
@@ -10,21 +10,24 @@ export async function loadAdminDashboard() {
   el.innerHTML = `<div style="color:var(--text-muted);text-align:center;padding:40px">⏳ Cargando dashboard...</div>`;
 
   try {
-    const [matchesSnap, predsSnap, usersSnap, groupsSnap] = await Promise.all([
+    const [matchesSnap, predsSnap, usersSnap, groupsSnap, membersSnap] = await Promise.all([
       getDocs(query(collection(db, 'matches'), orderBy('kickoff'))),
       getDocs(collection(db, 'predictions')),
       getDocs(collection(db, 'users')),
       getDocs(collection(db, 'groups')),
+      getDocs(collection(db, 'group_members')),
     ]);
 
-    const now = new Date();
-    const matches   = matchesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    const preds     = predsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    const users     = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-    const groups    = groupsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const now     = new Date();
+    const matches = matchesSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const preds   = predsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const users   = usersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const groups  = groupsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const members = membersSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-    const played    = matches.filter(m => m.home_score !== undefined && m.home_score !== null && m.finished);
-    const pending   = matches.filter(m => !m.finished && (m.home_score === undefined || m.home_score === null));
+    const played  = matches.filter(m => m.home_score !== undefined && m.home_score !== null && m.finished);
+    const pending = matches.filter(m => !m.finished && (m.home_score === undefined || m.home_score === null));
+
     const closingSoon = pending.filter(m => {
       const ko = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
       const diff = (ko - now) / 36e5;
@@ -35,7 +38,107 @@ export async function loadAdminDashboard() {
       return ko < now && (m.home_score === undefined || m.home_score === null);
     });
 
-    // ── Ranking global de usuarios por puntos ──
+    // ── Próximo partido pendiente ──
+    const nextMatch = pending
+      .map(m => ({ ...m, _ko: m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff) }))
+      .filter(m => m._ko > now)
+      .sort((a, b) => a._ko - b._ko)[0] || null;
+
+    // ── Jugadores sin pronóstico para el próximo partido ──
+    let missingSection = '';
+    if (nextMatch) {
+      // UIDs que YA tienen pronóstico para ese partido
+      const predsForMatch = new Set(
+        preds.filter(p => p.match_id === nextMatch.id).map(p => p.user_uid)
+      );
+
+      // Mapa de grupos: gid -> nombre
+      const groupMap = {};
+      groups.forEach(g => { groupMap[g.id] = g.name; });
+
+      // Mapa de usuarios: uid -> nombre
+      const userMap = {};
+      users.forEach(u => { userMap[u.id] = u.display_name || u.email || u.id; });
+
+      // Todos los UIDs que participan en al menos una comparsa
+      const allMemberUids = [...new Set(members.map(m => m.user_uid))];
+      const missingUids   = allMemberUids.filter(uid => !predsForMatch.has(uid));
+
+      // Agrupar faltantes por comparsa
+      const missingByGroup = {}; // gid -> [uid, ...]
+      members.forEach(m => {
+        if (missingUids.includes(m.user_uid)) {
+          if (!missingByGroup[m.group_id]) missingByGroup[m.group_id] = [];
+          missingByGroup[m.group_id].push(m.user_uid);
+        }
+      });
+
+      const totalMissing  = missingUids.length;
+      const totalWithPred = predsForMatch.size;
+      const totalPlayers  = allMemberUids.length;
+      const pct = totalPlayers ? Math.round((totalWithPred / totalPlayers) * 100) : 0;
+      const barColor = pct >= 80 ? '#34d399' : pct >= 50 ? '#f59e0b' : '#f87171';
+
+      const groupRows = Object.entries(missingByGroup)
+        .sort((a, b) => b[1].length - a[1].length)
+        .map(([gid, uids]) => {
+          const names = uids.map(uid => userMap[uid] || uid);
+          const gName = groupMap[gid] || gid;
+          return `
+          <div style="background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+              <span style="font-weight:700;font-size:13px">🏆 ${gName}</span>
+              <span style="background:rgba(239,68,68,0.12);color:#f87171;border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700">${uids.length} faltante${uids.length>1?'s':''}</span>
+            </div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              ${names.map(n => `<span style="background:rgba(148,163,184,0.08);border:1px solid rgba(148,163,184,0.15);border-radius:20px;padding:3px 10px;font-size:11px;color:var(--text-muted)">${n}</span>`).join('')}
+            </div>
+          </div>`;
+        }).join('');
+
+      missingSection = `
+      <div class="card p-3 mt-4">
+        <div class="section-title mb-1">🔔 Falta pronóstico — Próximo partido</div>
+
+        <!-- Partido -->
+        <div style="display:flex;align-items:center;gap:10px;background:rgba(245,158,11,0.07);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:12px 16px;margin-bottom:14px;flex-wrap:wrap">
+          <span style="font-size:1.4rem">${nextMatch.home_flag||'⚽'}</span>
+          <span style="font-weight:800;font-size:1rem">${nextMatch.home_team} vs ${nextMatch.away_team} ${nextMatch.away_flag||''}</span>
+          <span style="margin-left:auto;font-size:12px;color:var(--gold)">${fmtDate(nextMatch.kickoff)}</span>
+          <span style="font-size:12px;color:var(--text-muted)">${nextMatch.phase}</span>
+        </div>
+
+        <!-- Resumen global -->
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap">
+          <div style="flex:1;min-width:160px">
+            <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px">
+              <span style="color:var(--text-muted)">Cobertura de pronósticos</span>
+              <span style="font-weight:700;color:${barColor}">${totalWithPred} / ${totalPlayers} (${pct}%)</span>
+            </div>
+            <div style="height:8px;background:rgba(255,255,255,0.07);border-radius:8px">
+              <div style="height:8px;background:${barColor};border-radius:8px;width:${pct}%;transition:width 0.6s"></div>
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;flex-shrink:0">
+            <div style="text-align:center;background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:10px;padding:8px 16px">
+              <div style="font-size:1.3rem;font-weight:800;color:#34d399">${totalWithPred}</div>
+              <div style="font-size:10px;color:var(--text-muted)">Listos</div>
+            </div>
+            <div style="text-align:center;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:8px 16px">
+              <div style="font-size:1.3rem;font-weight:800;color:#f87171">${totalMissing}</div>
+              <div style="font-size:10px;color:var(--text-muted)">Faltan</div>
+            </div>
+          </div>
+        </div>
+
+        ${totalMissing === 0
+          ? `<div style="color:#34d399;font-size:13px;font-weight:600;text-align:center;padding:12px">✅ ¡Todos los participantes ya tienen su pronóstico!</div>`
+          : groupRows
+        }
+      </div>`;
+    }
+
+    // ── Ranking global ──
     const userPoints = {};
     const userNames  = {};
     users.forEach(u => {
@@ -50,7 +153,9 @@ export async function loadAdminDashboard() {
       .sort((a, b) => b.pts - a.pts)
       .slice(0, 10);
 
-    // ── Actividad reciente: últimos 8 pronósticos ──
+    // ── Actividad reciente ──
+    const matchMap = {};
+    matches.forEach(m => { matchMap[m.id] = m; });
     const recentPreds = [...preds]
       .filter(p => p.created_at)
       .sort((a, b) => {
@@ -59,8 +164,6 @@ export async function loadAdminDashboard() {
         return tb - ta;
       })
       .slice(0, 8);
-    const matchMap = {};
-    matches.forEach(m => { matchMap[m.id] = m; });
 
     // ── Progreso por grupo ──
     const groupProgress = {};
@@ -71,12 +174,10 @@ export async function loadAdminDashboard() {
       if (m.finished) groupProgress[g].played++;
     });
 
-    // ── Comparsas: miembros y pronósticos ──
-    const membersSnap = await getDocs(collection(db, 'group_members'));
+    // ── Conteos de comparsas ──
     const memberCount = {}, predCount = {};
-    membersSnap.docs.forEach(d => {
-      const gid = d.data().group_id;
-      memberCount[gid] = (memberCount[gid] || 0) + 1;
+    members.forEach(d => {
+      memberCount[d.group_id] = (memberCount[d.group_id] || 0) + 1;
     });
     preds.forEach(p => {
       if (p.group_id) predCount[p.group_id] = (predCount[p.group_id] || 0) + 1;
@@ -127,7 +228,10 @@ export async function loadAdminDashboard() {
         ✅ Sin alertas — todo al día
       </div>`}
 
-      <div class="row g-4">
+      <!-- Faltantes próximo partido -->
+      ${missingSection}
+
+      <div class="row g-4 mt-0">
 
         <!-- Actividad reciente -->
         <div class="col-md-6">
@@ -137,7 +241,6 @@ export async function loadAdminDashboard() {
               const m = matchMap[p.match_id];
               const name = userNames[p.user_uid] || p.user_uid;
               const ts = p.created_at?.toDate ? p.created_at.toDate() : new Date(p.created_at);
-              const timeAgo = fmtAgo(ts);
               return `
               <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
                 <div style="width:32px;height:32px;border-radius:50%;background:rgba(167,139,250,0.15);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🔮</div>
@@ -147,7 +250,7 @@ export async function loadAdminDashboard() {
                 </div>
                 <div style="text-align:right;flex-shrink:0">
                   <div style="font-size:13px;font-weight:800;color:var(--gold)">${p.home_score} - ${p.away_score}</div>
-                  <div style="font-size:10px;color:var(--text-muted)">${timeAgo}</div>
+                  <div style="font-size:10px;color:var(--text-muted)">${fmtAgo(ts instanceof Date ? ts : new Date())}</div>
                 </div>
               </div>`;
             }).join('') : '<p style="color:var(--text-muted);font-size:13px">Sin pronósticos aún.</p>'}
@@ -178,7 +281,7 @@ export async function loadAdminDashboard() {
 
       </div>
 
-      <!-- Progreso por grupo -->
+      <!-- Progreso fase de grupos -->
       <div class="card p-3 mt-4">
         <div class="section-title mb-3">📊 Progreso fase de grupos</div>
         <div class="row g-2">
@@ -234,7 +337,6 @@ export async function loadAdminDashboard() {
       </div>
     `;
 
-    // Exponer para el botón de refresh
     window.loadAdminDashboard = loadAdminDashboard;
 
   } catch(e) {
