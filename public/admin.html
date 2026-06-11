@@ -304,10 +304,11 @@
     import { db } from './js/firebase-config.js';
     import { collection, getDocs, doc, updateDoc, writeBatch, Timestamp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
     const TSDB = 'https://www.thesportsdb.com/api/v1/json/3';
+    const WC_LEAGUE_ID = '4429';
     function log(elId,msg,color='var(--text-muted)'){const el=document.getElementById(elId);if(!el)return;el.classList.add('visible');el.innerHTML+=`<span style="color:${color}">${msg}</span>\n`;el.scrollTop=el.scrollHeight;}
     function clearLog(elId){const el=document.getElementById(elId);if(el){el.innerHTML='';el.classList.add('visible');}}
     function setBusy(id,busy,label){const b=document.getElementById(id);if(b){b.disabled=busy;b.textContent=label;}}
-    const ALIASES={'mexico':['mexico','méxico'],'usa':['usa','united states','estados unidos','united states of america'],'south korea':['south korea','corea del sur','korea republic'],'czechia':['czechia','chequia','czech republic'],'ivory coast':['ivory coast','costa de marfil',"côte d'ivoire"],'dr congo':['dr congo','rd congo','congo dr','democratic republic of congo'],'scotland':['scotland','escocia'],'netherlands':['netherlands','países bajos','holland'],'saudi arabia':['saudi arabia','arabia saudita'],'cape verde':['cape verde','cabo verde'],'bosnia':['bosnia','bosnia y herzegovina','bosnia and herzegovina'],'new zealand':['new zealand','nueva zelanda'],'turkey':['turkey','turquía','türkiye'],'qatar':['qatar','catar']};
+    const ALIASES={'mexico':['mexico','m\u00e9xico'],'usa':['usa','united states','estados unidos','united states of america'],'south korea':['south korea','corea del sur','korea republic'],'czechia':['czechia','chequia','czech republic'],'ivory coast':['ivory coast','costa de marfil',"c\u00f4te d'ivoire"],'dr congo':['dr congo','rd congo','congo dr','democratic republic of congo'],'scotland':['scotland','escocia'],'netherlands':['netherlands','pa\u00edses bajos','holland'],'saudi arabia':['saudi arabia','arabia saudita'],'cape verde':['cape verde','cabo verde'],'bosnia':['bosnia','bosnia y herzegovina','bosnia and herzegovina'],'new zealand':['new zealand','nueva zelanda'],'turkey':['turkey','turqu\u00eda','t\u00fcrkiye'],'qatar':['qatar','catar']};
     function norm(n){const s=(n||'').toLowerCase().trim();for(const[c,vs]of Object.entries(ALIASES))if(vs.includes(s))return c;return s;}
     function teamsEq(a,b){return norm(a)===norm(b);}
     function calcPts(h,a,ph,pa){if(h===ph&&a===pa)return 6;return Math.sign(h-a)===Math.sign(ph-pa)?3:0;}
@@ -319,11 +320,17 @@
         const now=new Date(),from4h=new Date(now-4*3600*1000),plus1h=new Date(now+3600*1000);
         const snap=await getDocs(collection(db,'matches'));
         const active=snap.docs.filter(d=>{const ko=d.data().kickoff?.toDate?.()||new Date(d.data().kickoff);return !d.data().finished&&ko>=from4h&&ko<=plus1h;});
-        if(!active.length){log('logSyncMatches','⚠️ No hay partidos en ventana activa (±4h)','#f5a0ac');setBusy('btnSyncMatches',false,'🔄 Sincronizar partidos');return;}
+        if(!active.length){log('logSyncMatches','⚠️ No hay partidos en ventana activa (\u00b14h)','#f5a0ac');setBusy('btnSyncMatches',false,'🔄 Sincronizar partidos');return;}
         log('logSyncMatches',`📋 ${active.length} partido(s) en ventana activa`);
         const dates=[...new Set(active.map(d=>{const ko=d.data().kickoff?.toDate?.()||new Date(d.data().kickoff);return ko.toISOString().slice(0,10);}))]; 
         const events=[];
-        for(const date of dates){log('logSyncMatches',`📡 Consultando TheSportsDB ${date}...`);const r=await fetch(`${TSDB}/eventsday.php?d=${date}&l=FIFA%20World%20Cup`);const j=await r.json();if(j.events?.length){events.push(...j.events);log('logSyncMatches',`  ✅ ${j.events.length} eventos`,'#34d399');}else log('logSyncMatches',`  ⚠️ Sin eventos para ${date}`,'#f5a0ac');}
+        for(const date of dates){
+          log('logSyncMatches',`📡 Consultando TheSportsDB ${date}...`);
+          const r=await fetch(`${TSDB}/eventsday.php?d=${date}&id=${WC_LEAGUE_ID}`);
+          const j=await r.json();
+          if(j.events?.length){events.push(...j.events);log('logSyncMatches',`  ✅ ${j.events.length} eventos`,'#34d399');}
+          else log('logSyncMatches',`  ⚠️ Sin eventos para ${date}`,'#f5a0ac');
+        }
         if(!events.length){log('logSyncMatches','❌ Sin eventos','#f5a0ac');setBusy('btnSyncMatches',false,'🔄 Sincronizar partidos');return;}
         let updated=0;
         for(const docSnap of active){
@@ -335,7 +342,7 @@
           if(hg===null&&ag===null){log('logSyncMatches',`  ⏳ Sin marcador: ${m.home_team} vs ${m.away_team}`);continue;}
           const status=ev.strStatus||'',finished=['Match Finished','FT','AOT','PEN'].includes(status);
           await updateDoc(doc(db,'matches',docSnap.id),{home_score:hg,away_score:ag,match_status:finished?'FT':'LIVE',finished,last_synced:Timestamp.now()});
-          log('logSyncMatches',`  ⚽ ${m.home_team} ${hg}–${ag} ${m.away_team}`,finished?'#34d399':'#4aafd4');updated++;
+          log('logSyncMatches',`  ⚽ ${m.home_team} ${hg}\u2013${ag} ${m.away_team}`,finished?'#34d399':'#4aafd4');updated++;
           if(finished){const predsSnap=await getDocs(collection(db,'predictions'));const batch=writeBatch(db);let pts=0;predsSnap.docs.filter(p=>p.data().match_id===docSnap.id&&!p.data().points_synced).forEach(p=>{const points=calcPts(hg,ag,p.data().pred_home,p.data().pred_away);batch.update(p.ref,{points,points_synced:true});pts++;});if(pts){await batch.commit();log('logSyncMatches',`    🏅 ${pts} pronósticos`,'#f5a0ac');}}
         }
         log('logSyncMatches',`\n✅ ${updated} actualizado(s)`,'#34d399');
@@ -352,7 +359,7 @@
         const groups=Object.keys(standings).sort();
         if(!groups.length){log('logSyncGroups','⚠️ No hay partidos terminados','#f5a0ac');setBusy('btnSyncGroups',false,'📊 Recalcular grupos');return;}
         const batch=writeBatch(db);
-        for(const grupo of groups){const teams=Object.entries(standings[grupo]).map(([name,s])=>({name,...s,gd:s.gf-s.gc})).sort((a,b)=>b.pts-a.pts||(b.gd-a.gd)||(b.gf-a.gf));batch.set(doc(db,'standings',grupo.replace(' ','')),{grupo,teams,updated:Timestamp.now()});log('logSyncGroups',`  📋 ${grupo}: ${teams.map(t=>`${t.flag}${t.name} ${t.pts}pts`).join(' · ')}`);
+        for(const grupo of groups){const teams=Object.entries(standings[grupo]).map(([name,s])=>({name,...s,gd:s.gf-s.gc})).sort((a,b)=>b.pts-a.pts||(b.gd-a.gd)||(b.gf-a.gf));batch.set(doc(db,'standings',grupo.replace(' ','')),{grupo,teams,updated:Timestamp.now()});log('logSyncGroups',`  📋 ${grupo}: ${teams.map(t=>`${t.flag}${t.name} ${t.pts}pts`).join(' \u00b7 ')}`);
         }await batch.commit();log('logSyncGroups',`\n✅ ${groups.length} tablas guardadas`,'#34d399');
       }catch(e){log('logSyncGroups',`❌ Error: ${e.message}`,'#f5a0ac');}
       setBusy('btnSyncGroups',false,'📊 Recalcular grupos');
@@ -364,8 +371,9 @@
     import { db } from './js/firebase-config.js';
     import { collection, getDocs, doc, updateDoc, getDoc, setDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
     const TSDB='https://www.thesportsdb.com/api/v1/json/3';
+    const WC_LEAGUE_ID='4429';
     function slog(msg,color='var(--text-muted)'){const el=document.getElementById('logSyncStreaming');if(!el)return;el.classList.add('visible');el.innerHTML+=`<span style="color:${color}">${msg}</span>\n`;el.scrollTop=el.scrollHeight;}
-    async function loadLastSync(){try{const snap=await getDoc(doc(db,'app_config','streaming_sync'));if(snap.exists()){const d=snap.data();const ts=d.last_sync?.toDate?.();if(ts){const fmt=ts.toLocaleString('es-BO',{timeZone:'America/La_Paz',day:'2-digit',month:'short',hour:'numeric',minute:'2-digit',hour12:true});document.getElementById('streamingLastSync').innerHTML=`🕐 Última sync: <strong style="color:#a78bfa">${fmt}</strong> — ${d.matches_updated||0} partido(s)`;}}else{document.getElementById('streamingLastSync').textContent='🕐 Nunca sincronizado';}}catch(_){}}
+    async function loadLastSync(){try{const snap=await getDoc(doc(db,'app_config','streaming_sync'));if(snap.exists()){const d=snap.data();const ts=d.last_sync?.toDate?.();if(ts){const fmt=ts.toLocaleString('es-BO',{timeZone:'America/La_Paz',day:'2-digit',month:'short',hour:'numeric',minute:'2-digit',hour12:true});document.getElementById('streamingLastSync').innerHTML=`🕐 \u00daltima sync: <strong style="color:#a78bfa">${fmt}</strong> \u2014 ${d.matches_updated||0} partido(s)`;}}else{document.getElementById('streamingLastSync').textContent='🕐 Nunca sincronizado';}}catch(_){}}
     async function syncStreamingChannels(){
       const el=document.getElementById('logSyncStreaming');el.innerHTML='';el.classList.add('visible');
       document.getElementById('btnSyncStreaming').disabled=true;document.getElementById('btnSyncStreaming').textContent='⏳ Actualizando...';
@@ -376,10 +384,11 @@
         const todayMatches=matchesSnap.docs.filter(d=>{const ko=d.data().kickoff?.toDate?.()||new Date(d.data().kickoff);return ko.toLocaleDateString('en-CA',{timeZone:'America/La_Paz'})===todayStr;});
         if(!todayMatches.length){slog(`⚠️ Sin partidos hoy (${todayStr} Bolivia)`,'#f5a0ac');document.getElementById('btnSyncStreaming').disabled=false;document.getElementById('btnSyncStreaming').textContent='📡 Actualizar canales hoy';return;}
         slog(`📋 ${todayMatches.length} partido(s) hoy`);
-        const resp=await fetch(`${TSDB}/eventsday.php?d=${todayStr}&l=FIFA%20World%20Cup`);const json=await resp.json();const events=json.events||[];
+        const resp=await fetch(`${TSDB}/eventsday.php?d=${todayStr}&id=${WC_LEAGUE_ID}`);
+        const json=await resp.json();const events=json.events||[];
         if(!events.length){slog('⚠️ Sin eventos de TheSportsDB','#f5a0ac');document.getElementById('btnSyncStreaming').disabled=false;document.getElementById('btnSyncStreaming').textContent='📡 Actualizar canales hoy';return;}
         slog(`✅ ${events.length} evento(s) recibidos`,'#34d399');
-        const NORM={'mexico':['mexico','méxico'],'usa':['usa','united states','estados unidos'],'south korea':['south korea','corea del sur','korea republic']};
+        const NORM={'mexico':['mexico','m\u00e9xico'],'usa':['usa','united states','estados unidos'],'south korea':['south korea','corea del sur','korea republic']};
         function norm(n){const s=(n||'').toLowerCase().trim();for(const[c,vs]of Object.entries(NORM))if(vs.includes(s))return c;return s;}
         let updated=0;
         for(const mDoc of todayMatches){
@@ -388,7 +397,7 @@
           if(!ev){slog(`  ⚠️ Sin datos: ${m.home_team} vs ${m.away_team}`);continue;}
           const channels=[];if(ev.strTVStation)channels.push(ev.strTVStation);if(ev.strVideo)channels.push(ev.strVideo);
           await updateDoc(doc(db,'matches',mDoc.id),{channels,tv_station:ev.strTVStation||null,stream_url:ev.strVideo||null,thumb:ev.strThumb||null,tsdb_id:ev.idEvent||null,channels_synced_at:Timestamp.now()});
-          slog(`  📺 ${m.home_team} vs ${m.away_team} → ${channels.length?channels.join(', '):'sin canal'}`,channels.length?'#a78bfa':'var(--text-muted)');updated++;
+          slog(`  📺 ${m.home_team} vs ${m.away_team} \u2192 ${channels.length?channels.join(', '):'sin canal'}`,channels.length?'#a78bfa':'var(--text-muted)');updated++;
         }
         await setDoc(doc(db,'app_config','streaming_sync'),{last_sync:Timestamp.now(),matches_updated:updated,date_synced:todayStr});
         slog(`\n✅ ${updated} partido(s) con canales actualizados`,'#34d399');await loadLastSync();
@@ -409,7 +418,7 @@
       msg.innerHTML='<span style="color:#4aafd4">Insertando...</span>';
       try{
         const{inserted,skipped}=await bulkLoadMatches((done,total)=>{msg.innerHTML=`<span style="color:#4aafd4">⏳ ${done}/${total}...</span>`;});
-        msg.innerHTML=`<span style="color:#34d399">✅ ${inserted} nuevos. ${skipped} ya existían.</span>`;btn.textContent='✅ Cargado';
+        msg.innerHTML=`<span style="color:#34d399">✅ ${inserted} nuevos. ${skipped} ya exist\u00edan.</span>`;btn.textContent='✅ Cargado';
       }catch(e){msg.innerHTML=`<span style="color:#f5a0ac">❌ Error: ${e.message}</span>`;btn.disabled=false;btn.textContent='⚡ Cargar todos los partidos';}
     });
   </script>
