@@ -62,18 +62,34 @@ async function loadMatchesInProgress() {
 
 async function loadMatchesDone() {
   const snap = await getDocs(query(collection(db, 'matches'), orderBy('kickoff')));
-  const sel  = document.getElementById('matchSelectDone');
+
+  // Select resetear: solo los cerrados (finished=true)
+  const sel = document.getElementById('matchSelectDone');
+  if (sel) {
+    const done = snap.docs.filter(d => d.data().finished === true);
+    sel.innerHTML = done.length
+      ? done.map(d => {
+          const m = d.data();
+          return '<option value="' + d.id + '">' + (m.home_flag||'') + ' ' + m.home_team + ' ' + m.home_score + '-' + m.away_score + ' ' + m.away_team + ' ' + (m.away_flag||'') + ' — ' + m.phase + '</option>';
+        }).join('')
+      : '<option>Sin partidos cerrados</option>';
+  }
+
+  // Select recalcular: TODOS los partidos con marcador (abiertos o cerrados)
   const selRecalc = document.getElementById('matchSelectRecalc');
-  if (!sel) return;
-  const done = snap.docs.filter(d => d.data().finished === true);
-  const opts = done.length
-    ? done.map(d => {
-        const m = d.data();
-        return '<option value="' + d.id + '">' + (m.home_flag||'') + ' ' + m.home_team + ' ' + m.home_score + '-' + m.away_score + ' ' + m.away_team + ' ' + (m.away_flag||'') + ' — ' + m.phase + '</option>';
-      }).join('')
-    : '<option>Sin partidos cerrados</option>';
-  sel.innerHTML = opts;
-  if (selRecalc) selRecalc.innerHTML = done.length ? opts : '<option>Sin partidos cerrados</option>';
+  if (selRecalc) {
+    const withScore = snap.docs.filter(d => {
+      const m = d.data();
+      return m.home_score !== undefined && m.home_score !== null;
+    });
+    selRecalc.innerHTML = withScore.length
+      ? withScore.map(d => {
+          const m = d.data();
+          const badge = m.finished ? ' ✅' : ' 🔴';
+          return '<option value="' + d.id + '">' + (m.home_flag||'') + ' ' + m.home_team + ' ' + m.home_score + '-' + m.away_score + ' ' + m.away_team + ' ' + (m.away_flag||'') + badge + ' — ' + m.phase + '</option>';
+        }).join('')
+      : '<option>Sin partidos con marcador</option>';
+  }
 }
 
 // ── GUARDAR RESULTADO PARCIAL ──
@@ -86,7 +102,6 @@ document.getElementById('saveResultBtn')?.addEventListener('click', async () => 
 
   await updateDoc(doc(db, 'matches', mid), { home_score: hs, away_score: as_ });
 
-  // FIX: usa pred_home / pred_away
   const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id', '==', mid)));
   const batch = writeBatch(db);
   predsSnap.forEach(predDoc => {
@@ -106,6 +121,7 @@ document.getElementById('saveResultBtn')?.addEventListener('click', async () => 
     '📊 Marcador actualizado — ' + predsSnap.size + ' pronósticos recalculados (partido aún abierto)</div>';
   await loadMatchesAdmin();
   await loadMatchesInProgress();
+  await loadMatchesDone();
 });
 
 // ── CERRAR PARTIDO (finished = true) ──
@@ -123,7 +139,6 @@ document.getElementById('closeMatchBtn')?.addEventListener('click', async () => 
 
   await updateDoc(doc(db, 'matches', mid), { finished: true, match_status: 'FT' });
 
-  // Recalcula puntos de pronósticos al cerrar (usa pred_home/pred_away)
   const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id', '==', mid)));
   const batch = writeBatch(db);
   predsSnap.forEach(predDoc => {
@@ -138,7 +153,6 @@ document.getElementById('closeMatchBtn')?.addEventListener('click', async () => 
     batch.update(predDoc.ref, { points: pts, points_synced: true });
   });
 
-  // Favoritos
   const allMembersSnap = await getDocs(collection(db, 'group_members'));
   let favCount = 0;
   allMembersSnap.forEach(mDoc => {
@@ -162,7 +176,7 @@ document.getElementById('closeMatchBtn')?.addEventListener('click', async () => 
   await loadMatchesDone();
 });
 
-// ── RECALCULAR PUNTOS DE PARTIDO YA CERRADO ──
+// ── RECALCULAR PUNTOS (abierto o cerrado, mientras tenga marcador) ──
 document.getElementById('recalcPtsBtn')?.addEventListener('click', async () => {
   const mid = document.getElementById('matchSelectRecalc').value;
   const msg = document.getElementById('recalcMsg');
@@ -174,7 +188,7 @@ document.getElementById('recalcPtsBtn')?.addEventListener('click', async () => {
   const as_ = matchData.away_score;
 
   if (hs === null || hs === undefined) {
-    msg.innerHTML = badge('El partido no tiene marcador', 'danger');
+    msg.innerHTML = badge('El partido no tiene marcador aún', 'danger');
     return;
   }
 
@@ -197,8 +211,12 @@ document.getElementById('recalcPtsBtn')?.addEventListener('click', async () => {
   });
   await batch.commit();
 
+  const estado = matchData.finished ? '✅ FINAL' : '🔴 EN JUEGO';
   msg.innerHTML = '<div class="mt-2 p-2 rounded" style="background:rgba(167,139,250,0.12);border:1px solid #a78bfa;color:#a78bfa">' +
-    '✅ ' + recalcCount + ' pronósticos recalculados para ' + matchData.home_team + ' vs ' + matchData.away_team + ' (' + hs + '-' + as_ + ')</div>';
+    '✅ ' + recalcCount + ' pronósticos recalculados — ' +
+    matchData.home_team + ' ' + hs + '-' + as_ + ' ' + matchData.away_team +
+    ' <span style="font-size:11px;opacity:0.7">(' + estado + ')</span></div>';
+  await loadMatchesDone();
 });
 
 // ── RESETEAR RESULTADO ──
@@ -282,7 +300,7 @@ async function loadAllMatchesList() {
     btn.addEventListener('click', async () => {
       const mid   = btn.dataset.mid;
       const label = btn.dataset.label;
-      if (!confirm('\u00bfEliminar partido "' + label + '"? Se borrarán sus pronósticos.')) return;
+      if (!confirm('¿Eliminar partido "' + label + '"? Se borrarán sus pronósticos.')) return;
       btn.disabled = true; btn.textContent = '⏳';
       try {
         const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id', '==', mid)));
