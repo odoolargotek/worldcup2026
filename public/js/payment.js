@@ -30,7 +30,6 @@ async function getUserName(uid) {
   return n;
 }
 
-// Convierte un File a base64 data-URL (almacenamos en Firestore como string)
 function toBase64(file) {
   return new Promise((res, rej) => {
     const reader = new FileReader();
@@ -40,10 +39,8 @@ function toBase64(file) {
   });
 }
 
-// Límite ~800 KB en base64 (~600 KB imagen real)
 const MAX_B64 = 800 * 1024;
 
-// ─── HELPER: escribir notificación en Firestore → dispara Cloud Function FCM ─
 async function sendPaymentNotification(uid, { title, body, type }) {
   try {
     await addDoc(collection(db, 'notifications', uid, 'items'), {
@@ -77,7 +74,6 @@ export async function renderPayment(containerEl) {
   const sym = groupData.currency === 'BOB' ? 'Bs.' : '$';
   const fee = groupData.fee || 0;
 
-  // Cargar todos los miembros
   const membersSnap = await getDocs(query(collection(db, 'group_members'), where('group_id', '==', GROUP_ID)));
   const members = [];
   for (const mDoc of membersSnap.docs) {
@@ -86,18 +82,16 @@ export async function renderPayment(containerEl) {
     members.push({ docId: mDoc.id, uid: m.user_uid, name, role: m.role, payment: m.payment || {} });
   }
 
-  const myMember = members.find(m => m.uid === currentUser.uid);
+  const myMember  = members.find(m => m.uid === currentUser.uid);
   const myPayment = myMember?.payment || {};
-  const qrUrl    = groupData.payment_qr || null;
-  const payNotes = groupData.payment_notes || '';
+  const qrUrl     = groupData.payment_qr || null;
+  const payNotes  = groupData.payment_notes || '';
 
-  // ─── RESUMEN DE ESTADO (visible para todos) ─────────────────────────
   const paid    = members.filter(m => m.payment?.status === 'confirmed').length;
   const pending = members.filter(m => m.payment?.status === 'pending').length;
   const none    = members.length - paid - pending;
 
   containerEl.innerHTML = `
-  <!-- Resumen -->
   <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
     <div style="flex:1;min-width:110px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.3);border-radius:12px;padding:14px;text-align:center">
       <div style="font-size:1.6rem;font-weight:800;color:#34d399">${paid}</div>
@@ -113,7 +107,6 @@ export async function renderPayment(containerEl) {
     </div>
   </div>
 
-  <!-- QR de pago + info del admin -->
   <div id="payQrSection" style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:20px">
     <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px">📲 Datos de pago</div>
     ${ qrUrl
@@ -137,14 +130,12 @@ export async function renderPayment(containerEl) {
     </div>` : '' }
   </div>
 
-  <!-- MI ESTADO DE PAGO (participante) -->
   ${ !isAdmin ? `
   <div id="myPaySection" style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-bottom:20px">
     <div style="font-size:13px;font-weight:700;color:var(--primary-light);margin-bottom:10px">💳 Mi estado de pago</div>
     ${renderMyPayStatus(myPayment, sym, fee)}
   </div>` : '' }
 
-  <!-- LISTA DE PARTICIPANTES (admin) -->
   ${ isAdmin ? `
   <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;padding:18px">
     <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:12px">👥 Estado de pagos — participantes</div>
@@ -157,6 +148,17 @@ export async function renderPayment(containerEl) {
   attachPaymentListeners(members, sym, fee);
 }
 
+// ─── FORMATO FECHA LEGIBLE ────────────────────────────────────────────
+function fmtDate(iso) {
+  if (!iso) return '';
+  try {
+    return new Date(iso).toLocaleString('es-BO', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  } catch(_) { return iso; }
+}
+
 // ─── MI ESTADO DE PAGO ────────────────────────────────────────────────
 function renderMyPayStatus(pay, sym, fee) {
   if (pay.status === 'confirmed') {
@@ -164,7 +166,7 @@ function renderMyPayStatus(pay, sym, fee) {
       <span style="font-size:2rem">✅</span>
       <div>
         <div style="font-weight:700;color:#34d399">¡Pago confirmado!</div>
-        <div style="font-size:12px;color:var(--text-muted)">El administrador verificó tu pago${fee ? ` de ${sym}${fee}` : ''}.</div>
+        <div style="font-size:12px;color:var(--text-muted)">El administrador verificó tu pago${fee ? ` de ${sym}${fee}` : ''}.${ pay.confirmed_at ? `<br>📅 <em>${fmtDate(pay.confirmed_at)}</em>` : '' }</div>
       </div>
     </div>`;
   }
@@ -189,14 +191,16 @@ function renderAdminMemberRow(m, sym, fee) {
   const pay = m.payment || {};
   let badge, actions = '';
   if (pay.status === 'confirmed') {
+    const dateStr = pay.confirmed_at ? `<div style="font-size:10px;color:var(--text-muted);margin-top:3px">📅 ${fmtDate(pay.confirmed_at)}</div>` : '';
     badge = '<span style="background:rgba(52,211,153,0.15);color:#34d399;border:1px solid rgba(52,211,153,0.4);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700">✅ Confirmado</span>';
+    actions = `${dateStr}<button class="btn btn-sm btn-outline-secondary undo-pay-btn" data-uid="${m.uid}" data-docid="${m.docId}" style="font-size:10px;margin-top:6px;opacity:0.7">↩️ Deshacer pago</button>`;
   } else if (pay.status === 'pending') {
     badge = '<span style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.4);border-radius:20px;padding:2px 10px;font-size:11px;font-weight:700">⏳ En revisión</span>';
     actions = `
       ${ pay.receipt ? `<img src="${pay.receipt}" alt="Comprobante" style="max-width:160px;width:100%;border-radius:8px;margin:8px 0;border:1px solid var(--border);display:block" loading="lazy">` : '' }
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
         <button class="btn btn-sm btn-success confirm-pay-btn" data-uid="${m.uid}" data-docid="${m.docId}" style="font-size:11px;font-weight:700">✅ Confirmar pago</button>
-        <button class="btn btn-sm btn-outline-danger reject-pay-btn"  data-uid="${m.uid}" data-docid="${m.docId}" style="font-size:11px">❌ Rechazar</button>
+        <button class="btn btn-sm btn-outline-danger reject-pay-btn" data-uid="${m.uid}" data-docid="${m.docId}" style="font-size:11px">❌ Rechazar</button>
       </div>`;
   } else {
     badge = '<span style="background:rgba(148,163,184,0.1);color:var(--text-muted);border:1px solid var(--border);border-radius:20px;padding:2px 10px;font-size:11px">⬜ Sin pagar</span>';
@@ -234,7 +238,6 @@ function attachPaymentListeners(members, sym, fee) {
         if (b64.length > MAX_B64) { if (msg) msg.innerHTML = '<span style="color:#f5a0ac">⚠️ Imagen muy grande. Comprime y vuelve a intentar.</span>'; btn.disabled=false;btn.textContent='💾 Guardar QR / instrucciones'; return; }
         updates.payment_qr = b64;
         groupData.payment_qr = b64;
-        // Actualizar previsualización
         const preview = document.querySelector('#payQrSection img[alt="QR de pago"]');
         if (preview) preview.src = b64;
         else {
@@ -289,9 +292,6 @@ function attachPaymentListeners(members, sym, fee) {
   // Re-subir comprobante
   document.getElementById('reUploadBtn')?.addEventListener('click', () => {
     const mySection = document.getElementById('myPaySection');
-    if (mySection) mySection.querySelector('div:last-child')?.remove();
-    // Reemplazar contenido con formulario de subida
-    const myMember = members.find(m => m.uid === currentUser.uid);
     if (mySection) mySection.innerHTML = `
       <div style="font-size:13px;font-weight:700;color:var(--primary-light);margin-bottom:10px">💳 Mi estado de pago</div>
       <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px">📸 Nuevo comprobante</label>
@@ -301,27 +301,55 @@ function attachPaymentListeners(members, sym, fee) {
     attachPaymentListeners(members, sym, fee);
   });
 
-  // Admin: confirmar pago
+  // Admin: confirmar pago (manual o desde comprobante)
   document.querySelectorAll('.confirm-pay-btn, .manual-confirm-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
-      const { docid, uid } = btn.dataset;
+      const uid    = btn.dataset.uid;
+      const docid  = btn.dataset.docid;
       btn.disabled = true; btn.textContent = 'Guardando...';
       try {
+        const confirmedAt = new Date().toISOString();
         await updateDoc(doc(db, 'group_members', docid), {
           'payment.status':       'confirmed',
-          'payment.confirmed_at': new Date().toISOString()
+          'payment.confirmed_at': confirmedAt
         });
         const m = members.find(x => x.uid === uid);
+        if (m) m.payment = { ...m.payment, status: 'confirmed', confirmed_at: confirmedAt };
         const groupName = groupData?.name || 'tu comparsa';
-        // Notificar al participante por FCM
         await sendPaymentNotification(uid, {
           title: '✅ ¡Pago confirmado!',
           body:  `El administrador confirmó tu pago en ${groupName}.`,
           type:  'payment_confirmed',
         });
         const row = document.getElementById(`pay-row-${uid}`);
-        if (row && m) { m.payment = { ...m.payment, status: 'confirmed' }; row.outerHTML = renderAdminMemberRow(m, sym, fee); }
-      } catch(e) { btn.disabled = false; btn.textContent = btn.classList.contains('manual-confirm-btn') ? '✅ Marcar como pagado' : '✅ Confirmar pago'; }
+        if (row && m) { row.outerHTML = renderAdminMemberRow(m, sym, fee); attachPaymentListeners(members, sym, fee); }
+      } catch(e) {
+        btn.disabled = false;
+        btn.textContent = btn.classList.contains('manual-confirm-btn') ? '✅ Marcar como pagado' : '✅ Confirmar pago';
+      }
+    });
+  });
+
+  // Admin: DESHACER pago confirmado
+  document.querySelectorAll('.undo-pay-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('¿Deshacer la confirmación de pago? El participante volverá a estado "Sin pagar".')) return;
+      const uid   = btn.dataset.uid;
+      const docid = btn.dataset.docid;
+      btn.disabled = true; btn.textContent = 'Deshaciendo...';
+      try {
+        await updateDoc(doc(db, 'group_members', docid), {
+          'payment.status':       'none',
+          'payment.confirmed_at': null,
+          'payment.receipt':      ''
+        });
+        const m = members.find(x => x.uid === uid);
+        if (m) m.payment = { status: 'none', confirmed_at: null, receipt: '' };
+        const row = document.getElementById(`pay-row-${uid}`);
+        if (row && m) { row.outerHTML = renderAdminMemberRow(m, sym, fee); attachPaymentListeners(members, sym, fee); }
+      } catch(e) {
+        btn.disabled = false; btn.textContent = '↩️ Deshacer pago';
+      }
     });
   });
 
@@ -329,7 +357,8 @@ function attachPaymentListeners(members, sym, fee) {
   document.querySelectorAll('.reject-pay-btn').forEach(btn => {
     btn.addEventListener('click', async () => {
       if (!confirm('¿Rechazar el comprobante? El participante deberá subir uno nuevo.')) return;
-      const { docid, uid } = btn.dataset;
+      const uid   = btn.dataset.uid;
+      const docid = btn.dataset.docid;
       btn.disabled = true;
       try {
         await updateDoc(doc(db, 'group_members', docid), {
@@ -338,14 +367,14 @@ function attachPaymentListeners(members, sym, fee) {
         });
         const m = members.find(x => x.uid === uid);
         const groupName = groupData?.name || 'tu comparsa';
-        // Notificar al participante por FCM
         await sendPaymentNotification(uid, {
           title: '❌ Comprobante rechazado',
           body:  `El administrador rechazó tu comprobante en ${groupName}. Por favor sube uno nuevo.`,
           type:  'payment_rejected',
         });
+        if (m) m.payment = { status: 'rejected', receipt: '' };
         const row = document.getElementById(`pay-row-${uid}`);
-        if (row && m) { m.payment = { status: 'rejected', receipt: '' }; row.outerHTML = renderAdminMemberRow(m, sym, fee); }
+        if (row && m) { row.outerHTML = renderAdminMemberRow(m, sym, fee); attachPaymentListeners(members, sym, fee); }
       } catch(e) { btn.disabled = false; }
     });
   });
