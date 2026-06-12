@@ -11,7 +11,8 @@ document.querySelectorAll('[data-atab]').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('[data-atab]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    ['overview','results','matches','groupsmgr','tvaccess'].forEach(t => {
+    // 'streams' incluido para que atab-streams no quede con d-none
+    ['overview','results','matches','groupsmgr','tvaccess','streams'].forEach(t => {
       document.getElementById('atab-' + t)?.classList.toggle('d-none', btn.dataset.atab !== t);
     });
     if (btn.dataset.atab === 'matches')   loadAllMatchesList();
@@ -116,7 +117,6 @@ document.getElementById('saveResultBtn')?.addEventListener('click', async () => 
   const batch = writeBatch(db);
   predsSnap.forEach(predDoc => {
     const p  = predDoc.data();
-    // Los pronósticos usan home_score / away_score (no pred_home / pred_away)
     const pts = calcPoints(hs, as_, p.home_score, p.away_score);
     batch.update(predDoc.ref, { points: pts });
   });
@@ -191,14 +191,12 @@ document.getElementById('recalcPtsBtn')?.addEventListener('click', async () => {
     return;
   }
 
-  // Busca TODOS los pronósticos del partido (sin filtrar por group_id)
   const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id', '==', mid)));
   const batch = writeBatch(db);
   let recalcCount = 0;
 
   predsSnap.forEach(predDoc => {
     const p  = predDoc.data();
-    // Pronósticos usan home_score / away_score
     const pts = calcPoints(hs, as_, p.home_score, p.away_score);
     batch.update(predDoc.ref, { points: pts, points_synced: true });
     recalcCount++;
