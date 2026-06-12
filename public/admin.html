@@ -42,6 +42,7 @@
     .sync-card.green  { border-color: rgba(52,211,153,0.35);  background: rgba(52,211,153,0.05); }
     .sync-card.purple { border-color: rgba(167,139,250,0.35); background: rgba(167,139,250,0.05); }
     .sync-card.orange { border-color: rgba(251,146,60,0.35);  background: rgba(251,146,60,0.05); }
+    .sync-card.red    { border-color: rgba(239,68,68,0.35);   background: rgba(239,68,68,0.05); }
     .sync-btn { font-weight: 700; font-size: 0.92rem; padding: 10px 22px; border-radius: 10px; border: none; cursor: pointer; transition: opacity .2s, transform .1s; white-space: nowrap; }
     .sync-btn:active { transform: scale(0.97); }
     .sync-btn:disabled { opacity: 0.55; cursor: not-allowed; }
@@ -49,9 +50,31 @@
     .sync-btn-green  { background: linear-gradient(135deg,#059669,#34d399); color: #fff; }
     .sync-btn-purple { background: linear-gradient(135deg,#7c3aed,#a78bfa); color: #fff; }
     .sync-btn-orange { background: linear-gradient(135deg,#d97706,#fb923c); color: #fff; }
+    .sync-btn-red    { background: linear-gradient(135deg,#dc2626,#ef4444); color: #fff; }
     .sync-log { font-size: 12px; margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: rgba(0,0,0,0.25); color: var(--text-muted); display: none; max-height: 200px; overflow-y: auto; white-space: pre-wrap; }
     .sync-log.visible { display: block; }
     .section-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+    /* Streams editor */
+    #streamsJsonEditor {
+      width: 100%; min-height: 380px; font-family: 'Courier New', monospace;
+      font-size: 12.5px; line-height: 1.6;
+      background: rgba(0,0,0,0.35); color: #e2e8f0;
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+      padding: 14px; resize: vertical; outline: none;
+    }
+    #streamsJsonEditor:focus { border-color: #4aafd4; }
+    .streams-preview-item {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px; padding: 12px 16px; margin-bottom: 10px;
+    }
+    .streams-preview-match { font-weight: 700; font-size: 14px; color: #f1f5f9; margin-bottom: 8px; }
+    .streams-preview-link {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: rgba(74,175,212,0.12); border: 1px solid rgba(74,175,212,0.25);
+      border-radius: 6px; padding: 3px 10px; font-size: 12px; color: #4aafd4;
+      margin: 3px 4px 3px 0; text-decoration: none;
+    }
+    .streams-preview-link:hover { background: rgba(74,175,212,0.22); color: #4aafd4; }
   </style>
 </head>
 <body>
@@ -75,6 +98,7 @@
       <li class="nav-item"><button class="nav-link" data-atab="matches">⚽ Partidos</button></li>
       <li class="nav-item"><button class="nav-link" data-atab="groupsmgr">👥 Comparsas</button></li>
       <li class="nav-item"><button class="nav-link" data-atab="tvaccess">📺 Acceso TV</button></li>
+      <li class="nav-item"><button class="nav-link" data-atab="streams">📡 Streams</button></li>
     </ul>
 
     <!-- TAB DASHBOARD -->
@@ -269,6 +293,69 @@
           </div>
         </div>
         <div id="tvUserList"><div style="color:var(--text-muted);font-size:13px">Cargando usuarios...</div></div>
+      </div>
+    </div>
+
+    <!-- TAB STREAMS MANUALES -->
+    <div id="atab-streams" class="d-none">
+
+      <!-- Aviso informativo -->
+      <div class="sync-card mb-4" style="border-color:rgba(74,175,212,0.4);background:rgba(74,175,212,0.05)">
+        <div class="d-flex align-items-start gap-3">
+          <div style="font-size:2rem">📡</div>
+          <div>
+            <div style="font-weight:800;font-size:0.95rem;color:#4aafd4">Gestor de links en vivo (manual)</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:4px;line-height:1.7">
+              Pega aquí el JSON con los streams del día. Se guarda en <code style="color:#a78bfa">app_config/live_streams</code> en Firestore
+              y los usuarios con acceso TV lo verán de inmediato en la pestaña <strong>Ver en vivo</strong>.
+              <br>Si el array está vacío o no hay JSON guardado, se muestra el mensaje "Sin transmisiones disponibles".
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row g-4">
+        <!-- Editor JSON -->
+        <div class="col-lg-7">
+          <div class="card p-4">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+              <h6 style="color:#4aafd4;font-weight:700;margin:0">✏️ Editor JSON de streams</h6>
+              <div class="d-flex gap-2">
+                <button id="btnLoadStreams" class="btn btn-sm btn-outline-secondary">📥 Cargar actual</button>
+                <button id="btnClearStreams" class="btn btn-sm btn-outline-danger">🗑️ Limpiar</button>
+              </div>
+            </div>
+            <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px">
+              Formato: array de objetos <code style="color:#a78bfa">[{ "match": "...", "streams": [{"label": "🇪🇸 Español", "url": "..."}] }]</code>
+            </p>
+            <textarea id="streamsJsonEditor" placeholder='[
+  {
+    "match": "Argentina vs Brasil",
+    "streams": [
+      { "label": "🇪🇸 Español", "url": "https://..." },
+      { "label": "🇺🇸 Inglés",   "url": "https://..." }
+    ]
+  }
+]'></textarea>
+            <div class="d-flex gap-2 mt-3">
+              <button id="btnPreviewStreams" class="btn btn-sm" style="background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.3);font-weight:700">👁️ Vista previa</button>
+              <button id="btnSaveStreams" class="btn btn-sm sync-btn-blue sync-btn" style="padding:6px 20px">💾 Guardar en Firestore</button>
+            </div>
+            <div id="streamsMsg" class="mt-3"></div>
+          </div>
+        </div>
+
+        <!-- Vista previa + estado actual -->
+        <div class="col-lg-5">
+          <div class="card p-4 mb-3">
+            <h6 style="color:#a78bfa;font-weight:700;margin-bottom:12px">👁️ Vista previa</h6>
+            <div id="streamsPreview" style="color:var(--text-muted);font-size:13px">Pulsa «Vista previa» para ver cómo quedará.</div>
+          </div>
+          <div class="card p-4">
+            <h6 style="color:#34d399;font-weight:700;margin-bottom:8px">☁️ Estado actual en Firestore</h6>
+            <div id="streamsCurrentStatus" style="color:var(--text-muted);font-size:12px">Pulsa «Cargar actual» para ver el JSON guardado.</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -474,5 +561,114 @@
     const tvDiv=document.getElementById('atab-tvaccess');let loaded=false;
     new MutationObserver(()=>{if(!tvDiv.classList.contains('d-none')&&!loaded){loaded=true;loadAllUsers();}}).observe(tvDiv,{attributes:true,attributeFilter:['class']});
   </script>
+
+  <!-- GESTOR DE STREAMS MANUALES -->
+  <script type="module">
+    import { db } from './js/firebase-config.js';
+    import { doc, getDoc, setDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+    const editor   = document.getElementById('streamsJsonEditor');
+    const msgEl    = document.getElementById('streamsMsg');
+    const previewEl= document.getElementById('streamsPreview');
+    const statusEl = document.getElementById('streamsCurrentStatus');
+    const DOCREF   = () => doc(db, 'app_config', 'live_streams');
+
+    function showMsg(text, ok=true){
+      msgEl.innerHTML = `<span style="color:${ok?'#34d399':'#f5a0ac'}">${text}</span>`;
+      setTimeout(()=>{ msgEl.innerHTML=''; }, 4000);
+    }
+
+    function renderPreview(data){
+      if (!Array.isArray(data) || data.length === 0){
+        previewEl.innerHTML = '<span style="color:var(--text-muted)">Array vacío — no se mostrarán streams.</span>';
+        return;
+      }
+      previewEl.innerHTML = data.map(item => `
+        <div class="streams-preview-item">
+          <div class="streams-preview-match">⚽ ${item.match || '(sin nombre)'}</div>
+          <div>${(item.streams||[]).map(s=>
+            `<a class="streams-preview-link" href="${s.url}" target="_blank" rel="noopener">
+              ${s.label || 'Link'} <span style="font-size:10px;opacity:0.6">↗</span>
+            </a>`
+          ).join('')}</div>
+        </div>
+      `).join('');
+    }
+
+    // Cargar datos actuales de Firestore
+    async function loadCurrentStreams(){
+      statusEl.innerHTML = '<span style="color:var(--text-muted)">⏳ Cargando...</span>';
+      try {
+        const snap = await getDoc(DOCREF());
+        if (!snap.exists()) {
+          statusEl.innerHTML = '<span style="color:var(--text-muted)">Sin datos guardados todavía.</span>';
+          editor.value = '[]';
+          return;
+        }
+        const data = snap.data();
+        const streams = data.streams || [];
+        const ts = data.updated_at?.toDate?.();
+        const fmt = ts ? ts.toLocaleString('es-BO',{timeZone:'America/La_Paz',day:'2-digit',month:'short',hour:'numeric',minute:'2-digit',hour12:true}) : 'fecha desconocida';
+        statusEl.innerHTML = `
+          <div style="margin-bottom:8px">🕐 Guardado: <strong style="color:#34d399">${fmt}</strong></div>
+          <div>📋 Partidos: <strong style="color:#4aafd4">${streams.length}</strong> | 
+               🔗 Links totales: <strong style="color:#a78bfa">${streams.reduce((acc,m)=>acc+(m.streams?.length||0),0)}</strong></div>
+        `;
+        editor.value = JSON.stringify(streams, null, 2);
+        renderPreview(streams);
+      } catch(e) {
+        statusEl.innerHTML = `<span style="color:#f5a0ac">❌ Error: ${e.message}</span>`;
+      }
+    }
+
+    // Guardar en Firestore
+    document.getElementById('btnSaveStreams').addEventListener('click', async () => {
+      const btn = document.getElementById('btnSaveStreams');
+      let parsed;
+      try {
+        parsed = JSON.parse(editor.value);
+      } catch(e) {
+        showMsg(`❌ JSON inválido: ${e.message}`, false);
+        return;
+      }
+      if (!Array.isArray(parsed)) { showMsg('❌ Debe ser un array JSON [ ... ]', false); return; }
+      btn.disabled = true; btn.textContent = '⏳ Guardando...';
+      try {
+        await setDoc(DOCREF(), { streams: parsed, updated_at: Timestamp.now() });
+        showMsg(`✅ ${parsed.length} partido(s) guardados correctamente`);
+        await loadCurrentStreams();
+      } catch(e) {
+        showMsg(`❌ Error al guardar: ${e.message}`, false);
+      }
+      btn.disabled = false; btn.textContent = '💾 Guardar en Firestore';
+    });
+
+    // Vista previa sin guardar
+    document.getElementById('btnPreviewStreams').addEventListener('click', () => {
+      try {
+        const parsed = JSON.parse(editor.value);
+        renderPreview(parsed);
+      } catch(e) {
+        previewEl.innerHTML = `<span style="color:#f5a0ac">❌ JSON inválido: ${e.message}</span>`;
+      }
+    });
+
+    // Limpiar editor
+    document.getElementById('btnClearStreams').addEventListener('click', () => {
+      editor.value = '[]';
+      previewEl.innerHTML = '<span style="color:var(--text-muted)">Editor limpiado.</span>';
+    });
+
+    // Cargar datos al abrir el tab
+    document.getElementById('btnLoadStreams').addEventListener('click', loadCurrentStreams);
+    const streamsDiv = document.getElementById('atab-streams'); let streamsLoaded = false;
+    new MutationObserver(() => {
+      if (!streamsDiv.classList.contains('d-none') && !streamsLoaded) {
+        streamsLoaded = true;
+        loadCurrentStreams();
+      }
+    }).observe(streamsDiv, { attributes: true, attributeFilter: ['class'] });
+  </script>
+
 </body>
 </html>
