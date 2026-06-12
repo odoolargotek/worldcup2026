@@ -94,7 +94,6 @@ function deadlineBadge(kickoff, isFinal, hasScore, hasMyPred) {
 }
 
 // ── Badge de resultado del pronóstico ──────────────────────────────────────
-// Devuelve: 'exact' | 'winner' | 'miss' | null
 function predResult(pred, match) {
   if (!pred || match.home_score === undefined || match.home_score === null) return null;
   const ph = Number(pred.home_score);
@@ -108,34 +107,65 @@ function predResult(pred, match) {
   return 'miss';
 }
 
+// Inyecta los keyframes de animación una sola vez
+let _badgeStyleInjected = false;
+function injectBadgeStyles() {
+  if (_badgeStyleInjected) return;
+  _badgeStyleInjected = true;
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes badge-pop {
+      0%   { transform: scale(0.6); opacity: 0; }
+      60%  { transform: scale(1.15); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+    @keyframes badge-shine {
+      0%,100% { box-shadow: 0 0 6px rgba(251,191,36,0.4); }
+      50%      { box-shadow: 0 0 18px rgba(251,191,36,0.85), 0 0 32px rgba(251,191,36,0.3); }
+    }
+    .badge-exact {
+      animation: badge-pop 0.45s cubic-bezier(.36,.07,.19,.97) both,
+                 badge-shine 2s ease-in-out 0.45s infinite;
+    }
+    .badge-winner {
+      animation: badge-pop 0.4s cubic-bezier(.36,.07,.19,.97) both;
+    }
+    .badge-miss {
+      animation: badge-pop 0.35s ease both;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 function resultBadge(type) {
+  injectBadgeStyles();
+
   if (type === 'exact') {
-    return '<div style="' +
-      'display:inline-flex;align-items:center;gap:5px;' +
-      'background:linear-gradient(135deg,rgba(251,191,36,0.25),rgba(245,158,11,0.15));' +
-      'border:1px solid rgba(251,191,36,0.6);' +
-      'border-radius:20px;padding:3px 10px;margin-top:6px;' +
-      'font-size:11px;font-weight:800;color:#fbbf24;' +
-      'box-shadow:0 0 8px rgba(251,191,36,0.3)' +
-      '">🎯 ¡Resultado exacto!</div>';
+    return '<div class="badge-exact" style="' +
+      'display:inline-flex;align-items:center;gap:6px;' +
+      'background:linear-gradient(135deg,rgba(251,191,36,0.3),rgba(245,158,11,0.18));' +
+      'border:1.5px solid rgba(251,191,36,0.75);' +
+      'border-radius:24px;padding:5px 14px;margin-top:7px;' +
+      'font-size:12px;font-weight:900;color:#fbbf24;letter-spacing:0.3px' +
+      '">🎉 ¡Felicidades Crack! 🎯</div>';
   }
   if (type === 'winner') {
-    return '<div style="' +
-      'display:inline-flex;align-items:center;gap:5px;' +
-      'background:rgba(52,211,153,0.15);' +
-      'border:1px solid rgba(52,211,153,0.4);' +
-      'border-radius:20px;padding:3px 10px;margin-top:6px;' +
-      'font-size:11px;font-weight:700;color:#34d399' +
-      '">✅ ¡Ganador correcto!</div>';
+    return '<div class="badge-winner" style="' +
+      'display:inline-flex;align-items:center;gap:6px;' +
+      'background:rgba(52,211,153,0.18);' +
+      'border:1.5px solid rgba(52,211,153,0.5);' +
+      'border-radius:24px;padding:5px 14px;margin-top:7px;' +
+      'font-size:12px;font-weight:800;color:#34d399' +
+      '">⚽️ ¡Le atinaste al ganador!</div>';
   }
   if (type === 'miss') {
-    return '<div style="' +
-      'display:inline-flex;align-items:center;gap:5px;' +
+    return '<div class="badge-miss" style="' +
+      'display:inline-flex;align-items:center;gap:6px;' +
       'background:rgba(239,68,68,0.08);' +
       'border:1px solid rgba(239,68,68,0.25);' +
-      'border-radius:20px;padding:3px 10px;margin-top:6px;' +
+      'border-radius:24px;padding:4px 12px;margin-top:7px;' +
       'font-size:11px;font-weight:600;color:#f87171' +
-      '">❌ Fallaste</div>';
+      '">💔 Esta vez no fue… ¡ánimo!</div>';
   }
   return '';
 }
@@ -213,7 +243,6 @@ function renderMatches(snap) {
           : '';
         predBadge = '<div style="font-size:12px;color:var(--text-muted);margin-top:5px">🔮 <strong style="color:var(--text)">' + myPred.home_score + ' - ' + myPred.away_score + '</strong>' + pts + '</div>';
 
-        // Badge de felicitaciones si el partido ya terminó
         if (isFinal) {
           const rType = predResult(myPred, m);
           if (rType) predBadge += resultBadge(rType);
@@ -244,7 +273,6 @@ function renderMatches(snap) {
         actionArea = '<span style="font-size:11px;color:var(--text-muted);white-space:nowrap">🔒</span>';
       }
 
-      // Borde dorado especial para resultado exacto
       const rType = isFinal && myPred ? predResult(myPred, m) : null;
       const borderColor = rType === 'exact'  ? '#fbbf24'
                         : rType === 'winner' ? '#34d399'
