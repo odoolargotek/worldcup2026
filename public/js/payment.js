@@ -32,6 +32,10 @@ async function getUserInfo(uid) {
     if (authName) name = authName;
     if (!email && auth.currentUser.email) email = auth.currentUser.email;
   }
+  // Si no hay email en Firestore, intentar con auth directamente
+  if (!email && auth.currentUser?.uid === uid && auth.currentUser.email) {
+    email = auth.currentUser.email;
+  }
   name = name || (email ? email.split('@')[0] : 'Sin nombre');
   const info = { name, email: email || null };
   userInfoCache[uid] = info;
@@ -184,11 +188,16 @@ function renderMyPayStatus(pay, sym, fee) {
 
 function renderAdminMemberRow(m, sym, fee) {
   const pay = m.payment || {};
-  // Nombre con tooltip de email si no tiene nombre real
-  const noName  = !m.name || m.name === 'Sin nombre';
-  const nameHtml = noName && m.email
-    ? `<span style="font-style:italic;color:var(--text-muted)" title="${escHtml(m.email)}">Sin nombre</span> <span style="font-size:10px;color:var(--text-muted)">📧 ${escHtml(m.email)}</span>`
-    : `<span title="${m.email ? escHtml(m.email) : ''}">${escHtml(m.name)}</span>`;
+
+  // Nombre: si no tiene nombre real, mostrar en cursiva
+  const noRealName = !m.name || m.name === 'Sin nombre';
+  const nameDisplay = noRealName
+    ? `<span style="font-style:italic;color:var(--text-muted)">Sin nombre</span>`
+    : `<span>${escHtml(m.name)}</span>`;
+  // Email siempre visible debajo del nombre
+  const emailLine = m.email
+    ? `<div style="font-size:11px;color:var(--text-muted);margin-top:1px">📧 ${escHtml(m.email)}</div>`
+    : '';
 
   let badge, actions = '';
   if (pay.status === 'confirmed') {
@@ -210,7 +219,8 @@ function renderAdminMemberRow(m, sym, fee) {
   return `
     <div id="pay-row-${m.uid}" style="display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--border);flex-wrap:wrap;align-items:flex-start">
       <div style="flex:1;min-width:140px">
-        <div style="font-weight:600;font-size:0.9rem">${nameHtml} ${m.role==='admin'?'<span style="font-size:10px;color:var(--gold)">★ Admin</span>':''}</div>
+        <div style="font-weight:600;font-size:0.9rem">${nameDisplay} ${m.role==='admin'?'<span style="font-size:10px;color:var(--gold)">★ Admin</span>':''}</div>
+        ${emailLine}
         <div style="margin-top:4px">${badge}</div>
       </div>
       <div>${actions}</div>
