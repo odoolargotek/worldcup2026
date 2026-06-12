@@ -37,16 +37,13 @@
     #saveNicknameBtn:hover{background:rgba(245,158,11,0.35)}#saveNicknameBtn:disabled{opacity:0.5;cursor:default}
     #nicknameMsg{font-size:12px;margin-top:6px;min-height:16px}
     #tab-tv{display:none}#tv-nav-item{display:none}
-    .tv-match-card{background:var(--bg-card,#1c2333);border:1px solid var(--border,rgba(255,255,255,0.07));border-radius:14px;padding:16px 18px;display:flex;flex-direction:column;gap:10px;transition:border-color 0.2s}
-    .tv-match-card:hover{border-color:rgba(29,144,198,0.5)}
-    .tv-match-title{font-size:0.98rem;font-weight:700;line-height:1.3}
-    .tv-btn{display:block;width:100%;padding:9px 0;border-radius:8px;font-size:13px;font-weight:700;text-align:center;text-decoration:none;border:none;cursor:pointer;transition:opacity 0.15s}
-    .tv-btn:hover{opacity:0.85;text-decoration:none}
-    .tv-btn-primary{background:#1D90C6;color:#fff}
-    .tv-btn-secondary{background:rgba(29,144,198,0.15);color:#4aafd4;border:1px solid rgba(29,144,198,0.4)}
-    .tv-badge-live{background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px;letter-spacing:0.5px}
-    .tv-badge-upcoming{background:rgba(245,158,11,0.2);color:#f59e0b;font-size:10px;font-weight:700;padding:2px 7px;border-radius:20px}
-    .tv-badge-cat{background:rgba(29,144,198,0.15);color:#4aafd4;font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px}
+    /* Tarjetas de stream (nuevo formato) */
+    .stream-match-card{background:var(--bg-card,#1c2333);border:1px solid var(--border,rgba(255,255,255,0.07));border-radius:14px;padding:16px 18px;margin-bottom:14px;transition:border-color 0.2s}
+    .stream-match-card:hover{border-color:rgba(29,144,198,0.45)}
+    .stream-match-title{font-size:0.98rem;font-weight:700;margin-bottom:10px;color:var(--text,#e2e8f0)}
+    .stream-links-row{display:flex;flex-wrap:wrap;gap:7px}
+    .stream-link-btn{display:inline-flex;align-items:center;gap:5px;background:rgba(29,144,198,0.13);border:1px solid rgba(29,144,198,0.35);border-radius:8px;padding:6px 13px;font-size:12px;font-weight:700;color:#4aafd4;text-decoration:none;transition:background 0.15s,border-color 0.15s}
+    .stream-link-btn:hover{background:rgba(29,144,198,0.25);border-color:rgba(29,144,198,0.6);color:#4aafd4;text-decoration:none}
     #dashTabs{margin-bottom:20px}
     #dashTabs .nav-link{color:var(--text-muted,#94a3b8);font-size:14px;font-weight:600;border:none;padding:8px 16px;border-radius:8px}
     #dashTabs .nav-link.active{background:rgba(29,144,198,0.15);color:#4aafd4}
@@ -144,15 +141,15 @@
     <!-- TAB: Ver en vivo -->
     <div id="tab-tv" style="display:none">
       <div style="margin-bottom:16px">
-        <h6 style="font-weight:800;margin-bottom:4px">📺 Partidos disponibles</h6>
-        <p style="font-size:12px;color:var(--text-muted);margin:0">Haz clic en "📺 Ver partido" para abrir el stream en una nueva pestaña.</p>
+        <h6 style="font-weight:800;margin-bottom:4px">📺 Partidos en vivo</h6>
+        <p style="font-size:12px;color:var(--text-muted);margin:0">Haz clic en el link de tu idioma preferido para abrir el stream en una nueva pestaña.</p>
       </div>
       <div id="tvMatchesLoading" style="text-align:center;padding:40px 0;color:var(--text-muted);font-size:13px">
-        <div class="loading-label" style="justify-content:center"><span class="dot"></span><span class="dot"></span><span class="dot"></span>Cargando partidos...</div>
+        <div class="loading-label" style="justify-content:center"><span class="dot"></span><span class="dot"></span><span class="dot"></span>Cargando transmisiones...</div>
       </div>
-      <div id="tvMatchesGrid" class="row g-3"></div>
+      <div id="tvMatchesGrid"></div>
       <div id="tvMatchesError" style="display:none;text-align:center;padding:30px 0">
-        <div style="color:#f5a0ac;font-size:13px;margin-bottom:8px">⚠️ No se pudo cargar la lista de partidos.</div>
+        <div style="color:#f5a0ac;font-size:13px;margin-bottom:8px">⚠️ No se pudo cargar la lista de transmisiones.</div>
         <div id="tvErrorDetail" style="color:var(--text-muted);font-size:11px;margin-bottom:16px"></div>
         <button onclick="retryTvLoad()" style="background:rgba(29,144,198,0.2);color:#4aafd4;border:1px solid rgba(29,144,198,0.4);border-radius:8px;padding:7px 18px;font-size:13px;font-weight:700;cursor:pointer">🔄 Reintentar</button>
       </div>
@@ -248,7 +245,10 @@
     document.getElementById('nicknameInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('saveNicknameBtn').click();});
   </script>
 
-  <script>
+  <!-- TAB TV — carga desde Firestore via live-streams.js -->
+  <script type="module">
+    import { getLiveStreams } from './js/live-streams.js';
+
     let tvLoaded = false;
 
     window.switchDashTab = function(tab) {
@@ -260,73 +260,71 @@
     };
 
     window.retryTvLoad = function() {
-      tvLoaded=false;
-      document.getElementById('tvMatchesError').style.display='none';
-      document.getElementById('tvMatchesLoading').style.display='block';
-      document.getElementById('tvMatchesGrid').innerHTML='';
+      tvLoaded = false;
+      document.getElementById('tvMatchesError').style.display = 'none';
+      document.getElementById('tvMatchesLoading').style.display = 'block';
+      document.getElementById('tvMatchesGrid').innerHTML = '';
       loadTvMatches();
     };
 
     async function loadTvMatches() {
       tvLoaded = true;
-      const grid      = document.getElementById('tvMatchesGrid');
-      const loading   = document.getElementById('tvMatchesLoading');
-      const errDiv    = document.getElementById('tvMatchesError');
+      const grid    = document.getElementById('tvMatchesGrid');
+      const loading = document.getElementById('tvMatchesLoading');
+      const errDiv  = document.getElementById('tvMatchesError');
       const errDetail = document.getElementById('tvErrorDetail');
 
-      const sources = [
-        'https://raw.githubusercontent.com/odoolargotek/worldcup2026/main/public/data/matches.json',
-        'https://streamtp.top/api/matches.json'
-      ];
+      try {
+        const streams = await getLiveStreams();
+        loading.style.display = 'none';
 
-      let matches = null, lastError = '';
-      for (const url of sources) {
-        try {
-          const res = await fetch(url, {cache:'no-cache'});
-          if (!res.ok) { lastError = 'HTTP '+res.status+' ('+url+')'; continue; }
-          const data = await res.json();
-          const arr = Array.isArray(data) ? data : (data.matches || []);
-          if (arr.length > 0) { matches = arr; break; }
-          lastError = 'Sin partidos en '+url;
-        } catch(e) { lastError = e.message+' ('+url+')'; }
-      }
+        if (!streams || streams.length === 0) {
+          grid.innerHTML = `
+            <div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+              <div style="font-size:3rem;margin-bottom:16px">📺</div>
+              <div style="font-weight:700;font-size:1rem;margin-bottom:8px;color:var(--text)">Sin transmisiones disponibles</div>
+              <div style="font-size:0.85rem">El administrador aún no ha cargado links para hoy.<br>Vuelve a revisar cuando comiencen los partidos.</div>
+            </div>`;
+          return;
+        }
 
-      loading.style.display = 'none';
-      if (!matches || !matches.length) {
+        // Contador de streams totales
+        const totalLinks = streams.reduce((acc, m) => acc + (m.streams?.length || 0), 0);
+        const header = `
+          <div style="margin-bottom:14px">
+            <span style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">
+              📡 ${streams.length} partido(s) · ${totalLinks} link(s) disponibles
+            </span>
+          </div>`;
+
+        const cards = streams.map(item => {
+          const matchName = item.match || 'Partido';
+          const links = (item.streams || []).map(s =>
+            `<a href="${s.url}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="stream-link-btn">
+              ${s.label || 'Ver stream'}
+              <span style="font-size:10px;opacity:0.55">↗</span>
+            </a>`
+          ).join('');
+
+          return `
+            <div class="stream-match-card">
+              <div class="stream-match-title">⚽ ${matchName}</div>
+              <div class="stream-links-row">
+                ${links || '<span style="font-size:12px;color:var(--text-muted)">Sin links disponibles</span>'}
+              </div>
+            </div>`;
+        }).join('');
+
+        grid.innerHTML = header + cards;
+
+      } catch(e) {
+        loading.style.display = 'none';
         errDiv.style.display = 'block';
-        errDetail.textContent = lastError || 'No hay partidos disponibles.';
-        return;
+        errDetail.textContent = e.message || 'Error desconocido';
       }
-      grid.innerHTML = matches.map(m => buildTvCard(m)).join('');
-    }
-
-    function buildTvCard(m) {
-      const title    = m.title    || 'Partido';
-      const time     = m.time     || '';
-      const category = m.category || '';
-      const isLive   = m.status === 'live' || m.status === 'en vivo';
-      const streams  = Array.isArray(m.streams) ? m.streams : [];
-      const statusBadge = isLive
-        ? '<span class="tv-badge-live">● EN VIVO</span>'
-        : (time ? `<span class="tv-badge-upcoming">⏰ ${time}</span>` : '');
-      const catBadge = category ? `<span class="tv-badge-cat">${category}</span>` : '';
-
-      const buttons = streams.length
-        ? streams.map((s, i) => {
-            const label = (s.flag || '') + ' ' + (i === 0 ? '📺 Ver partido' : (s.language || s.streamId || 'Canal '+(i+1)));
-            const cls   = i === 0 ? 'tv-btn tv-btn-primary' : 'tv-btn tv-btn-secondary';
-            return `<a href="${s.embedUrl}" target="_blank" rel="noopener" class="${cls}" style="margin-top:${i>0?'6px':'0'}">${label}</a>`;
-          }).join('')
-        : '<span style="font-size:12px;color:var(--text-muted)">Sin enlace disponible</span>';
-
-      return `
-      <div class="col-12 col-sm-6 col-lg-4">
-        <div class="tv-match-card">
-          <div style="display:flex;flex-wrap:wrap;gap:5px;align-items:center">${catBadge}${statusBadge}</div>
-          <div class="tv-match-title">${title}</div>
-          <div style="display:flex;flex-direction:column;gap:4px">${buttons}</div>
-        </div>
-      </div>`;
     }
 
     window.hideGroupsLoading=function(){var l=document.getElementById('groupLoadingState'),g=document.getElementById('groupList');if(l)l.style.display='none';if(g)g.style.display='';};
