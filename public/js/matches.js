@@ -32,7 +32,7 @@ onAuthStateChanged(auth, async (user) => {
   );
 });
 
-// ── Helpers de fecha ──────────────────────────────────────────────────────────
+// ── Helpers de fecha ─────────────────────────────────────────────────────────
 
 function toLocalDateKey(date) {
   return date.toLocaleDateString('en-CA', { timeZone: TZ });
@@ -55,7 +55,7 @@ function dateLabel(key) {
   return { text: label, color: 'var(--gold)', emoji: '📆' };
 }
 
-// ── Badge de urgencia ─────────────────────────────────────────────────────────
+// ── Badge de urgencia ──────────────────────────────────────────────────────────
 
 function deadlineBadge(kickoff, isFinal, hasScore, hasMyPred) {
   if (isFinal) return '';
@@ -93,14 +93,60 @@ function deadlineBadge(kickoff, isFinal, hasScore, hasMyPred) {
   return '';
 }
 
-// ── Render principal ──────────────────────────────────────────────────────────
+// ── Badge de resultado del pronóstico ──────────────────────────────────────
+// Devuelve: 'exact' | 'winner' | 'miss' | null
+function predResult(pred, match) {
+  if (!pred || match.home_score === undefined || match.home_score === null) return null;
+  const ph = Number(pred.home_score);
+  const pa = Number(pred.away_score);
+  const mh = Number(match.home_score);
+  const ma = Number(match.away_score);
+  if (ph === mh && pa === ma) return 'exact';
+  const predSign  = Math.sign(ph - pa);
+  const matchSign = Math.sign(mh - ma);
+  if (predSign === matchSign) return 'winner';
+  return 'miss';
+}
+
+function resultBadge(type) {
+  if (type === 'exact') {
+    return '<div style="' +
+      'display:inline-flex;align-items:center;gap:5px;' +
+      'background:linear-gradient(135deg,rgba(251,191,36,0.25),rgba(245,158,11,0.15));' +
+      'border:1px solid rgba(251,191,36,0.6);' +
+      'border-radius:20px;padding:3px 10px;margin-top:6px;' +
+      'font-size:11px;font-weight:800;color:#fbbf24;' +
+      'box-shadow:0 0 8px rgba(251,191,36,0.3)' +
+      '">🎯 ¡Resultado exacto!</div>';
+  }
+  if (type === 'winner') {
+    return '<div style="' +
+      'display:inline-flex;align-items:center;gap:5px;' +
+      'background:rgba(52,211,153,0.15);' +
+      'border:1px solid rgba(52,211,153,0.4);' +
+      'border-radius:20px;padding:3px 10px;margin-top:6px;' +
+      'font-size:11px;font-weight:700;color:#34d399' +
+      '">✅ ¡Ganador correcto!</div>';
+  }
+  if (type === 'miss') {
+    return '<div style="' +
+      'display:inline-flex;align-items:center;gap:5px;' +
+      'background:rgba(239,68,68,0.08);' +
+      'border:1px solid rgba(239,68,68,0.25);' +
+      'border-radius:20px;padding:3px 10px;margin-top:6px;' +
+      'font-size:11px;font-weight:600;color:#f87171' +
+      '">❌ Fallaste</div>';
+  }
+  return '';
+}
+
+// ── Render principal ─────────────────────────────────────────────────────────
 
 function renderMatches(snap) {
   const container = document.getElementById('matchList');
   if (!container) return;
   const now = new Date();
 
-  // Agrupar por fecha local Bolivia
   const byDate = {};
   snap.forEach(d => {
     const m       = d.data();
@@ -159,13 +205,19 @@ function renderMatches(snap) {
         ? '<span style="background:rgba(245,158,11,0.12);color:var(--gold);font-size:9px;font-weight:700;padding:1px 7px;border-radius:20px;letter-spacing:1px">' + m.phase + '</span>'
         : '';
 
-      // Los pronósticos se guardan con home_score / away_score
+      // Pronóstico + badge de acierto
       let predBadge = '';
       if (myPred) {
         const pts = myPred.points !== undefined
           ? '<span style="color:var(--gold);font-weight:700"> +' + myPred.points + 'pts</span>'
           : '';
         predBadge = '<div style="font-size:12px;color:var(--text-muted);margin-top:5px">🔮 <strong style="color:var(--text)">' + myPred.home_score + ' - ' + myPred.away_score + '</strong>' + pts + '</div>';
+
+        // Badge de felicitaciones si el partido ya terminó
+        if (isFinal) {
+          const rType = predResult(myPred, m);
+          if (rType) predBadge += resultBadge(rType);
+        }
       } else if (isOpen) {
         predBadge = '<div style="font-size:11px;color:var(--text-muted);margin-top:5px;font-style:italic">Sin pronóstico aún</div>';
       }
@@ -192,7 +244,14 @@ function renderMatches(snap) {
         actionArea = '<span style="font-size:11px;color:var(--text-muted);white-space:nowrap">🔒</span>';
       }
 
-      const borderColor = isFinal ? 'var(--gold)' : isLive ? '#34d399' : isOpen ? 'var(--green-light)' : '#475569';
+      // Borde dorado especial para resultado exacto
+      const rType = isFinal && myPred ? predResult(myPred, m) : null;
+      const borderColor = rType === 'exact'  ? '#fbbf24'
+                        : rType === 'winner' ? '#34d399'
+                        : isFinal            ? 'var(--gold)'
+                        : isLive             ? '#34d399'
+                        : isOpen             ? 'var(--green-light)'
+                        : '#475569';
 
       const card = document.createElement('div');
       card.className = 'mb-2';
