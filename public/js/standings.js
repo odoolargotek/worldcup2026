@@ -12,7 +12,8 @@ const PHASES   = ['Grupo A','Grupo B','Grupo C','Grupo D','Grupo E','Grupo F',
 
 let groupData = null;
 
-const userNameCache = {};
+// Cache: uid → { name, email }
+const userInfoCache = {};
 
 function sym() {
   return (groupData?.currency === 'BOB') ? 'Bs.' : '$';
@@ -26,31 +27,35 @@ function getCategory(pts) {
   return                  { label: '\ud83d\udc36 Novato',    color: '#94a3b8', bg: 'rgba(148,163,184,0.1)',  border: 'rgba(148,163,184,0.3)' };
 }
 
-async function getUserName(uid) {
-  if (userNameCache[uid]) return userNameCache[uid];
-  let name = null;
-  let emailFallback = null;
+// Retorna { name, email } para el uid dado
+async function getUserInfo(uid) {
+  if (userInfoCache[uid]) return userInfoCache[uid];
+  let name  = null;
+  let email = null;
   try {
     const uSnap = await getDoc(doc(db, 'users', uid));
     if (uSnap.exists()) {
       const d = uSnap.data();
-      // Nombre: display_name o displayName (solo si no está vacío)
       const candidate = (d.display_name || '').trim() || (d.displayName || '').trim();
       if (candidate) name = candidate;
-      // Guardar email completo como fallback
-      if (d.email) emailFallback = d.email;
+      if (d.email) email = d.email;
     }
   } catch(_) {}
-  // Si no hay nombre en Firestore, intentar con el objeto auth
   if (!name && auth.currentUser?.uid === uid) {
     const authName = (auth.currentUser.displayName || '').trim();
     if (authName) name = authName;
-    if (!emailFallback && auth.currentUser.email) emailFallback = auth.currentUser.email;
+    if (!email && auth.currentUser.email) email = auth.currentUser.email;
   }
-  // Fallback final: correo completo
-  name = name || emailFallback || 'Sin nombre';
-  userNameCache[uid] = name;
-  return name;
+  // Si sigue sin nombre, usar parte del correo como display
+  name = name || (email ? email.split('@')[0] : 'Sin nombre');
+  const info = { name, email: email || null };
+  userInfoCache[uid] = info;
+  return info;
+}
+
+// Compatibilidad: devuelve solo el nombre
+async function getUserName(uid) {
+  return (await getUserInfo(uid)).name;
 }
 
 onAuthStateChanged(auth, async (user) => {
@@ -77,9 +82,9 @@ onAuthStateChanged(auth, async (user) => {
   await renderStandings(user, prizeEl, feeEl);
 });
 
-// ─────────────────────────────────────────────────────────
-// PANEL DE ADMINISTRADOR (con botón Editar configuración)
-// ─────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// PANEL DE ADMINISTRADOR
+// ─────────────────────────────────────────────────────────────────
 function renderAdminPanel(user, g) {
   const container = document.getElementById('rankingTab');
   if (!container) return;
@@ -102,7 +107,6 @@ function renderAdminPanel(user, g) {
     <div id="adminMsg" style="margin-top:8px;font-size:12px"></div>`;
   container.parentNode.insertBefore(panel, container);
 
-  // Toggle inscripciones
   document.getElementById('toggleOpenBtn')?.addEventListener('click', async () => {
     const newState = !(g.is_open === false);
     await updateDoc(doc(db, 'groups', GROUP_ID), { is_open: !newState });
@@ -119,26 +123,23 @@ function renderAdminPanel(user, g) {
     }
   });
 
-  // Abrir modal de edición
   document.getElementById('editGroupBtn')?.addEventListener('click', () => openEditModal(g));
 }
 
-// ─────────────────────────────────────────────────────────
-// MODAL: EDITAR CONFIGURACIÓN DEL GRUPO
-// ─────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────
+// MODAL: EDITAR CONFIGURACIÓN
+// ─────────────────────────────────────────────────────────────────
 async function openEditModal(g) {
-  // Cargar participantes actuales para la pestaña de gestión
   const membersSnap = await getDocs(
     query(collection(db, 'group_members'), where('group_id', '==', GROUP_ID))
   );
   const members = [];
   for (const mDoc of membersSnap.docs) {
-    const m = mDoc.data();
-    const name = await getUserName(m.user_uid);
-    members.push({ docId: mDoc.id, uid: m.user_uid, name, role: m.role });
+    const m    = mDoc.data();
+    const info = await getUserInfo(m.user_uid);
+    members.push({ docId: mDoc.id, uid: m.user_uid, name: info.name, email: info.email, role: m.role });
   }
 
-  // Quitar modal anterior si existe
   document.getElementById('editGroupModal')?.remove();
 
   const modal = document.createElement('div');
@@ -151,8 +152,6 @@ async function openEditModal(g) {
 
   const pct = g.prize_pct || { p1: 60, p2: 30, p3: 10 };
   const pctP3 = pct.p3 || 0;
-
-  // QR preview existente
   const existingQR   = g.payment_qr || '';
   const existingInst = g.payment_instructions || '';
 
@@ -161,7 +160,6 @@ async function openEditModal(g) {
     <button id="closeEditModal" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;color:var(--text-muted);cursor:pointer">\u00d7</button>
     <h5 style="font-weight:800;margin-bottom:18px;color:var(--gold)">\u270f\ufe0f Editar comparsa</h5>
 
-    <!-- Tabs internas -->
     <div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap">
       <button class="edit-tab-btn active" data-etab="general" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:rgba(245,158,11,0.15);color:var(--gold);cursor:pointer">\ud83d\udcdd General</button>
       <button class="edit-tab-btn" data-etab="montos" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer">\ud83d\udcb0 Montos</button>
@@ -186,8 +184,8 @@ async function openEditModal(g) {
       <div class="mb-3">
         <label style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:block">Moneda</label>
         <select id="editCurrency" class="form-select">
-          <option value="USD" ${(g.currency||'USD')==='USD'?'selected':''}>USD — D\u00f3lar</option>
-          <option value="BOB" ${g.currency==='BOB'?'selected':''}>BOB — Boliviano</option>
+          <option value="USD" ${(g.currency||'USD')==='USD'?'selected':''}>USD \u2014 D\u00f3lar</option>
+          <option value="BOB" ${g.currency==='BOB'?'selected':''}>BOB \u2014 Boliviano</option>
         </select>
       </div>
       <div class="mb-3">
@@ -224,10 +222,8 @@ async function openEditModal(g) {
     <!-- TAB: PAGO -->
     <div id="etab-pago" class="d-none">
       <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
-        Sube el QR de tu método de pago para que los participantes puedan escanearlo y enviarte el comprobante.
+        Sube el QR de tu m\u00e9todo de pago para que los participantes puedan escanearlo.
       </p>
-
-      <!-- Preview QR actual -->
       <div id="qrPreviewWrap" style="margin-bottom:14px;${existingQR ? '' : 'display:none'}">
         <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">QR actual:</div>
         <div style="display:flex;align-items:flex-start;gap:12px">
@@ -238,26 +234,22 @@ async function openEditModal(g) {
           </button>
         </div>
       </div>
-
-      <!-- Upload nuevo QR -->
       <div class="mb-3">
         <label style="font-size:12px;color:var(--text-muted);margin-bottom:6px;display:block">
           ${existingQR ? 'Reemplazar QR' : 'Subir QR de pago'}
         </label>
         <input type="file" id="editQrInput" accept="image/*" class="form-control" style="font-size:12px">
-        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Formatos: JPG, PNG, WebP. Máx ~600 KB.</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Formatos: JPG, PNG, WebP. M\u00e1x ~600 KB.</div>
         <div id="qrUploadPreview" style="margin-top:10px;display:none">
           <div style="font-size:11px;color:#34d399;margin-bottom:4px">\u2705 Nuevo QR seleccionado:</div>
           <img id="qrUploadImg" src="" alt="Preview" style="width:100px;height:100px;object-fit:contain;border-radius:8px;border:1px solid var(--border);background:#fff;padding:4px">
         </div>
       </div>
-
       <div class="mb-3">
         <label style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:block">Instrucciones de pago (opcional)</label>
         <textarea id="editPayInst" class="form-control" rows="3" maxlength="300" style="resize:none"
           placeholder="Ej: Transferir a cuenta 7XXXXXXX, poner tu nombre en referencia">${escHtml(existingInst)}</textarea>
       </div>
-
       <div style="display:flex;justify-content:flex-end">
         <button id="savePayBtn" class="btn btn-sm btn-success" style="font-weight:700">\ud83d\udcbe Guardar pago</button>
       </div>
@@ -268,21 +260,27 @@ async function openEditModal(g) {
     <div id="etab-participantes" class="d-none">
       <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px">${members.length} participante(s). Puedes expulsar a quien necesites.</p>
       <div style="display:flex;flex-direction:column;gap:8px" id="membersList">
-        ${members.map(m => `
-          <div id="member-row-${m.uid}" style="display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px">
+        ${members.map(m => {
+          const noName = !m.name || m.name === 'Sin nombre';
+          const emailLine = m.email
+            ? `<div style="font-size:10px;color:var(--text-muted);margin-top:1px" title="${escHtml(m.email)}">\ud83d\udce7 ${escHtml(m.email)}</div>`
+            : '';
+          return `
+          <div id="member-row-${m.uid}" title="${m.email ? escHtml(m.email) : ''}" style="display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px">
             <div style="flex:1">
-              <div style="font-weight:600;font-size:0.9rem">${escHtml(m.name)}</div>
+              <div style="font-weight:600;font-size:0.9rem${noName ? ';color:var(--text-muted);font-style:italic' : ''}">${escHtml(m.name)}</div>
+              ${emailLine}
               <div style="font-size:11px;color:var(--text-muted)">${m.role === 'admin' ? '\u2B50 Administrador' : 'Participante'}</div>
             </div>
             ${m.role !== 'admin' ? `
             <button onclick="window._kickMember('${m.uid}','${escHtml(m.name)}','${m.docId}')" style="background:rgba(201,52,75,0.15);color:#f5a0ac;border:1px solid rgba(201,52,75,0.3);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer">
               Expulsar
             </button>` : ''}
-          </div>`).join('')}
+          </div>`;
+        }).join('')}
       </div>
     </div>
 
-    <!-- Acciones (General / Montos) -->
     <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end" id="editModalActions">
       <button id="cancelEditBtn" class="btn btn-outline-light btn-sm">Cancelar</button>
       <button id="saveEditBtn" class="btn btn-warning btn-sm" style="font-weight:700">\ud83d\udcbe Guardar cambios</button>
@@ -292,20 +290,14 @@ async function openEditModal(g) {
 
   document.body.appendChild(modal);
 
-  // Cerrar
   document.getElementById('closeEditModal')?.addEventListener('click', () => modal.remove());
   document.getElementById('cancelEditBtn')?.addEventListener('click', () => modal.remove());
   modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
 
-  // ── Preview al seleccionar nuevo QR ──
   document.getElementById('editQrInput')?.addEventListener('change', (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 700 * 1024) {
-      alert('La imagen es demasiado grande. Usa una imagen menor a 600 KB.');
-      e.target.value = '';
-      return;
-    }
+    if (file.size > 700 * 1024) { alert('La imagen es demasiado grande. Usa una imagen menor a 600 KB.'); e.target.value = ''; return; }
     const reader = new FileReader();
     reader.onload = (ev) => {
       const wrap = document.getElementById('qrUploadPreview');
@@ -315,9 +307,8 @@ async function openEditModal(g) {
     reader.readAsDataURL(file);
   });
 
-  // ── Quitar QR existente ──
   document.getElementById('removeQrBtn')?.addEventListener('click', async () => {
-    if (!confirm('¿Quitar el QR de pago?')) return;
+    if (!confirm('\u00bfQuitar el QR de pago?')) return;
     try {
       await updateDoc(doc(db, 'groups', GROUP_ID), { payment_qr: '' });
       g.payment_qr = '';
@@ -328,18 +319,14 @@ async function openEditModal(g) {
     }
   });
 
-  // ── Guardar sección de pago ──
   document.getElementById('savePayBtn')?.addEventListener('click', async () => {
     const inst    = document.getElementById('editPayInst')?.value.trim() || '';
     const file    = document.getElementById('editQrInput')?.files?.[0];
     const payMsg  = document.getElementById('payMsg');
     const saveBtn = document.getElementById('savePayBtn');
-
     if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Guardando...'; }
-
     try {
       const updates = { payment_instructions: inst };
-
       if (file) {
         const base64 = await new Promise((resolve, reject) => {
           const reader = new FileReader();
@@ -349,14 +336,12 @@ async function openEditModal(g) {
         });
         updates.payment_qr = base64;
         g.payment_qr = base64;
-        // Actualizar preview en el modal
         const wrap = document.getElementById('qrPreviewWrap');
         const img  = document.getElementById('qrPreviewImg');
         if (wrap && img) { img.src = base64; wrap.style.display = 'block'; }
         document.getElementById('qrUploadPreview').style.display = 'none';
         document.getElementById('editQrInput').value = '';
       }
-
       await updateDoc(doc(db, 'groups', GROUP_ID), updates);
       g.payment_instructions = inst;
       if (payMsg) payMsg.innerHTML = '<span style="color:#34d399">\u2705 Datos de pago guardados correctamente.</span>';
@@ -367,29 +352,20 @@ async function openEditModal(g) {
     }
   });
 
-  // ── Tabs internas ──
   const ALL_TABS = ['general','montos','pago','participantes'];
   modal.querySelectorAll('.edit-tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       modal.querySelectorAll('.edit-tab-btn').forEach(b => {
-        b.style.background = 'var(--bg)';
-        b.style.color = 'var(--text-muted)';
-        b.classList.remove('active');
+        b.style.background = 'var(--bg)'; b.style.color = 'var(--text-muted)'; b.classList.remove('active');
       });
-      btn.style.background = 'rgba(245,158,11,0.15)';
-      btn.style.color = 'var(--gold)';
-      btn.classList.add('active');
+      btn.style.background = 'rgba(245,158,11,0.15)'; btn.style.color = 'var(--gold)'; btn.classList.add('active');
       const tab = btn.dataset.etab;
-      ALL_TABS.forEach(t => {
-        document.getElementById(`etab-${t}`)?.classList.toggle('d-none', t !== tab);
-      });
-      // Mostrar/ocultar botones de acción según pestaña
+      ALL_TABS.forEach(t => document.getElementById(`etab-${t}`)?.classList.toggle('d-none', t !== tab));
       const actions = document.getElementById('editModalActions');
       if (actions) actions.style.display = (tab === 'participantes' || tab === 'pago') ? 'none' : 'flex';
     });
   });
 
-  // ── Guardar cambios de configuración (General / Montos) ──
   document.getElementById('saveEditBtn')?.addEventListener('click', async () => {
     const name     = document.getElementById('editName')?.value.trim();
     const desc     = document.getElementById('editDesc')?.value.trim();
@@ -401,30 +377,14 @@ async function openEditModal(g) {
     const p3       = parseInt(document.getElementById('editP3')?.value) || 0;
     const saveMsg  = document.getElementById('editSaveMsg');
     const pctErr   = document.getElementById('pctError');
-
-    if (!name) { if (saveMsg) saveMsg.innerHTML = '<span style="color:#f5a0ac">\u26a0\ufe0f El nombre no puede estar vacío</span>'; return; }
-    if (p1 + p2 + p3 !== 100) {
-      if (pctErr) pctErr.textContent = '\u26a0\ufe0f La distribución debe sumar exactamente 100%';
-      if (saveMsg) saveMsg.innerHTML = '';
-      return;
-    }
+    if (!name) { if (saveMsg) saveMsg.innerHTML = '<span style="color:#f5a0ac">\u26a0\ufe0f El nombre no puede estar vac\u00edo</span>'; return; }
+    if (p1 + p2 + p3 !== 100) { if (pctErr) pctErr.textContent = '\u26a0\ufe0f La distribuci\u00f3n debe sumar exactamente 100%'; if (saveMsg) saveMsg.innerHTML = ''; return; }
     if (pctErr) pctErr.textContent = '';
-
     const btn = document.getElementById('saveEditBtn');
     if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
-
     try {
-      await updateDoc(doc(db, 'groups', GROUP_ID), {
-        name,
-        description: desc || '',
-        currency,
-        fee,
-        prize,
-        prize_pct: { p1, p2, p3 }
-      });
-      // Actualizar objeto local
+      await updateDoc(doc(db, 'groups', GROUP_ID), { name, description: desc || '', currency, fee, prize, prize_pct: { p1, p2, p3 } });
       Object.assign(g, { name, description: desc, currency, fee, prize, prize_pct: { p1, p2, p3 } });
-      // Actualizar navbar
       const nameNav = document.getElementById('groupNameNav');
       if (nameNav) nameNav.textContent = name;
       if (saveMsg) saveMsg.innerHTML = '<span style="color:#34d399">\u2705 Guardado correctamente. Recarga para ver todos los cambios.</span>';
@@ -435,15 +395,12 @@ async function openEditModal(g) {
     }
   });
 
-  // Expulsar participante (función global temporal)
   window._kickMember = async (uid, name, docId) => {
-    if (!confirm(`¿Expulsar a ${name} de la comparsa?`)) return;
+    if (!confirm(`\u00bfExpulsar a ${name} de la comparsa?`)) return;
     try {
       await deleteDoc(doc(db, 'group_members', docId));
       document.getElementById(`member-row-${uid}`)?.remove();
-    } catch(e) {
-      alert('Error al expulsar participante.');
-    }
+    } catch(e) { alert('Error al expulsar participante.'); }
   };
 }
 
@@ -481,7 +438,6 @@ function renderMyPointsCard(me, position, total) {
     { min:  30, label: '\ud83c\udf31 En forma' },
   ].find(c => me.total < c.min);
   const progress = nextCat ? Math.round((me.total / nextCat.min) * 100) : 100;
-
   el.innerHTML = `
     <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Mis puntos</div>
     <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:8px;margin-top:4px">
@@ -489,9 +445,7 @@ function renderMyPointsCard(me, position, total) {
       <span style="font-size:12px;color:var(--text-muted)">pts</span>
       <span style="margin-left:auto;font-size:11px;color:var(--text-muted)">#${position} de ${total}</span>
     </div>
-    <div style="display:inline-block;background:${cat.bg};color:${cat.color};border:1px solid ${cat.border};border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700;margin-bottom:10px">
-      ${cat.label}
-    </div>
+    <div style="display:inline-block;background:${cat.bg};color:${cat.color};border:1px solid ${cat.border};border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700;margin-bottom:10px">${cat.label}</div>
     ${nextCat ? `
     <div style="margin-bottom:6px">
       <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-bottom:3px">
@@ -518,12 +472,8 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
   if (!rankingTab) return;
   const s = sym();
 
-  const membersSnap = await getDocs(
-    query(collection(db, 'group_members'), where('group_id', '==', GROUP_ID))
-  );
-  const predsSnap = await getDocs(
-    query(collection(db, 'predictions'), where('group_id', '==', GROUP_ID))
-  );
+  const membersSnap = await getDocs(query(collection(db, 'group_members'), where('group_id', '==', GROUP_ID)));
+  const predsSnap   = await getDocs(query(collection(db, 'predictions'),   where('group_id', '==', GROUP_ID)));
 
   const memberCount = membersSnap.size;
   const totalPrize  = calcPrize(groupData, memberCount);
@@ -553,7 +503,8 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
   const rows = [];
   for (const mDoc of membersSnap.docs) {
     const m    = mDoc.data();
-    const name = await getUserName(m.user_uid);
+    const info = await getUserInfo(m.user_uid);
+    const name = info.name;
 
     const favs      = m.favorites     || {};
     const favsPts   = m.favorites_pts || {};
@@ -569,7 +520,7 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
     });
     const chosenCount = PHASES.filter(ph => favs[ph]).length;
     const total = totalFavPts + predPts - totalPenalty;
-    rows.push({ name, isMe: m.user_uid === currentUser.uid, favs, favsPts, penalties, totalFavPts, totalPenalty, exactos, resultados, predPts, chosenCount, total });
+    rows.push({ name, email: info.email, isMe: m.user_uid === currentUser.uid, favs, favsPts, penalties, totalFavPts, totalPenalty, exactos, resultados, predPts, chosenCount, total });
   }
 
   rows.sort((a, b) => b.total - a.total);
@@ -625,6 +576,12 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
     const penLine = r.totalPenalty > 0
       ? `<div class="ranking-concept" style="color:var(--accent);font-weight:600"><span>\u26a0\ufe0f Penalidades</span><span>-${r.totalPenalty} pts</span></div>` : '';
 
+    // Nombre con tooltip de email si no tiene nombre real
+    const noName = r.name === 'Sin nombre';
+    const nameHtml = noName && r.email
+      ? `<span title="${escHtml(r.email)}" style="color:var(--text-muted);font-style:italic">Sin nombre</span> <span style="font-size:10px;color:var(--text-muted)">\ud83d\udce7 ${escHtml(r.email)}</span>`
+      : escHtml(r.name);
+
     const card = document.createElement('div');
     card.className = 'mb-3';
     card.innerHTML = `
@@ -633,14 +590,14 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
           <div style="font-size:1.5rem;min-width:36px;text-align:center">${medal}</div>
           <div style="flex:1">
             <div style="font-weight:700;font-size:1rem">
-              ${r.name}
+              ${nameHtml}
               ${r.isMe ? '<span style="color:#4aafd4;font-size:11px;margin-left:6px">(t\u00fa)</span>' : ''}
               ${prizeChip}
             </div>
             <div style="font-size:12px;color:var(--text-muted)">\ud83c\udfc6 ${r.chosenCount}/12 favs \u00b7 \ud83c\udfaf ${r.exactos} exactos \u00b7 \u2705 ${r.resultados} resultados</div>
           </div>
           <div style="text-align:right">
-            <div style="font-size:1.8rem;font-weight:800;color:${i===0?'var(--gold)':i===1?'#9ca3af':i===2?'#d97706':'var(--primary-light)'};">${r.total}</div>
+            <div style="font-size:1.8rem;font-weight:800;color:${i===0?'var(--gold)':i===1?'#9ca3af':i===2?'#d97706':'var(--primary-light)'}">${r.total}</div>
             <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase">pts</div>
           </div>
         </div>
