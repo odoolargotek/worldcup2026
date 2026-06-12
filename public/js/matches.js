@@ -159,13 +159,13 @@ function renderMatches(snap) {
         ? '<span style="background:rgba(245,158,11,0.12);color:var(--gold);font-size:9px;font-weight:700;padding:1px 7px;border-radius:20px;letter-spacing:1px">' + m.phase + '</span>'
         : '';
 
-      // pred_home / pred_away son los campos reales del pronóstico
+      // Los pronósticos se guardan con home_score / away_score
       let predBadge = '';
       if (myPred) {
         const pts = myPred.points !== undefined
           ? '<span style="color:var(--gold);font-weight:700"> +' + myPred.points + 'pts</span>'
           : '';
-        predBadge = '<div style="font-size:12px;color:var(--text-muted);margin-top:5px">🔮 <strong style="color:var(--text)">' + myPred.pred_home + ' - ' + myPred.pred_away + '</strong>' + pts + '</div>';
+        predBadge = '<div style="font-size:12px;color:var(--text-muted);margin-top:5px">🔮 <strong style="color:var(--text)">' + myPred.home_score + ' - ' + myPred.away_score + '</strong>' + pts + '</div>';
       } else if (isOpen) {
         predBadge = '<div style="font-size:11px;color:var(--text-muted);margin-top:5px;font-style:italic">Sin pronóstico aún</div>';
       }
@@ -184,9 +184,9 @@ function renderMatches(snap) {
             '<div style="font-size:9px;color:#34d399;letter-spacing:1px;margin-top:2px">EN VIVO</div>' +
           '</div>';
       } else if (isOpen) {
-        const btnBg    = myPred ? 'transparent'      : 'var(--green)';
+        const btnBg    = myPred ? 'transparent'        : 'var(--green)';
         const btnColor = myPred ? 'var(--green-light)' : '#fff';
-        const btnLabel = myPred ? '✏️ Editar'         : '⚽ Pronosticar';
+        const btnLabel = myPred ? '✏️ Editar'          : '⚽ Pronosticar';
         actionArea = '<a class="btn btn-sm px-3" href="predict.html?gid=' + GROUP_ID + '&mid=' + m.id + '" style="background:' + btnBg + ';color:' + btnColor + ';border:1px solid var(--green);white-space:nowrap;font-size:12px;font-weight:600">' + btnLabel + '</a>';
       } else {
         actionArea = '<span style="font-size:11px;color:var(--text-muted);white-space:nowrap">🔒</span>';
