@@ -14,35 +14,30 @@ let groupData   = null;
 
 // Cache: uid → { name, email }
 const userInfoCache = {};
-async function getUserInfo(uid) {
+async function getUserInfo(uid, memberEmail) {
   if (userInfoCache[uid]) return userInfoCache[uid];
   let name  = null;
-  let email = null;
+  let email = memberEmail || null; // primero usamos el email del doc group_members
   try {
     const s = await getDoc(doc(db, 'users', uid));
     if (s.exists()) {
       const d = s.data();
       const candidate = (d.display_name || '').trim() || (d.displayName || '').trim();
       if (candidate) name = candidate;
-      if (d.email) email = d.email;
+      if (!email && d.email) email = d.email; // fallback a users/{uid}.email
     }
   } catch(_) {}
-  if (!name && auth.currentUser?.uid === uid) {
-    const authName = (auth.currentUser.displayName || '').trim();
-    if (authName) name = authName;
+  if (auth.currentUser?.uid === uid) {
+    if (!name) {
+      const authName = (auth.currentUser.displayName || '').trim();
+      if (authName) name = authName;
+    }
     if (!email && auth.currentUser.email) email = auth.currentUser.email;
-  }
-  // Si no hay email en Firestore, intentar con auth directamente
-  if (!email && auth.currentUser?.uid === uid && auth.currentUser.email) {
-    email = auth.currentUser.email;
   }
   name = name || (email ? email.split('@')[0] : 'Sin nombre');
   const info = { name, email: email || null };
   userInfoCache[uid] = info;
   return info;
-}
-async function getUserName(uid) {
-  return (await getUserInfo(uid)).name;
 }
 
 function toBase64(file) {
@@ -86,7 +81,8 @@ export async function renderPayment(containerEl) {
   const members = [];
   for (const mDoc of membersSnap.docs) {
     const m    = mDoc.data();
-    const info = await getUserInfo(m.user_uid);
+    // Pasamos m.email (guardado en group_members) como primer fallback
+    const info = await getUserInfo(m.user_uid, m.email || null);
     members.push({ docId: mDoc.id, uid: m.user_uid, name: info.name, email: info.email, role: m.role, payment: m.payment || {} });
   }
 

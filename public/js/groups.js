@@ -79,7 +79,6 @@ async function loadGroups(user) {
     }
 
     const memberDocs = snap.docs;
-    // Traer grupos + todos los miembros de cada grupo EN PARALELO
     const [gSnaps, memberListSnaps] = await Promise.all([
       Promise.all(memberDocs.map(m => getDoc(doc(db, 'groups', m.data().group_id)))),
       Promise.all(memberDocs.map(m =>
@@ -114,7 +113,6 @@ function buildPotBadge(g, memberCount, paidCount, sym) {
   const hasFee   = g.fee && memberCount > 0;
   const hasPrize = g.type === 'closed' && g.prize;
 
-  // Badge de pagos confirmados
   const showPayBadge = (hasFee || hasPrize) && memberCount > 0;
   const allPaid   = paidCount === memberCount;
   const payColor  = allPaid ? '#34d399' : paidCount > 0 ? '#f59e0b' : '#94a3b8';
@@ -131,7 +129,6 @@ function buildPotBadge(g, memberCount, paidCount, sym) {
       margin-left:6px;
     ">${payIcon} ${paidCount}/${memberCount} pagado${memberCount !== 1 ? 's' : ''}</span>` : '';
 
-  // Grupos abiertos con cuota
   if (hasFee && g.type !== 'closed') {
     const confirmedPot = g.fee * paidCount;
     const totalPot     = g.fee * memberCount;
@@ -167,7 +164,6 @@ function buildPotBadge(g, memberCount, paidCount, sym) {
       </div>`;
   }
 
-  // Grupos cerrados con premio fijo
   if (hasPrize) {
     const prizeStr = Number(g.prize).toLocaleString('es', { minimumFractionDigits:0, maximumFractionDigits:2 });
     return `
@@ -282,7 +278,7 @@ window.copyInviteLink = function(url, btn) {
   });
 };
 
-// ── Crear comparsa ───────────────────────────────────────────────────────────────────────────────────
+// ── Crear comparsa ────────────────────────────────────────────────────────────────────────────────────────────────
 document.getElementById('createGroupBtn')?.addEventListener('click', async () => {
   const user     = auth.currentUser;
   const name     = document.getElementById('newGroupName').value.trim();
@@ -329,8 +325,10 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
       is_open: true, owner_uid: user.uid, created_at: serverTimestamp()
     });
     pendingGroupId = ref.id;
+    // Guardar email del usuario en group_members para que el admin pueda identificarlo
     await setDoc(doc(db, 'group_members', `${ref.id}_${user.uid}`), {
       group_id: ref.id, user_uid: user.uid, role: 'admin',
+      email: user.email || null,
       favorite: null, penalty_pts: 0, favorite_pts: 0
     });
     ['newGroupName','newGroupPrizeClosed','newGroupFee','newGroupFeeOpen','newGroupMax','distP1','distP2','distP3']
@@ -352,7 +350,7 @@ document.getElementById('createGroupBtn')?.addEventListener('click', async () =>
   }
 });
 
-// ── Unirse a comparsa ──────────────────────────────────────────────────────────────────────────────
+// ── Unirse a comparsa ────────────────────────────────────────────────────────────────────────────────────────
 document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
   const user = auth.currentUser;
   const code = document.getElementById('joinCode').value.trim().toUpperCase();
@@ -378,8 +376,10 @@ document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
     }
   }
 
+  // Guardar email del usuario en group_members para que el admin pueda identificarlo
   await setDoc(doc(db, 'group_members', memberId), {
     group_id: gSnap.id, user_uid: user.uid, role: 'member',
+    email: user.email || null,
     favorite: null, penalty_pts: 0, favorite_pts: 0
   });
   pendingGroupId = gSnap.id;
@@ -389,7 +389,7 @@ document.getElementById('joinGroupBtn')?.addEventListener('click', async () => {
   openFavoriteOverlay();
 });
 
-// ── Overlay favorito ──────────────────────────────────────────────────────────────────────────────
+// ── Overlay favorito ───────────────────────────────────────────────────────────────────────────────────────
 function openFavoriteOverlay() {
   document.getElementById('selectedTeam').value = '';
   document.getElementById('saveFavoriteBtn').disabled = true;
@@ -451,7 +451,7 @@ function setupFavoriteOverlay(user) {
   });
 }
 
-// ── Overlay eliminar ──────────────────────────────────────────────────────────────────────────────
+// ── Overlay eliminar ──────────────────────────────────────────────────────────────────────────────────────
 let _deleteGid = null;
 let _deleteUser = null;
 
