@@ -1,0 +1,8 @@
+[
+  {
+    "match": "Ejemplo vs Ejemplo",
+    "streams": [
+      { "label": "🇪🇸 Español", "url": "https://ejemplo.com/stream" }
+    ]
+  }
+]
