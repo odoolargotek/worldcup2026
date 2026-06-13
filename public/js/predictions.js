@@ -1,8 +1,8 @@
-// predictions.js — Guardar pronóstico + countdown de plazo
+// predictions.js — Guardar pronóstico + countdown de plazo + navegación entre partidos
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
-  doc, getDoc, setDoc
+  doc, getDoc, setDoc, collection, getDocs, query, orderBy
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 import { fmtLong } from './time.js';
 import { findPerplexitySuggestion, renderPerplexityButton } from './perplexity-suggest.js';
@@ -12,12 +12,16 @@ const MATCH_ID = params.get('mid');
 const GROUP_ID = params.get('gid');
 
 document.getElementById('backLink')?.setAttribute('href', `group.html?gid=${GROUP_ID}`);
+document.getElementById('dashboardLink')?.setAttribute('href', `group.html?gid=${GROUP_ID}`);
 
 let kickoffDate = null;
 let countdownInterval = null;
 
 onAuthStateChanged(auth, async (user) => {
   if (!user || !MATCH_ID) return;
+
+  // Carga todos los partidos para navegación anterior/siguiente
+  await loadMatchNavigation();
 
   const mSnap = await getDoc(doc(db, 'matches', MATCH_ID));
   if (!mSnap.exists()) return;
@@ -85,6 +89,47 @@ onAuthStateChanged(auth, async (user) => {
     }
   });
 });
+
+// ── Navegación anterior / siguiente ──
+async function loadMatchNavigation() {
+  const navPrev    = document.getElementById('navPrev');
+  const navNext    = document.getElementById('navNext');
+  const navCounter = document.getElementById('navCounter');
+  if (!navPrev || !navNext || !navCounter) return;
+
+  try {
+    const snap = await getDocs(query(collection(db, 'matches'), orderBy('kickoff')));
+    const allMatches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    const idx = allMatches.findIndex(m => m.id === MATCH_ID);
+
+    if (idx === -1) {
+      navCounter.textContent = '';
+      return;
+    }
+
+    const total = allMatches.length;
+    navCounter.innerHTML =
+      `<span style="font-size:0.75rem;color:var(--text-muted)">Partido</span><br>` +
+      `<strong style="color:var(--text)">${idx + 1} / ${total}</strong>`;
+
+    // Anterior
+    if (idx > 0) {
+      const prevId = allMatches[idx - 1].id;
+      navPrev.setAttribute('href', `predict.html?gid=${GROUP_ID}&mid=${prevId}`);
+      navPrev.classList.remove('disabled');
+    }
+
+    // Siguiente
+    if (idx < total - 1) {
+      const nextId = allMatches[idx + 1].id;
+      navNext.setAttribute('href', `predict.html?gid=${GROUP_ID}&mid=${nextId}`);
+      navNext.classList.remove('disabled');
+    }
+  } catch (err) {
+    console.error('Nav error:', err);
+    navCounter.textContent = '';
+  }
+}
 
 function startCountdown(kickoff) {
   const el     = document.getElementById('deadlineCountdown');
