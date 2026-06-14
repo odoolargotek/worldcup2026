@@ -4,13 +4,15 @@
 // pero quieres forzar un valor específico en un grupo.
 //
 // CÓMO USAR (desde admin.html):
-//   import { patchFavorites } from './fix-favorites-manual.js';
+//   import { patchFavorites, cleanPenalties } from './fix-favorites-manual.js';
 //   await patchFavorites({ dryRun: true });   // solo muestra
 //   await patchFavorites({ dryRun: false });  // aplica
+//   await cleanPenalties({ dryRun: true });   // preview penalidades
+//   await cleanPenalties({ dryRun: false });  // limpia penalidades
 
 import { db } from './firebase-config.js';
 import {
-  collection, getDocs, doc, updateDoc, getDoc
+  collection, getDocs, doc, updateDoc
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
 // ─── PARCHES MANUALES ──────────────────────────────────────────────────────
@@ -18,15 +20,17 @@ import {
 // Para borrar un favorito de un grupo, pon null como valor.
 // ────────────────────────────────────────────────────────────
 const MANUAL_PATCHES = [
+  // Ya aplicados: Portugal y Inglaterra
+  // { userId: 'YyGkFKfNLpSHaDgOmj4Kl8PmwPC3', patches: { ... } },
+];
+
+// ─── LIMPIEZAS DE PENALIDADES ──────────────────────────────────────────────
+// Grupos vacíos que NO deben tener penalidad (el jugador no eligió aún)
+const PENALTY_CLEANUPS = [
   {
     userId: 'YyGkFKfNLpSHaDgOmj4Kl8PmwPC3',  // El Bedre
-    patches: {
-      'Grupo K': 'Portugal',    // reemplaza Colombia (descartada por conflicto)
-      'Grupo L': 'Inglaterra',  // grupo que quedó vacío (Nueva Zelanda era su placeholder)
-    },
+    grupos: ['Grupo B', 'Grupo D'],             // grupos vacíos → sin penalidad
   },
-  // ─ agrega más jugadores aquí si hace falta ─
-  // { userId: 'OTRO_UID', patches: { 'Grupo X': 'Equipo' } },
 ];
 
 // ───
@@ -58,7 +62,6 @@ export async function patchFavorites({ dryRun = true, onLog } = {}) {
   let totalPatched = 0;
 
   for (const { userId, patches } of MANUAL_PATCHES) {
-    // Buscar todos los group_members de este usuario
     const allSnap = await getDocs(collection(db, 'group_members'));
     const userDocs = allSnap.docs.filter(d => d.id.endsWith('_' + userId));
 
@@ -102,4 +105,72 @@ export async function patchFavorites({ dryRun = true, onLog } = {}) {
   log('━'.repeat(43), '#888');
 
   return { totalPatched };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// cleanPenalties: elimina penalidades de grupos vacíos (sin equipo elegido)
+// ─────────────────────────────────────────────────────────────────────────────
+export async function cleanPenalties({ dryRun = true, onLog } = {}) {
+  const log = onLog || ((msg, color) => {
+    if (color) console.log('%c' + msg, `color:${color}`);
+    else        console.log(msg);
+  });
+
+  log('━'.repeat(43), '#888');
+  log(`🧹 clean-penalties  [${dryRun ? 'DRY RUN' : '⚡ APLICANDO'}]`, '#f0c040');
+  log('━'.repeat(43), '#888');
+
+  let totalFixed = 0;
+
+  const allSnap = await getDocs(collection(db, 'group_members'));
+
+  for (const { userId, grupos } of PENALTY_CLEANUPS) {
+    const userDocs = allSnap.docs.filter(d => d.id.endsWith('_' + userId));
+
+    if (userDocs.length === 0) {
+      log(`❌ userId no encontrado: ${userId}`, '#f87171');
+      continue;
+    }
+
+    for (const snap of userDocs) {
+      const data      = snap.data();
+      const name      = data.display_name || data.name || snap.id;
+      const favs      = data.favorites   || {};
+      const penalties = { ...(data.penalties || {}) };
+
+      log(`\n👤 ${name}  (${snap.id})`, '#93c5fd');
+
+      let changed = false;
+      for (const grupo of grupos) {
+        const hasFav = !!favs[grupo];
+        const hasPen = penalties[grupo] !== undefined && penalties[grupo] !== 0;
+
+        if (!hasFav && hasPen) {
+          log(`  🗑️  ${grupo}: penalidad ${penalties[grupo]} pts → eliminada (grupo vacío)`, '#f87171');
+          delete penalties[grupo];
+          changed = true;
+        } else if (!hasFav && !hasPen) {
+          log(`  ✅ ${grupo}: sin favorito y sin penalidad (ok)`, '#6ee7b7');
+        } else if (hasFav) {
+          log(`  ⏭️  ${grupo}: tiene favorito "${favs[grupo]}", no se toca`, '#9ca3af');
+        }
+      }
+
+      if (changed && !dryRun) {
+        await updateDoc(doc(db, 'group_members', snap.id), { penalties });
+        totalFixed++;
+        log(`  ✅ Guardado en Firestore`, '#6ee7b7');
+      } else if (changed) {
+        totalFixed++;
+      }
+    }
+  }
+
+  log('\n' + '━'.repeat(43), '#888');
+  log(`📊 Resumen: ${totalFixed} documento(s) ${dryRun ? 'a limpiar' : 'limpiados'}`, '#f0c040');
+  if (dryRun) log('💡 Pulsa "Limpiar penalidades" para confirmar', '#93c5fd');
+  else        log('🎉 ¡Penalidades limpiadas!', '#34d399');
+  log('━'.repeat(43), '#888');
+
+  return { totalFixed };
 }
