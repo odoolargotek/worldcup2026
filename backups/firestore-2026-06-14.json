@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-06-14T02:09:24.331Z",
+  "exported_at": "2026-06-14T15:47:04.672Z",
   "project_id": "worldcup2026-8f27b",
   "collections": {
     "users": {
@@ -456,9 +456,6 @@
         "penalty_pts": 0,
         "favorite_pts": 0,
         "favorite": "España",
-        "favorites_pts": {
-          "Grupo A": 3
-        },
         "payment": {
           "confirmed_at": "2026-06-12T05:54:27.710Z",
           "status": "confirmed"
@@ -474,7 +471,15 @@
           "Grupo E": "Ecuador",
           "Grupo F": "Japón",
           "Grupo K": "Portugal",
-          "Grupo D": "Australia"
+          "Grupo D": "Australia",
+          "Grupo B": "Suiza",
+          "Grupo H": "España",
+          "Grupo I": "Senegal",
+          "Grupo J": "Argentina"
+        },
+        "favorites_pts": {
+          "Grupo A": 3,
+          "Grupo D": 3
         }
       },
       "7jp4CqXhkUeHHtgSezui_agbRHL3RLuN0lDgpTc7vtyMz5f82": {
@@ -736,9 +741,6 @@
         "penalty_pts": 0,
         "favorite_pts": 0,
         "favorite": "Argentina",
-        "favorites_pts": {
-          "Grupo A": 3
-        },
         "favorites": {
           "Grupo E": "Alemania",
           "Grupo A": "México",
@@ -750,6 +752,10 @@
           "Grupo J": "Argentina",
           "Grupo L": "Inglaterra",
           "Grupo G": "Irán"
+        },
+        "favorites_pts": {
+          "Grupo A": 3,
+          "Grupo D": 3
         }
       },
       "U7zYBqBvnob52JyEMiM1_IsXtyxgES0Oq6sVD3uvEM5KebXF2": {
@@ -1301,6 +1307,17 @@
         "created_at": {
           "_seconds": 1780735820,
           "_nanoseconds": 759000000
+        }
+      },
+      "7jp4CqXhkUeHHtgSezui_0nyqebwv1EaEocSQJ5u1_agbRHL3RLuN0lDgpTc7vtyMz5f82": {
+        "group_id": "7jp4CqXhkUeHHtgSezui",
+        "match_id": "0nyqebwv1EaEocSQJ5u1",
+        "user_uid": "agbRHL3RLuN0lDgpTc7vtyMz5f82",
+        "home_score": 2,
+        "away_score": 0,
+        "created_at": {
+          "_seconds": 1781433157,
+          "_nanoseconds": 942000000
         }
       },
       "7jp4CqXhkUeHHtgSezui_0nyqebwv1EaEocSQJ5u1_jU3KD28YBfND4asZbddy49ApQU62": {
@@ -2321,6 +2338,17 @@
           "_nanoseconds": 314000000
         }
       },
+      "7jp4CqXhkUeHHtgSezui_HFcQvqjxGH6gM15j0GWH_jmfWRG7OHigbmqgkOSKiIaZ4kc92": {
+        "group_id": "7jp4CqXhkUeHHtgSezui",
+        "match_id": "HFcQvqjxGH6gM15j0GWH",
+        "user_uid": "jmfWRG7OHigbmqgkOSKiIaZ4kc92",
+        "home_score": 2,
+        "away_score": 1,
+        "created_at": {
+          "_seconds": 1781410904,
+          "_nanoseconds": 492000000
+        }
+      },
       "7jp4CqXhkUeHHtgSezui_HFcQvqjxGH6gM15j0GWH_qNaedUEVLla4VCZ5FOQRIevfiel2": {
         "group_id": "7jp4CqXhkUeHHtgSezui",
         "match_id": "HFcQvqjxGH6gM15j0GWH",
@@ -2772,6 +2800,17 @@
           "_nanoseconds": 833000000
         }
       },
+      "7jp4CqXhkUeHHtgSezui_TZI2zpMBfczPNbQeNGvJ_agbRHL3RLuN0lDgpTc7vtyMz5f82": {
+        "group_id": "7jp4CqXhkUeHHtgSezui",
+        "match_id": "TZI2zpMBfczPNbQeNGvJ",
+        "user_uid": "agbRHL3RLuN0lDgpTc7vtyMz5f82",
+        "home_score": 3,
+        "away_score": 0,
+        "created_at": {
+          "_seconds": 1781433097,
+          "_nanoseconds": 319000000
+        }
+      },
       "7jp4CqXhkUeHHtgSezui_TZI2zpMBfczPNbQeNGvJ_jU3KD28YBfND4asZbddy49ApQU62": {
         "group_id": "7jp4CqXhkUeHHtgSezui",
         "match_id": "TZI2zpMBfczPNbQeNGvJ",
@@ -2886,11 +2925,22 @@
         "group_id": "7jp4CqXhkUeHHtgSezui",
         "match_id": "WVK8RzP8AjamRoT3ifQW",
         "user_uid": "YyGkFKfNLpSHaDgOmj4Kl8PmwPC3",
-        "home_score": 0,
+        "home_score": 1,
         "away_score": 2,
         "created_at": {
-          "_seconds": 1780735804,
-          "_nanoseconds": 718000000
+          "_seconds": 1781414772,
+          "_nanoseconds": 905000000
+        }
+      },
+      "7jp4CqXhkUeHHtgSezui_WVK8RzP8AjamRoT3ifQW_agbRHL3RLuN0lDgpTc7vtyMz5f82": {
+        "group_id": "7jp4CqXhkUeHHtgSezui",
+        "match_id": "WVK8RzP8AjamRoT3ifQW",
+        "user_uid": "agbRHL3RLuN0lDgpTc7vtyMz5f82",
+        "home_score": 2,
+        "away_score": 1,
+        "created_at": {
+          "_seconds": 1781433119,
+          "_nanoseconds": 340000000
         }
       },
       "7jp4CqXhkUeHHtgSezui_WVK8RzP8AjamRoT3ifQW_jU3KD28YBfND4asZbddy49ApQU62": {
@@ -3160,6 +3210,17 @@
         "created_at": {
           "_seconds": 1781127228,
           "_nanoseconds": 195000000
+        }
+      },
+      "7jp4CqXhkUeHHtgSezui_b5yrjGIvLOXDLuG9uhV6_jmfWRG7OHigbmqgkOSKiIaZ4kc92": {
+        "group_id": "7jp4CqXhkUeHHtgSezui",
+        "match_id": "b5yrjGIvLOXDLuG9uhV6",
+        "user_uid": "jmfWRG7OHigbmqgkOSKiIaZ4kc92",
+        "home_score": 1,
+        "away_score": 2,
+        "created_at": {
+          "_seconds": 1781411873,
+          "_nanoseconds": 497000000
         }
       },
       "7jp4CqXhkUeHHtgSezui_b5yrjGIvLOXDLuG9uhV6_qNaedUEVLla4VCZ5FOQRIevfiel2": {
@@ -3554,6 +3615,17 @@
           "_nanoseconds": 699000000
         }
       },
+      "7jp4CqXhkUeHHtgSezui_kmAQbCQ5Lkr9gKLthS0Y_jmfWRG7OHigbmqgkOSKiIaZ4kc92": {
+        "group_id": "7jp4CqXhkUeHHtgSezui",
+        "match_id": "kmAQbCQ5Lkr9gKLthS0Y",
+        "user_uid": "jmfWRG7OHigbmqgkOSKiIaZ4kc92",
+        "home_score": 1,
+        "away_score": 0,
+        "created_at": {
+          "_seconds": 1781411905,
+          "_nanoseconds": 771000000
+        }
+      },
       "7jp4CqXhkUeHHtgSezui_kmAQbCQ5Lkr9gKLthS0Y_qNaedUEVLla4VCZ5FOQRIevfiel2": {
         "group_id": "7jp4CqXhkUeHHtgSezui",
         "match_id": "kmAQbCQ5Lkr9gKLthS0Y",
@@ -3916,7 +3988,9 @@
         "created_at": {
           "_seconds": 1781376189,
           "_nanoseconds": 792000000
-        }
+        },
+        "points": 0,
+        "points_synced": true
       },
       "7jp4CqXhkUeHHtgSezui_psld4GrU8xc4MyVWMHur_YyGkFKfNLpSHaDgOmj4Kl8PmwPC3": {
         "group_id": "7jp4CqXhkUeHHtgSezui",
@@ -3927,7 +4001,22 @@
         "created_at": {
           "_seconds": 1780735637,
           "_nanoseconds": 131000000
-        }
+        },
+        "points": 0,
+        "points_synced": true
+      },
+      "7jp4CqXhkUeHHtgSezui_psld4GrU8xc4MyVWMHur_j4nrnj5mFfYkwXSbXYs46MqFf2p2": {
+        "group_id": "7jp4CqXhkUeHHtgSezui",
+        "match_id": "psld4GrU8xc4MyVWMHur",
+        "user_uid": "j4nrnj5mFfYkwXSbXYs46MqFf2p2",
+        "home_score": 1,
+        "away_score": 1,
+        "created_at": {
+          "_seconds": 1781405547,
+          "_nanoseconds": 672000000
+        },
+        "points": 0,
+        "points_synced": true
       },
       "7jp4CqXhkUeHHtgSezui_psld4GrU8xc4MyVWMHur_jU3KD28YBfND4asZbddy49ApQU62": {
         "group_id": "7jp4CqXhkUeHHtgSezui",
@@ -3938,7 +4027,9 @@
         "created_at": {
           "_seconds": 1781126414,
           "_nanoseconds": 461000000
-        }
+        },
+        "points": 0,
+        "points_synced": true
       },
       "7jp4CqXhkUeHHtgSezui_psld4GrU8xc4MyVWMHur_jmfWRG7OHigbmqgkOSKiIaZ4kc92": {
         "group_id": "7jp4CqXhkUeHHtgSezui",
@@ -3949,7 +4040,9 @@
         "created_at": {
           "_seconds": 1781296693,
           "_nanoseconds": 894000000
-        }
+        },
+        "points": 0,
+        "points_synced": true
       },
       "7jp4CqXhkUeHHtgSezui_psld4GrU8xc4MyVWMHur_qNaedUEVLla4VCZ5FOQRIevfiel2": {
         "group_id": "7jp4CqXhkUeHHtgSezui",
@@ -3960,7 +4053,9 @@
         "created_at": {
           "_seconds": 1781191112,
           "_nanoseconds": 675000000
-        }
+        },
+        "points": 0,
+        "points_synced": true
       },
       "7jp4CqXhkUeHHtgSezui_psld4GrU8xc4MyVWMHur_t21ZamcUZhb3fkTd5yvrWmxvoe02": {
         "group_id": "7jp4CqXhkUeHHtgSezui",
@@ -3971,7 +4066,9 @@
         "created_at": {
           "_seconds": 1781228522,
           "_nanoseconds": 479000000
-        }
+        },
+        "points": 0,
+        "points_synced": true
       },
       "7jp4CqXhkUeHHtgSezui_sMY63xRxljcGr4NpuhPI_YyGkFKfNLpSHaDgOmj4Kl8PmwPC3": {
         "group_id": "7jp4CqXhkUeHHtgSezui",
@@ -4149,6 +4246,17 @@
           "_nanoseconds": 387000000
         }
       },
+      "7jp4CqXhkUeHHtgSezui_vt9F3gYAmsM3iInqUswA_jmfWRG7OHigbmqgkOSKiIaZ4kc92": {
+        "group_id": "7jp4CqXhkUeHHtgSezui",
+        "match_id": "vt9F3gYAmsM3iInqUswA",
+        "user_uid": "jmfWRG7OHigbmqgkOSKiIaZ4kc92",
+        "home_score": 4,
+        "away_score": 0,
+        "created_at": {
+          "_seconds": 1781410823,
+          "_nanoseconds": 490000000
+        }
+      },
       "7jp4CqXhkUeHHtgSezui_vt9F3gYAmsM3iInqUswA_qNaedUEVLla4VCZ5FOQRIevfiel2": {
         "group_id": "7jp4CqXhkUeHHtgSezui",
         "match_id": "vt9F3gYAmsM3iInqUswA",
@@ -4191,6 +4299,17 @@
         "created_at": {
           "_seconds": 1780735735,
           "_nanoseconds": 694000000
+        }
+      },
+      "7jp4CqXhkUeHHtgSezui_wNu9EdZdpnZ01eux5Qma_agbRHL3RLuN0lDgpTc7vtyMz5f82": {
+        "group_id": "7jp4CqXhkUeHHtgSezui",
+        "match_id": "wNu9EdZdpnZ01eux5Qma",
+        "user_uid": "agbRHL3RLuN0lDgpTc7vtyMz5f82",
+        "home_score": 0,
+        "away_score": 1,
+        "created_at": {
+          "_seconds": 1781433144,
+          "_nanoseconds": 571000000
         }
       },
       "7jp4CqXhkUeHHtgSezui_wNu9EdZdpnZ01eux5Qma_jU3KD28YBfND4asZbddy49ApQU62": {
@@ -5448,7 +5567,9 @@
         "created_at": {
           "_seconds": 1781062949,
           "_nanoseconds": 680000000
-        }
+        },
+        "points": 0,
+        "points_synced": true
       },
       "dbZvk5ix0HCBOcaMkA4G_psld4GrU8xc4MyVWMHur_wkvdrVjsHEZpd3aZ8AfnSHV3CyT2": {
         "group_id": "dbZvk5ix0HCBOcaMkA4G",
@@ -5459,7 +5580,9 @@
         "created_at": {
           "_seconds": 1781125410,
           "_nanoseconds": 103000000
-        }
+        },
+        "points": 0,
+        "points_synced": true
       },
       "dbZvk5ix0HCBOcaMkA4G_sMY63xRxljcGr4NpuhPI_jU3KD28YBfND4asZbddy49ApQU62": {
         "group_id": "dbZvk5ix0HCBOcaMkA4G",
@@ -5701,6 +5824,17 @@
         "points_synced": true,
         "points": 3
       },
+      "null_0nyqebwv1EaEocSQJ5u1_Yy2lTJh5AyZBgqrbAOiYwdb4wyH3": {
+        "group_id": "null",
+        "match_id": "0nyqebwv1EaEocSQJ5u1",
+        "user_uid": "Yy2lTJh5AyZBgqrbAOiYwdb4wyH3",
+        "home_score": 2,
+        "away_score": 1,
+        "created_at": {
+          "_seconds": 1781445934,
+          "_nanoseconds": 819000000
+        }
+      },
       "null_G2QeNAIcgL4aK67SCCL6_pjTxTH6dUrdF7TmEHWuLpnQ3Gf82": {
         "group_id": "null",
         "match_id": "G2QeNAIcgL4aK67SCCL6",
@@ -5713,6 +5847,28 @@
         },
         "points_synced": true,
         "points": 3
+      },
+      "null_TZI2zpMBfczPNbQeNGvJ_Yy2lTJh5AyZBgqrbAOiYwdb4wyH3": {
+        "group_id": "null",
+        "match_id": "TZI2zpMBfczPNbQeNGvJ",
+        "user_uid": "Yy2lTJh5AyZBgqrbAOiYwdb4wyH3",
+        "home_score": 3,
+        "away_score": 0,
+        "created_at": {
+          "_seconds": 1781445967,
+          "_nanoseconds": 523000000
+        }
+      },
+      "null_WVK8RzP8AjamRoT3ifQW_Yy2lTJh5AyZBgqrbAOiYwdb4wyH3": {
+        "group_id": "null",
+        "match_id": "WVK8RzP8AjamRoT3ifQW",
+        "user_uid": "Yy2lTJh5AyZBgqrbAOiYwdb4wyH3",
+        "home_score": 1,
+        "away_score": 0,
+        "created_at": {
+          "_seconds": 1781445993,
+          "_nanoseconds": 802000000
+        }
       },
       "null_Z7zDm8LyiwXaOrTN7wbL_pjTxTH6dUrdF7TmEHWuLpnQ3Gf82": {
         "group_id": "null",
@@ -5775,6 +5931,17 @@
         "created_at": {
           "_seconds": 1781371755,
           "_nanoseconds": 409000000
+        }
+      },
+      "yaf1NI7rj9QKzPZ6Sdqv_0nyqebwv1EaEocSQJ5u1_IOWNZMWPhpZMbOdExpnRIz2vZEi2": {
+        "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
+        "match_id": "0nyqebwv1EaEocSQJ5u1",
+        "user_uid": "IOWNZMWPhpZMbOdExpnRIz2vZEi2",
+        "home_score": 2,
+        "away_score": 1,
+        "created_at": {
+          "_seconds": 1781426795,
+          "_nanoseconds": 528000000
         }
       },
       "yaf1NI7rj9QKzPZ6Sdqv_6iA5YsCAbSBYNR8AcvRD_ELjb0IFQrfXsIYkeEbNXdIAwsOm2": {
@@ -5972,6 +6139,28 @@
         "points_synced": true,
         "points": 3
       },
+      "yaf1NI7rj9QKzPZ6Sdqv_HFcQvqjxGH6gM15j0GWH_IOWNZMWPhpZMbOdExpnRIz2vZEi2": {
+        "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
+        "match_id": "HFcQvqjxGH6gM15j0GWH",
+        "user_uid": "IOWNZMWPhpZMbOdExpnRIz2vZEi2",
+        "home_score": 2,
+        "away_score": 0,
+        "created_at": {
+          "_seconds": 1781426847,
+          "_nanoseconds": 595000000
+        }
+      },
+      "yaf1NI7rj9QKzPZ6Sdqv_S5W4fo1qAWp79gV690OQ_IOWNZMWPhpZMbOdExpnRIz2vZEi2": {
+        "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
+        "match_id": "S5W4fo1qAWp79gV690OQ",
+        "user_uid": "IOWNZMWPhpZMbOdExpnRIz2vZEi2",
+        "home_score": 1,
+        "away_score": 0,
+        "created_at": {
+          "_seconds": 1781426918,
+          "_nanoseconds": 439000000
+        }
+      },
       "yaf1NI7rj9QKzPZ6Sdqv_TZI2zpMBfczPNbQeNGvJ_ELjb0IFQrfXsIYkeEbNXdIAwsOm2": {
         "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
         "match_id": "TZI2zpMBfczPNbQeNGvJ",
@@ -5983,6 +6172,28 @@
           "_nanoseconds": 569000000
         }
       },
+      "yaf1NI7rj9QKzPZ6Sdqv_TZI2zpMBfczPNbQeNGvJ_IOWNZMWPhpZMbOdExpnRIz2vZEi2": {
+        "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
+        "match_id": "TZI2zpMBfczPNbQeNGvJ",
+        "user_uid": "IOWNZMWPhpZMbOdExpnRIz2vZEi2",
+        "home_score": 4,
+        "away_score": 0,
+        "created_at": {
+          "_seconds": 1781426697,
+          "_nanoseconds": 581000000
+        }
+      },
+      "yaf1NI7rj9QKzPZ6Sdqv_TZI2zpMBfczPNbQeNGvJ_Yy2lTJh5AyZBgqrbAOiYwdb4wyH3": {
+        "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
+        "match_id": "TZI2zpMBfczPNbQeNGvJ",
+        "user_uid": "Yy2lTJh5AyZBgqrbAOiYwdb4wyH3",
+        "home_score": 3,
+        "away_score": 0,
+        "created_at": {
+          "_seconds": 1781445697,
+          "_nanoseconds": 432000000
+        }
+      },
       "yaf1NI7rj9QKzPZ6Sdqv_WVK8RzP8AjamRoT3ifQW_ELjb0IFQrfXsIYkeEbNXdIAwsOm2": {
         "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
         "match_id": "WVK8RzP8AjamRoT3ifQW",
@@ -5992,6 +6203,28 @@
         "created_at": {
           "_seconds": 1781371487,
           "_nanoseconds": 93000000
+        }
+      },
+      "yaf1NI7rj9QKzPZ6Sdqv_WVK8RzP8AjamRoT3ifQW_IOWNZMWPhpZMbOdExpnRIz2vZEi2": {
+        "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
+        "match_id": "WVK8RzP8AjamRoT3ifQW",
+        "user_uid": "IOWNZMWPhpZMbOdExpnRIz2vZEi2",
+        "home_score": 2,
+        "away_score": 1,
+        "created_at": {
+          "_seconds": 1781427873,
+          "_nanoseconds": 67000000
+        }
+      },
+      "yaf1NI7rj9QKzPZ6Sdqv_WVK8RzP8AjamRoT3ifQW_Yy2lTJh5AyZBgqrbAOiYwdb4wyH3": {
+        "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
+        "match_id": "WVK8RzP8AjamRoT3ifQW",
+        "user_uid": "Yy2lTJh5AyZBgqrbAOiYwdb4wyH3",
+        "home_score": 1,
+        "away_score": 0,
+        "created_at": {
+          "_seconds": 1781445743,
+          "_nanoseconds": 204000000
         }
       },
       "yaf1NI7rj9QKzPZ6Sdqv_Z7zDm8LyiwXaOrTN7wbL_ELjb0IFQrfXsIYkeEbNXdIAwsOm2": {
@@ -6059,6 +6292,17 @@
         "points": 0,
         "points_synced": true
       },
+      "yaf1NI7rj9QKzPZ6Sdqv_b5yrjGIvLOXDLuG9uhV6_IOWNZMWPhpZMbOdExpnRIz2vZEi2": {
+        "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
+        "match_id": "b5yrjGIvLOXDLuG9uhV6",
+        "user_uid": "IOWNZMWPhpZMbOdExpnRIz2vZEi2",
+        "home_score": 0,
+        "away_score": 2,
+        "created_at": {
+          "_seconds": 1781426867,
+          "_nanoseconds": 470000000
+        }
+      },
       "yaf1NI7rj9QKzPZ6Sdqv_bOIcMOaJUgpPQpvH7DUA_ELjb0IFQrfXsIYkeEbNXdIAwsOm2": {
         "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
         "match_id": "bOIcMOaJUgpPQpvH7DUA",
@@ -6123,6 +6367,28 @@
         },
         "points": 0,
         "points_synced": true
+      },
+      "yaf1NI7rj9QKzPZ6Sdqv_cl3ZoPkQE2fw2Tz6IoFO_IOWNZMWPhpZMbOdExpnRIz2vZEi2": {
+        "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
+        "match_id": "cl3ZoPkQE2fw2Tz6IoFO",
+        "user_uid": "IOWNZMWPhpZMbOdExpnRIz2vZEi2",
+        "home_score": 2,
+        "away_score": 1,
+        "created_at": {
+          "_seconds": 1781426941,
+          "_nanoseconds": 978000000
+        }
+      },
+      "yaf1NI7rj9QKzPZ6Sdqv_kmAQbCQ5Lkr9gKLthS0Y_IOWNZMWPhpZMbOdExpnRIz2vZEi2": {
+        "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
+        "match_id": "kmAQbCQ5Lkr9gKLthS0Y",
+        "user_uid": "IOWNZMWPhpZMbOdExpnRIz2vZEi2",
+        "home_score": 1,
+        "away_score": 1,
+        "created_at": {
+          "_seconds": 1781426885,
+          "_nanoseconds": 813000000
+        }
       },
       "yaf1NI7rj9QKzPZ6Sdqv_n1itrr1f4F2gD6YTpFjd_ELjb0IFQrfXsIYkeEbNXdIAwsOm2": {
         "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
@@ -6198,7 +6464,9 @@
         "created_at": {
           "_seconds": 1781371302,
           "_nanoseconds": 388000000
-        }
+        },
+        "points": 0,
+        "points_synced": true
       },
       "yaf1NI7rj9QKzPZ6Sdqv_psld4GrU8xc4MyVWMHur_IOWNZMWPhpZMbOdExpnRIz2vZEi2": {
         "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
@@ -6209,7 +6477,9 @@
         "created_at": {
           "_seconds": 1781362683,
           "_nanoseconds": 910000000
-        }
+        },
+        "points": 0,
+        "points_synced": true
       },
       "yaf1NI7rj9QKzPZ6Sdqv_psld4GrU8xc4MyVWMHur_NYQlNv1y0hZZ37Uac7jbiEIZ4L82": {
         "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
@@ -6220,7 +6490,9 @@
         "created_at": {
           "_seconds": 1781374082,
           "_nanoseconds": 168000000
-        }
+        },
+        "points": 0,
+        "points_synced": true
       },
       "yaf1NI7rj9QKzPZ6Sdqv_psld4GrU8xc4MyVWMHur_VRGcL9yXxqNNhlCfo4n2L6bORbH2": {
         "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
@@ -6231,7 +6503,9 @@
         "created_at": {
           "_seconds": 1781381583,
           "_nanoseconds": 104000000
-        }
+        },
+        "points": 0,
+        "points_synced": true
       },
       "yaf1NI7rj9QKzPZ6Sdqv_psld4GrU8xc4MyVWMHur_Yy2lTJh5AyZBgqrbAOiYwdb4wyH3": {
         "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
@@ -6242,6 +6516,30 @@
         "created_at": {
           "_seconds": 1781385296,
           "_nanoseconds": 84000000
+        },
+        "points": 0,
+        "points_synced": true
+      },
+      "yaf1NI7rj9QKzPZ6Sdqv_u8PmXzjspEOdJBpXSnWt_IOWNZMWPhpZMbOdExpnRIz2vZEi2": {
+        "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
+        "match_id": "u8PmXzjspEOdJBpXSnWt",
+        "user_uid": "IOWNZMWPhpZMbOdExpnRIz2vZEi2",
+        "home_score": 0,
+        "away_score": 3,
+        "created_at": {
+          "_seconds": 1781427000,
+          "_nanoseconds": 603000000
+        }
+      },
+      "yaf1NI7rj9QKzPZ6Sdqv_vt9F3gYAmsM3iInqUswA_IOWNZMWPhpZMbOdExpnRIz2vZEi2": {
+        "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
+        "match_id": "vt9F3gYAmsM3iInqUswA",
+        "user_uid": "IOWNZMWPhpZMbOdExpnRIz2vZEi2",
+        "home_score": 4,
+        "away_score": 0,
+        "created_at": {
+          "_seconds": 1781426818,
+          "_nanoseconds": 247000000
         }
       },
       "yaf1NI7rj9QKzPZ6Sdqv_wNu9EdZdpnZ01eux5Qma_ELjb0IFQrfXsIYkeEbNXdIAwsOm2": {
@@ -6253,6 +6551,17 @@
         "created_at": {
           "_seconds": 1781371529,
           "_nanoseconds": 491000000
+        }
+      },
+      "yaf1NI7rj9QKzPZ6Sdqv_wNu9EdZdpnZ01eux5Qma_IOWNZMWPhpZMbOdExpnRIz2vZEi2": {
+        "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
+        "match_id": "wNu9EdZdpnZ01eux5Qma",
+        "user_uid": "IOWNZMWPhpZMbOdExpnRIz2vZEi2",
+        "home_score": 0,
+        "away_score": 1,
+        "created_at": {
+          "_seconds": 1781426777,
+          "_nanoseconds": 385000000
         }
       }
     },
@@ -6613,7 +6922,9 @@
         "phase": "Grupo C",
         "city": "Foxborough",
         "home_score": 0,
-        "away_score": 1
+        "away_score": 1,
+        "finished": true,
+        "match_status": "FT"
       },
       "GQ1IvAhlFoMpWcSwGYd0": {
         "home_team": "Alemania",
@@ -7151,13 +7462,17 @@
         "home_team": "Australia",
         "home_flag": "🇦🇺",
         "away_flag": "🇹🇷",
-        "kickoff": {
-          "_seconds": 1781452800,
-          "_nanoseconds": 0
-        },
         "phase": "Grupo D",
         "city": "Vancouver",
-        "away_team": "Turquía"
+        "away_team": "Turquía",
+        "kickoff": {
+          "_seconds": 1781409600,
+          "_nanoseconds": 0
+        },
+        "home_score": 2,
+        "away_score": 0,
+        "finished": true,
+        "match_status": "FT"
       },
       "sMY63xRxljcGr4NpuhPI": {
         "home_team": "Egipto",
