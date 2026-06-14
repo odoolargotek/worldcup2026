@@ -1,5 +1,5 @@
 {
-  "exported_at": "2026-06-14T00:20:31.657Z",
+  "exported_at": "2026-06-14T02:09:24.331Z",
   "project_id": "worldcup2026-8f27b",
   "collections": {
     "users": {
@@ -463,22 +463,18 @@
           "confirmed_at": "2026-06-12T05:54:27.710Z",
           "status": "confirmed"
         },
-        "favorites": {
-          "Grupo A": "México",
-          "Grupo B": "Ecuador",
-          "Grupo C": "Uruguay",
-          "Grupo D": "Francia",
-          "Grupo E": "Japón",
-          "Grupo F": "Portugal",
-          "Grupo G": "España",
-          "Grupo H": "Senegal",
-          "Grupo I": "Brasil",
-          "Grupo J": "Colombia",
-          "Grupo L": "Nueva Zelanda",
-          "Grupo K": "Portugal"
-        },
         "penalties": {
           "Grupo K": 3
+        },
+        "favorites": {
+          "Grupo A": "México",
+          "Grupo C": "Brasil",
+          "Grupo G": "Nueva Zelanda",
+          "Grupo L": "Inglaterra",
+          "Grupo E": "Ecuador",
+          "Grupo F": "Japón",
+          "Grupo K": "Portugal",
+          "Grupo D": "Australia"
         }
       },
       "7jp4CqXhkUeHHtgSezui_agbRHL3RLuN0lDgpTc7vtyMz5f82": {
@@ -709,12 +705,12 @@
         "penalty_pts": 0,
         "favorite_pts": 0,
         "favorite": "Argentina",
-        "favorites": {
-          "Grupo A": "México",
-          "Grupo B": "Argelia"
-        },
         "favorites_pts": {
           "Grupo A": 3
+        },
+        "favorites": {
+          "Grupo A": "México",
+          "Grupo J": "Argelia"
         }
       },
       "HQj9BHDUezMNKkDTzCzd_j4nrnj5mFfYkwXSbXYs46MqFf2p2": {
@@ -740,22 +736,20 @@
         "penalty_pts": 0,
         "favorite_pts": 0,
         "favorite": "Argentina",
-        "favorites": {
-          "Grupo A": "México",
-          "Grupo B": "Argentina",
-          "Grupo C": "USA",
-          "Grupo D": "Francia",
-          "Grupo E": "Alemania",
-          "Grupo F": "Portugal",
-          "Grupo G": "España",
-          "Grupo H": "Inglaterra",
-          "Grupo I": "Noruega",
-          "Grupo J": "Países Bajos",
-          "Grupo K": "Australia",
-          "Grupo L": "Irán"
-        },
         "favorites_pts": {
           "Grupo A": 3
+        },
+        "favorites": {
+          "Grupo E": "Alemania",
+          "Grupo A": "México",
+          "Grupo I": "Noruega",
+          "Grupo F": "Países Bajos",
+          "Grupo K": "Portugal",
+          "Grupo D": "Australia",
+          "Grupo H": "España",
+          "Grupo J": "Argentina",
+          "Grupo L": "Inglaterra",
+          "Grupo G": "Irán"
         }
       },
       "U7zYBqBvnob52JyEMiM1_IsXtyxgES0Oq6sVD3uvEM5KebXF2": {
@@ -1102,12 +1096,12 @@
         "penalty_pts": 0,
         "favorite_pts": 0,
         "favorite": "Argentina",
-        "favorites": {
-          "Grupo A": "México",
-          "Grupo B": "Argentina"
-        },
         "favorites_pts": {
           "Grupo A": 3
+        },
+        "favorites": {
+          "Grupo A": "México",
+          "Grupo J": "Argentina"
         }
       },
       "tHHJzJSGdxz1mnXVujpS_0gSs18jr69RxM9BhSZ1zdMLHhPw1": {
@@ -2179,7 +2173,9 @@
         "created_at": {
           "_seconds": 1781376161,
           "_nanoseconds": 938000000
-        }
+        },
+        "points_synced": true,
+        "points": 3
       },
       "7jp4CqXhkUeHHtgSezui_G2QeNAIcgL4aK67SCCL6_YyGkFKfNLpSHaDgOmj4Kl8PmwPC3": {
         "group_id": "7jp4CqXhkUeHHtgSezui",
@@ -2190,7 +2186,9 @@
         "created_at": {
           "_seconds": 1780735536,
           "_nanoseconds": 736000000
-        }
+        },
+        "points_synced": true,
+        "points": 3
       },
       "7jp4CqXhkUeHHtgSezui_G2QeNAIcgL4aK67SCCL6_j4nrnj5mFfYkwXSbXYs46MqFf2p2": {
         "group_id": "7jp4CqXhkUeHHtgSezui",
@@ -2201,7 +2199,9 @@
         "created_at": {
           "_seconds": 1781395538,
           "_nanoseconds": 581000000
-        }
+        },
+        "points_synced": true,
+        "points": 6
       },
       "7jp4CqXhkUeHHtgSezui_G2QeNAIcgL4aK67SCCL6_jU3KD28YBfND4asZbddy49ApQU62": {
         "group_id": "7jp4CqXhkUeHHtgSezui",
@@ -2212,7 +2212,9 @@
         "created_at": {
           "_seconds": 1781126392,
           "_nanoseconds": 155000000
-        }
+        },
+        "points_synced": true,
+        "points": 3
       },
       "7jp4CqXhkUeHHtgSezui_G2QeNAIcgL4aK67SCCL6_jmfWRG7OHigbmqgkOSKiIaZ4kc92": {
         "group_id": "7jp4CqXhkUeHHtgSezui",
@@ -2223,7 +2225,9 @@
         "created_at": {
           "_seconds": 1781296669,
           "_nanoseconds": 687000000
-        }
+        },
+        "points_synced": true,
+        "points": 3
       },
       "7jp4CqXhkUeHHtgSezui_G2QeNAIcgL4aK67SCCL6_qNaedUEVLla4VCZ5FOQRIevfiel2": {
         "group_id": "7jp4CqXhkUeHHtgSezui",
@@ -2234,7 +2238,9 @@
         "created_at": {
           "_seconds": 1781191063,
           "_nanoseconds": 796000000
-        }
+        },
+        "points_synced": true,
+        "points": 3
       },
       "7jp4CqXhkUeHHtgSezui_G2QeNAIcgL4aK67SCCL6_t21ZamcUZhb3fkTd5yvrWmxvoe02": {
         "group_id": "7jp4CqXhkUeHHtgSezui",
@@ -2245,7 +2251,9 @@
         "created_at": {
           "_seconds": 1780937669,
           "_nanoseconds": 547000000
-        }
+        },
+        "points_synced": true,
+        "points": 3
       },
       "7jp4CqXhkUeHHtgSezui_GQ1IvAhlFoMpWcSwGYd0_YyGkFKfNLpSHaDgOmj4Kl8PmwPC3": {
         "group_id": "7jp4CqXhkUeHHtgSezui",
@@ -4698,7 +4706,9 @@
         "created_at": {
           "_seconds": 1781227525,
           "_nanoseconds": 386000000
-        }
+        },
+        "points_synced": true,
+        "points": 3
       },
       "dbZvk5ix0HCBOcaMkA4G_G2QeNAIcgL4aK67SCCL6_j4nrnj5mFfYkwXSbXYs46MqFf2p2": {
         "group_id": "dbZvk5ix0HCBOcaMkA4G",
@@ -4709,7 +4719,9 @@
         "created_at": {
           "_seconds": 1781387594,
           "_nanoseconds": 405000000
-        }
+        },
+        "points_synced": true,
+        "points": 6
       },
       "dbZvk5ix0HCBOcaMkA4G_G2QeNAIcgL4aK67SCCL6_jU3KD28YBfND4asZbddy49ApQU62": {
         "group_id": "dbZvk5ix0HCBOcaMkA4G",
@@ -4720,7 +4732,9 @@
         "created_at": {
           "_seconds": 1781062915,
           "_nanoseconds": 199000000
-        }
+        },
+        "points_synced": true,
+        "points": 3
       },
       "dbZvk5ix0HCBOcaMkA4G_G2QeNAIcgL4aK67SCCL6_wkvdrVjsHEZpd3aZ8AfnSHV3CyT2": {
         "group_id": "dbZvk5ix0HCBOcaMkA4G",
@@ -4731,7 +4745,9 @@
         "created_at": {
           "_seconds": 1781125285,
           "_nanoseconds": 549000000
-        }
+        },
+        "points_synced": true,
+        "points": 3
       },
       "dbZvk5ix0HCBOcaMkA4G_GQ1IvAhlFoMpWcSwGYd0_jU3KD28YBfND4asZbddy49ApQU62": {
         "group_id": "dbZvk5ix0HCBOcaMkA4G",
@@ -5694,7 +5710,9 @@
         "created_at": {
           "_seconds": 1781377162,
           "_nanoseconds": 463000000
-        }
+        },
+        "points_synced": true,
+        "points": 3
       },
       "null_Z7zDm8LyiwXaOrTN7wbL_pjTxTH6dUrdF7TmEHWuLpnQ3Gf82": {
         "group_id": "null",
@@ -5898,7 +5916,9 @@
         "created_at": {
           "_seconds": 1781371994,
           "_nanoseconds": 931000000
-        }
+        },
+        "points_synced": true,
+        "points": 3
       },
       "yaf1NI7rj9QKzPZ6Sdqv_G2QeNAIcgL4aK67SCCL6_IOWNZMWPhpZMbOdExpnRIz2vZEi2": {
         "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
@@ -5909,7 +5929,9 @@
         "created_at": {
           "_seconds": 1781362659,
           "_nanoseconds": 225000000
-        }
+        },
+        "points_synced": true,
+        "points": 3
       },
       "yaf1NI7rj9QKzPZ6Sdqv_G2QeNAIcgL4aK67SCCL6_NYQlNv1y0hZZ37Uac7jbiEIZ4L82": {
         "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
@@ -5920,7 +5942,9 @@
         "created_at": {
           "_seconds": 1781374103,
           "_nanoseconds": 885000000
-        }
+        },
+        "points_synced": true,
+        "points": 3
       },
       "yaf1NI7rj9QKzPZ6Sdqv_G2QeNAIcgL4aK67SCCL6_VRGcL9yXxqNNhlCfo4n2L6bORbH2": {
         "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
@@ -5931,7 +5955,9 @@
         "created_at": {
           "_seconds": 1781360211,
           "_nanoseconds": 870000000
-        }
+        },
+        "points_synced": true,
+        "points": 3
       },
       "yaf1NI7rj9QKzPZ6Sdqv_G2QeNAIcgL4aK67SCCL6_Yy2lTJh5AyZBgqrbAOiYwdb4wyH3": {
         "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
@@ -5942,7 +5968,9 @@
         "created_at": {
           "_seconds": 1781367989,
           "_nanoseconds": 621000000
-        }
+        },
+        "points_synced": true,
+        "points": 3
       },
       "yaf1NI7rj9QKzPZ6Sdqv_TZI2zpMBfczPNbQeNGvJ_ELjb0IFQrfXsIYkeEbNXdIAwsOm2": {
         "group_id": "yaf1NI7rj9QKzPZ6Sdqv",
@@ -6583,7 +6611,9 @@
           "_nanoseconds": 0
         },
         "phase": "Grupo C",
-        "city": "Foxborough"
+        "city": "Foxborough",
+        "home_score": 0,
+        "away_score": 1
       },
       "GQ1IvAhlFoMpWcSwGYd0": {
         "home_team": "Alemania",
