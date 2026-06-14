@@ -31,6 +31,11 @@
     </div>
     <div style="display:flex;gap:8px;align-items:center">
       <button id="themeToggleBtn">☀️ Claro</button>
+      <a id="calendarBtn"
+         href="worldcup2026.ics"
+         download="Mundial2026.ics"
+         class="btn btn-outline-light btn-sm d-none"
+         title="Descargar calendario de partidos">📅 Calendario</a>
       <a id="dashboardLink" href="dashboard.html" class="btn btn-outline-light btn-sm d-none">🏆 Mis comparsas</a>
       <button id="logoutBtn" class="btn btn-outline-light btn-sm d-none">Salir</button>
     </div>
@@ -96,6 +101,15 @@
       <div id="forgotMsg" class="mt-1" style="font-size:0.85rem"></div>
       <hr style="border-color:var(--border)">
       <button id="backToLogin" class="btn btn-outline-light btn-sm w-100">← Volver al inicio de sesión</button>
+    </div>
+
+    <!-- Descarga calendario (visible sin login) -->
+    <div class="text-center mt-3 mb-1">
+      <a href="worldcup2026.ics"
+         download="Mundial2026.ics"
+         style="font-size:0.8rem;color:var(--text-muted);text-decoration:none">
+        📅 Descargar calendario de partidos
+      </a>
     </div>
 
     <div class="text-center mt-4" style="color:var(--text-muted);font-size:12px">
