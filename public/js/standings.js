@@ -27,6 +27,85 @@ function getCategory(pts) {
   return                  { label: '\ud83d\udc36 Novato',    color: '#94a3b8', bg: 'rgba(148,163,184,0.1)',  border: 'rgba(148,163,184,0.3)' };
 }
 
+// ─────────────────────────────────────────────────────────────────
+// MODAL: EXPLICACIÓN DE PUNTUACIÓN
+// ─────────────────────────────────────────────────────────────────
+function openScoringModal() {
+  document.getElementById('scoringModal')?.remove();
+  const modal = document.createElement('div');
+  modal.id = 'scoringModal';
+  modal.style.cssText = `
+    position:fixed;inset:0;z-index:9999;
+    background:rgba(0,0,0,0.75);display:flex;
+    align-items:center;justify-content:center;
+    padding:20px 16px;`;
+  modal.innerHTML = `
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:420px;position:relative">
+    <button id="closeScoringModal" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;color:var(--text-muted);cursor:pointer">&times;</button>
+    <h5 style="font-weight:800;margin-bottom:4px;color:var(--primary-light)">\ud83d\udcca \u00bfC\u00f3mo se calculan los puntos?</h5>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:18px">Cada partido tiene dos formas de sumar puntos:</p>
+
+    <!-- Pronósticos -->
+    <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">\ud83c\udfaf Pron\u00f3sticos de partido</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+      <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:700;color:var(--gold)">\ud83c\udfaf Score exacto</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Adivinas el marcador exacto<br><span style="font-style:italic">Ej: pronosticas 2-1 y termina 2-1</span></div>
+        </div>
+        <div style="font-size:1.6rem;font-weight:800;color:var(--gold)">+6</div>
+      </div>
+      <div style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.3);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:700;color:#34d399">\u2705 Resultado correcto</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Aciertas qui\u00e9n gana o empate<br><span style="font-style:italic">Ej: pronosticas 1-0 y termina 3-0</span></div>
+        </div>
+        <div style="font-size:1.6rem;font-weight:800;color:#34d399">+3</div>
+      </div>
+      <div style="background:rgba(148,163,184,0.06);border:1px solid rgba(148,163,184,0.15);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-weight:700;color:var(--text-muted)">\u274c Resultado incorrecto</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">No aciertas el ganador</div>
+        </div>
+        <div style="font-size:1.6rem;font-weight:800;color:var(--text-muted)">0</div>
+      </div>
+    </div>
+
+    <!-- Favoritos -->
+    <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">\ud83c\udfc6 Favoritos por grupo</div>
+    <div style="background:rgba(29,144,198,0.08);border:1px solid rgba(29,144,198,0.3);border-radius:10px;padding:12px 16px;margin-bottom:18px">
+      <div style="font-size:13px;color:var(--text);margin-bottom:6px">Elige un favorito por cada grupo (A\u2013L). Si tu equipo avanza a la siguiente fase, \u00a1sumas puntos extra!</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+        <span style="background:rgba(29,144,198,0.15);color:#4aafd4;border:1px solid rgba(29,144,198,0.3);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700">\ud83e\udd47 1\u00b0 del grupo = m\u00e1s pts</span>
+        <span style="background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.3);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700">\u2705 Pasa de fase = pts extra</span>
+      </div>
+    </div>
+
+    <!-- Niveles -->
+    <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">\ud83d\udd25 Niveles de jugador</div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
+        <span style="color:#94a3b8">\ud83d\udc36 Novato</span><span style="color:var(--text-muted)">0 – 29 pts</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
+        <span style="color:#a78bfa">\ud83c\udf31 En forma</span><span style="color:var(--text-muted)">30 – 59 pts</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
+        <span style="color:#34d399">\u26bd Competidor</span><span style="color:var(--text-muted)">60 – 99 pts</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
+        <span style="color:#4aafd4">\ud83c\udfc6 Experto</span><span style="color:var(--text-muted)">100 – 149 pts</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
+        <span style="color:#f59e0b">\ud83d\udd25 Leyenda</span><span style="color:var(--text-muted)">150+ pts</span>
+      </div>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  document.getElementById('closeScoringModal')?.addEventListener('click', () => modal.remove());
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+}
+
 // Retorna { name, email } para el uid dado
 async function getUserInfo(uid) {
   if (userInfoCache[uid]) return userInfoCache[uid];
@@ -46,14 +125,12 @@ async function getUserInfo(uid) {
     if (authName) name = authName;
     if (!email && auth.currentUser.email) email = auth.currentUser.email;
   }
-  // Si sigue sin nombre, usar parte del correo como display
   name = name || (email ? email.split('@')[0] : 'Sin nombre');
   const info = { name, email: email || null };
   userInfoCache[uid] = info;
   return info;
 }
 
-// Compatibilidad: devuelve solo el nombre
 async function getUserName(uid) {
   return (await getUserInfo(uid)).name;
 }
@@ -455,7 +532,7 @@ function renderMyPointsCard(me, position, total) {
         <div style="height:100%;width:${progress}%;background:${cat.color};border-radius:99px;transition:width 0.6s ease"></div>
       </div>
     </div>` : `<div style="font-size:11px;color:var(--gold);font-weight:700">\ud83d\udd25 \u00a1Nivel m\u00e1ximo!</div>`}
-    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
       <div style="font-size:11px;color:var(--text-muted)"><span style="color:#f59e0b;font-weight:700">${me.exactos}</span> exactos</div>
       <div style="font-size:11px;color:var(--text-muted)">&middot;</div>
       <div style="font-size:11px;color:var(--text-muted)"><span style="color:#4aafd4;font-weight:700">${me.resultados}</span> result.</div>
@@ -463,8 +540,10 @@ function renderMyPointsCard(me, position, total) {
       <div style="font-size:11px;color:var(--text-muted)"><span style="color:#34d399;font-weight:700">${me.totalFavPts}</span> favs</div>
       ${me.totalPenalty ? `<div style="font-size:11px;color:var(--text-muted)">&middot;</div>
       <div style="font-size:11px;color:#f5a0ac"><span style="font-weight:700">-${me.totalPenalty}</span> pen</div>` : ''}
+      <button id="scoringInfoBtn" style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:20px;padding:2px 10px;font-size:11px;color:var(--text-muted);cursor:pointer;white-space:nowrap">\u2139\ufe0f \u00bfC\u00f3mo se punta?</button>
     </div>
   `;
+  document.getElementById('scoringInfoBtn')?.addEventListener('click', openScoringModal);
 }
 
 async function renderStandings(currentUser, prizeEl, feeEl) {
@@ -576,7 +655,6 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
     const penLine = r.totalPenalty > 0
       ? `<div class="ranking-concept" style="color:var(--accent);font-weight:600"><span>\u26a0\ufe0f Penalidades</span><span>-${r.totalPenalty} pts</span></div>` : '';
 
-    // Nombre con tooltip de email si no tiene nombre real
     const noName = r.name === 'Sin nombre';
     const nameHtml = noName && r.email
       ? `<span title="${escHtml(r.email)}" style="color:var(--text-muted);font-style:italic">Sin nombre</span> <span style="font-size:10px;color:var(--text-muted)">\ud83d\udce7 ${escHtml(r.email)}</span>`
