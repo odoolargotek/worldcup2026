@@ -199,7 +199,7 @@
     <div id="atab-matches" class="d-none">
 
       <!-- FILA: Corregir nombres + Corregir favoritos -->
-      <div class="row g-3 mb-4">
+      <div class="row g-3 mb-3">
         <div class="col-md-6">
           <div class="sync-card orange">
             <div class="d-flex align-items-center gap-3 flex-wrap">
@@ -232,6 +232,31 @@
               </div>
             </div>
             <div id="logFixFavs" class="sync-log"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILA: Parche manual de favoritos -->
+      <div class="row g-3 mb-4">
+        <div class="col-12">
+          <div class="sync-card" style="border-color:rgba(99,179,237,0.45);background:rgba(99,179,237,0.05)">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+              <div style="font-size:2rem">✏️</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:800;font-size:0.95rem;color:#63b3ed">✏️ Parche manual de favoritos</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
+                  Fuerza valores específicos que el script automático no pudo resolver.
+                  <span style="color:#63b3ed;font-weight:700">El Bedre</span>:
+                  <span style="color:#34d399">Grupo K → 🇵🇹 Portugal</span> &nbsp;|&nbsp;
+                  <span style="color:#34d399">Grupo L → 🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra</span>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+                <button id="btnPatchFavsDry" class="sync-btn" style="background:rgba(99,179,237,0.15);color:#63b3ed;border:1px solid rgba(99,179,237,0.4);font-size:0.82rem;padding:7px 14px">🔍 Vista previa</button>
+                <button id="btnPatchFavsApply" class="sync-btn" style="background:linear-gradient(135deg,#2563eb,#63b3ed);color:#fff">✏️ Aplicar parche</button>
+              </div>
+            </div>
+            <div id="logPatchFavs" class="sync-log"></div>
           </div>
         </div>
       </div>
@@ -476,6 +501,41 @@
     setupFixFavsBtn('btnFixFavsApply', false);
   </script>
 
+  <!-- PARCHE MANUAL DE FAVORITOS -->
+  <script type="module">
+    import { patchFavorites } from './js/fix-favorites-manual.js';
+
+    function setupPatchBtn(btnId, dryRun) {
+      document.getElementById(btnId).addEventListener('click', async () => {
+        const log    = document.getElementById('logPatchFavs');
+        const btnDry = document.getElementById('btnPatchFavsDry');
+        const btnApp = document.getElementById('btnPatchFavsApply');
+        log.innerHTML = ''; log.classList.add('visible');
+        btnDry.disabled = true; btnApp.disabled = true;
+        btnDry.textContent = dryRun ? '⏳ Analizando...' : '🔍 Vista previa';
+        btnApp.textContent = dryRun ? '✏️ Aplicar parche' : '⏳ Parcheando...';
+
+        function addLine(msg, color) {
+          log.innerHTML += `<span style="color:${color||'var(--text-muted)'}">${msg}</span>\n`;
+          log.scrollTop = log.scrollHeight;
+        }
+
+        try {
+          await patchFavorites({ dryRun, onLog: addLine });
+        } catch(e) {
+          addLine(`❌ Error: ${e.message}`, '#f5a0ac');
+        }
+
+        btnDry.disabled = false; btnApp.disabled = false;
+        btnDry.textContent = '🔍 Vista previa';
+        btnApp.textContent = '✏️ Aplicar parche';
+      });
+    }
+
+    setupPatchBtn('btnPatchFavsDry',   true);
+    setupPatchBtn('btnPatchFavsApply', false);
+  </script>
+
   <!-- SYNC RESULTADOS + GRUPOS -->
   <script type="module">
     import { db } from './js/firebase-config.js';
@@ -659,7 +719,6 @@
       `).join('');
     }
 
-    // Cargar datos actuales de Firestore
     async function loadCurrentStreams(){
       statusEl.innerHTML = '<span style="color:var(--text-muted)">⏳ Cargando...</span>';
       try {
@@ -685,7 +744,6 @@
       }
     }
 
-    // Guardar en Firestore
     document.getElementById('btnSaveStreams').addEventListener('click', async () => {
       const btn = document.getElementById('btnSaveStreams');
       let parsed;
@@ -707,7 +765,6 @@
       btn.disabled = false; btn.textContent = '💾 Guardar en Firestore';
     });
 
-    // Vista previa sin guardar
     document.getElementById('btnPreviewStreams').addEventListener('click', () => {
       try {
         const parsed = JSON.parse(editor.value);
@@ -717,13 +774,11 @@
       }
     });
 
-    // Limpiar editor
     document.getElementById('btnClearStreams').addEventListener('click', () => {
       editor.value = '[]';
       previewEl.innerHTML = '<span style="color:var(--text-muted)">Editor limpiado.</span>';
-      });
+    });
 
-    // Cargar datos al abrir el tab
     document.getElementById('btnLoadStreams').addEventListener('click', loadCurrentStreams);
     const streamsDiv = document.getElementById('atab-streams'); let streamsLoaded = false;
     new MutationObserver(() => {
