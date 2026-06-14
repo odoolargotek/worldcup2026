@@ -1,0 +1,75 @@
+BEGIN:VCALENDAR
+PRODID:-//Largotek SRL//WorldCup2026 by Largotek//ES
+VERSION:2.0
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:World Cup 2026 - Largotek
+X-WR-TIMEZONE:UTC
+X-WR-CALDESC:Calendario de partidos del Mundial 2026 generado por Largotek SRL. https://largotek.com
+BEGIN:VEVENT
+UID:wc2026-1@largotek.com
+DTSTAMP:20260613T221500Z
+SUMMARY:[Largotek] Mexico vs South Africa - GROUP A
+DTSTART:20260611T180000Z
+DTEND:20260611T200000Z
+LOCATION:Mexico City Stadium\, Mexico City\, Mexico
+DESCRIPTION:Calendario generado por Largotek SRL.\nPartido del Mundial 2026.\nFase: group\, Grupo A.\nMás info en https://largotek.com
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+UID:wc2026-2@largotek.com
+DTSTAMP:20260613T221500Z
+SUMMARY:[Largotek] Canada vs Uruguay - GROUP B
+DTSTART:20260611T210000Z
+DTEND:20260611T230000Z
+LOCATION:Toronto Stadium\, Toronto\, Canada
+DESCRIPTION:Calendario generado por Largotek SRL.\nPartido del Mundial 2026.\nFase: group\, Grupo B.\nMás info en https://largotek.com
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+UID:wc2026-3@largotek.com
+DTSTAMP:20260613T221500Z
+SUMMARY:[Largotek] USA vs Portugal - GROUP C
+DTSTART:20260612T200000Z
+DTEND:20260612T220000Z
+LOCATION:MetLife Stadium\, East Rutherford\, United States
+DESCRIPTION:Calendario generado por Largotek SRL.\nPartido del Mundial 2026.\nFase: group\, Grupo C.\nMás info en https://largotek.com
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+UID:wc2026-4@largotek.com
+DTSTAMP:20260613T221500Z
+SUMMARY:[Largotek] Brazil vs Argentina - GROUP D
+DTSTART:20260613T180000Z
+DTEND:20260613T200000Z
+LOCATION:SoFi Stadium\, Los Angeles\, United States
+DESCRIPTION:Calendario generado por Largotek SRL.\nPartido del Mundial 2026.\nFase: group\, Grupo D.\nMás info en https://largotek.com
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+UID:wc2026-5@largotek.com
+DTSTAMP:20260613T221500Z
+SUMMARY:[Largotek] France vs Germany - GROUP E
+DTSTART:20260614T200000Z
+DTEND:20260614T220000Z
+LOCATION:AT&T Stadium\, Dallas\, United States
+DESCRIPTION:Calendario generado por Largotek SRL.\nPartido del Mundial 2026.\nFase: group\, Grupo E.\nMás info en https://largotek.com
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+END:VEVENT
+BEGIN:VEVENT
+UID:wc2026-final@largotek.com
+DTSTAMP:20260613T221500Z
+SUMMARY:[Largotek] Final Mundial 2026
+DTSTART:20260719T190000Z
+DTEND:20260719T220000Z
+LOCATION:MetLife Stadium\, East Rutherford\, United States
+DESCRIPTION:Calendario generado por Largotek SRL.\nFinal de la Copa Mundial de la FIFA 2026.\nMás info en https://largotek.com
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+END:VEVENT
+END:VCALENDAR

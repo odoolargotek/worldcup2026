@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>World Cup 2026 - Calendario Largotek</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #0a1628;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: #132038;
+      border: 1px solid #1e3a5f;
+      border-radius: 16px;
+      padding: 40px;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    }
+    .logo {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #4a9eff;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 6px;
+    }
+    .subtitle {
+      color: #8ba3c7;
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+    .btn {
+      display: inline-block;
+      background: #4a9eff;
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      padding: 14px 28px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+      width: 100%;
+      margin-bottom: 12px;
+    }
+    .btn:hover { background: #2b7de9; }
+    .btn-secondary {
+      background: transparent;
+      border: 1px solid #1e3a5f;
+      color: #8ba3c7;
+      font-size: 13px;
+      padding: 10px 20px;
+    }
+    .btn-secondary:hover { background: #1e3a5f; color: #fff; }
+    .status { margin-top: 16px; font-size: 13px; color: #4a9eff; min-height: 20px; }
+    .footer {
+      margin-top: 32px;
+      font-size: 11px;
+      color: #3d5a80;
+    }
+    .matches-list {
+      margin-top: 28px;
+      text-align: left;
+    }
+    .match-item {
+      background: #0e1e35;
+      border: 1px solid #1e3a5f;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .match-item .teams { font-weight: 700; color: #fff; }
+    .match-item .meta { color: #5a7a9f; font-size: 11px; margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">Largotek SRL</div>
+    <h1>⚽ World Cup 2026</h1>
+    <p class="subtitle">Calendario oficial de partidos para tu dispositivo</p>
+
+    <button class="btn" id="btn-download">📅 Descargar calendario (.ics)</button>
+    <a class="btn btn-secondary" href="worldcup2026_largotek.ics" download>⬇️ Descarga directa archivo .ics</a>
+
+    <div class="status" id="status"></div>
+
+    <div class="matches-list" id="matches-list"></div>
+
+    <div class="footer">Generado por Largotek SRL · https://largotek.com</div>
+  </div>
+
+  <script>
+    const fixtures = [
+      { id:1, stage:'group', group:'A', date_utc:'2026-06-11T18:00:00Z', home_team:'Mexico', away_team:'South Africa', stadium:'Mexico City Stadium', city:'Mexico City', country:'Mexico' },
+      { id:2, stage:'group', group:'B', date_utc:'2026-06-11T21:00:00Z', home_team:'Canada', away_team:'Uruguay', stadium:'Toronto Stadium', city:'Toronto', country:'Canada' },
+      { id:3, stage:'group', group:'C', date_utc:'2026-06-12T20:00:00Z', home_team:'USA', away_team:'Portugal', stadium:'MetLife Stadium', city:'East Rutherford', country:'United States' },
+      { id:4, stage:'group', group:'D', date_utc:'2026-06-13T18:00:00Z', home_team:'Brazil', away_team:'Argentina', stadium:'SoFi Stadium', city:'Los Angeles', country:'United States' },
+      { id:5, stage:'group', group:'E', date_utc:'2026-06-14T20:00:00Z', home_team:'France', away_team:'Germany', stadium:'AT&T Stadium', city:'Dallas', country:'United States' },
+      { id:104, stage:'final', group:null, date_utc:'2026-07-19T19:00:00Z', home_team:'TBD', away_team:'TBD', stadium:'MetLife Stadium', city:'East Rutherford', country:'United States' }
+    ];
+
+    function formatDateToICS(dt) {
+      const d = new Date(dt);
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getUTCFullYear()}${pad(d.getUTCMonth()+1)}${pad(d.getUTCDate())}T${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z`;
+    }
+
+    function generateICS(fixtures) {
+      const now = formatDateToICS(new Date().toISOString());
+      let ics = '';
+      ics += 'BEGIN:VCALENDAR\r\n';
+      ics += 'PRODID:-//Largotek SRL//WorldCup2026 by Largotek//ES\r\n';
+      ics += 'VERSION:2.0\r\n';
+      ics += 'CALSCALE:GREGORIAN\r\n';
+      ics += 'METHOD:PUBLISH\r\n';
+      ics += 'X-WR-CALNAME:World Cup 2026 - Largotek\r\n';
+      ics += 'X-WR-TIMEZONE:UTC\r\n';
+      ics += 'X-WR-CALDESC:Calendario del Mundial 2026 por Largotek SRL.\r\n';
+      fixtures.forEach(match => {
+        const uid = `wc2026-${match.id}@largotek.com`;
+        const dtstart = formatDateToICS(match.date_utc);
+        const endDate = new Date(match.date_utc); endDate.setHours(endDate.getHours()+2);
+        const dtend = formatDateToICS(endDate.toISOString());
+        const stageLabel = (match.stage||'MATCH').toUpperCase();
+        const groupLabel = match.group ? ` Grupo ${match.group}` : '';
+        const summary = `[Largotek] ${match.home_team} vs ${match.away_team} - ${stageLabel}${groupLabel}`;
+        const location = `${match.stadium}, ${match.city}, ${match.country}`.replace(/,/g, '\\,');
+        const description = `Calendario generado por Largotek SRL.\\nPartido del Mundial 2026.\\nFase: ${match.stage||'n/a'}${match.group?', Grupo '+match.group:''}.\\nMás info en https://largotek.com`;
+        ics += 'BEGIN:VEVENT\r\n';
+        ics += `UID:${uid}\r\n`;
+        ics += `DTSTAMP:${now}\r\n`;
+        ics += `SUMMARY:${summary}\r\n`;
+        ics += `DTSTART:${dtstart}\r\n`;
+        ics += `DTEND:${dtend}\r\n`;
+        ics += `LOCATION:${location}\r\n`;
+        ics += `DESCRIPTION:${description}\r\n`;
+        ics += 'STATUS:CONFIRMED\r\n';
+        ics += 'TRANSP:OPAQUE\r\n';
+        ics += 'END:VEVENT\r\n';
+      });
+      ics += 'END:VCALENDAR\r\n';
+      return ics;
+    }
+
+    function downloadICS(filename, content) {
+      const blob = new Blob([content], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    document.getElementById('btn-download').addEventListener('click', () => {
+      const status = document.getElementById('status');
+      status.textContent = 'Generando calendario...';
+      try {
+        const ics = generateICS(fixtures);
+        downloadICS('worldcup2026_largotek.ics', ics);
+        status.textContent = '✅ Archivo generado y descargado correctamente.';
+      } catch(e) {
+        status.textContent = '❌ Error al generar el archivo.';
+      }
+    });
+
+    // Render lista de partidos
+    const list = document.getElementById('matches-list');
+    fixtures.forEach(m => {
+      const div = document.createElement('div');
+      div.className = 'match-item';
+      const d = new Date(m.date_utc);
+      div.innerHTML = `
+        <div class="teams">${m.home_team} vs ${m.away_team}</div>
+        <div class="meta">${d.toUTCString()} · ${m.stadium}, ${m.city}</div>
+      `;
+      list.appendChild(div);
+    });
+  </script>
+</body>
+</html>
