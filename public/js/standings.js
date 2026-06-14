@@ -40,7 +40,7 @@ function openScoringModal() {
     align-items:center;justify-content:center;
     padding:20px 16px;`;
   modal.innerHTML = `
-  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:420px;position:relative">
+  <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:420px;position:relative;max-height:90vh;overflow-y:auto">
     <button id="closeScoringModal" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;color:var(--text-muted);cursor:pointer">&times;</button>
     <h5 style="font-weight:800;margin-bottom:4px;color:var(--primary-light)">\ud83d\udcca \u00bfC\u00f3mo se calculan los puntos?</h5>
     <p style="font-size:12px;color:var(--text-muted);margin-bottom:18px">Cada partido tiene dos formas de sumar puntos:</p>
@@ -540,10 +540,8 @@ function renderMyPointsCard(me, position, total) {
       <div style="font-size:11px;color:var(--text-muted)"><span style="color:#34d399;font-weight:700">${me.totalFavPts}</span> favs</div>
       ${me.totalPenalty ? `<div style="font-size:11px;color:var(--text-muted)">&middot;</div>
       <div style="font-size:11px;color:#f5a0ac"><span style="font-weight:700">-${me.totalPenalty}</span> pen</div>` : ''}
-      <button id="scoringInfoBtn" style="margin-left:auto;background:none;border:1px solid var(--border);border-radius:20px;padding:2px 10px;font-size:11px;color:var(--text-muted);cursor:pointer;white-space:nowrap">\u2139\ufe0f \u00bfC\u00f3mo se punta?</button>
     </div>
   `;
-  document.getElementById('scoringInfoBtn')?.addEventListener('click', openScoringModal);
 }
 
 async function renderStandings(currentUser, prizeEl, feeEl) {
@@ -629,9 +627,13 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
   const pct    = groupData?.prize_pct || { p1:100, p2:0, p3:0 };
   const pctArr = [pct.p1, pct.p2, pct.p3];
 
+  // ID único por carta para el botón de scoring
+  let cardIndex = 0;
+
   rows.forEach((r, i) => {
     const medal   = i < 3 ? medals[i] : `<span style="color:var(--text-muted);font-size:0.9rem">${i+1}</span>`;
     const meStyle = r.isMe ? 'border-color:#1D90C6!important;box-shadow:0 0 0 1px #1D90C6' : '';
+    const scoringBtnId = `scoringBtn_${cardIndex++}`;
 
     let prizeChip = '';
     if (totalPrize > 0 && i < 3 && pctArr[i] > 0) {
@@ -687,7 +689,10 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
             <div class="ranking-concept" style="font-weight:700;margin-top:4px">
               <span>Subtotal favs</span><span style="color:var(--primary-light)">+${r.totalFavPts} pts</span>
             </div>
-            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin:10px 0 4px">\ud83c\udfaf Pron\u00f3sticos</div>
+            <div style="display:flex;align-items:center;gap:8px;margin:10px 0 4px">
+              <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">\ud83c\udfaf Pron\u00f3sticos</div>
+              <button id="${scoringBtnId}" style="background:none;border:1px solid var(--border);border-radius:20px;padding:1px 8px;font-size:10px;color:var(--text-muted);cursor:pointer;line-height:1.6">\u2139\ufe0f \u00bfC\u00f3mo se punta?</button>
+            </div>
             <div class="ranking-concept"><span>Exactos \u00d7${r.exactos}</span><span style="color:var(--primary-light)">+${r.exactos*6} pts</span></div>
             <div class="ranking-concept"><span>Resultados \u00d7${r.resultados}</span><span style="color:var(--primary-light)">+${r.resultados*3} pts</span></div>
             ${penLine}
@@ -697,6 +702,12 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
         </details>
       </div>`;
     rankingTab.appendChild(card);
+
+    // Vincular el botón ℹ️ después de que el DOM exista
+    card.querySelector(`#${scoringBtnId}`)?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openScoringModal();
+    });
   });
 
   if (rows.length === 0) {
