@@ -51,6 +51,7 @@
     .sync-btn-purple { background: linear-gradient(135deg,#7c3aed,#a78bfa); color: #fff; }
     .sync-btn-orange { background: linear-gradient(135deg,#d97706,#fb923c); color: #fff; }
     .sync-btn-red    { background: linear-gradient(135deg,#dc2626,#ef4444); color: #fff; }
+    .sync-btn-gold   { background: linear-gradient(135deg,#b45309,#f59e0b); color: #000; }
     .sync-log { font-size: 12px; margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: rgba(0,0,0,0.25); color: var(--text-muted); display: none; max-height: 200px; overflow-y: auto; white-space: pre-wrap; }
     .sync-log.visible { display: block; }
     .section-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
@@ -196,18 +197,43 @@
 
     <!-- TAB PARTIDOS -->
     <div id="atab-matches" class="d-none">
-      <div class="sync-card orange mb-4">
-        <div class="d-flex align-items-center gap-3 flex-wrap">
-          <div style="font-size:2rem">🔧</div>
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:800;font-size:0.95rem;color:#fb923c">🔧 Corregir nombres duplicados</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
-              Normaliza nombres inconsistentes. <strong style="color:#fb923c">No borra partidos ni pronósticos.</strong>
+
+      <!-- FILA: Corregir nombres + Corregir favoritos -->
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <div class="sync-card orange">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+              <div style="font-size:2rem">🔧</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:800;font-size:0.95rem;color:#fb923c">🔧 Corregir nombres duplicados</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
+                  Normaliza nombres inconsistentes. <strong style="color:#fb923c">No borra partidos ni pronósticos.</strong>
+                </div>
+              </div>
+              <button id="btnFixNames" class="sync-btn sync-btn-orange">🔧 Corregir ahora</button>
             </div>
+            <div id="logFixNames" class="sync-log"></div>
           </div>
-          <button id="btnFixNames" class="sync-btn sync-btn-orange">🔧 Corregir ahora</button>
         </div>
-        <div id="logFixNames" class="sync-log"></div>
+        <div class="col-md-6">
+          <div class="sync-card" style="border-color:rgba(245,158,11,0.45);background:rgba(245,158,11,0.06)">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+              <div style="font-size:2rem">⭐</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:800;font-size:0.95rem;color:#f59e0b">⭐ Corregir grupos de favoritos</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
+                  Reasigna cada equipo favorito a su grupo correcto.
+                  <strong style="color:#f59e0b">No toca pronósticos ni puntos.</strong>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+                <button id="btnFixFavsDry" class="sync-btn" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.4);font-size:0.82rem;padding:7px 14px">🔍 Vista previa</button>
+                <button id="btnFixFavsApply" class="sync-btn sync-btn-gold">⭐ Aplicar corrección</button>
+              </div>
+            </div>
+            <div id="logFixFavs" class="sync-log"></div>
+          </div>
+        </div>
       </div>
 
       <div class="card p-4 mb-4" style="border-color:rgba(29,144,198,0.4);background:rgba(29,144,198,0.05)">
@@ -410,6 +436,44 @@
       document.getElementById('btnFixNames').disabled = false;
       document.getElementById('btnFixNames').textContent = '🔧 Corregir ahora';
     });
+  </script>
+
+  <!-- FIX FAVORITOS -->
+  <script type="module">
+    import { fixFavoritesGroups } from './js/fix-favorites-groups.js';
+
+    function setupFixFavsBtn(btnId, dryRun) {
+      document.getElementById(btnId).addEventListener('click', async () => {
+        const log    = document.getElementById('logFixFavs');
+        const btnDry = document.getElementById('btnFixFavsDry');
+        const btnApp = document.getElementById('btnFixFavsApply');
+        log.innerHTML = ''; log.classList.add('visible');
+        btnDry.disabled = true; btnApp.disabled = true;
+        btnDry.textContent = dryRun ? '⏳ Analizando...' : '🔍 Vista previa';
+        btnApp.textContent = dryRun ? '⭐ Aplicar corrección' : '⏳ Aplicando...';
+
+        function addLine(msg, color) {
+          log.innerHTML += `<span style="color:${color||'var(--text-muted)'}">${msg}</span>\n`;
+          log.scrollTop = log.scrollHeight;
+        }
+
+        try {
+          const { checked, fixed, skipped, conflicts } = await fixFavoritesGroups({ dryRun, onLog: addLine });
+          if (!dryRun && conflicts.length === 0) {
+            addLine(`\n🎉 ${fixed} jugador(es) corregidos exitosamente.`, '#34d399');
+          }
+        } catch(e) {
+          addLine(`❌ Error: ${e.message}`, '#f5a0ac');
+        }
+
+        btnDry.disabled = false; btnApp.disabled = false;
+        btnDry.textContent = '🔍 Vista previa';
+        btnApp.textContent = '⭐ Aplicar corrección';
+      });
+    }
+
+    setupFixFavsBtn('btnFixFavsDry',   true);
+    setupFixFavsBtn('btnFixFavsApply', false);
   </script>
 
   <!-- SYNC RESULTADOS + GRUPOS -->
@@ -657,7 +721,7 @@
     document.getElementById('btnClearStreams').addEventListener('click', () => {
       editor.value = '[]';
       previewEl.innerHTML = '<span style="color:var(--text-muted)">Editor limpiado.</span>';
-    });
+      });
 
     // Cargar datos al abrir el tab
     document.getElementById('btnLoadStreams').addEventListener('click', loadCurrentStreams);
