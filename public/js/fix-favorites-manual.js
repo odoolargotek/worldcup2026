@@ -16,20 +16,39 @@ import {
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
 // ─── PARCHES MANUALES ──────────────────────────────────────────────────────
-// Cada entrada: userId (UID de Firebase Auth) + patches (grupo → equipo)
-// Para borrar un favorito de un grupo, pon null como valor.
-// ────────────────────────────────────────────────────────────
+// Fuente: backup firestore-2026-06-07.json — El Bedre
+//
+// Grupos sin conflicto → restaurados al equipo original del backup
+// Grupo H y Grupo I → null (vacíos, que el jugador elija sin penalidad)
+// ────────────────────────────────────────────────────────────────────────────
 const MANUAL_PATCHES = [
-  // Ya aplicados: Portugal y Inglaterra
-  // { userId: 'YyGkFKfNLpSHaDgOmj4Kl8PmwPC3', patches: { ... } },
+  {
+    userId: 'YyGkFKfNLpSHaDgOmj4Kl8PmwPC3',  // El Bedre
+    patches: {
+      // ── Restauración directa (sin conflicto) ───────────────────────
+      'Grupo A': 'México',          // backup Grupo A  → real Grupo A ✅
+      'Grupo C': 'Brasil',          // backup Grupo I  → real Grupo C
+      'Grupo D': 'Australia',       // backup Grupo K  → real Grupo D
+      'Grupo E': 'Ecuador',         // backup Grupo B  → real Grupo E
+      'Grupo F': 'Japón',           // backup Grupo E  → real Grupo F
+      'Grupo G': 'Nueva Zelanda',   // backup Grupo L  → real Grupo G
+      'Grupo K': 'Portugal',        // backup Grupo F  → real Grupo K
+      'Grupo L': 'Inglaterra',      // ya aplicado anteriormente ✅
+
+      // ── Con conflicto: se dejan vacíos para que El Bedre elija ───────
+      'Grupo H': null,  // Uruguay 🇺🇾 vs España 🇪🇸 → vacío, sin penalidad
+      'Grupo I': null,  // Francia 🇫🇷 vs Senegal 🇸🇳 → vacío, sin penalidad
+    },
+  },
 ];
 
 // ─── LIMPIEZAS DE PENALIDADES ──────────────────────────────────────────────
-// Grupos vacíos que NO deben tener penalidad (el jugador no eligió aún)
+// Grupo H y Grupo I quedan vacíos (conflicto sin resolver)
+// → se eliminan sus penalidades para que el jugador pueda elegir libremente
 const PENALTY_CLEANUPS = [
   {
     userId: 'YyGkFKfNLpSHaDgOmj4Kl8PmwPC3',  // El Bedre
-    grupos: ['Grupo B', 'Grupo D'],             // grupos vacíos → sin penalidad
+    grupos: ['Grupo H', 'Grupo I'],
   },
 ];
 
@@ -81,7 +100,7 @@ export async function patchFavorites({ dryRun = true, onLog } = {}) {
         const prev = favs[grupo] || '(vacío)';
         if (equipo === null) {
           delete favs[grupo];
-          log(`  🗑️  ${grupo}: "${prev}" → eliminado`, '#f87171');
+          log(`  🗑️  ${grupo}: "${prev}" → eliminado (elige libremente)`, '#f5a0ac');
         } else {
           favs[grupo] = equipo;
           log(`  ✏️  ${grupo}: "${prev}" → "${equipo}" ${FLAGS[equipo]||''}`, '#34d399');
