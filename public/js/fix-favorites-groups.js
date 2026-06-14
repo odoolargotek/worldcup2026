@@ -2,15 +2,20 @@
 // Corrige los favoritos de jugadores que eligieron equipos ANTES de la
 // corrección de grupos — reasigna cada equipo a su grupo real.
 //
-// CÓMO USAR (desde admin.html o la consola del browser con Firebase cargado):
+// Regla de conflicto:
+//   Si dos equipos quieren el mismo grupo, gana el que YA estaba en su grupo
+//   correcto (no fue movido). Si ambos fueron movidos, gana el primero en orden.
+//   El perdedor se descarta (queda ese grupo sin favorito en vez de datos corruptos).
+//
+// CÓMO USAR (desde admin.html):
 //   import { fixFavoritesGroups } from './fix-favorites-groups.js';
-//   await fixFavoritesGroups({ dryRun: true });          // solo muestra cambios
-//   await fixFavoritesGroups({ dryRun: false });         // aplica a TODOS
-//   await fixFavoritesGroups({ userId: 'UID', dryRun: false }); // solo 1 jugador
+//   await fixFavoritesGroups({ dryRun: true });           // solo muestra
+//   await fixFavoritesGroups({ dryRun: false });          // aplica a TODOS
+//   await fixFavoritesGroups({ userId: 'UID', dryRun: false }); // solo 1
 
 import { db } from './firebase-config.js';
 import {
-  collection, getDocs, doc, writeBatch, getDoc
+  collection, getDocs, doc, writeBatch
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
 // ─── Mapa oficial Grupo → Equipos (fuente: favorite.js) ──────────────────────
@@ -38,26 +43,19 @@ for (const [grupo, equipos] of Object.entries(TEAMS_BY_PHASE)) {
 }
 
 // ─── Función principal ────────────────────────────────────────────────────────
-/**
- * @param {object}  opts
- * @param {boolean} opts.dryRun   - true = solo muestra, NO escribe (default: true)
- * @param {string}  [opts.userId] - si se pasa, corrige solo ese UID
- * @param {function} [opts.onLog] - callback(msg, color) para UI, si no usa console
- */
 export async function fixFavoritesGroups({ dryRun = true, userId = null, onLog } = {}) {
   const log = onLog || ((msg, color) => {
     if (color) console.log('%c' + msg, `color:${color}`);
     else        console.log(msg);
   });
 
-  log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', '#888');
+  log('━'.repeat(43), '#888');
   log(`🔧 fix-favorites-groups  [${dryRun ? 'DRY RUN' : '⚡ APLICANDO'}]`, '#f0c040');
-  log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', '#888');
+  log('━'.repeat(43), '#888');
 
   // Cargar documentos
   let docs;
   if (userId) {
-    // Solo buscar docs que contengan ese UID
     const allSnap = await getDocs(collection(db, 'group_members'));
     docs = allSnap.docs.filter(d => d.id.endsWith('_' + userId));
     if (docs.length === 0) {
@@ -79,53 +77,80 @@ export async function fixFavoritesGroups({ dryRun = true, userId = null, onLog }
     const favs = data.favorites || {};
     const playerName = data.display_name || data.name || snap.id;
 
-    // ¿Tiene al menos un favorito incorrecto?
+    // ¿Tiene al menos un favorito en grupo incorrecto?
     let needsFix = false;
+    const seenTeams = new Set();
     for (const [grupoActual, equipo] of Object.entries(favs)) {
       if (!equipo) continue;
       const grupoReal = TEAM_TO_GROUP[equipo];
-      if (grupoReal && grupoReal !== grupoActual) { needsFix = true; break; }
+      if ((grupoReal && grupoReal !== grupoActual) || seenTeams.has(equipo)) {
+        needsFix = true; break;
+      }
+      seenTeams.add(equipo);
     }
 
     if (!needsFix) { skipped++; continue; }
 
     log(`\n👤 ${playerName}  (${snap.id})`, '#93c5fd');
 
-    // Reconstruir favorites con grupos correctos
-    const corrected = {};
-    const memberConflicts = [];
+    // ───
+    // Fase 1: construir lista de candidatos ordenados por prioridad
+    // Prioridad: equipo que YA estaba en su grupo correcto > equipo movido
+    // ───
+    const candidates = []; // { equipo, grupoReal, wasMoved }
+    const seenDuplicates = new Set();
 
     for (const [grupoActual, equipo] of Object.entries(favs)) {
       if (!equipo) continue;
-      const grupoReal = TEAM_TO_GROUP[equipo];
 
+      // Ignorar duplicados exactos de equipo (Portugal elegido dos veces, etc.)
+      if (seenDuplicates.has(equipo)) {
+        log(`  🗑️  Duplicado ignorado: "${equipo}" (ya procesado)`, '#94a3b8');
+        continue;
+      }
+      seenDuplicates.add(equipo);
+
+      const grupoReal = TEAM_TO_GROUP[equipo];
       if (!grupoReal) {
-        log(`  ⚠️  "${equipo}" no reconocido en ${grupoActual} — se conserva en su lugar`, '#fbbf24');
-        corrected[grupoActual] = equipo;
+        log(`  ⚠️  "${equipo}" no reconocido — se conserva en ${grupoActual}`, '#fbbf24');
+        candidates.push({ equipo, grupoReal: grupoActual, wasMoved: false });
         continue;
       }
 
+      const wasMoved = grupoActual !== grupoReal;
+      candidates.push({ equipo, grupoReal, wasMoved });
+    }
+
+    // Ordenar: no-movidos primero (tienen prioridad en conflictos)
+    candidates.sort((a, b) => Number(a.wasMoved) - Number(b.wasMoved));
+
+    // ───
+    // Fase 2: asignar grupos sin colisiones
+    // ───
+    const corrected = {};
+    const memberConflicts = [];
+
+    for (const { equipo, grupoReal, wasMoved } of candidates) {
       if (corrected[grupoReal] !== undefined) {
-        // Conflicto: dos equipos quieren el mismo grupo
+        // Conflicto: el grupo ya fue ocupado por equipo de mayor prioridad
         memberConflicts.push({
           grupoReal,
-          equipo1: corrected[grupoReal],
-          equipo2: equipo,
-          player: playerName,
-          docId: snap.id,
+          winner:  corrected[grupoReal],
+          loser:   equipo,
+          player:  playerName,
+          docId:   snap.id,
         });
-        log(`  🚨 CONFLICTO en ${grupoReal}: "${corrected[grupoReal]}" vs "${equipo}" — se conserva el primero`, '#f87171');
-        // Conservamos el primero; el segundo queda en su grupo original
-        corrected[grupoActual] = equipo;
+        log(
+          `  ⚠️  CONFLICTO ${grupoReal}: "${corrected[grupoReal]}" gana sobre "${equipo}" — descartado`,
+          '#fbbf24'
+        );
         continue;
       }
-
       corrected[grupoReal] = equipo;
-
-      if (grupoActual !== grupoReal) {
-        log(`  🔄 ${equipo}: ${grupoActual} → ${grupoReal}`, '#34d399');
+      if (wasMoved) {
+        log(`  🔄 ${equipo}: → ${grupoReal}`, '#34d399');
       } else {
-        log(`  ✅ ${equipo}: ${grupoActual} (ya correcto)`, '#6ee7b7');
+        log(`  ✅ ${equipo}: ${grupoReal} (ya correcto)`, '#6ee7b7');
       }
     }
 
@@ -137,38 +162,39 @@ export async function fixFavoritesGroups({ dryRun = true, userId = null, onLog }
       batch.update(doc(db, 'group_members', snap.id), { favorites: corrected });
       batchCount++;
       fixed++;
-
-      // Commit cada 400 ops
       if (batchCount >= 400) {
         await batch.commit();
         batch = writeBatch(db);
         batchCount = 0;
       }
     } else {
-      fixed++; // en dry run contamos igual para el resumen
+      fixed++;
     }
   }
 
   if (!dryRun && batchCount > 0) await batch.commit();
 
-  // ─── Resumen final ────────────────────────────────────────────
-  log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', '#888');
-  log(`📊 Resumen:`, '#f0c040');
-  log(`   👥 Jugadores revisados con errores : ${checked}`, '#e2e8f0');
-  log(`   ✅ Jugadores ${dryRun ? 'a corregir' : 'corregidos'}      : ${fixed}`, '#34d399');
-  log(`   ⏭️  Sin cambios (ya correctos)      : ${skipped}`, '#94a3b8');
+  // ─── Resumen ────────────────────────────────────────────────────────
+  log('\n' + '━'.repeat(43), '#888');
+  log('📊 Resumen:', '#f0c040');
+  log(`   👥 Jugadores con errores revisados : ${checked}`, '#e2e8f0');
+  log(`   ✅ Jugadores ${dryRun ? 'a corregir' : 'corregidos'}       : ${fixed}`, '#34d399');
+  log(`   ⏭️  Sin cambios (ya correctos)       : ${skipped}`, '#94a3b8');
+
   if (allConflicts.length > 0) {
-    log(`\n⚠️  CONFLICTOS que requieren revisión manual (${allConflicts.length}):`, '#fbbf24');
+    log(`\n⚠️  Grupos con conflicto resueltos automáticamente (${allConflicts.length}):`, '#fbbf24');
     allConflicts.forEach(c =>
-      log(`   ${c.player} — ${c.grupoReal}: "${c.equipo1}" vs "${c.equipo2}"`, '#fca5a5')
+      log(`   ${c.player} — ${c.grupoReal}: "✅${c.winner}" conservado, "🗑️${c.loser}" descartado`, '#fca5a5')
     );
+    log('   (el equipo ganador es el que ya estaba en su grupo correcto o el primero en orden)', '#94a3b8');
   }
+
   if (dryRun) {
-    log('\n💡 Para aplicar los cambios ejecuta con dryRun: false', '#93c5fd');
+    log('\n💡 Para aplicar, pulsa "Aplicar corrección"', '#93c5fd');
   } else {
     log('\n🎉 ¡Listo! Favoritos corregidos en Firestore.', '#34d399');
   }
-  log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━', '#888');
+  log('━'.repeat(43), '#888');
 
   return { checked, fixed, skipped, conflicts: allConflicts };
 }
