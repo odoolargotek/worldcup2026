@@ -236,9 +236,9 @@
         </div>
       </div>
 
-      <!-- FILA: Parche manual de favoritos -->
+      <!-- FILA: Parche manual de favoritos + Limpiar penalidades -->
       <div class="row g-3 mb-4">
-        <div class="col-12">
+        <div class="col-md-6">
           <div class="sync-card" style="border-color:rgba(99,179,237,0.45);background:rgba(99,179,237,0.05)">
             <div class="d-flex align-items-center gap-3 flex-wrap">
               <div style="font-size:2rem">✏️</div>
@@ -257,6 +257,27 @@
               </div>
             </div>
             <div id="logPatchFavs" class="sync-log"></div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="sync-card red">
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+              <div style="font-size:2rem">🧹</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:800;font-size:0.95rem;color:#f87171">🧹 Limpiar penalidades de grupos vacíos</div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
+                  Elimina penalidades de grupos donde el jugador <strong style="color:#f87171">aún no eligió</strong> equipo.
+                  <span style="color:#63b3ed;font-weight:700">El Bedre</span>:
+                  <span style="color:#fca5a5">Grupo B</span> &nbsp;|&nbsp;
+                  <span style="color:#fca5a5">Grupo D</span>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+                <button id="btnCleanPenDry" class="sync-btn" style="background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.35);font-size:0.82rem;padding:7px 14px">🔍 Vista previa</button>
+                <button id="btnCleanPenApply" class="sync-btn sync-btn-red">🧹 Limpiar penalidades</button>
+              </div>
+            </div>
+            <div id="logCleanPen" class="sync-log"></div>
           </div>
         </div>
       </div>
@@ -534,6 +555,41 @@
 
     setupPatchBtn('btnPatchFavsDry',   true);
     setupPatchBtn('btnPatchFavsApply', false);
+  </script>
+
+  <!-- LIMPIAR PENALIDADES DE GRUPOS VACÍOS -->
+  <script type="module">
+    import { cleanPenalties } from './js/fix-favorites-manual.js';
+
+    function setupCleanPenBtn(btnId, dryRun) {
+      document.getElementById(btnId).addEventListener('click', async () => {
+        const log    = document.getElementById('logCleanPen');
+        const btnDry = document.getElementById('btnCleanPenDry');
+        const btnApp = document.getElementById('btnCleanPenApply');
+        log.innerHTML = ''; log.classList.add('visible');
+        btnDry.disabled = true; btnApp.disabled = true;
+        btnDry.textContent = dryRun ? '⏳ Analizando...' : '🔍 Vista previa';
+        btnApp.textContent = dryRun ? '🧹 Limpiar penalidades' : '⏳ Limpiando...';
+
+        function addLine(msg, color) {
+          log.innerHTML += `<span style="color:${color||'var(--text-muted)'}">${msg}</span>\n`;
+          log.scrollTop = log.scrollHeight;
+        }
+
+        try {
+          await cleanPenalties({ dryRun, onLog: addLine });
+        } catch(e) {
+          addLine(`❌ Error: ${e.message}`, '#f5a0ac');
+        }
+
+        btnDry.disabled = false; btnApp.disabled = false;
+        btnDry.textContent = '🔍 Vista previa';
+        btnApp.textContent = '🧹 Limpiar penalidades';
+      });
+    }
+
+    setupCleanPenBtn('btnCleanPenDry',   true);
+    setupCleanPenBtn('btnCleanPenApply', false);
   </script>
 
   <!-- SYNC RESULTADOS + GRUPOS -->
