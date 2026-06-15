@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Irán vs Nueva Zelanda - Ficha Técnica | Copa Mundial FIFA 2026</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --largotek-blue: #00A3E0;
+      --largotek-dark: #004866;
+      --accent-iran:   #239F40;
+      --accent-nz:     #000000;
+      --accent-red:    #DA291C;
+      --bg-light:      #F5F7FA;
+      --text-main:     #222222;
+      --text-muted:    #555555;
+      --card-bg:       #FFFFFF;
+      --border-soft:   #D6E2F0;
+      --shadow-soft:   0 3px 8px rgba(0,0,0,0.06);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: var(--bg-light);
+      color: var(--text-main);
+      line-height: 1.45;
+      font-size: 12px;
+    }
+    header {
+      background: linear-gradient(90deg, var(--largotek-blue), var(--largotek-dark));
+      color: #fff; padding: 8px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 6px;
+    }
+    .logo-area { display: flex; align-items: center; gap: 10px; }
+    .logo-area img { height: 30px; }
+    .logo-text-block .company { font-size: 0.95rem; font-weight: 700; letter-spacing: 0.04em; }
+    .logo-text-block .tagline { font-size: 0.68rem; opacity: 0.85; margin-top: 1px; }
+    .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .header-badge { background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.35); border-radius: 999px; padding: 2px 10px; font-size: 0.65rem; font-weight: 600; letter-spacing: 0.05em; }
+    .ia-seal { display: inline-flex; align-items: center; gap: 6px; background: linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08)); border: 1.5px solid rgba(255,255,255,0.55); border-radius: 999px; padding: 3px 10px 3px 5px; backdrop-filter: blur(4px); }
+    .ia-seal .seal-icon { width: 20px; height: 20px; background: linear-gradient(135deg, #00C6FF, #0072FF); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; flex-shrink: 0; box-shadow: 0 0 6px rgba(0,198,255,0.6); }
+    .ia-seal .seal-text { display: flex; flex-direction: column; line-height: 1.1; }
+    .ia-seal .seal-line1 { font-size: 0.55rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.95); }
+    .ia-seal .seal-line2 { font-size: 0.55rem; font-weight: 600; color: rgba(255,255,255,0.75); letter-spacing: 0.02em; }
+    .ia-seal-footer { display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #00A3E0 0%, #0072B5 100%); border: 1.5px solid rgba(255,255,255,0.25); border-radius: 10px; padding: 6px 12px 6px 8px; box-shadow: 0 2px 10px rgba(0,163,224,0.35); }
+    .ia-seal-footer .sf-icon { width: 24px; height: 24px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
+    .ia-seal-footer .sf-text { display: flex; flex-direction: column; line-height: 1.2; }
+    .ia-seal-footer .sf-l1 { font-size: 0.6rem; font-weight: 900; letter-spacing: 0.07em; text-transform: uppercase; color: #fff; }
+    .ia-seal-footer .sf-l2 { font-size: 0.58rem; font-weight: 600; color: rgba(255,255,255,0.8); }
+    .ia-seal-footer .sf-l3 { font-size: 0.55rem; color: rgba(255,255,255,0.65); margin-top: 1px; }
+    .page-watermark { position: absolute; top: 50%; right: 14px; transform: translateY(-50%) rotate(-30deg); opacity: 0.04; font-size: 2.2rem; font-weight: 900; letter-spacing: 0.04em; color: var(--largotek-dark); pointer-events: none; white-space: nowrap; text-transform: uppercase; z-index: 0; }
+    .ia-banner { background: linear-gradient(90deg, #00172A, #003855, #00172A); color: rgba(255,255,255,0.9); padding: 3px 16px; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 0.62rem; letter-spacing: 0.04em; border-bottom: 1px solid rgba(0,163,224,0.3); }
+    .ia-banner .ib-dot { width: 5px; height: 5px; background: var(--largotek-blue); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.4); } }
+    .ia-banner strong { color: #00C6FF; }
+    main { max-width: 100%; margin: 0; padding: 0; }
+    .page { width: 100%; padding: 8px 14px 6px; position: relative; }
+    h2 { font-size: 0.88rem; font-weight: 700; color: var(--largotek-dark); border-bottom: 2px solid var(--largotek-blue); padding-bottom: 3px; margin: 0 0 6px; }
+    h3 { font-size: 0.78rem; font-weight: 700; color: var(--largotek-dark); margin: 0 0 4px; }
+    p { margin: 0 0 5px; font-size: 0.76rem; }
+    .card { background: var(--card-bg); border-radius: 8px; padding: 8px 10px; box-shadow: var(--shadow-soft); border: 1px solid var(--border-soft); }
+    .match-hero { text-align: center; background: linear-gradient(135deg, #E8F5E9, #ffffff); padding: 7px 10px; border-radius: 8px; border: 1px solid var(--border-soft); margin-bottom: 7px; }
+    .match-hero .grupo-label { font-size: 0.62rem; color: var(--text-muted); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 3px; }
+    .match-hero .teams { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 3px 0; }
+    .match-hero .team-name { font-weight: 700; font-size: 0.88rem; color: var(--largotek-dark); }
+    .match-hero .flag { font-size: 1.7rem; }
+    .match-hero .vs { font-size: 1.2rem; font-weight: 900; color: var(--largotek-blue); }
+    .match-hero .meta { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; font-size: 0.68rem; color: var(--text-muted); margin-top: 3px; }
+    .match-hero .meta strong { color: var(--largotek-dark); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid-3col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid-3col > div:last-child { grid-column: 1 / -1; }
+    .badge { display: inline-block; padding: 2px 7px; border-radius: 999px; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #fff; margin-bottom: 5px; }
+    .badge-iran { background: var(--accent-iran); }
+    .badge-nz   { background: #1A1A1A; }
+    .flag-header { display: flex; align-items: center; gap: 7px; margin-bottom: 2px; }
+    .flag-emoji { font-size: 1.4rem; }
+    .section-label { font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--largotek-blue); margin: 6px 0 3px; }
+    ul { margin: 0; padding-left: 13px; }
+    li { margin-bottom: 2px; font-size: 0.72rem; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; }
+    .pill { font-size: 0.6rem; padding: 2px 7px; border-radius: 999px; background: #EEF6FD; border: 1px solid #C5DFF2; color: var(--largotek-dark); font-weight: 500; }
+    .player-card { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 6px; background: #F4F9FF; border: 1px solid var(--border-soft); margin-bottom: 3px; }
+    .player-num { width: 22px; height: 22px; background: var(--largotek-blue); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.6rem; flex-shrink: 0; }
+    .player-info .name { font-weight: 700; font-size: 0.72rem; }
+    .player-info .desc { font-size: 0.62rem; color: var(--text-muted); }
+    .comp-table { width: 100%; border-collapse: collapse; font-size: 0.7rem; margin-top: 5px; }
+    .comp-table th { background: var(--largotek-dark); color: #fff; padding: 4px 7px; text-align: left; font-weight: 600; }
+    .comp-table td { padding: 4px 7px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+    .comp-table tr:last-child td { border-bottom: none; }
+    .comp-table tr:nth-child(even) td { background: #F8FBFF; }
+    .timeline { list-style: none; padding: 0; margin: 0; }
+    .timeline li { display: flex; align-items: flex-start; gap: 7px; padding: 4px 0; border-bottom: 1px dashed var(--border-soft); font-size: 0.72rem; }
+    .timeline li:last-child { border-bottom: none; }
+    .t-icon { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--largotek-blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.58rem; font-weight: 700; }
+    .prob-wrap { margin: 5px 0 2px; }
+    .prob-row { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; font-size: 0.72rem; }
+    .prob-label { min-width: 130px; }
+    .prob-bar-bg { flex: 1; background: #E3ECF5; border-radius: 999px; height: 10px; overflow: hidden; }
+    .prob-bar-fill { height: 100%; border-radius: 999px; }
+    .prob-pct { min-width: 28px; font-weight: 700; color: var(--largotek-dark); text-align: right; }
+    .score-box { text-align: center; padding: 8px; background: #E8F5E9; border-radius: 7px; margin-top: 4px; }
+    .score-box .score { font-size: 1.6rem; font-weight: 900; color: var(--largotek-dark); }
+    .score-box .score-sub { font-size: 0.62rem; color: var(--text-muted); margin-top: 2px; }
+    .report-footer { background: var(--largotek-dark); color: rgba(255,255,255,0.85); padding: 8px 14px; font-size: 0.68rem; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px; }
+    .footer-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .report-footer .ai-tag { display: flex; align-items: center; gap: 6px; }
+    .ai-icon { background: var(--largotek-blue); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+    .report-footer a { color: var(--largotek-blue); text-decoration: none; }
+    .footer-sep { width: 1px; height: 32px; background: rgba(255,255,255,0.15); }
+    .players-grid, .players-grid-nz { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 5px; }
+    .fut-card { position: relative; border-radius: 10px; padding: 8px 6px 6px; display: flex; flex-direction: column; align-items: center; text-align: center; overflow: hidden; min-height: 185px; }
+    .fut-card.gold    { background: linear-gradient(160deg, #C8980A 0%, #F5D060 35%, #E8B820 65%, #A67C00 100%); border: 2px solid #C8980A; box-shadow: 0 4px 14px rgba(200,152,10,0.35); }
+    .fut-card.silver  { background: linear-gradient(160deg, #7A8C99 0%, #C8D6DF 35%, #9FB3BC 65%, #5A6E79 100%); border: 2px solid #8AA0A9; box-shadow: 0 4px 14px rgba(90,110,121,0.3); }
+    .fut-card.bronze  { background: linear-gradient(160deg, #8B4513 0%, #D2956A 35%, #B5681A 65%, #6B3410 100%); border: 2px solid #A0522D; box-shadow: 0 4px 14px rgba(107,52,16,0.3); }
+    .fut-card.iran-special { background: linear-gradient(160deg, #1A5C2A 0%, #239F40 40%, #155020 70%, #0A2E12 100%); border: 2px solid #239F40; box-shadow: 0 4px 18px rgba(35,159,64,0.4); }
+    .fut-card.nz-special   { background: linear-gradient(160deg, #1A0000 0%, #8B0000 40%, #DA291C 70%, #500000 100%); border: 2px solid #DA291C; box-shadow: 0 4px 18px rgba(218,41,28,0.4); }
+    .fut-overall { font-size: 1.45rem; font-weight: 900; line-height: 1; color: rgba(0,0,0,0.75); text-shadow: 0 1px 0 rgba(255,255,255,0.3); margin-bottom: 1px; }
+    .fut-card.iran-special .fut-overall, .fut-card.iran-special .fut-pos, .fut-card.iran-special .fut-name, .fut-card.iran-special .fut-club, .fut-card.iran-special .fut-flag-sm,
+    .fut-card.nz-special .fut-overall,   .fut-card.nz-special .fut-pos,   .fut-card.nz-special .fut-name,   .fut-card.nz-special .fut-club,   .fut-card.nz-special .fut-flag-sm { color: rgba(255,255,255,0.95); text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+    .fut-pos { font-size: 0.6rem; font-weight: 700; color: rgba(0,0,0,0.6); letter-spacing: 0.06em; margin-bottom: 3px; }
+    .fut-flag-sm { font-size: 1rem; margin-bottom: 2px; }
+    .fut-avatar { width: 46px; height: 46px; border-radius: 50%; background: rgba(0,0,0,0.18); border: 2px solid rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 900; color: rgba(255,255,255,0.9); margin: 2px 0; text-shadow: 0 1px 2px rgba(0,0,0,0.4); letter-spacing: -1px; }
+    .fut-name { font-size: 0.65rem; font-weight: 800; color: rgba(0,0,0,0.8); text-transform: uppercase; letter-spacing: 0.04em; margin: 2px 0 1px; line-height: 1.1; }
+    .fut-club { font-size: 0.53rem; color: rgba(0,0,0,0.55); margin-bottom: 5px; }
+    .fut-divider { width: 80%; height: 1px; background: rgba(0,0,0,0.2); margin: 3px auto; }
+    .fut-card.iran-special .fut-divider, .fut-card.nz-special .fut-divider { background: rgba(255,255,255,0.25); }
+    .fut-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 6px; width: 100%; margin-top: 2px; }
+    .fut-stat { display: flex; justify-content: space-between; align-items: center; font-size: 0.58rem; }
+    .fut-stat .s-val { font-weight: 900; font-size: 0.67rem; color: rgba(0,0,0,0.75); }
+    .fut-stat .s-lbl { font-weight: 600; color: rgba(0,0,0,0.5); letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.52rem; }
+    .fut-card.iran-special .fut-stat .s-val, .fut-card.iran-special .fut-stat .s-lbl,
+    .fut-card.nz-special .fut-stat .s-val,   .fut-card.nz-special .fut-stat .s-lbl { color: rgba(255,255,255,0.85); }
+    .skill-bar-wrap { width: 100%; padding: 0 5px; margin-top: 5px; }
+    .skill-row { display: flex; align-items: center; gap: 4px; margin-bottom: 2px; }
+    .skill-row .sk-lbl { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(0,0,0,0.5); min-width: 24px; text-align: right; }
+    .fut-card.iran-special .skill-row .sk-lbl, .fut-card.nz-special .skill-row .sk-lbl { color: rgba(255,255,255,0.6); }
+    .skill-row .sk-val { font-size: 0.58rem; font-weight: 900; min-width: 18px; color: rgba(0,0,0,0.7); }
+    .fut-card.iran-special .skill-row .sk-val, .fut-card.nz-special .skill-row .sk-val { color: rgba(255,255,255,0.9); }
+    .sk-bar-bg { flex: 1; height: 4px; background: rgba(0,0,0,0.15); border-radius: 999px; overflow: hidden; }
+    .fut-card.iran-special .sk-bar-bg, .fut-card.nz-special .sk-bar-bg { background: rgba(255,255,255,0.15); }
+    .sk-bar-fill { height: 100%; border-radius: 999px; background: rgba(0,0,0,0.45); }
+    .fut-card.iran-special .sk-bar-fill, .fut-card.nz-special .sk-bar-fill { background: rgba(255,255,255,0.7); }
+    .bar-elite { background: #1a7a1a !important; }
+    .bar-high  { background: #4da832 !important; }
+    .bar-mid   { background: #c8a800 !important; }
+    .bar-low   { background: #d44c00 !important; }
+    .team-section-title { display: flex; align-items: center; gap: 7px; margin: 10px 0 5px; padding: 5px 8px; border-radius: 7px; }
+    .team-section-title.iran { background: linear-gradient(90deg, #239F40, #DA291C, #239F40); color: #fff; }
+    .team-section-title.nz   { background: linear-gradient(90deg, #1A1A1A, #8B0000, #1A1A1A); color: #fff; }
+    .team-section-title .ts-flag { font-size: 1.1rem; }
+    .team-section-title .ts-name { font-weight: 700; font-size: 0.78rem; }
+    .team-section-title .ts-sub  { font-size: 0.62rem; opacity: 0.85; margin-left: auto; }
+    @media print {
+      @page { size: A4 portrait; margin: 7mm 9mm; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+      body { background: #fff !important; font-size: 10px; }
+      header { padding: 5px 12px; }
+      .logo-area img { height: 24px; }
+      .ia-banner { padding: 2px 12px; font-size: 0.58rem; }
+      .ia-banner .ib-dot { animation: none !important; }
+      .page-break { page-break-before: always; break-before: page; }
+      .card, article, .match-hero, .report-footer, .fut-card { page-break-inside: avoid; break-inside: avoid; }
+      .card { box-shadow: none !important; }
+      .page { padding: 5px 0 3px; }
+      .print-btn { display: none !important; }
+      .report-footer { margin-top: 5px; border-radius: 0; }
+      .fut-card { min-height: 170px; }
+      .page-watermark { opacity: 0.03; }
+      .grid-2 { grid-template-columns: 1fr 1fr; }
+      .grid-3col { grid-template-columns: 1fr 1fr; }
+      .grid-3col > div:last-child { grid-column: 1 / -1; }
+      .players-grid, .players-grid-nz { grid-template-columns: repeat(4, 1fr); gap: 7px; }
+    }
+    @media screen {
+      .print-btn { position: fixed; bottom: 22px; right: 22px; background: var(--largotek-blue); color: #fff; border: none; border-radius: 50px; padding: 10px 22px; font-size: 0.88rem; font-weight: 700; cursor: pointer; box-shadow: 0 4px 14px rgba(0,163,224,0.4); z-index: 999; letter-spacing: 0.03em; }
+      .print-btn:hover { background: var(--largotek-dark); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-area">
+    <img src="https://raw.githubusercontent.com/odoolargotek/worldcup2026/main/fichas/assets/largotek-logo.png"
+         onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';"
+         alt="Largotek Logo">
+    <div id="logo-fallback" style="display:none; align-items:center; justify-content:center; background:#00A3E0; border-radius:6px; padding:3px 10px; font-size:1.1rem; font-weight:900; letter-spacing:0.04em; color:#fff;">largotek</div>
+    <div class="logo-text-block">
+      <div class="company">Largotek Analytics</div>
+      <div class="tagline">Inteligencia Deportiva con IA &mdash; Copa Mundial FIFA 2026</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="header-badge">🏆 Copa Mundial FIFA 2026 &nbsp;|&nbsp; Informe Técnico</span>
+    <div class="ia-seal">
+      <div class="seal-icon">🤖</div>
+      <div class="seal-text">
+        <span class="seal-line1">Hecha con Inteligencia Artificial</span>
+        <span class="seal-line2">entrenada por Largotek</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="ia-banner">
+  <div class="ib-dot"></div>
+  <span>Este informe fue <strong>generado y analizado con Inteligencia Artificial entrenada por Largotek</strong> &mdash; Largotek SRL &middot; La Paz, Bolivia &middot; largotek.com</span>
+  <div class="ib-dot"></div>
+</div>
+
+<main>
+
+<!-- PÁGINA 1 -->
+<div class="page">
+  <div class="page-watermark">Largotek IA</div>
+  <div class="match-hero">
+    <div class="grupo-label">Grupo H &middot; Jornada 1 &middot; Copa Mundial FIFA 2026</div>
+    <div class="teams">
+      <div><div class="flag">🇮🇷</div><div class="team-name">Irán</div></div>
+      <div class="vs">vs</div>
+      <div><div class="flag">🇳🇿</div><div class="team-name">Nueva Zelanda</div></div>
+    </div>
+    <div class="meta">
+      <span>📅 <strong>20 de junio, 2026</strong></span>
+      <span>🏟️ <strong>Levi's Stadium, Santa Clara, EE.UU.</strong></span>
+      <span>⏰ <strong>12:00 ET</strong></span>
+      <span>📺 <strong>Grupo H &mdash; Jornada 1</strong></span>
+    </div>
+  </div>
+  <div class="grid-2">
+    <article class="card">
+      <div class="flag-header"><span class="flag-emoji">🇮🇷</span><div><h2 style="border:none;padding:0;margin:0;font-size:0.88rem;">Irán &mdash; Team Melli</h2></div></div>
+      <span class="badge badge-iran">Potencia asiática &middot; Ranking FIFA #20</span>
+      <p>La selección más fuerte de Asia, con tres Copas del Mundo consecutivas. Llega como sólido favorito ante Nueva Zelanda, apoyándose en su veteranía asiática y el liderazgo de Mehdi Taremi, una de las grandes figuras del fútbol iraní.</p>
+      <div class="section-label">🎽 Datos técnicos</div>
+      <ul>
+        <li><strong>Entrenador:</strong> Amir Ghalenoei</li>
+        <li><strong>Sistema base:</strong> 4-3-3 / 4-2-3-1 ofensivo</li>
+        <li><strong>Fortaleza:</strong> Solidez defensiva + Taremi en ataque</li>
+      </ul>
+      <div class="section-label">⚽ Jugadores clave</div>
+      <div class="player-card"><div class="player-num" style="background:#239F40;">9</div><div class="player-info"><div class="name">Mehdi Taremi</div><div class="desc">Delantero centro &middot; Inter de Milán &middot; Goleador de clase mundial</div></div></div>
+      <div class="player-card"><div class="player-num" style="background:#239F40;">10</div><div class="player-info"><div class="name">Sardar Azmoun</div><div class="desc">Extremo/Delantero &middot; Bayer Leverkusen &middot; Velocidad y habilidad técnica</div></div></div>
+      <div class="player-card"><div class="player-num" style="background:#239F40;">7</div><div class="player-info"><div class="name">Alireza Jahanbakhsh</div><div class="desc">Extremo &middot; Feyenoord &middot; Desborde y asistencias clave</div></div></div>
+      <div class="player-card"><div class="player-num" style="background:#239F40;">1</div><div class="player-info"><div class="name">Alireza Beiranvand</div><div class="desc">Portero &middot; Referente bajo los palos, experiencia mundialista</div></div></div>
+      <div class="section-label">📰 Novedades</div>
+      <ul>
+        <li>Taremi llega en gran nivel tras temporada en Inter de Milán.</li>
+        <li>Irán busca superar la fase de grupos por primera vez en su historia.</li>
+        <li>Ghalenoei apuesta a un 4-3-3 dinámico para dominar a los All Whites.</li>
+      </ul>
+      <div class="pill-row">
+        <span class="pill">Ataque por bandas</span><span class="pill">Taremi referencia</span>
+        <span class="pill">Presión media</span><span class="pill">Pelota parada</span>
+      </div>
+    </article>
+    <article class="card">
+      <div class="flag-header"><span class="flag-emoji">🇳🇿</span><div><h2 style="border:none;padding:0;margin:0;font-size:0.88rem;">Nueva Zelanda &mdash; All Whites</h2></div></div>
+      <span class="badge badge-nz">🥝 Debut histórico 2026 &middot; Ranking FIFA #98</span>
+      <p>Los All Whites regresan a un Mundial gracias a su clasificación por repechaje intercontinental. Un equipo de trabajadores, ordenados y físicos, que busca sorprender con disciplina colectiva y aprovechar el espíritu de equipo.</p>
+      <div class="section-label">🎽 Datos técnicos</div>
+      <ul>
+        <li><strong>Entrenador:</strong> Darren Bazeley</li>
+        <li><strong>Sistema base:</strong> 4-4-2 / 5-3-2 defensivo</li>
+        <li><strong>Clasificación:</strong> Repechaje intercontinental OFC/CONCACAF</li>
+      </ul>
+      <div class="section-label">⚽ Jugadores clave</div>
+      <div class="player-card"><div class="player-num" style="background:#1A1A1A;">9</div><div class="player-info"><div class="name">Chris Wood</div><div class="desc">Delantero &middot; Nottingham Forest &middot; Goleador histórico y referencia absoluta</div></div></div>
+      <div class="player-card"><div class="player-num" style="background:#1A1A1A;">10</div><div class="player-info"><div class="name">Clayton Lewis</div><div class="desc">Mediocampista &middot; Seattle Sounders &middot; Creatividad y visión de juego</div></div></div>
+      <div class="player-card"><div class="player-num" style="background:#1A1A1A;">4</div><div class="player-info"><div class="name">Winston Reid</div><div class="desc">Defensa central &middot; Liderazgo defensivo y experiencia</div></div></div>
+      <div class="player-card"><div class="player-num" style="background:#1A1A1A;">1</div><div class="player-info"><div class="name">Oliver Sail</div><div class="desc">Portero &middot; Reflejos y seguridad bajo presión</div></div></div>
+      <div class="section-label">📰 Novedades</div>
+      <ul>
+        <li>Chris Wood, máximo goleador histórico de NZ, busca su legado mundialista.</li>
+        <li>Plantilla mayoritariamente del fútbol australiano y de ligas menores europeas.</li>
+        <li>El objetivo es competir dignamente; una victoria sería histórica para el país.</li>
+      </ul>
+      <div class="pill-row">
+        <span class="pill">Bloque bajo</span><span class="pill">Físico y directo</span>
+        <span class="pill">Chris Wood referencia</span><span class="pill">Pelota parada</span>
+      </div>
+    </article>
+  </div>
+</div>
+
+<!-- PÁGINA 2 -->
+<div class="page page-break">
+  <div class="page-watermark">Largotek IA</div>
+  <div class="grid-3col">
+    <div><div class="card">
+      <h2>⚔️ Comparación de estrategias</h2>
+      <table class="comp-table">
+        <thead><tr><th>Dimensión</th><th>🇮🇷 Irán</th><th>🇳🇿 Nueva Zelanda</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Sistema</strong></td><td>4-3-3 / 4-2-3-1</td><td>4-4-2 / 5-3-2</td></tr>
+          <tr><td><strong>Posesión</strong></td><td>~60%, dominio</td><td>Cede el balón</td></tr>
+          <tr><td><strong>Pressing</strong></td><td>Presión media organizada</td><td>Repliegue compacto</td></tr>
+          <tr><td><strong>Ataque</strong></td><td>Taremi + Azmoun velocidad</td><td>Pelotazos a Chris Wood</td></tr>
+          <tr><td><strong>Defensa</strong></td><td>Línea media, equilibrado</td><td>Bloque bajo, 2 líneas</td></tr>
+          <tr><td><strong>Bal. parado</strong></td><td>Corners elaborados</td><td>Peligro aéreo Wood</td></tr>
+          <tr><td><strong>Objetivo</strong></td><td>Victoria cómoda</td><td>Aguantar, sorprender</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:8px;"><h3>Plan: Irán 🇮🇷</h3>
+        <ul>
+          <li>Posesión y juego combinativo para desgastar el bloque neozelandés.</li>
+          <li>Taremi en el área: aprovechar su calidad frente a defensas físicos pero lentos.</li>
+          <li>Jahanbakhsh y Azmoun en bandas para crear superioridades.</li>
+          <li>Gol temprano: abre el partido y libera la tensión del debut en grupo.</li>
+        </ul>
+      </div>
+      <div style="margin-top:6px;"><h3>Plan: Nueva Zelanda 🇳🇿</h3>
+        <ul>
+          <li>Bloque 4-4-2 bajo para minimizar los espacios a Taremi y Azmoun.</li>
+          <li>Pelotazos largos a Chris Wood para generar segunda jugada.</li>
+          <li>Aprovechar balón parado: la mayor amenaza real ante Irán.</li>
+          <li>Si aguantan hasta el 70', pueden presionar buscando el empate histórico.</li>
+        </ul>
+      </div>
+    </div></div>
+    <div><div class="card">
+      <h2>🔮 Qué esperar del partido</h2>
+      <h3>Guion probable</h3>
+      <ul class="timeline">
+        <li><div class="t-icon">0'</div><div><strong>Inicio:</strong> Irán domina posesión; NZ se repliega en bloque bajo organizado.</div></li>
+        <li><div class="t-icon">25'</div><div><strong>Primera ocasión:</strong> Taremi busca el espacio entre líneas; Wood intenta el primer remate neozelandés.</div></li>
+        <li><div class="t-icon">45'</div><div><strong>Descanso:</strong> Si NZ aguanta 0-0, la presión sobre Irán se intensifica para el 2º tiempo.</div></li>
+        <li><div class="t-icon">60'</div><div><strong>Cambios:</strong> Irán acelera; NZ ajusta para resistir con energía fresca.</div></li>
+        <li><div class="t-icon">90'</div><div><strong>Cierre:</strong> ¿Irán finiquita o NZ roba un histórico punto en su debut?</div></li>
+      </ul>
+      <div class="section-label" style="margin-top:8px;">🌶️ Factores de interés</div>
+      <ul>
+        <li><strong>Mehdi Taremi</strong> como gran figura: sus goles con Inter lo proyectan a nivel estelar.</li>
+        <li><strong>Chris Wood</strong>: histórico goleador que puede dar el gol del año a NZ.</li>
+        <li>Irán busca con urgencia los 3 puntos para mantener opciones en el Grupo H.</li>
+        <li>Nueva Zelanda juega sin presión: cualquier punto es un triunfo moral.</li>
+      </ul>
+    </div></div>
+    <div><div class="card">
+      <h2>📊 Proyecciones y análisis</h2>
+      <h3>Probabilidades estimadas</h3>
+      <p style="font-size:0.65rem;color:var(--text-muted);">Simulaciones pre-partido &mdash; 10,000 iteraciones.</p>
+      <div class="prob-wrap">
+        <div class="prob-row"><span class="prob-label">🇮🇷 Victoria Irán</span><div class="prob-bar-bg"><div class="prob-bar-fill" style="width:74%;background:#239F40;"></div></div><span class="prob-pct">74%</span></div>
+        <div class="prob-row"><span class="prob-label">🤝 Empate</span><div class="prob-bar-bg"><div class="prob-bar-fill" style="width:17%;background:var(--text-muted);"></div></div><span class="prob-pct">17%</span></div>
+        <div class="prob-row"><span class="prob-label">🇳🇿 Victoria Nueva Zelanda</span><div class="prob-bar-bg"><div class="prob-bar-fill" style="width:9%;background:#DA291C;"></div></div><span class="prob-pct">9%</span></div>
+      </div>
+      <div class="section-label">🎯 Resultado más probable</div>
+      <div class="score-box"><div class="score">2 &ndash; 0</div><div class="score-sub">Proyección consenso de simulaciones</div></div>
+      <div class="section-label" style="margin-top:8px;">🏆 Grupo H &mdash; contexto</div>
+      <table class="comp-table" style="margin-top:3px;">
+        <thead><tr><th>Equipo</th><th>Favorito</th><th>Objetivo</th></tr></thead>
+        <tbody>
+          <tr><td>🇪🇸 España</td><td>Sí</td><td>Clasificar 1.º</td></tr>
+          <tr><td>🇺🇾 Uruguay</td><td>Sí</td><td>Top 2</td></tr>
+          <tr><td>🇮🇷 Irán</td><td>Parcial</td><td>3.º / sorpresa</td></tr>
+          <tr><td>🇨🇻 Cabo Verde</td><td>No</td><td>Competir</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:0.65rem;color:var(--text-muted);margin-top:4px;">⚠️ Nueva Zelanda fue incluida en el Grupo H en este torneo ampliado de 48 equipos, reemplazando a una plaza adicional asignada a Oceanía.</p>
+    </div></div>
+  </div>
+</div>
+
+<!-- PÁGINA 3 -->
+<div class="page page-break">
+  <div class="page-watermark">Largotek IA</div>
+  <div class="card">
+    <h2>🎮 Fichas de jugadores &mdash; Estilo EA Sports FC 26 &mdash; Ratings Oficiales</h2>
+    <p style="font-size:0.68rem;color:var(--text-muted);margin-bottom:6px;">Ratings basados en EA Sports FC 26 (temporada 2025-26). PAC=Velocidad &middot; SHO=Tiro &middot; PAS=Pase &middot; DRI=Regate &middot; DEF=Defensa &middot; PHY=Físico</p>
+
+    <div class="team-section-title iran">
+      <span class="ts-flag">🇮🇷</span><span class="ts-name">IRÁN &mdash; Team Melli</span>
+      <span class="ts-sub">Cartas especiales &middot; EA Sports FC 26</span>
+    </div>
+    <div class="players-grid">
+      <!-- Taremi -->
+      <div class="fut-card iran-special">
+        <div class="fut-overall">83</div><div class="fut-pos">ST</div><div class="fut-flag-sm">🇮🇷</div>
+        <div class="fut-avatar">MT</div><div class="fut-name">M. Taremi</div><div class="fut-club">Inter de Milán</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">78</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">83</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">72</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">78</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">40</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">76</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">SHO</span><span class="sk-val">83</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:83%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">DRI</span><span class="sk-val">78</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:78%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PAC</span><span class="sk-val">78</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:78%"></div></div></div>
+        </div>
+      </div>
+      <!-- Azmoun -->
+      <div class="fut-card gold">
+        <div class="fut-overall">80</div><div class="fut-pos">LW</div><div class="fut-flag-sm">🇮🇷</div>
+        <div class="fut-avatar">SA</div><div class="fut-name">S. Azmoun</div><div class="fut-club">Bayer Leverkusen</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">84</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">78</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">70</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">80</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">36</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">72</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">PAC</span><span class="sk-val">84</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:84%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">DRI</span><span class="sk-val">80</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:80%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">SHO</span><span class="sk-val">78</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:78%"></div></div></div>
+        </div>
+      </div>
+      <!-- Jahanbakhsh -->
+      <div class="fut-card silver">
+        <div class="fut-overall">77</div><div class="fut-pos">RW</div><div class="fut-flag-sm">🇮🇷</div>
+        <div class="fut-avatar">AJ</div><div class="fut-name">Jahanbakhsh</div><div class="fut-club">Feyenoord</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">86</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">72</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">72</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">78</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">40</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">62</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">PAC</span><span class="sk-val">86</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:86%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">DRI</span><span class="sk-val">78</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:78%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PAS</span><span class="sk-val">72</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:72%"></div></div></div>
+        </div>
+      </div>
+      <!-- Beiranvand -->
+      <div class="fut-card silver">
+        <div class="fut-overall">74</div><div class="fut-pos">GK</div><div class="fut-flag-sm">🇮🇷</div>
+        <div class="fut-avatar">AB</div><div class="fut-name">Beiranvand</div><div class="fut-club">Persepolis FC</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">76</span><span class="s-lbl">DIV</span></div>
+          <div class="fut-stat"><span class="s-val">74</span><span class="s-lbl">HAN</span></div>
+          <div class="fut-stat"><span class="s-val">80</span><span class="s-lbl">KIC</span></div>
+          <div class="fut-stat"><span class="s-val">75</span><span class="s-lbl">REF</span></div>
+          <div class="fut-stat"><span class="s-val">68</span><span class="s-lbl">SPD</span></div>
+          <div class="fut-stat"><span class="s-val">74</span><span class="s-lbl">POS</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">KIC</span><span class="sk-val">80</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:80%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">DIV</span><span class="sk-val">76</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:76%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">REF</span><span class="sk-val">75</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:75%"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="team-section-title nz" style="margin-top:12px;">
+      <span class="ts-flag">🇳🇿</span><span class="ts-name">NUEVA ZELANDA &mdash; All Whites</span>
+      <span class="ts-sub">Cartas plata/bronce &middot; EA Sports FC 26</span>
+    </div>
+    <div class="players-grid-nz">
+      <!-- Chris Wood -->
+      <div class="fut-card nz-special">
+        <div class="fut-overall">77</div><div class="fut-pos">ST</div><div class="fut-flag-sm">🇳🇿</div>
+        <div class="fut-avatar">CW</div><div class="fut-name">Chris Wood</div><div class="fut-club">Nottm Forest</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">73</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">77</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">60</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">66</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">38</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">82</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">PHY</span><span class="sk-val">82</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:82%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">SHO</span><span class="sk-val">77</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:77%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PAC</span><span class="sk-val">73</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:73%"></div></div></div>
+        </div>
+      </div>
+      <!-- Clayton Lewis -->
+      <div class="fut-card silver">
+        <div class="fut-overall">70</div><div class="fut-pos">CAM</div><div class="fut-flag-sm">🇳🇿</div>
+        <div class="fut-avatar">CL</div><div class="fut-name">C. Lewis</div><div class="fut-club">Seattle Sounders</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">72</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">62</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">72</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">72</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">44</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">60</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">PAS</span><span class="sk-val">72</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:72%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">DRI</span><span class="sk-val">72</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:72%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PAC</span><span class="sk-val">72</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:72%"></div></div></div>
+        </div>
+      </div>
+      <!-- Winston Reid -->
+      <div class="fut-card bronze">
+        <div class="fut-overall">67</div><div class="fut-pos">CB</div><div class="fut-flag-sm">🇳🇿</div>
+        <div class="fut-avatar">WR</div><div class="fut-name">W. Reid</div><div class="fut-club">Vancouver WFC</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">62</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">38</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">56</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">55</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">72</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">74</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">PHY</span><span class="sk-val">74</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:74%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">DEF</span><span class="sk-val">72</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:72%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PAC</span><span class="sk-val">62</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-low" style="width:62%"></div></div></div>
+        </div>
+      </div>
+      <!-- Oliver Sail -->
+      <div class="fut-card bronze">
+        <div class="fut-overall">65</div><div class="fut-pos">GK</div><div class="fut-flag-sm">🇳🇿</div>
+        <div class="fut-avatar">OS</div><div class="fut-name">O. Sail</div><div class="fut-club">FC Copenhagen</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">68</span><span class="s-lbl">DIV</span></div>
+          <div class="fut-stat"><span class="s-val">65</span><span class="s-lbl">HAN</span></div>
+          <div class="fut-stat"><span class="s-val">62</span><span class="s-lbl">KIC</span></div>
+          <div class="fut-stat"><span class="s-val">66</span><span class="s-lbl">REF</span></div>
+          <div class="fut-stat"><span class="s-val">60</span><span class="s-lbl">SPD</span></div>
+          <div class="fut-stat"><span class="s-val">67</span><span class="s-lbl">POS</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">DIV</span><span class="sk-val">68</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:68%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">REF</span><span class="sk-val">66</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:66%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">POS</span><span class="sk-val">67</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:67%"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leyenda + Sello IA -->
+    <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;align-items:center;">
+      <div style="display:flex;align-items:center;gap:5px;font-size:0.62rem;color:var(--text-muted);"><div style="width:14px;height:14px;border-radius:3px;background:linear-gradient(135deg,#1A5C2A,#239F40);"></div><span><strong>Team Melli</strong> (Irán especial)</span></div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:0.62rem;color:var(--text-muted);"><div style="width:14px;height:14px;border-radius:3px;background:linear-gradient(135deg,#1A0000,#DA291C);"></div><span><strong>All Whites</strong> (NZ especial)</span></div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:0.62rem;color:var(--text-muted);"><div style="width:14px;height:14px;border-radius:3px;background:linear-gradient(135deg,#C8980A,#F5D060);"></div><span><strong>Oro</strong></span></div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:0.62rem;color:var(--text-muted);"><div style="width:14px;height:14px;border-radius:3px;background:linear-gradient(135deg,#7A8C99,#C8D6DF);"></div><span><strong>Plata</strong></span></div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:0.62rem;color:var(--text-muted);"><div style="width:14px;height:14px;border-radius:3px;background:linear-gradient(135deg,#8B4513,#D2956A);"></div><span><strong>Bronce</strong></span></div>
+      <div style="margin-left:auto;">
+        <div style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#003855,#005F85);border:1.5px solid #00A3E0;border-radius:7px;padding:4px 10px;">
+          <span style="font-size:0.9rem;">🤖</span>
+          <div style="display:flex;flex-direction:column;line-height:1.15;">
+            <span style="font-size:0.55rem;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;color:#fff;">Hecha con Inteligencia Artificial</span>
+            <span style="font-size:0.52rem;font-weight:600;color:#00C6FF;">entrenada por Largotek &mdash; largotek.com</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<div class="report-footer">
+  <div class="footer-left">
+    <div class="ia-seal-footer">
+      <div class="sf-icon">🤖</div>
+      <div class="sf-text">
+        <span class="sf-l1">Hecha con Inteligencia Artificial</span>
+        <span class="sf-l2">entrenada por Largotek</span>
+        <span class="sf-l3">largotek.com &middot; La Paz, Bolivia</span>
+      </div>
+    </div>
+    <div class="footer-sep"></div>
+    <div class="ai-tag">
+      <div class="ai-icon">📊</div>
+      <div>
+        <div style="font-weight:600;color:#fff;">Informe Técnico &mdash; Copa Mundial FIFA 2026</div>
+        <div>Análisis y simulaciones con IA &middot; Largotek Analytics SRL</div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:right;">
+    <div style="font-weight:600;color:#fff;">Juan Luis Garvía Ossio</div>
+    <div>Largotek SRL &mdash; La Paz, Bolivia &mdash; <a href="https://largotek.com">largotek.com</a></div>
+    <div style="margin-top:1px;opacity:0.7;">Generado: 15 de junio de 2026</div>
+  </div>
+</div>
+
+<button class="print-btn" onclick="window.print()">🖨️ Imprimir / Guardar PDF (3 hojas)</button>
+
+</body>
+</html>
