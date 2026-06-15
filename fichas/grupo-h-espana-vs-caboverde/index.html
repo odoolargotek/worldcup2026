@@ -5,20 +5,17 @@
   <title>España vs Cabo Verde - Ficha Técnica | Copa Mundial FIFA 2026</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* ============================
-       VARIABLES Y BASE
-    ============================ */
     :root {
       --largotek-blue: #00A3E0;
       --largotek-dark: #004866;
-      --accent-red:   #E30613;
-      --accent-green: #009E60;
-      --bg-light:     #F5F7FA;
-      --text-main:    #222222;
-      --text-muted:   #555555;
-      --card-bg:      #FFFFFF;
-      --border-soft:  #D6E2F0;
-      --shadow-soft:  0 3px 8px rgba(0,0,0,0.06);
+      --accent-red:    #E30613;
+      --accent-green:  #009E60;
+      --bg-light:      #F5F7FA;
+      --text-main:     #222222;
+      --text-muted:    #555555;
+      --card-bg:       #FFFFFF;
+      --border-soft:   #D6E2F0;
+      --shadow-soft:   0 3px 8px rgba(0,0,0,0.06);
     }
     * { box-sizing: border-box; }
     body {
@@ -29,10 +26,6 @@
       line-height: 1.45;
       font-size: 13px;
     }
-
-    /* ============================
-       HEADER
-    ============================ */
     header {
       background: linear-gradient(90deg, var(--largotek-blue), var(--largotek-dark));
       color: #fff;
@@ -45,8 +38,8 @@
     }
     .logo-area { display: flex; align-items: center; gap: 12px; }
     .logo-area img { height: 36px; }
-    .logo-text-block .company  { font-size: 1.1rem; font-weight: 700; letter-spacing: 0.04em; }
-    .logo-text-block .tagline  { font-size: 0.75rem; opacity: 0.85; margin-top: 1px; }
+    .logo-text-block .company { font-size: 1.1rem; font-weight: 700; letter-spacing: 0.04em; }
+    .logo-text-block .tagline { font-size: 0.75rem; opacity: 0.85; margin-top: 1px; }
     .header-badge {
       background: rgba(255,255,255,0.18);
       border: 1px solid rgba(255,255,255,0.35);
@@ -56,163 +49,78 @@
       font-weight: 600;
       letter-spacing: 0.05em;
     }
-
-    /* ============================
-       LAYOUT GENERAL
-    ============================ */
     main { max-width: 100%; margin: 0; padding: 0; }
-
-    /* Páginas de impresión — contenedor */
-    .page {
-      width: 100%;
-      padding: 10px 18px 8px;
-    }
-
+    .page { width: 100%; padding: 10px 18px 8px; }
     h2 {
-      font-size: 0.95rem;
-      font-weight: 700;
+      font-size: 0.95rem; font-weight: 700;
       color: var(--largotek-dark);
       border-bottom: 2px solid var(--largotek-blue);
-      padding-bottom: 4px;
-      margin: 0 0 8px;
+      padding-bottom: 4px; margin: 0 0 8px;
     }
     h3 { font-size: 0.85rem; font-weight: 700; color: var(--largotek-dark); margin: 0 0 5px; }
-    p  { margin: 0 0 6px; font-size: 0.82rem; }
-
+    p { margin: 0 0 6px; font-size: 0.82rem; }
     .card {
-      background: var(--card-bg);
-      border-radius: 10px;
-      padding: 10px 12px;
-      box-shadow: var(--shadow-soft);
+      background: var(--card-bg); border-radius: 10px;
+      padding: 10px 12px; box-shadow: var(--shadow-soft);
       border: 1px solid var(--border-soft);
     }
-
-    /* ============================
-       CABECERA DEL PARTIDO
-    ============================ */
     .match-hero {
       text-align: center;
       background: linear-gradient(135deg, #E8F5FD, #ffffff);
-      padding: 8px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--border-soft);
-      margin-bottom: 8px;
+      padding: 8px 12px; border-radius: 10px;
+      border: 1px solid var(--border-soft); margin-bottom: 8px;
     }
     .match-hero .grupo-label {
-      font-size: 0.68rem;
-      color: var(--text-muted);
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      margin-bottom: 4px;
+      font-size: 0.68rem; color: var(--text-muted);
+      letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 4px;
     }
     .match-hero .teams {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 20px;
-      margin: 4px 0;
+      display: flex; align-items: center; justify-content: center; gap: 20px; margin: 4px 0;
     }
-    .match-hero .team-name {
-      font-weight: 700;
-      font-size: 0.95rem;
-      color: var(--largotek-dark);
-    }
-    .match-hero .flag  { font-size: 2rem; }
-    .match-hero .vs    { font-size: 1.4rem; font-weight: 900; color: var(--largotek-blue); }
-    .match-hero .meta  {
-      display: flex; flex-wrap: wrap; gap: 10px;
-      justify-content: center;
+    .match-hero .team-name { font-weight: 700; font-size: 0.95rem; color: var(--largotek-dark); }
+    .match-hero .flag { font-size: 2rem; }
+    .match-hero .vs { font-size: 1.4rem; font-weight: 900; color: var(--largotek-blue); }
+    .match-hero .meta {
+      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
       font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;
     }
     .match-hero .meta strong { color: var(--largotek-dark); }
-
-    /* ============================
-       GRIDS
-    ============================ */
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .grid-3col {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1.1fr;
-      gap: 10px;
-    }
-    .grid-match {
-      display: grid;
-      grid-template-columns: 1.7fr 1fr;
-      gap: 10px;
-    }
-
-    /* ============================
-       ELEMENTOS INTERNOS
-    ============================ */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .grid-3col { display: grid; grid-template-columns: 1fr 1fr 1.1fr; gap: 10px; }
     .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 999px;
-      font-size: 0.65rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: #fff;
-      margin-bottom: 6px;
+      display: inline-block; padding: 2px 8px; border-radius: 999px;
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: #fff; margin-bottom: 6px;
     }
     .badge-blue  { background: var(--largotek-blue); }
-    .badge-green { background: var(--accent-green);  }
-    .badge-gray  { background: var(--text-muted);    }
-
+    .badge-green { background: var(--accent-green); }
+    .badge-gray  { background: var(--text-muted); }
     .flag-header { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
-    .flag-emoji  { font-size: 1.6rem; }
-
+    .flag-emoji { font-size: 1.6rem; }
     .section-label {
-      font-size: 0.62rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--largotek-blue);
-      margin: 8px 0 3px;
+      font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--largotek-blue); margin: 8px 0 3px;
     }
-
     ul { margin: 0; padding-left: 14px; }
     li { margin-bottom: 2px; font-size: 0.78rem; }
-
     .pill-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
     .pill {
-      font-size: 0.65rem;
-      padding: 2px 8px;
-      border-radius: 999px;
-      background: #EEF6FD;
-      border: 1px solid #C5DFF2;
-      color: var(--largotek-dark);
-      font-weight: 500;
+      font-size: 0.65rem; padding: 2px 8px; border-radius: 999px;
+      background: #EEF6FD; border: 1px solid #C5DFF2;
+      color: var(--largotek-dark); font-weight: 500;
     }
-
-    /* Jugadores */
     .player-card {
-      display: flex;
-      align-items: center;
-      gap: 7px;
-      padding: 5px 7px;
-      border-radius: 7px;
-      background: #F4F9FF;
-      border: 1px solid var(--border-soft);
-      margin-bottom: 4px;
+      display: flex; align-items: center; gap: 7px;
+      padding: 5px 7px; border-radius: 7px;
+      background: #F4F9FF; border: 1px solid var(--border-soft); margin-bottom: 4px;
     }
     .player-num {
-      width: 24px; height: 24px;
-      background: var(--largotek-blue);
-      color: #fff;
-      border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 0.65rem;
-      flex-shrink: 0;
+      width: 24px; height: 24px; background: var(--largotek-blue); color: #fff;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 0.65rem; flex-shrink: 0;
     }
     .player-info .name { font-weight: 700; font-size: 0.78rem; }
     .player-info .desc { font-size: 0.68rem; color: var(--text-muted); }
-
-    /* Tabla comparativa */
     .comp-table { width: 100%; border-collapse: collapse; font-size: 0.76rem; margin-top: 6px; }
     .comp-table th {
       background: var(--largotek-dark); color: #fff;
@@ -221,129 +129,288 @@
     .comp-table td { padding: 5px 8px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
     .comp-table tr:last-child td { border-bottom: none; }
     .comp-table tr:nth-child(even) td { background: #F8FBFF; }
-
-    /* Timeline */
     .timeline { list-style: none; padding: 0; margin: 0; }
     .timeline li {
       display: flex; align-items: flex-start; gap: 8px;
-      padding: 5px 0;
-      border-bottom: 1px dashed var(--border-soft);
-      font-size: 0.78rem;
+      padding: 5px 0; border-bottom: 1px dashed var(--border-soft); font-size: 0.78rem;
     }
     .timeline li:last-child { border-bottom: none; }
     .t-icon {
-      flex-shrink: 0;
-      width: 26px; height: 26px;
-      border-radius: 50%;
+      flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
       background: var(--largotek-blue); color: #fff;
       display: flex; align-items: center; justify-content: center;
       font-size: 0.62rem; font-weight: 700;
     }
-
-    /* Probabilidades */
     .prob-wrap { margin: 6px 0 2px; }
-    .prob-row  { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 0.78rem; }
+    .prob-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 0.78rem; }
     .prob-label { min-width: 130px; }
-    .prob-bar-bg {
-      flex: 1; background: #E3ECF5;
-      border-radius: 999px; height: 11px; overflow: hidden;
-    }
+    .prob-bar-bg { flex: 1; background: #E3ECF5; border-radius: 999px; height: 11px; overflow: hidden; }
     .prob-bar-fill { height: 100%; border-radius: 999px; }
     .prob-pct { min-width: 30px; font-weight: 700; color: var(--largotek-dark); text-align: right; }
-
-    /* Marcador proyectado */
     .score-box {
       text-align: center; padding: 10px; background: #EEF6FD;
       border-radius: 8px; margin-top: 4px;
     }
     .score-box .score { font-size: 1.8rem; font-weight: 900; color: var(--largotek-dark); }
     .score-box .score-sub { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
-
-    /* Footer */
     .report-footer {
-      background: var(--largotek-dark);
-      color: rgba(255,255,255,0.85);
-      padding: 8px 18px;
-      font-size: 0.72rem;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
+      background: var(--largotek-dark); color: rgba(255,255,255,0.85);
+      padding: 8px 18px; font-size: 0.72rem;
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px;
     }
     .report-footer .ai-tag { display: flex; align-items: center; gap: 7px; }
     .ai-icon {
-      background: var(--largotek-blue);
-      border-radius: 50%; width: 22px; height: 22px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.75rem;
+      background: var(--largotek-blue); border-radius: 50%;
+      width: 22px; height: 22px; display: flex; align-items: center;
+      justify-content: center; font-size: 0.75rem;
     }
     .report-footer a { color: var(--largotek-blue); text-decoration: none; }
 
-    /* ============================
-       PRINT — A4 LANDSCAPE, 2 HOJAS
-    ============================ */
-    @media print {
-      @page {
-        size: A4 landscape;
-        margin: 8mm 10mm;
-      }
+    /* ============================================================
+       CARTAS DE JUGADORES ESTILO FIFA / EA SPORTS FC
+    ============================================================ */
+    .players-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 6px;
+    }
+    .players-grid-cv {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-top: 6px;
+    }
 
+    /* Carta base estilo FUT */
+    .fut-card {
+      position: relative;
+      border-radius: 12px;
+      padding: 10px 8px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      overflow: hidden;
+      min-height: 200px;
+    }
+    /* Fondo dorado premium España */
+    .fut-card.gold {
+      background: linear-gradient(160deg, #C8980A 0%, #F5D060 35%, #E8B820 65%, #A67C00 100%);
+      border: 2px solid #C8980A;
+      box-shadow: 0 4px 14px rgba(200,152,10,0.35);
+    }
+    /* Fondo plata Cabo Verde */
+    .fut-card.silver {
+      background: linear-gradient(160deg, #7A8C99 0%, #C8D6DF 35%, #9FB3BC 65%, #5A6E79 100%);
+      border: 2px solid #8AA0A9;
+      box-shadow: 0 4px 14px rgba(90,110,121,0.3);
+    }
+    /* Fondo bronce lower rated */
+    .fut-card.bronze {
+      background: linear-gradient(160deg, #8B4513 0%, #D2956A 35%, #B5681A 65%, #6B3410 100%);
+      border: 2px solid #A0522D;
+      box-shadow: 0 4px 14px rgba(107,52,16,0.3);
+    }
+    /* Carta especial Largotek edition */
+    .fut-card.largotek-special {
+      background: linear-gradient(160deg, #003855 0%, #00A3E0 40%, #005F85 70%, #002840 100%);
+      border: 2px solid #00A3E0;
+      box-shadow: 0 4px 18px rgba(0,163,224,0.4);
+    }
+
+    .fut-overall {
+      font-size: 1.6rem;
+      font-weight: 900;
+      line-height: 1;
+      color: rgba(0,0,0,0.75);
+      text-shadow: 0 1px 0 rgba(255,255,255,0.3);
+      margin-bottom: 1px;
+    }
+    .fut-card.largotek-special .fut-overall,
+    .fut-card.largotek-special .fut-pos,
+    .fut-card.largotek-special .fut-name,
+    .fut-card.largotek-special .fut-club,
+    .fut-card.largotek-special .fut-flag-sm {
+      color: rgba(255,255,255,0.95);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    }
+
+    .fut-pos {
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: rgba(0,0,0,0.6);
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+    .fut-flag-sm { font-size: 1.1rem; margin-bottom: 3px; }
+
+    /* Avatar del jugador (iniciales estilo silhouette) */
+    .fut-avatar {
+      width: 52px; height: 52px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.18);
+      border: 2px solid rgba(255,255,255,0.4);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; font-weight: 900;
+      color: rgba(255,255,255,0.9);
+      margin: 3px 0;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+      letter-spacing: -1px;
+    }
+
+    .fut-name {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: rgba(0,0,0,0.8);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin: 3px 0 1px;
+      line-height: 1.1;
+    }
+    .fut-club {
+      font-size: 0.58rem;
+      color: rgba(0,0,0,0.55);
+      margin-bottom: 6px;
+    }
+
+    /* Separador */
+    .fut-divider {
+      width: 80%; height: 1px;
+      background: rgba(0,0,0,0.2);
+      margin: 4px auto;
+    }
+
+    /* Stats de la carta */
+    .fut-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px 8px;
+      width: 100%;
+      margin-top: 2px;
+    }
+    .fut-stat {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.62rem;
+    }
+    .fut-stat .s-val {
+      font-weight: 900;
+      font-size: 0.72rem;
+      color: rgba(0,0,0,0.75);
+    }
+    .fut-stat .s-lbl {
+      font-weight: 600;
+      color: rgba(0,0,0,0.5);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      font-size: 0.55rem;
+    }
+    .fut-card.largotek-special .fut-stat .s-val,
+    .fut-card.largotek-special .fut-stat .s-lbl {
+      color: rgba(255,255,255,0.85);
+    }
+    .fut-card.largotek-special .fut-divider { background: rgba(255,255,255,0.25); }
+
+    /* Barra de skill debajo del valor */
+    .skill-bar-wrap {
+      width: 100%;
+      padding: 0 6px;
+      margin-top: 6px;
+    }
+    .skill-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      margin-bottom: 3px;
+    }
+    .skill-row .sk-lbl {
+      font-size: 0.58rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: rgba(0,0,0,0.5);
+      min-width: 26px;
+      text-align: right;
+    }
+    .fut-card.largotek-special .skill-row .sk-lbl { color: rgba(255,255,255,0.6); }
+    .skill-row .sk-val {
+      font-size: 0.62rem;
+      font-weight: 900;
+      min-width: 20px;
+      color: rgba(0,0,0,0.7);
+    }
+    .fut-card.largotek-special .skill-row .sk-val { color: rgba(255,255,255,0.9); }
+    .sk-bar-bg {
+      flex: 1; height: 5px;
+      background: rgba(0,0,0,0.15);
+      border-radius: 999px; overflow: hidden;
+    }
+    .fut-card.largotek-special .sk-bar-bg { background: rgba(255,255,255,0.15); }
+    .sk-bar-fill {
+      height: 100%; border-radius: 999px;
+      background: rgba(0,0,0,0.45);
+    }
+    .fut-card.largotek-special .sk-bar-fill { background: rgba(255,255,255,0.7); }
+
+    /* Colores de barras según rating */
+    .bar-elite  { background: #1a7a1a !important; }
+    .bar-high   { background: #4da832 !important; }
+    .bar-mid    { background: #c8a800 !important; }
+    .bar-low    { background: #d44c00 !important; }
+    .bar-poor   { background: #a00000 !important; }
+
+    /* Team section title */
+    .team-section-title {
+      display: flex; align-items: center; gap: 8px;
+      margin: 12px 0 6px;
+      padding: 6px 10px;
+      border-radius: 8px;
+    }
+    .team-section-title.spain {
+      background: linear-gradient(90deg, #C8001A, #FF4444);
+      color: #fff;
+    }
+    .team-section-title.caboverde {
+      background: linear-gradient(90deg, #003893, #009E60);
+      color: #fff;
+    }
+    .team-section-title .ts-flag { font-size: 1.3rem; }
+    .team-section-title .ts-name { font-weight: 700; font-size: 0.85rem; }
+    .team-section-title .ts-sub  { font-size: 0.68rem; opacity: 0.85; margin-left: auto; }
+
+    /* ============================================================
+       PRINT - 3 HOJAS A4 LANDSCAPE
+    ============================================================ */
+    @media print {
+      @page { size: A4 landscape; margin: 8mm 10mm; }
       * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         color-adjust: exact !important;
       }
-
-      body {
-        background: #fff !important;
-        font-size: 11px;
-      }
-
-      header {
-        padding: 6px 14px;
-      }
+      body { background: #fff !important; font-size: 11px; }
+      header { padding: 6px 14px; }
       .logo-area img { height: 28px; }
-
-      /* Forzar salto de página entre hoja 1 y 2 */
-      .page-break {
-        page-break-before: always;
-        break-before: page;
+      .page-break { page-break-before: always; break-before: page; }
+      .card, article, .match-hero, .report-footer, .fut-card {
+        page-break-inside: avoid; break-inside: avoid;
       }
-
-      /* Evitar saltos dentro de las tarjetas */
-      .card, article, .match-hero, .report-footer {
-        page-break-inside: avoid;
-        break-inside: avoid;
-      }
-
-      /* Ocultar sombras innecesarias en print */
       .card { box-shadow: none !important; }
-
       .page { padding: 6px 0 4px; }
-
-      /* Botón imprimir oculto en print */
       .print-btn { display: none !important; }
-
-      /* Footer siempre al fondo */
       .report-footer { margin-top: 6px; border-radius: 0; }
+      .fut-card { min-height: 185px; }
     }
-
-    /* Botón imprimir (solo pantalla) */
     @media screen {
       .print-btn {
-        position: fixed;
-        bottom: 22px; right: 22px;
-        background: var(--largotek-blue);
-        color: #fff;
+        position: fixed; bottom: 22px; right: 22px;
+        background: var(--largotek-blue); color: #fff;
         border: none; border-radius: 50px;
-        padding: 10px 22px;
-        font-size: 0.9rem;
-        font-weight: 700;
-        cursor: pointer;
-        box-shadow: 0 4px 14px rgba(0,163,224,0.4);
-        z-index: 999;
-        letter-spacing: 0.03em;
+        padding: 10px 22px; font-size: 0.9rem; font-weight: 700;
+        cursor: pointer; box-shadow: 0 4px 14px rgba(0,163,224,0.4);
+        z-index: 999; letter-spacing: 0.03em;
       }
       .print-btn:hover { background: var(--largotek-dark); }
     }
@@ -351,7 +418,7 @@
 </head>
 <body>
 
-<!-- ========== HEADER GLOBAL ========== -->
+<!-- HEADER -->
 <header>
   <div class="logo-area">
     <img src="https://raw.githubusercontent.com/odoolargotek/worldcup2026/main/fichas/assets/largotek-logo.png"
@@ -369,11 +436,9 @@
 <main>
 
 <!-- ============================================================
-     PÁGINA 1 — Cabecera del partido + Fichas de equipos
+     PÁGINA 1 — Cabecera + Fichas de equipos
 ============================================================ -->
 <div class="page">
-
-  <!-- Cabecera del partido -->
   <div class="match-hero">
     <div class="grupo-label">Grupo H &middot; Jornada 1 &middot; Copa Mundial FIFA 2026</div>
     <div class="teams">
@@ -388,66 +453,30 @@
       <span>📺 <strong>Grupo H &mdash; Jornada 1</strong></span>
     </div>
   </div>
-
-  <!-- Fichas de equipos lado a lado -->
   <div class="grid-2">
-
-    <!-- FICHA ESPAÑA -->
     <article class="card">
-      <div class="flag-header">
-        <span class="flag-emoji">🇪🇸</span>
-        <div>
-          <h2 style="border:none; padding:0; margin:0; font-size:0.95rem;">España &mdash; La Roja</h2>
-        </div>
+      <div class="flag-header"><span class="flag-emoji">🇪🇸</span>
+        <div><h2 style="border:none;padding:0;margin:0;font-size:0.95rem;">España &mdash; La Roja</h2></div>
       </div>
-      <span class="badge badge-blue">Candidata al título · Ranking FIFA #2</span>
-
+      <span class="badge badge-blue">Candidata al título &middot; Ranking FIFA #2</span>
       <p>Campeona de Europa, llega como gran favorita con una generación que combina talento joven y experiencia ganadora bajo la dirección de Luis de la Fuente.</p>
-
       <div class="section-label">🎽 Datos técnicos</div>
       <ul>
         <li><strong>Entrenador:</strong> Luis de la Fuente</li>
         <li><strong>Sistema base:</strong> 4-3-3 / 4-2-3-1 flexible</li>
         <li><strong>Convocatoria notable:</strong> 26 jugadores, ninguno del Real Madrid</li>
       </ul>
-
       <div class="section-label">⚽ Jugadores clave</div>
-      <div class="player-card">
-        <div class="player-num">11</div>
-        <div class="player-info">
-          <div class="name">Lamine Yamal</div>
-          <div class="desc">Extremo dcho · FC Barcelona · Principal desequilibrador del torneo</div>
-        </div>
-      </div>
-      <div class="player-card">
-        <div class="player-num">17</div>
-        <div class="player-info">
-          <div class="name">Nico Williams</div>
-          <div class="desc">Extremo izq · Athletic Club · Velocidad y desborde</div>
-        </div>
-      </div>
-      <div class="player-card">
-        <div class="player-num">16</div>
-        <div class="player-info">
-          <div class="name">Rodri</div>
-          <div class="desc">Pivote · Manchester City · Equilibrio y salida limpia</div>
-        </div>
-      </div>
-      <div class="player-card">
-        <div class="player-num">8</div>
-        <div class="player-info">
-          <div class="name">Pedri</div>
-          <div class="desc">Interior · FC Barcelona · Ritmo y juego entre líneas</div>
-        </div>
-      </div>
-
+      <div class="player-card"><div class="player-num">11</div><div class="player-info"><div class="name">Lamine Yamal</div><div class="desc">Extremo dcho &middot; FC Barcelona &middot; Principal desequilibrador del torneo</div></div></div>
+      <div class="player-card"><div class="player-num">17</div><div class="player-info"><div class="name">Nico Williams</div><div class="desc">Extremo izq &middot; Athletic Club &middot; Velocidad y desborde</div></div></div>
+      <div class="player-card"><div class="player-num">16</div><div class="player-info"><div class="name">Rodri</div><div class="desc">Pivote &middot; Manchester City &middot; Equilibrio y salida limpia</div></div></div>
+      <div class="player-card"><div class="player-num">8</div><div class="player-info"><div class="name">Pedri</div><div class="desc">Interior &middot; FC Barcelona &middot; Ritmo y juego entre líneas</div></div></div>
       <div class="section-label">📰 Novedades</div>
       <ul>
         <li>Simulaciones otorgan ~87% de probabilidad de victoria a España en este debut.</li>
         <li>Prensa internacional la sitúa 2.ª favorita al título, detrás de Francia.</li>
         <li>Yamal: primer partido mundialista completo con plenas expectativas globales.</li>
       </ul>
-
       <div class="pill-row">
         <span class="pill">Posesión dominante</span>
         <span class="pill">Presión alta</span>
@@ -455,63 +484,29 @@
         <span class="pill">Desequilibrio 1v1</span>
       </div>
     </article>
-
-    <!-- FICHA CABO VERDE -->
     <article class="card">
-      <div class="flag-header">
-        <span class="flag-emoji">🇨🇻</span>
-        <div>
-          <h2 style="border:none; padding:0; margin:0; font-size:0.95rem;">Cabo Verde &mdash; Os Tubarões Azuis</h2>
-        </div>
+      <div class="flag-header"><span class="flag-emoji">🇨🇻</span>
+        <div><h2 style="border:none;padding:0;margin:0;font-size:0.95rem;">Cabo Verde &mdash; Os Tubarões Azuis</h2></div>
       </div>
       <span class="badge badge-green">🎉 Debut histórico en un Mundial</span>
-
-      <p>Primera Copa del Mundo en su historia. Clasificaron superando a Camerún en la fase africana. País de ~600,000 habitantes que defenderá con orgullo su lugar en la cita más grande del fútbol.</p>
-
+      <p>Primera Copa del Mundo en su historia. País de ~600,000 habitantes que defenderá con orgullo su lugar en la cita más grande del fútbol.</p>
       <div class="section-label">🎽 Datos técnicos</div>
       <ul>
         <li><strong>Entrenador:</strong> Bubista (Pedro Brito da Rocha)</li>
         <li><strong>Clasificación:</strong> Victoria 3–0 ante Eswatini en jornada final africana</li>
         <li><strong>Sistema base:</strong> 4-5-1 / 4-3-3 compacto y pragmático</li>
       </ul>
-
       <div class="section-label">⚽ Jugadores clave</div>
-      <div class="player-card">
-        <div class="player-num" style="background:var(--accent-green);">1</div>
-        <div class="player-info">
-          <div class="name">Vozinha</div>
-          <div class="desc">Portero · Experiencia y liderazgo defensivo clave</div>
-        </div>
-      </div>
-      <div class="player-card">
-        <div class="player-num" style="background:var(--accent-green);">5</div>
-        <div class="player-info">
-          <div class="name">Logan Costa</div>
-          <div class="desc">Defensa central · Toulouse FC · Solidez aérea y física</div>
-        </div>
-      </div>
-      <div class="player-card">
-        <div class="player-num" style="background:var(--accent-green);">10</div>
-        <div class="player-info">
-          <div class="name">Jamiro Monteiro</div>
-          <div class="desc">Mediocampista · Creatividad y conexión entre líneas</div>
-        </div>
-      </div>
-      <div class="player-card">
-        <div class="player-num" style="background:var(--accent-green);">7</div>
-        <div class="player-info">
-          <div class="name">Kevin Pina</div>
-          <div class="desc">Mediocampista ofensivo · Desborde y llegada desde 2.ª línea</div>
-        </div>
-      </div>
-
+      <div class="player-card"><div class="player-num" style="background:var(--accent-green);">1</div><div class="player-info"><div class="name">Vozinha</div><div class="desc">Portero &middot; Experiencia y liderazgo defensivo clave</div></div></div>
+      <div class="player-card"><div class="player-num" style="background:var(--accent-green);">5</div><div class="player-info"><div class="name">Logan Costa</div><div class="desc">Defensa central &middot; Toulouse FC &middot; Solidez aérea y física</div></div></div>
+      <div class="player-card"><div class="player-num" style="background:var(--accent-green);">10</div><div class="player-info"><div class="name">Jamiro Monteiro</div><div class="desc">Mediocampista &middot; Creatividad y conexión entre líneas</div></div></div>
+      <div class="player-card"><div class="player-num" style="background:var(--accent-green);">7</div><div class="player-info"><div class="name">Kevin Pina</div><div class="desc">Mediocampista ofensivo &middot; Desborde y llegada desde 2.ª línea</div></div></div>
       <div class="section-label">📰 Novedades</div>
       <ul>
         <li>CNN y Al Jazeera destacan su historia con el lema "nada es imposible".</li>
         <li>Grupo H incluye a España y Uruguay: enfoque defensivo y pragmático es imperativo.</li>
         <li>Representan a uno de los países más pequeños en disputar un Mundial.</li>
       </ul>
-
       <div class="pill-row">
         <span class="pill">Bloque medio-bajo</span>
         <span class="pill">Transición rápida</span>
@@ -519,212 +514,372 @@
         <span class="pill">Juego físico</span>
       </div>
     </article>
-
-  </div><!-- /grid-2 fichas -->
-</div><!-- /page 1 -->
-
+  </div>
+</div>
 
 <!-- ============================================================
-     PÁGINA 2 — Estrategias + Qué esperar
+     PÁGINA 2 — Estrategias + Proyecciones
 ============================================================ -->
 <div class="page page-break">
-
   <div class="grid-3col">
-
-    <!-- COLUMNA 1: Tabla comparativa de estrategias -->
     <div>
       <div class="card">
         <h2>⚔️ Comparación de estrategias</h2>
         <table class="comp-table">
-          <thead>
-            <tr>
-              <th>Dimensión</th>
-              <th>🇪🇸 España</th>
-              <th>🇨🇻 Cabo Verde</th>
-            </tr>
-          </thead>
+          <thead><tr><th>Dimensión</th><th>🇪🇸 España</th><th>🇨🇻 Cabo Verde</th></tr></thead>
           <tbody>
-            <tr>
-              <td><strong>Sistema</strong></td>
-              <td>4-3-3 / 4-2-3-1</td>
-              <td>4-5-1 compacto</td>
-            </tr>
-            <tr>
-              <td><strong>Posesión</strong></td>
-              <td>~65-70 % (dominante)</td>
-              <td>Baja, cede el balón</td>
-            </tr>
-            <tr>
-              <td><strong>Pressing</strong></td>
-              <td>Alta presión tras pérdida</td>
-              <td>Repliegue ordenado</td>
-            </tr>
-            <tr>
-              <td><strong>Ataque</strong></td>
-              <td>Bandas, 1v1, centros rasos</td>
-              <td>Transición directa</td>
-            </tr>
-            <tr>
-              <td><strong>Defensa</strong></td>
-              <td>Línea alta, anticipación</td>
-              <td>Bloque bajo, 2 líneas de 4</td>
-            </tr>
-            <tr>
-              <td><strong>Bal. parado</strong></td>
-              <td>Jugadas elaboradas</td>
-              <td>Fortaleza aérea, amenaza</td>
-            </tr>
-            <tr>
-              <td><strong>Objetivo</strong></td>
-              <td>Ganar con solvencia</td>
-              <td>Resistir, sorprender</td>
-            </tr>
+            <tr><td><strong>Sistema</strong></td><td>4-3-3 / 4-2-3-1</td><td>4-5-1 compacto</td></tr>
+            <tr><td><strong>Posesión</strong></td><td>~65-70% dominante</td><td>Baja, cede el balón</td></tr>
+            <tr><td><strong>Pressing</strong></td><td>Alta presión tras pérdida</td><td>Repliegue ordenado</td></tr>
+            <tr><td><strong>Ataque</strong></td><td>Bandas, 1v1, centros rasos</td><td>Transición directa</td></tr>
+            <tr><td><strong>Defensa</strong></td><td>Línea alta, anticipación</td><td>Bloque bajo, 2 líneas</td></tr>
+            <tr><td><strong>Bal. parado</strong></td><td>Jugadas elaboradas</td><td>Fortaleza aérea</td></tr>
+            <tr><td><strong>Objetivo</strong></td><td>Ganar con solvencia</td><td>Resistir, sorprender</td></tr>
           </tbody>
         </table>
-
         <div style="margin-top:10px;">
           <h3>Plan: España 🇪🇸</h3>
           <ul>
-            <li>Cargar juego por bandas (Yamal y Nico) para generar 1v1 constantes.</li>
-            <li>Circular el balón con paciencia hasta encontrar espacios en el bloque compacto.</li>
-            <li>Presión alta inmediata tras pérdida para cortar transiciones rivales.</li>
+            <li>Cargar juego por bandas (Yamal y Nico) para 1v1 constantes.</li>
+            <li>Circular con paciencia hasta encontrar espacios en el bloque.</li>
+            <li>Presión alta inmediata tras pérdida para cortar transiciones.</li>
             <li>Primer gol temprano: abre espacios y calma la ansiedad del debut.</li>
           </ul>
         </div>
         <div style="margin-top:8px;">
           <h3>Plan: Cabo Verde 🇨🇻</h3>
           <ul>
-            <li>Bloque 4-5-1 cerrado, pasillos interiores sellados frente a Pedri/Rodri.</li>
-            <li>Transición rápida atacando la espalda de la línea alta española.</li>
+            <li>Bloque 4-5-1 cerrado, pasillos interiores sellados.</li>
+            <li>Transición rápida atacando espalda de la línea alta española.</li>
             <li>Balón parado como principal opción real de gol.</li>
             <li>Aguantar 0–0 al descanso: desequilibra emocionalmente a España.</li>
           </ul>
         </div>
       </div>
     </div>
-
-    <!-- COLUMNA 2: Guion del partido / Timeline -->
     <div>
       <div class="card">
         <h2>🔮 Qué esperar del partido</h2>
         <h3>Guion probable</h3>
         <ul class="timeline">
-          <li>
-            <div class="t-icon">0'</div>
-            <div><strong>Inicio:</strong> España instala el partido en campo rival con pressing y posesión desde el arranque.</div>
-          </li>
-          <li>
-            <div class="t-icon">15'</div>
-            <div><strong>Primer quiebre:</strong> Yamal genera las primeras llegadas por banda derecha. Cabo Verde resiste con orden.</div>
-          </li>
-          <li>
-            <div class="t-icon">45'</div>
-            <div><strong>Descanso clave:</strong> Si Cabo Verde llega sin gol en contra, la presión narrativa sobre España se dispara.</div>
-          </li>
-          <li>
-            <div class="t-icon">60'</div>
-            <div><strong>Fase decisiva:</strong> España acelera con cambios; Cabo Verde ajusta para resistir los últimos 30 minutos.</div>
-          </li>
-          <li>
-            <div class="t-icon">90'</div>
-            <div><strong>Cierre:</strong> Con ventaja española, Cabo Verde puede buscar el gol del honor histórico.</div>
-          </li>
+          <li><div class="t-icon">0'</div><div><strong>Inicio:</strong> España instala el partido en campo rival con pressing y posesión.</div></li>
+          <li><div class="t-icon">15'</div><div><strong>Primer quiebre:</strong> Yamal genera llegadas por banda dcha. Cabo Verde resiste con orden.</div></li>
+          <li><div class="t-icon">45'</div><div><strong>Descanso clave:</strong> Si Cabo Verde llega sin gol en contra, la presión narrativa sobre España se dispara.</div></li>
+          <li><div class="t-icon">60'</div><div><strong>Fase decisiva:</strong> España acelera con cambios; Cabo Verde ajusta para resistir los últimos 30'.</div></li>
+          <li><div class="t-icon">90'</div><div><strong>Cierre:</strong> Con ventaja española, Cabo Verde puede buscar el gol del honor histórico.</div></li>
         </ul>
-
         <div class="section-label" style="margin-top:10px;">🌶️ Factores de interés</div>
         <ul>
           <li><strong>Debut histórico</strong> de Cabo Verde genera simpatía global.</li>
-          <li><strong>Yamal</strong> en su primer Mundial: cada jugada suya será viral.</li>
-          <li>Un gol de Cabo Verde sería uno de los momentos del torneo.</li>
+          <li><strong>Yamal</strong> en su primer Mundial: cada jugada será viral.</li>
+          <li>Un gol de Cabo Verde sería el momento del torneo.</li>
           <li><strong>Calor de Atlanta</strong> puede afectar el pressing español en 2.ª parte.</li>
         </ul>
       </div>
     </div>
-
-    <!-- COLUMNA 3: Probabilidades + Resultado + Live tracking -->
     <div>
       <div class="card">
         <h2>📊 Proyecciones y análisis</h2>
-
         <h3>Probabilidades estimadas</h3>
-        <p style="font-size:0.7rem; color:var(--text-muted);">Basadas en modelos de simulación y análisis pre-partido (10,000 iteraciones).</p>
-
+        <p style="font-size:0.7rem;color:var(--text-muted);">Simulaciones pre-partido &mdash; 10,000 iteraciones.</p>
         <div class="prob-wrap">
-          <div class="prob-row">
-            <span class="prob-label">🇪🇸 Victoria España</span>
-            <div class="prob-bar-bg">
-              <div class="prob-bar-fill" style="width:87%; background:var(--largotek-blue);"></div>
-            </div>
-            <span class="prob-pct">87%</span>
-          </div>
-          <div class="prob-row">
-            <span class="prob-label">🤝 Empate</span>
-            <div class="prob-bar-bg">
-              <div class="prob-bar-fill" style="width:8%; background:var(--text-muted);"></div>
-            </div>
-            <span class="prob-pct">8%</span>
-          </div>
-          <div class="prob-row">
-            <span class="prob-label">🇨🇻 Victoria Cabo Verde</span>
-            <div class="prob-bar-bg">
-              <div class="prob-bar-fill" style="width:5%; background:var(--accent-green);"></div>
-            </div>
-            <span class="prob-pct">5%</span>
-          </div>
+          <div class="prob-row"><span class="prob-label">🇪🇸 Victoria España</span><div class="prob-bar-bg"><div class="prob-bar-fill" style="width:87%;background:var(--largotek-blue);"></div></div><span class="prob-pct">87%</span></div>
+          <div class="prob-row"><span class="prob-label">🤝 Empate</span><div class="prob-bar-bg"><div class="prob-bar-fill" style="width:8%;background:var(--text-muted);"></div></div><span class="prob-pct">8%</span></div>
+          <div class="prob-row"><span class="prob-label">🇨🇻 Victoria Cabo Verde</span><div class="prob-bar-bg"><div class="prob-bar-fill" style="width:5%;background:var(--accent-green);"></div></div><span class="prob-pct">5%</span></div>
         </div>
-
         <div class="section-label">🎯 Resultado más probable</div>
         <div class="score-box">
-          <div class="score">3 – 0</div>
+          <div class="score">3 &ndash; 0</div>
           <div class="score-sub">Proyección consenso de simulaciones</div>
         </div>
-
-        <div class="section-label" style="margin-top:10px;">📈 Para seguir en vivo</div>
-        <ul>
-          <li>Actualizar posesión y xG cada 15 minutos.</li>
-          <li>Registrar cada remate de Cabo Verde a puerta.</li>
-          <li>Seguir cambios tácticos de cada entrenador.</li>
-          <li>Comparar guion real vs proyecciones previas.</li>
-        </ul>
-
-        <div class="section-label" style="margin-top:10px;">🏆 Posición en el grupo</div>
+        <div class="section-label" style="margin-top:10px;">🏆 Grupo H &mdash; contexto</div>
         <table class="comp-table" style="margin-top:4px;">
-          <thead>
-            <tr><th>Equipo</th><th>Favorito</th><th>Objetivo</th></tr>
-          </thead>
+          <thead><tr><th>Equipo</th><th>Favorito</th><th>Objetivo</th></tr></thead>
           <tbody>
             <tr><td>🇪🇸 España</td><td>Sí</td><td>Clasificar 1.º</td></tr>
-            <tr><td>🇺🇾 Uruguay</td><td>Sí</td><td>Clasificar Top 2</td></tr>
-            <tr><td>🇨🇻 Cabo Verde</td><td>No</td><td>Sorpresa / 3.er lugar</td></tr>
+            <tr><td>🇺🇾 Uruguay</td><td>Sí</td><td>Top 2</td></tr>
+            <tr><td>🇨🇻 Cabo Verde</td><td>No</td><td>Sorpresa / 3.º</td></tr>
             <tr><td>🇮🇷 Irán</td><td>No</td><td>Competir</td></tr>
           </tbody>
         </table>
+        <div class="section-label" style="margin-top:10px;">📈 Seguimiento en vivo</div>
+        <ul>
+          <li>Actualizar posesión y xG cada 15 minutos.</li>
+          <li>Registrar cada remate de Cabo Verde a puerta.</li>
+          <li>Comparar guion real vs proyecciones previas.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PÁGINA 3 — CARTAS DE JUGADORES ESTILO EA SPORTS FC 26
+============================================================ -->
+<div class="page page-break">
+  <div class="card">
+    <h2>🎮 Fichas de jugadores &mdash; Estilo EA Sports FC 26 &mdash; Ratings Oficiales</h2>
+    <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:8px;">Ratings basados en EA Sports FC 26 (temporada 2025-26). PAC=Velocidad &middot; SHO=Tiro &middot; PAS=Pase &middot; DRI=Regate &middot; DEF=Defensa &middot; PHY=Físico</p>
+
+    <!-- ESPAÑA -->
+    <div class="team-section-title spain">
+      <span class="ts-flag">🇪🇸</span>
+      <span class="ts-name">ESPAÑA &mdash; La Roja</span>
+      <span class="ts-sub">Cartas doradas &middot; EA Sports FC 26</span>
+    </div>
+
+    <div class="players-grid">
+
+      <!-- LAMINE YAMAL OVR 89 -->
+      <div class="fut-card largotek-special">
+        <div class="fut-overall">89</div>
+        <div class="fut-pos">RM</div>
+        <div class="fut-flag-sm">🇪🇸</div>
+        <div class="fut-avatar">LY</div>
+        <div class="fut-name">L. Yamal</div>
+        <div class="fut-club">FC Barcelona</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">85</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">81</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">86</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">90</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">23</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">53</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">PAC</span><span class="sk-val">85</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:85%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">DRI</span><span class="sk-val">90</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-elite" style="width:90%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PAS</span><span class="sk-val">86</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:86%"></div></div></div>
+        </div>
+      </div>
+
+      <!-- RODRI OVR 90 -->
+      <div class="fut-card gold">
+        <div class="fut-overall">90</div>
+        <div class="fut-pos">CDM</div>
+        <div class="fut-flag-sm">🇪🇸</div>
+        <div class="fut-avatar">RO</div>
+        <div class="fut-name">Rodri</div>
+        <div class="fut-club">Manchester City</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">64</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">72</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">85</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">78</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">86</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">82</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">DEF</span><span class="sk-val">86</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:86%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PAS</span><span class="sk-val">85</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:85%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PHY</span><span class="sk-val">82</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:82%"></div></div></div>
+        </div>
+      </div>
+
+      <!-- PEDRI OVR 89 -->
+      <div class="fut-card gold">
+        <div class="fut-overall">89</div>
+        <div class="fut-pos">CM</div>
+        <div class="fut-flag-sm">🇪🇸</div>
+        <div class="fut-avatar">PE</div>
+        <div class="fut-name">Pedri</div>
+        <div class="fut-club">FC Barcelona</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">76</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">75</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">88</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">89</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">45</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">68</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">DRI</span><span class="sk-val">89</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-elite" style="width:89%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PAS</span><span class="sk-val">88</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:88%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PAC</span><span class="sk-val">76</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:76%"></div></div></div>
+        </div>
+      </div>
+
+      <!-- NICO WILLIAMS OVR 85 -->
+      <div class="fut-card gold">
+        <div class="fut-overall">85</div>
+        <div class="fut-pos">LW</div>
+        <div class="fut-flag-sm">🇪🇸</div>
+        <div class="fut-avatar">NW</div>
+        <div class="fut-name">N. Williams</div>
+        <div class="fut-club">Athletic Club</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">93</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">77</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">79</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">86</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">28</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">63</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">PAC</span><span class="sk-val">93</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-elite" style="width:93%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">DRI</span><span class="sk-val">86</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:86%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PAS</span><span class="sk-val">79</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:79%"></div></div></div>
+        </div>
+      </div>
+
+    </div><!-- /players-grid españa -->
+
+    <!-- CABO VERDE -->
+    <div class="team-section-title caboverde" style="margin-top:14px;">
+      <span class="ts-flag">🇨🇻</span>
+      <span class="ts-name">CABO VERDE &mdash; Os Tubarões Azuis</span>
+      <span class="ts-sub">Cartas plata/bronce &middot; EA Sports FC 26</span>
+    </div>
+
+    <div class="players-grid-cv">
+
+      <!-- LOGAN COSTA OVR 77 -->
+      <div class="fut-card silver">
+        <div class="fut-overall">77</div>
+        <div class="fut-pos">CB</div>
+        <div class="fut-flag-sm">🇨🇻</div>
+        <div class="fut-avatar">LC</div>
+        <div class="fut-name">Logan Costa</div>
+        <div class="fut-club">Toulouse FC</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">72</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">44</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">58</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">60</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">78</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">76</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">DEF</span><span class="sk-val">78</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:78%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PHY</span><span class="sk-val">76</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:76%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PAC</span><span class="sk-val">72</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:72%"></div></div></div>
+        </div>
+      </div>
+
+      <!-- NUNO DA COSTA OVR 74 -->
+      <div class="fut-card silver">
+        <div class="fut-overall">74</div>
+        <div class="fut-pos">ST</div>
+        <div class="fut-flag-sm">🇨🇻</div>
+        <div class="fut-avatar">NC</div>
+        <div class="fut-name">Nuno da Costa</div>
+        <div class="fut-club">Delantero referencia</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">78</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">72</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">60</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">68</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">32</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">70</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">PAC</span><span class="sk-val">78</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:78%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">SHO</span><span class="sk-val">72</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:72%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PHY</span><span class="sk-val">70</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:70%"></div></div></div>
+        </div>
+      </div>
+
+      <!-- JAMIRO MONTEIRO OVR 69 -->
+      <div class="fut-card bronze">
+        <div class="fut-overall">69</div>
+        <div class="fut-pos">CAM</div>
+        <div class="fut-flag-sm">🇨🇻</div>
+        <div class="fut-avatar">JM</div>
+        <div class="fut-name">J. Monteiro</div>
+        <div class="fut-club">PEC Zwolle</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">70</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">62</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">68</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">70</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">38</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">58</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">DRI</span><span class="sk-val">70</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:70%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PAC</span><span class="sk-val">70</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:70%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PAS</span><span class="sk-val">68</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:68%"></div></div></div>
+        </div>
+      </div>
+
+      <!-- KEVIN PINA OVR 68 -->
+      <div class="fut-card bronze">
+        <div class="fut-overall">68</div>
+        <div class="fut-pos">CM</div>
+        <div class="fut-flag-sm">🇨🇻</div>
+        <div class="fut-avatar">KP</div>
+        <div class="fut-name">Kevin Pina</div>
+        <div class="fut-club">Mediocampista ofensivo</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">75</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">60</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">65</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">68</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">45</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">62</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">PAC</span><span class="sk-val">75</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:75%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">DRI</span><span class="sk-val">68</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:68%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PAS</span><span class="sk-val">65</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:65%"></div></div></div>
+        </div>
+      </div>
+
+    </div><!-- /players-grid caboverde -->
+
+    <!-- Leyenda de colores de cartas -->
+    <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;">
+      <div style="display:flex;align-items:center;gap:6px;font-size:0.68rem;color:var(--text-muted);">
+        <div style="width:16px;height:16px;border-radius:4px;background:linear-gradient(135deg,#003855,#00A3E0);"></div>
+        <span><strong>Edición Largotek</strong> &mdash; Figura especial (OVR 86+)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:0.68rem;color:var(--text-muted);">
+        <div style="width:16px;height:16px;border-radius:4px;background:linear-gradient(135deg,#C8980A,#F5D060);"></div>
+        <span><strong>Carta Oro</strong> &mdash; Jugador de élite (OVR 75-89)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:0.68rem;color:var(--text-muted);">
+        <div style="width:16px;height:16px;border-radius:4px;background:linear-gradient(135deg,#7A8C99,#C8D6DF);"></div>
+        <span><strong>Carta Plata</strong> &mdash; Jugador regular (OVR 65-74)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:0.68rem;color:var(--text-muted);">
+        <div style="width:16px;height:16px;border-radius:4px;background:linear-gradient(135deg,#8B4513,#D2956A);"></div>
+        <span><strong>Carta Bronce</strong> &mdash; Jugador en desarrollo (OVR &lt;65)</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;font-size:0.68rem;color:var(--text-muted);margin-left:auto;">
+        <span>Fuente: EA Sports FC 26 Official Ratings</span>
       </div>
     </div>
 
-  </div><!-- /grid-3col -->
-</div><!-- /page 2 -->
+  </div><!-- /card -->
+</div><!-- /page 3 -->
 
 </main>
 
-<!-- ========== FOOTER GLOBAL ========== -->
+<!-- FOOTER -->
 <div class="report-footer">
   <div class="ai-tag">
     <div class="ai-icon">🤖</div>
     <div>
-      <div style="font-weight:600; color:#fff;">Informe generado con Inteligencia Artificial</div>
+      <div style="font-weight:600;color:#fff;">Informe generado con Inteligencia Artificial</div>
       <div>Análisis con IA &mdash; Personalizaciones y adecuaciones por <strong style="color:#fff;">Largotek SRL</strong></div>
     </div>
   </div>
   <div style="text-align:right;">
-    <div style="font-weight:600; color:#fff;">Juan Luis Garvía Ossio</div>
+    <div style="font-weight:600;color:#fff;">Juan Luis Garvía Ossio</div>
     <div>Largotek SRL &mdash; La Paz, Bolivia &mdash; <a href="https://largotek.com">largotek.com</a></div>
-    <div style="margin-top:1px; opacity:0.7;">Generado: 15 de junio de 2026</div>
+    <div style="margin-top:1px;opacity:0.7;">Generado: 15 de junio de 2026</div>
   </div>
 </div>
 
-<!-- Botón imprimir (solo pantalla) -->
-<button class="print-btn" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+<button class="print-btn" onclick="window.print()">🖨️ Imprimir / Guardar PDF (3 hojas)</button>
 
 </body>
 </html>
