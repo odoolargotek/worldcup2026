@@ -24,7 +24,7 @@
       background: var(--bg-light);
       color: var(--text-main);
       line-height: 1.45;
-      font-size: 13px;
+      font-size: 12px;
     }
 
     /* ============================
@@ -33,24 +33,24 @@
     header {
       background: linear-gradient(90deg, var(--largotek-blue), var(--largotek-dark));
       color: #fff;
-      padding: 10px 22px;
+      padding: 8px 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px;
     }
-    .logo-area { display: flex; align-items: center; gap: 12px; }
-    .logo-area img { height: 36px; }
-    .logo-text-block .company { font-size: 1.1rem; font-weight: 700; letter-spacing: 0.04em; }
-    .logo-text-block .tagline { font-size: 0.75rem; opacity: 0.85; margin-top: 1px; }
-    .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+    .logo-area { display: flex; align-items: center; gap: 10px; }
+    .logo-area img { height: 30px; }
+    .logo-text-block .company { font-size: 0.95rem; font-weight: 700; letter-spacing: 0.04em; }
+    .logo-text-block .tagline { font-size: 0.68rem; opacity: 0.85; margin-top: 1px; }
+    .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
     .header-badge {
       background: rgba(255,255,255,0.18);
       border: 1px solid rgba(255,255,255,0.35);
       border-radius: 999px;
-      padding: 3px 12px;
-      font-size: 0.72rem;
+      padding: 2px 10px;
+      font-size: 0.65rem;
       font-weight: 600;
       letter-spacing: 0.05em;
     }
@@ -61,111 +61,78 @@
     .ia-seal {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
+      gap: 6px;
       background: linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08));
       border: 1.5px solid rgba(255,255,255,0.55);
       border-radius: 999px;
-      padding: 4px 12px 4px 6px;
+      padding: 3px 10px 3px 5px;
       backdrop-filter: blur(4px);
     }
     .ia-seal .seal-icon {
-      width: 22px; height: 22px;
+      width: 20px; height: 20px;
       background: linear-gradient(135deg, #00C6FF, #0072FF);
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       flex-shrink: 0;
       box-shadow: 0 0 6px rgba(0,198,255,0.6);
     }
-    .ia-seal .seal-text {
-      display: flex; flex-direction: column; line-height: 1.1;
-    }
+    .ia-seal .seal-text { display: flex; flex-direction: column; line-height: 1.1; }
     .ia-seal .seal-line1 {
-      font-size: 0.58rem;
-      font-weight: 800;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
+      font-size: 0.55rem; font-weight: 800;
+      letter-spacing: 0.06em; text-transform: uppercase;
       color: rgba(255,255,255,0.95);
     }
     .ia-seal .seal-line2 {
-      font-size: 0.6rem;
-      font-weight: 600;
-      color: rgba(255,255,255,0.75);
-      letter-spacing: 0.02em;
+      font-size: 0.55rem; font-weight: 600;
+      color: rgba(255,255,255,0.75); letter-spacing: 0.02em;
     }
 
-    /* Sello en footer (versión oscura) */
+    /* Sello en footer */
     .ia-seal-footer {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
+      display: inline-flex; align-items: center; gap: 8px;
       background: linear-gradient(135deg, #00A3E0 0%, #0072B5 100%);
       border: 1.5px solid rgba(255,255,255,0.25);
       border-radius: 10px;
-      padding: 7px 14px 7px 10px;
+      padding: 6px 12px 6px 8px;
       box-shadow: 0 2px 10px rgba(0,163,224,0.35);
     }
     .ia-seal-footer .sf-icon {
-      width: 28px; height: 28px;
+      width: 24px; height: 24px;
       background: rgba(255,255,255,0.2);
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      font-size: 0.95rem;
-      flex-shrink: 0;
+      font-size: 0.85rem; flex-shrink: 0;
     }
     .ia-seal-footer .sf-text { display: flex; flex-direction: column; line-height: 1.2; }
-    .ia-seal-footer .sf-l1 {
-      font-size: 0.65rem;
-      font-weight: 900;
-      letter-spacing: 0.07em;
-      text-transform: uppercase;
-      color: #fff;
-    }
-    .ia-seal-footer .sf-l2 {
-      font-size: 0.62rem;
-      font-weight: 600;
-      color: rgba(255,255,255,0.8);
-    }
-    .ia-seal-footer .sf-l3 {
-      font-size: 0.58rem;
-      color: rgba(255,255,255,0.65);
-      margin-top: 1px;
-    }
+    .ia-seal-footer .sf-l1 { font-size: 0.6rem; font-weight: 900; letter-spacing: 0.07em; text-transform: uppercase; color: #fff; }
+    .ia-seal-footer .sf-l2 { font-size: 0.58rem; font-weight: 600; color: rgba(255,255,255,0.8); }
+    .ia-seal-footer .sf-l3 { font-size: 0.55rem; color: rgba(255,255,255,0.65); margin-top: 1px; }
 
-    /* Sello watermark en cada página */
+    /* Watermark */
     .page-watermark {
       position: absolute;
-      top: 50%;
-      right: 18px;
+      top: 50%; right: 14px;
       transform: translateY(-50%) rotate(-30deg);
       opacity: 0.04;
-      font-size: 2.5rem;
-      font-weight: 900;
-      letter-spacing: 0.04em;
-      color: var(--largotek-dark);
-      pointer-events: none;
-      white-space: nowrap;
-      text-transform: uppercase;
-      z-index: 0;
+      font-size: 2.2rem; font-weight: 900;
+      letter-spacing: 0.04em; color: var(--largotek-dark);
+      pointer-events: none; white-space: nowrap;
+      text-transform: uppercase; z-index: 0;
     }
 
-    /* Banda IA debajo del header */
+    /* Banda IA */
     .ia-banner {
       background: linear-gradient(90deg, #00172A, #003855, #00172A);
       color: rgba(255,255,255,0.9);
-      padding: 4px 22px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-      font-size: 0.68rem;
-      letter-spacing: 0.04em;
+      padding: 3px 16px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      font-size: 0.62rem; letter-spacing: 0.04em;
       border-bottom: 1px solid rgba(0,163,224,0.3);
     }
     .ia-banner .ib-dot {
-      width: 6px; height: 6px;
-      background: var(--largotek-blue);
-      border-radius: 50%;
+      width: 5px; height: 5px;
+      background: var(--largotek-blue); border-radius: 50%;
       animation: pulse 2s infinite;
     }
     @keyframes pulse {
@@ -178,130 +145,104 @@
        LAYOUT GENERAL
     ============================ */
     main { max-width: 100%; margin: 0; padding: 0; }
-    .page { width: 100%; padding: 10px 18px 8px; position: relative; }
+    .page { width: 100%; padding: 8px 14px 6px; position: relative; }
     h2 {
-      font-size: 0.95rem; font-weight: 700;
+      font-size: 0.88rem; font-weight: 700;
       color: var(--largotek-dark);
       border-bottom: 2px solid var(--largotek-blue);
-      padding-bottom: 4px; margin: 0 0 8px;
+      padding-bottom: 3px; margin: 0 0 6px;
     }
-    h3 { font-size: 0.85rem; font-weight: 700; color: var(--largotek-dark); margin: 0 0 5px; }
-    p { margin: 0 0 6px; font-size: 0.82rem; }
+    h3 { font-size: 0.78rem; font-weight: 700; color: var(--largotek-dark); margin: 0 0 4px; }
+    p { margin: 0 0 5px; font-size: 0.76rem; }
     .card {
-      background: var(--card-bg); border-radius: 10px;
-      padding: 10px 12px; box-shadow: var(--shadow-soft);
+      background: var(--card-bg); border-radius: 8px;
+      padding: 8px 10px; box-shadow: var(--shadow-soft);
       border: 1px solid var(--border-soft);
     }
     .match-hero {
       text-align: center;
       background: linear-gradient(135deg, #E8F5FD, #ffffff);
-      padding: 8px 12px; border-radius: 10px;
-      border: 1px solid var(--border-soft); margin-bottom: 8px;
+      padding: 7px 10px; border-radius: 8px;
+      border: 1px solid var(--border-soft); margin-bottom: 7px;
     }
-    .match-hero .grupo-label {
-      font-size: 0.68rem; color: var(--text-muted);
-      letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 4px;
-    }
-    .match-hero .teams {
-      display: flex; align-items: center; justify-content: center; gap: 20px; margin: 4px 0;
-    }
-    .match-hero .team-name { font-weight: 700; font-size: 0.95rem; color: var(--largotek-dark); }
-    .match-hero .flag { font-size: 2rem; }
-    .match-hero .vs { font-size: 1.4rem; font-weight: 900; color: var(--largotek-blue); }
-    .match-hero .meta {
-      display: flex; flex-wrap: wrap; gap: 10px; justify-content: center;
-      font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;
-    }
+    .match-hero .grupo-label { font-size: 0.62rem; color: var(--text-muted); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 3px; }
+    .match-hero .teams { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 3px 0; }
+    .match-hero .team-name { font-weight: 700; font-size: 0.88rem; color: var(--largotek-dark); }
+    .match-hero .flag { font-size: 1.7rem; }
+    .match-hero .vs { font-size: 1.2rem; font-weight: 900; color: var(--largotek-blue); }
+    .match-hero .meta { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; font-size: 0.68rem; color: var(--text-muted); margin-top: 3px; }
     .match-hero .meta strong { color: var(--largotek-dark); }
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .grid-3col { display: grid; grid-template-columns: 1fr 1fr 1.1fr; gap: 10px; }
+
+    /* Grids — en portrait usamos 1 columna para p1, 2col para p2, etc. */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid-3col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid-3col > div:last-child { grid-column: 1 / -1; }
+
     .badge {
-      display: inline-block; padding: 2px 8px; border-radius: 999px;
-      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.06em;
-      text-transform: uppercase; color: #fff; margin-bottom: 6px;
+      display: inline-block; padding: 2px 7px; border-radius: 999px;
+      font-size: 0.6rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: #fff; margin-bottom: 5px;
     }
     .badge-blue  { background: var(--largotek-blue); }
     .badge-green { background: var(--accent-green); }
-    .flag-header { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; }
-    .flag-emoji { font-size: 1.6rem; }
+    .flag-header { display: flex; align-items: center; gap: 7px; margin-bottom: 2px; }
+    .flag-emoji { font-size: 1.4rem; }
     .section-label {
-      font-size: 0.62rem; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.08em; color: var(--largotek-blue); margin: 8px 0 3px;
+      font-size: 0.58rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--largotek-blue); margin: 6px 0 3px;
     }
-    ul { margin: 0; padding-left: 14px; }
-    li { margin-bottom: 2px; font-size: 0.78rem; }
-    .pill-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+    ul { margin: 0; padding-left: 13px; }
+    li { margin-bottom: 2px; font-size: 0.72rem; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; }
     .pill {
-      font-size: 0.65rem; padding: 2px 8px; border-radius: 999px;
+      font-size: 0.6rem; padding: 2px 7px; border-radius: 999px;
       background: #EEF6FD; border: 1px solid #C5DFF2;
       color: var(--largotek-dark); font-weight: 500;
     }
     .player-card {
-      display: flex; align-items: center; gap: 7px;
-      padding: 5px 7px; border-radius: 7px;
-      background: #F4F9FF; border: 1px solid var(--border-soft); margin-bottom: 4px;
+      display: flex; align-items: center; gap: 6px;
+      padding: 4px 6px; border-radius: 6px;
+      background: #F4F9FF; border: 1px solid var(--border-soft); margin-bottom: 3px;
     }
     .player-num {
-      width: 24px; height: 24px; background: var(--largotek-blue); color: #fff;
+      width: 22px; height: 22px; background: var(--largotek-blue); color: #fff;
       border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 0.65rem; flex-shrink: 0;
+      font-weight: 700; font-size: 0.6rem; flex-shrink: 0;
     }
-    .player-info .name { font-weight: 700; font-size: 0.78rem; }
-    .player-info .desc { font-size: 0.68rem; color: var(--text-muted); }
-    .comp-table { width: 100%; border-collapse: collapse; font-size: 0.76rem; margin-top: 6px; }
-    .comp-table th {
-      background: var(--largotek-dark); color: #fff;
-      padding: 5px 8px; text-align: left; font-weight: 600;
-    }
-    .comp-table td { padding: 5px 8px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+    .player-info .name { font-weight: 700; font-size: 0.72rem; }
+    .player-info .desc { font-size: 0.62rem; color: var(--text-muted); }
+    .comp-table { width: 100%; border-collapse: collapse; font-size: 0.7rem; margin-top: 5px; }
+    .comp-table th { background: var(--largotek-dark); color: #fff; padding: 4px 7px; text-align: left; font-weight: 600; }
+    .comp-table td { padding: 4px 7px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
     .comp-table tr:last-child td { border-bottom: none; }
     .comp-table tr:nth-child(even) td { background: #F8FBFF; }
     .timeline { list-style: none; padding: 0; margin: 0; }
-    .timeline li {
-      display: flex; align-items: flex-start; gap: 8px;
-      padding: 5px 0; border-bottom: 1px dashed var(--border-soft); font-size: 0.78rem;
-    }
+    .timeline li { display: flex; align-items: flex-start; gap: 7px; padding: 4px 0; border-bottom: 1px dashed var(--border-soft); font-size: 0.72rem; }
     .timeline li:last-child { border-bottom: none; }
-    .t-icon {
-      flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
-      background: var(--largotek-blue); color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.62rem; font-weight: 700;
-    }
-    .prob-wrap { margin: 6px 0 2px; }
-    .prob-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; font-size: 0.78rem; }
-    .prob-label { min-width: 130px; }
-    .prob-bar-bg { flex: 1; background: #E3ECF5; border-radius: 999px; height: 11px; overflow: hidden; }
+    .t-icon { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--largotek-blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.58rem; font-weight: 700; }
+    .prob-wrap { margin: 5px 0 2px; }
+    .prob-row { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; font-size: 0.72rem; }
+    .prob-label { min-width: 120px; }
+    .prob-bar-bg { flex: 1; background: #E3ECF5; border-radius: 999px; height: 10px; overflow: hidden; }
     .prob-bar-fill { height: 100%; border-radius: 999px; }
-    .prob-pct { min-width: 30px; font-weight: 700; color: var(--largotek-dark); text-align: right; }
-    .score-box {
-      text-align: center; padding: 10px; background: #EEF6FD;
-      border-radius: 8px; margin-top: 4px;
-    }
-    .score-box .score { font-size: 1.8rem; font-weight: 900; color: var(--largotek-dark); }
-    .score-box .score-sub { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; }
+    .prob-pct { min-width: 28px; font-weight: 700; color: var(--largotek-dark); text-align: right; }
+    .score-box { text-align: center; padding: 8px; background: #EEF6FD; border-radius: 7px; margin-top: 4px; }
+    .score-box .score { font-size: 1.6rem; font-weight: 900; color: var(--largotek-dark); }
+    .score-box .score-sub { font-size: 0.62rem; color: var(--text-muted); margin-top: 2px; }
 
     /* ============================
        FOOTER
     ============================ */
     .report-footer {
       background: var(--largotek-dark); color: rgba(255,255,255,0.85);
-      padding: 10px 18px; font-size: 0.72rem;
-      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px;
+      padding: 8px 14px; font-size: 0.68rem;
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px;
     }
-    .footer-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-    .report-footer .ai-tag { display: flex; align-items: center; gap: 7px; }
-    .ai-icon {
-      background: var(--largotek-blue); border-radius: 50%;
-      width: 22px; height: 22px; display: flex; align-items: center;
-      justify-content: center; font-size: 0.75rem;
-    }
+    .footer-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .report-footer .ai-tag { display: flex; align-items: center; gap: 6px; }
+    .ai-icon { background: var(--largotek-blue); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
     .report-footer a { color: var(--largotek-blue); text-decoration: none; }
-    /* Separador vertical en footer */
-    .footer-sep {
-      width: 1px; height: 36px;
-      background: rgba(255,255,255,0.15);
-    }
+    .footer-sep { width: 1px; height: 32px; background: rgba(255,255,255,0.15); }
 
     /* ============================================================
        CARTAS FIFA
@@ -309,82 +250,64 @@
     .players-grid, .players-grid-cv {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 12px;
-      margin-top: 6px;
+      gap: 10px;
+      margin-top: 5px;
     }
     .fut-card {
-      position: relative;
-      border-radius: 12px;
-      padding: 10px 8px 8px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      overflow: hidden;
-      min-height: 200px;
+      position: relative; border-radius: 10px;
+      padding: 8px 6px 6px;
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center; overflow: hidden; min-height: 185px;
     }
     .fut-card.gold {
       background: linear-gradient(160deg, #C8980A 0%, #F5D060 35%, #E8B820 65%, #A67C00 100%);
-      border: 2px solid #C8980A;
-      box-shadow: 0 4px 14px rgba(200,152,10,0.35);
+      border: 2px solid #C8980A; box-shadow: 0 4px 14px rgba(200,152,10,0.35);
     }
     .fut-card.silver {
       background: linear-gradient(160deg, #7A8C99 0%, #C8D6DF 35%, #9FB3BC 65%, #5A6E79 100%);
-      border: 2px solid #8AA0A9;
-      box-shadow: 0 4px 14px rgba(90,110,121,0.3);
+      border: 2px solid #8AA0A9; box-shadow: 0 4px 14px rgba(90,110,121,0.3);
     }
     .fut-card.bronze {
       background: linear-gradient(160deg, #8B4513 0%, #D2956A 35%, #B5681A 65%, #6B3410 100%);
-      border: 2px solid #A0522D;
-      box-shadow: 0 4px 14px rgba(107,52,16,0.3);
+      border: 2px solid #A0522D; box-shadow: 0 4px 14px rgba(107,52,16,0.3);
     }
     .fut-card.largotek-special {
       background: linear-gradient(160deg, #003855 0%, #00A3E0 40%, #005F85 70%, #002840 100%);
-      border: 2px solid #00A3E0;
-      box-shadow: 0 4px 18px rgba(0,163,224,0.4);
+      border: 2px solid #00A3E0; box-shadow: 0 4px 18px rgba(0,163,224,0.4);
     }
-    .fut-overall {
-      font-size: 1.6rem; font-weight: 900; line-height: 1;
-      color: rgba(0,0,0,0.75);
-      text-shadow: 0 1px 0 rgba(255,255,255,0.3);
-      margin-bottom: 1px;
-    }
+    .fut-overall { font-size: 1.45rem; font-weight: 900; line-height: 1; color: rgba(0,0,0,0.75); text-shadow: 0 1px 0 rgba(255,255,255,0.3); margin-bottom: 1px; }
     .fut-card.largotek-special .fut-overall,
     .fut-card.largotek-special .fut-pos,
     .fut-card.largotek-special .fut-name,
     .fut-card.largotek-special .fut-club,
     .fut-card.largotek-special .fut-flag-sm { color: rgba(255,255,255,0.95); text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
-    .fut-pos { font-size: 0.65rem; font-weight: 700; color: rgba(0,0,0,0.6); letter-spacing: 0.06em; margin-bottom: 4px; }
-    .fut-flag-sm { font-size: 1.1rem; margin-bottom: 3px; }
+    .fut-pos { font-size: 0.6rem; font-weight: 700; color: rgba(0,0,0,0.6); letter-spacing: 0.06em; margin-bottom: 3px; }
+    .fut-flag-sm { font-size: 1rem; margin-bottom: 2px; }
     .fut-avatar {
-      width: 52px; height: 52px; border-radius: 50%;
+      width: 46px; height: 46px; border-radius: 50%;
       background: rgba(0,0,0,0.18); border: 2px solid rgba(255,255,255,0.4);
       display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem; font-weight: 900;
-      color: rgba(255,255,255,0.9); margin: 3px 0;
+      font-size: 1rem; font-weight: 900;
+      color: rgba(255,255,255,0.9); margin: 2px 0;
       text-shadow: 0 1px 2px rgba(0,0,0,0.4); letter-spacing: -1px;
     }
-    .fut-name {
-      font-size: 0.72rem; font-weight: 800;
-      color: rgba(0,0,0,0.8); text-transform: uppercase;
-      letter-spacing: 0.04em; margin: 3px 0 1px; line-height: 1.1;
-    }
-    .fut-club { font-size: 0.58rem; color: rgba(0,0,0,0.55); margin-bottom: 6px; }
-    .fut-divider { width: 80%; height: 1px; background: rgba(0,0,0,0.2); margin: 4px auto; }
-    .fut-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 8px; width: 100%; margin-top: 2px; }
-    .fut-stat { display: flex; justify-content: space-between; align-items: center; font-size: 0.62rem; }
-    .fut-stat .s-val { font-weight: 900; font-size: 0.72rem; color: rgba(0,0,0,0.75); }
-    .fut-stat .s-lbl { font-weight: 600; color: rgba(0,0,0,0.5); letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.55rem; }
+    .fut-name { font-size: 0.65rem; font-weight: 800; color: rgba(0,0,0,0.8); text-transform: uppercase; letter-spacing: 0.04em; margin: 2px 0 1px; line-height: 1.1; }
+    .fut-club { font-size: 0.53rem; color: rgba(0,0,0,0.55); margin-bottom: 5px; }
+    .fut-divider { width: 80%; height: 1px; background: rgba(0,0,0,0.2); margin: 3px auto; }
+    .fut-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 6px; width: 100%; margin-top: 2px; }
+    .fut-stat { display: flex; justify-content: space-between; align-items: center; font-size: 0.58rem; }
+    .fut-stat .s-val { font-weight: 900; font-size: 0.67rem; color: rgba(0,0,0,0.75); }
+    .fut-stat .s-lbl { font-weight: 600; color: rgba(0,0,0,0.5); letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.52rem; }
     .fut-card.largotek-special .fut-stat .s-val,
     .fut-card.largotek-special .fut-stat .s-lbl { color: rgba(255,255,255,0.85); }
     .fut-card.largotek-special .fut-divider { background: rgba(255,255,255,0.25); }
-    .skill-bar-wrap { width: 100%; padding: 0 6px; margin-top: 6px; }
-    .skill-row { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
-    .skill-row .sk-lbl { font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(0,0,0,0.5); min-width: 26px; text-align: right; }
+    .skill-bar-wrap { width: 100%; padding: 0 5px; margin-top: 5px; }
+    .skill-row { display: flex; align-items: center; gap: 4px; margin-bottom: 2px; }
+    .skill-row .sk-lbl { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(0,0,0,0.5); min-width: 24px; text-align: right; }
     .fut-card.largotek-special .skill-row .sk-lbl { color: rgba(255,255,255,0.6); }
-    .skill-row .sk-val { font-size: 0.62rem; font-weight: 900; min-width: 20px; color: rgba(0,0,0,0.7); }
+    .skill-row .sk-val { font-size: 0.58rem; font-weight: 900; min-width: 18px; color: rgba(0,0,0,0.7); }
     .fut-card.largotek-special .skill-row .sk-val { color: rgba(255,255,255,0.9); }
-    .sk-bar-bg { flex: 1; height: 5px; background: rgba(0,0,0,0.15); border-radius: 999px; overflow: hidden; }
+    .sk-bar-bg { flex: 1; height: 4px; background: rgba(0,0,0,0.15); border-radius: 999px; overflow: hidden; }
     .fut-card.largotek-special .sk-bar-bg { background: rgba(255,255,255,0.15); }
     .sk-bar-fill { height: 100%; border-radius: 999px; background: rgba(0,0,0,0.45); }
     .fut-card.largotek-special .sk-bar-fill { background: rgba(255,255,255,0.7); }
@@ -393,42 +316,44 @@
     .bar-mid   { background: #c8a800 !important; }
     .bar-low   { background: #d44c00 !important; }
     .bar-poor  { background: #a00000 !important; }
-    .team-section-title {
-      display: flex; align-items: center; gap: 8px;
-      margin: 12px 0 6px; padding: 6px 10px; border-radius: 8px;
-    }
+    .team-section-title { display: flex; align-items: center; gap: 7px; margin: 10px 0 5px; padding: 5px 8px; border-radius: 7px; }
     .team-section-title.spain   { background: linear-gradient(90deg, #C8001A, #FF4444); color: #fff; }
     .team-section-title.caboverde { background: linear-gradient(90deg, #003893, #009E60); color: #fff; }
-    .team-section-title .ts-flag { font-size: 1.3rem; }
-    .team-section-title .ts-name { font-weight: 700; font-size: 0.85rem; }
-    .team-section-title .ts-sub  { font-size: 0.68rem; opacity: 0.85; margin-left: auto; }
+    .team-section-title .ts-flag { font-size: 1.1rem; }
+    .team-section-title .ts-name { font-weight: 700; font-size: 0.78rem; }
+    .team-section-title .ts-sub  { font-size: 0.62rem; opacity: 0.85; margin-left: auto; }
 
     /* ============================================================
-       PRINT — 3 HOJAS A4 LANDSCAPE
+       PRINT — A4 PORTRAIT (VERTICAL)
     ============================================================ */
     @media print {
-      @page { size: A4 landscape; margin: 8mm 10mm; }
+      @page { size: A4 portrait; margin: 7mm 9mm; }
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
-      body { background: #fff !important; font-size: 11px; }
-      header { padding: 6px 14px; }
-      .logo-area img { height: 28px; }
-      .ia-banner { padding: 3px 14px; font-size: 0.62rem; }
+      body { background: #fff !important; font-size: 10px; }
+      header { padding: 5px 12px; }
+      .logo-area img { height: 24px; }
+      .ia-banner { padding: 2px 12px; font-size: 0.58rem; }
       .ia-banner .ib-dot { animation: none !important; }
       .page-break { page-break-before: always; break-before: page; }
       .card, article, .match-hero, .report-footer, .fut-card { page-break-inside: avoid; break-inside: avoid; }
       .card { box-shadow: none !important; }
-      .page { padding: 6px 0 4px; }
+      .page { padding: 5px 0 3px; }
       .print-btn { display: none !important; }
-      .report-footer { margin-top: 6px; border-radius: 0; }
-      .fut-card { min-height: 185px; }
+      .report-footer { margin-top: 5px; border-radius: 0; }
+      .fut-card { min-height: 170px; }
       .page-watermark { opacity: 0.03; }
+      /* En portrait los grids se adaptan mejor con 1 col para pg1 */
+      .grid-2 { grid-template-columns: 1fr 1fr; }
+      .grid-3col { grid-template-columns: 1fr 1fr; }
+      .grid-3col > div:last-child { grid-column: 1 / -1; }
+      .players-grid, .players-grid-cv { grid-template-columns: repeat(4, 1fr); gap: 7px; }
     }
     @media screen {
       .print-btn {
         position: fixed; bottom: 22px; right: 22px;
         background: var(--largotek-blue); color: #fff;
         border: none; border-radius: 50px;
-        padding: 10px 22px; font-size: 0.9rem; font-weight: 700;
+        padding: 10px 22px; font-size: 0.88rem; font-weight: 700;
         cursor: pointer; box-shadow: 0 4px 14px rgba(0,163,224,0.4);
         z-index: 999; letter-spacing: 0.03em;
       }
@@ -444,7 +369,7 @@
     <img src="https://raw.githubusercontent.com/odoolargotek/worldcup2026/main/fichas/assets/largotek-logo.png"
          onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';"
          alt="Largotek Logo">
-    <div id="logo-fallback" style="display:none; align-items:center; justify-content:center; background:#00A3E0; border-radius:6px; padding:4px 12px; font-size:1.2rem; font-weight:900; letter-spacing:0.04em; color:#fff;">largotek</div>
+    <div id="logo-fallback" style="display:none; align-items:center; justify-content:center; background:#00A3E0; border-radius:6px; padding:3px 10px; font-size:1.1rem; font-weight:900; letter-spacing:0.04em; color:#fff;">largotek</div>
     <div class="logo-text-block">
       <div class="company">Largotek Analytics</div>
       <div class="tagline">Inteligencia Deportiva con IA &mdash; Copa Mundial FIFA 2026</div>
@@ -452,7 +377,6 @@
   </div>
   <div class="header-right">
     <span class="header-badge">🏆 Copa Mundial FIFA 2026 &nbsp;|&nbsp; Informe Técnico</span>
-    <!-- SELLO IA EN HEADER -->
     <div class="ia-seal">
       <div class="seal-icon">🤖</div>
       <div class="seal-text">
@@ -493,7 +417,7 @@
   </div>
   <div class="grid-2">
     <article class="card">
-      <div class="flag-header"><span class="flag-emoji">🇪🇸</span><div><h2 style="border:none;padding:0;margin:0;font-size:0.95rem;">España &mdash; La Roja</h2></div></div>
+      <div class="flag-header"><span class="flag-emoji">🇪🇸</span><div><h2 style="border:none;padding:0;margin:0;font-size:0.88rem;">España &mdash; La Roja</h2></div></div>
       <span class="badge badge-blue">Candidata al título &middot; Ranking FIFA #2</span>
       <p>Campeona de Europa, llega como gran favorita con una generación que combina talento joven y experiencia ganadora bajo la dirección de Luis de la Fuente.</p>
       <div class="section-label">🎽 Datos técnicos</div>
@@ -519,7 +443,7 @@
       </div>
     </article>
     <article class="card">
-      <div class="flag-header"><span class="flag-emoji">🇨🇻</span><div><h2 style="border:none;padding:0;margin:0;font-size:0.95rem;">Cabo Verde &mdash; Os Tubarões Azuis</h2></div></div>
+      <div class="flag-header"><span class="flag-emoji">🇨🇻</span><div><h2 style="border:none;padding:0;margin:0;font-size:0.88rem;">Cabo Verde &mdash; Os Tubarões Azuis</h2></div></div>
       <span class="badge badge-green">🎉 Debut histórico en un Mundial</span>
       <p>Primera Copa del Mundo en su historia. País de ~600,000 habitantes que defenderá con orgullo su lugar en la cita más grande del fútbol.</p>
       <div class="section-label">🎽 Datos técnicos</div>
@@ -567,7 +491,7 @@
           <tr><td><strong>Objetivo</strong></td><td>Ganar con solvencia</td><td>Resistir, sorprender</td></tr>
         </tbody>
       </table>
-      <div style="margin-top:10px;"><h3>Plan: España 🇪🇸</h3>
+      <div style="margin-top:8px;"><h3>Plan: España 🇪🇸</h3>
         <ul>
           <li>Cargar juego por bandas (Yamal y Nico) para 1v1 constantes.</li>
           <li>Circular con paciencia hasta encontrar espacios en el bloque.</li>
@@ -575,7 +499,7 @@
           <li>Primer gol temprano: abre espacios y calma la ansiedad del debut.</li>
         </ul>
       </div>
-      <div style="margin-top:8px;"><h3>Plan: Cabo Verde 🇨🇻</h3>
+      <div style="margin-top:6px;"><h3>Plan: Cabo Verde 🇨🇻</h3>
         <ul>
           <li>Bloque 4-5-1 cerrado, pasillos interiores sellados.</li>
           <li>Transición rápida atacando espalda de la línea alta española.</li>
@@ -594,7 +518,7 @@
         <li><div class="t-icon">60'</div><div><strong>Fase decisiva:</strong> España acelera con cambios; Cabo Verde ajusta para resistir los últimos 30'.</div></li>
         <li><div class="t-icon">90'</div><div><strong>Cierre:</strong> Con ventaja española, Cabo Verde puede buscar el gol del honor histórico.</div></li>
       </ul>
-      <div class="section-label" style="margin-top:10px;">🌶️ Factores de interés</div>
+      <div class="section-label" style="margin-top:8px;">🌶️ Factores de interés</div>
       <ul>
         <li><strong>Debut histórico</strong> de Cabo Verde genera simpatía global.</li>
         <li><strong>Yamal</strong> en su primer Mundial: cada jugada será viral.</li>
@@ -605,7 +529,7 @@
     <div><div class="card">
       <h2>📊 Proyecciones y análisis</h2>
       <h3>Probabilidades estimadas</h3>
-      <p style="font-size:0.7rem;color:var(--text-muted);">Simulaciones pre-partido &mdash; 10,000 iteraciones.</p>
+      <p style="font-size:0.65rem;color:var(--text-muted);">Simulaciones pre-partido &mdash; 10,000 iteraciones.</p>
       <div class="prob-wrap">
         <div class="prob-row"><span class="prob-label">🇪🇸 Victoria España</span><div class="prob-bar-bg"><div class="prob-bar-fill" style="width:87%;background:var(--largotek-blue);"></div></div><span class="prob-pct">87%</span></div>
         <div class="prob-row"><span class="prob-label">🤝 Empate</span><div class="prob-bar-bg"><div class="prob-bar-fill" style="width:8%;background:var(--text-muted);"></div></div><span class="prob-pct">8%</span></div>
@@ -613,8 +537,8 @@
       </div>
       <div class="section-label">🎯 Resultado más probable</div>
       <div class="score-box"><div class="score">3 &ndash; 0</div><div class="score-sub">Proyección consenso de simulaciones</div></div>
-      <div class="section-label" style="margin-top:10px;">🏆 Grupo H &mdash; contexto</div>
-      <table class="comp-table" style="margin-top:4px;">
+      <div class="section-label" style="margin-top:8px;">🏆 Grupo H &mdash; contexto</div>
+      <table class="comp-table" style="margin-top:3px;">
         <thead><tr><th>Equipo</th><th>Favorito</th><th>Objetivo</th></tr></thead>
         <tbody>
           <tr><td>🇪🇸 España</td><td>Sí</td><td>Clasificar 1.º</td></tr>
@@ -623,12 +547,6 @@
           <tr><td>🇮🇷 Irán</td><td>No</td><td>Competir</td></tr>
         </tbody>
       </table>
-      <div class="section-label" style="margin-top:10px;">📈 Seguimiento en vivo</div>
-      <ul>
-        <li>Actualizar posesión y xG cada 15 minutos.</li>
-        <li>Registrar cada remate de Cabo Verde a puerta.</li>
-        <li>Comparar guion real vs proyecciones previas.</li>
-      </ul>
     </div></div>
   </div>
 </div>
@@ -640,7 +558,7 @@
   <div class="page-watermark">Largotek IA</div>
   <div class="card">
     <h2>🎮 Fichas de jugadores &mdash; Estilo EA Sports FC 26 &mdash; Ratings Oficiales</h2>
-    <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:8px;">Ratings basados en EA Sports FC 26 (temporada 2025-26). PAC=Velocidad &middot; SHO=Tiro &middot; PAS=Pase &middot; DRI=Regate &middot; DEF=Defensa &middot; PHY=Físico</p>
+    <p style="font-size:0.68rem;color:var(--text-muted);margin-bottom:6px;">Ratings basados en EA Sports FC 26 (temporada 2025-26). PAC=Velocidad &middot; SHO=Tiro &middot; PAS=Pase &middot; DRI=Regate &middot; DEF=Defensa &middot; PHY=Físico</p>
     <div class="team-section-title spain">
       <span class="ts-flag">🇪🇸</span><span class="ts-name">ESPAÑA &mdash; La Roja</span>
       <span class="ts-sub">Cartas doradas &middot; EA Sports FC 26</span>
@@ -719,7 +637,7 @@
         </div>
       </div>
     </div>
-    <div class="team-section-title caboverde" style="margin-top:14px;">
+    <div class="team-section-title caboverde" style="margin-top:12px;">
       <span class="ts-flag">🇨🇻</span><span class="ts-name">CABO VERDE &mdash; Os Tubarões Azuis</span>
       <span class="ts-sub">Cartas plata/bronce &middot; EA Sports FC 26</span>
     </div>
@@ -797,19 +715,18 @@
         </div>
       </div>
     </div>
-    <!-- Leyenda -->
-    <div style="display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;align-items:center;">
-      <div style="display:flex;align-items:center;gap:6px;font-size:0.68rem;color:var(--text-muted);"><div style="width:16px;height:16px;border-radius:4px;background:linear-gradient(135deg,#003855,#00A3E0);"></div><span><strong>Edición Largotek</strong> (OVR 86+)</span></div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:0.68rem;color:var(--text-muted);"><div style="width:16px;height:16px;border-radius:4px;background:linear-gradient(135deg,#C8980A,#F5D060);"></div><span><strong>Oro</strong> (OVR 75-89)</span></div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:0.68rem;color:var(--text-muted);"><div style="width:16px;height:16px;border-radius:4px;background:linear-gradient(135deg,#7A8C99,#C8D6DF);"></div><span><strong>Plata</strong> (OVR 65-74)</span></div>
-      <div style="display:flex;align-items:center;gap:6px;font-size:0.68rem;color:var(--text-muted);"><div style="width:16px;height:16px;border-radius:4px;background:linear-gradient(135deg,#8B4513,#D2956A);"></div><span><strong>Bronce</strong> (OVR &lt;65)</span></div>
+    <!-- Leyenda + Sello IA -->
+    <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;align-items:center;">
+      <div style="display:flex;align-items:center;gap:5px;font-size:0.62rem;color:var(--text-muted);"><div style="width:14px;height:14px;border-radius:3px;background:linear-gradient(135deg,#003855,#00A3E0);"></div><span><strong>Edición Largotek</strong></span></div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:0.62rem;color:var(--text-muted);"><div style="width:14px;height:14px;border-radius:3px;background:linear-gradient(135deg,#C8980A,#F5D060);"></div><span><strong>Oro</strong></span></div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:0.62rem;color:var(--text-muted);"><div style="width:14px;height:14px;border-radius:3px;background:linear-gradient(135deg,#7A8C99,#C8D6DF);"></div><span><strong>Plata</strong></span></div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:0.62rem;color:var(--text-muted);"><div style="width:14px;height:14px;border-radius:3px;background:linear-gradient(135deg,#8B4513,#D2956A);"></div><span><strong>Bronce</strong></span></div>
       <div style="margin-left:auto;">
-        <!-- SELLO IA EN PÁGINA 3 -->
-        <div style="display:inline-flex;align-items:center;gap:7px;background:linear-gradient(135deg,#003855,#005F85);border:1.5px solid #00A3E0;border-radius:8px;padding:5px 12px;">
-          <span style="font-size:1rem;">🤖</span>
+        <div style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#003855,#005F85);border:1.5px solid #00A3E0;border-radius:7px;padding:4px 10px;">
+          <span style="font-size:0.9rem;">🤖</span>
           <div style="display:flex;flex-direction:column;line-height:1.15;">
-            <span style="font-size:0.6rem;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;color:#fff;">Hecha con Inteligencia Artificial</span>
-            <span style="font-size:0.58rem;font-weight:600;color:#00C6FF;">entrenada por Largotek &mdash; largotek.com</span>
+            <span style="font-size:0.55rem;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;color:#fff;">Hecha con Inteligencia Artificial</span>
+            <span style="font-size:0.52rem;font-weight:600;color:#00C6FF;">entrenada por Largotek &mdash; largotek.com</span>
           </div>
         </div>
       </div>
@@ -822,7 +739,6 @@
 <!-- ========== FOOTER ========== -->
 <div class="report-footer">
   <div class="footer-left">
-    <!-- SELLO IA GRANDE EN FOOTER -->
     <div class="ia-seal-footer">
       <div class="sf-icon">🤖</div>
       <div class="sf-text">
