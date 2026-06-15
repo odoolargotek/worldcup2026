@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>España vs Cabo Verde - Ficha Técnica | Copa Mundial FIFA 2026</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --largotek-blue: #00A3E0;
+      --largotek-dark: #004866;
+      --accent-red: #E30613;
+      --accent-green: #009E60;
+      --bg-light: #F5F7FA;
+      --text-main: #222222;
+      --text-muted: #555555;
+      --card-bg: #FFFFFF;
+      --border-soft: #D6E2F0;
+      --shadow-soft: 0 4px 12px rgba(0,0,0,0.06);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      background: var(--bg-light);
+      color: var(--text-main);
+      line-height: 1.6;
+    }
+    header {
+      background: linear-gradient(90deg, var(--largotek-blue), var(--largotek-dark));
+      color: #fff;
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .logo-area { display: flex; align-items: center; gap: 14px; }
+    .logo-area img { height: 44px; }
+    .logo-text-block .company { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.04em; }
+    .logo-text-block .tagline { font-size: 0.82rem; opacity: 0.85; margin-top: 2px; }
+    .header-badge {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+    main { max-width: 1180px; margin: 28px auto 50px; padding: 0 18px; }
+    h1,h2,h3 { margin: 0 0 8px; font-weight: 700; }
+    h1 { font-size: 1.85rem; color: var(--largotek-dark); }
+    h2 { font-size: 1.25rem; color: var(--largotek-dark); border-bottom: 2px solid var(--largotek-blue); padding-bottom: 6px; margin-bottom: 12px; }
+    h3 { font-size: 1rem; color: var(--largotek-dark); }
+    p { margin: 0 0 10px; }
+    .subtitle { font-size: 0.95rem; color: var(--text-muted); margin-bottom: 14px; }
+    .card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 20px 22px;
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--border-soft);
+      margin-bottom: 20px;
+    }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    @media(max-width:860px){ .grid-2 { grid-template-columns: 1fr; } }
+    .grid-strategy { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    @media(max-width:860px){ .grid-strategy { grid-template-columns: 1fr; } }
+    .grid-match { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+    @media(max-width:860px){ .grid-match { grid-template-columns: 1fr; } }
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+    .badge-blue { background: var(--largotek-blue); }
+    .badge-dark { background: var(--largotek-dark); }
+    .badge-red { background: var(--accent-red); }
+    .badge-green { background: var(--accent-green); }
+    .badge-gray { background: var(--text-muted); }
+    .flag-header { display: flex; align-items: center; gap: 10px; margin-bottom: 4px; }
+    .flag-emoji { font-size: 2rem; }
+    .meta-info {
+      display: flex; flex-wrap: wrap; gap: 12px;
+      font-size: 0.88rem; color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+    .meta-info strong { color: var(--largotek-dark); }
+    .section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--largotek-blue);
+      margin: 14px 0 5px;
+    }
+    ul { margin: 0; padding-left: 18px; }
+    li { margin-bottom: 5px; font-size: 0.93rem; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+    .pill {
+      font-size: 0.75rem;
+      padding: 4px 11px;
+      border-radius: 999px;
+      background: #EEF6FD;
+      border: 1px solid #C5DFF2;
+      color: var(--largotek-dark);
+      font-weight: 500;
+    }
+    /* Barra de probabilidades */
+    .prob-wrap { margin: 10px 0 4px; }
+    .prob-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 0.88rem; }
+    .prob-label { min-width: 140px; color: var(--text-main); }
+    .prob-bar-bg {
+      flex: 1;
+      background: #E3ECF5;
+      border-radius: 999px;
+      height: 14px;
+      overflow: hidden;
+    }
+    .prob-bar-fill { height: 100%; border-radius: 999px; }
+    .prob-pct { min-width: 36px; font-weight: 700; color: var(--largotek-dark); text-align: right; }
+    /* Tabla comparativa */
+    .comp-table { width: 100%; border-collapse: collapse; font-size: 0.88rem; margin-top: 10px; }
+    .comp-table th {
+      background: var(--largotek-dark);
+      color: #fff;
+      padding: 8px 10px;
+      text-align: left;
+      font-weight: 600;
+    }
+    .comp-table td { padding: 8px 10px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+    .comp-table tr:last-child td { border-bottom: none; }
+    .comp-table tr:nth-child(even) td { background: #F8FBFF; }
+    /* Momento del partido */
+    .timeline { list-style: none; padding: 0; margin: 0; }
+    .timeline li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 8px 0;
+      border-bottom: 1px dashed var(--border-soft);
+      font-size: 0.9rem;
+    }
+    .timeline li:last-child { border-bottom: none; }
+    .t-icon {
+      flex-shrink: 0;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--largotek-blue);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    /* Jugadores a seguir */
+    .player-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: #F4F9FF;
+      border: 1px solid var(--border-soft);
+      margin-bottom: 8px;
+    }
+    .player-num {
+      width: 30px;
+      height: 30px;
+      background: var(--largotek-blue);
+      color: #fff;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700;
+      font-size: 0.78rem;
+      flex-shrink: 0;
+    }
+    .player-info .name { font-weight: 700; font-size: 0.88rem; }
+    .player-info .desc { font-size: 0.78rem; color: var(--text-muted); }
+    /* Footer del informe */
+    .report-footer {
+      background: var(--largotek-dark);
+      color: rgba(255,255,255,0.85);
+      border-radius: 12px;
+      padding: 16px 22px;
+      font-size: 0.82rem;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-top: 28px;
+    }
+    .report-footer .ai-tag {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .ai-icon {
+      background: var(--largotek-blue);
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+    }
+    .report-footer a { color: var(--largotek-blue); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<!-- HEADER LARGOTEK -->
+<header>
+  <div class="logo-area">
+    <img src="https://raw.githubusercontent.com/odoolargotek/worldcup2026/main/fichas/assets/largotek-logo.png"
+         onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';"
+         alt="Largotek Logo">
+    <div id="logo-fallback" style="display:none; align-items:center; justify-content:center; background:#00A3E0; border-radius:8px; padding:6px 14px; font-size:1.4rem; font-weight:900; letter-spacing:0.04em; color:#fff;">largotek</div>
+    <div class="logo-text-block">
+      <div class="company">Largotek Analytics</div>
+      <div class="tagline">Inteligencia Deportiva con IA &mdash; Copa Mundial FIFA 2026</div>
+    </div>
+  </div>
+  <span class="header-badge">🏆 Copa Mundial FIFA 2026 &nbsp;|&nbsp; Informe Técnico</span>
+</header>
+
+<main>
+
+  <!-- ===== CABECERA DEL PARTIDO ===== -->
+  <div class="card" style="text-align:center; background: linear-gradient(135deg, #E8F5FD, #ffffff);">
+    <div style="font-size:0.8rem; color:var(--text-muted); letter-spacing:0.07em; text-transform:uppercase; margin-bottom:6px;">Grupo H &middot; Jornada 1 &middot; Copa Mundial FIFA 2026</div>
+    <div style="display:flex; align-items:center; justify-content:center; gap:24px; margin: 10px 0;">
+      <div style="text-align:center;">
+        <div style="font-size:3rem;">🇪🇸</div>
+        <div style="font-weight:700; font-size:1.1rem; color:var(--largotek-dark);">España</div>
+      </div>
+      <div style="font-size:2rem; font-weight:900; color:var(--largotek-blue);">vs</div>
+      <div style="text-align:center;">
+        <div style="font-size:3rem;">🇨🇻</div>
+        <div style="font-weight:700; font-size:1.1rem; color:var(--largotek-dark);">Cabo Verde</div>
+      </div>
+    </div>
+    <div class="meta-info" style="justify-content:center;">
+      <span>📅 <strong>15 de junio, 2026</strong></span>
+      <span>🏟️ <strong>Atlanta Stadium, Estados Unidos</strong></span>
+      <span>⏰ <strong>Mediodía local (ET)</strong></span>
+      <span>📺 <strong>Grupo H</strong></span>
+    </div>
+  </div>
+
+  <!-- ===== FICHAS DE EQUIPOS ===== -->
+  <div class="grid-2">
+
+    <!-- FICHA ESPAÑA -->
+    <article class="card">
+      <div class="flag-header">
+        <span class="flag-emoji">🇪🇸</span>
+        <div>
+          <h2 style="border:none; padding:0; margin:0;">España</h2>
+          <div style="font-size:0.8rem; color:var(--text-muted);">La Roja</div>
+        </div>
+      </div>
+      <span class="badge badge-blue">Candidata al título</span>
+
+      <p>España llega al Mundial 2026 como campeona de Europa y una de las máximas favoritas al título, con una generación que mezcla talento joven explosivo y experiencia ganadora.</p>
+
+      <div class="section-label">🎽 Datos técnicos</div>
+      <ul>
+        <li><strong>Entrenador:</strong> Luis de la Fuente</li>
+        <li><strong>Ranking FIFA:</strong> 2.º del mundo (detrás de Francia)</li>
+        <li><strong>Sistema base:</strong> 4-3-3 / 4-2-3-1 flexible</li>
+        <li><strong>Goles promedio anotados (clasificatoria):</strong> sólido ataque colectivo</li>
+      </ul>
+
+      <div class="section-label">⚽ Jugadores clave</div>
+      <div class="player-card">
+        <div class="player-num">11</div>
+        <div class="player-info">
+          <div class="name">Lamine Yamal</div>
+          <div class="desc">Extremo derecho · FC Barcelona · Principal desequilibrador y estrella del torneo</div>
+        </div>
+      </div>
+      <div class="player-card">
+        <div class="player-num">17</div>
+        <div class="player-info">
+          <div class="name">Nico Williams</div>
+          <div class="desc">Extremo izquierdo · Athletic Club · Velocidad, desborde y profundidad</div>
+        </div>
+      </div>
+      <div class="player-card">
+        <div class="player-num">16</div>
+        <div class="player-info">
+          <div class="name">Rodri</div>
+          <div class="desc">Mediocampista pivote · Manchester City · Equilibrio, lectura y salida limpia</div>
+        </div>
+      </div>
+      <div class="player-card">
+        <div class="player-num">8</div>
+        <div class="player-info">
+          <div class="name">Pedri</div>
+          <div class="desc">Interior · FC Barcelona · Control de ritmo y juego entre líneas</div>
+        </div>
+      </div>
+
+      <div class="section-label">📰 Novedades recientes</div>
+      <ul>
+        <li>España convoca a 26 jugadores sin ningún futbolista del Real Madrid, con Yamal liderando la lista como figura indiscutible.</li>
+        <li>Los modelos de simulación otorgan a España alrededor del 87% de probabilidad de victoria en este debut.</li>
+        <li>La prensa internacional la sitúa como la segunda favorita al título mundial solo por detrás de Francia.</li>
+      </ul>
+
+      <div class="pill-row">
+        <span class="pill">Posesión dominante</span>
+        <span class="pill">Presión alta</span>
+        <span class="pill">Ataque por bandas</span>
+        <span class="pill">Desequilibrio 1v1</span>
+        <span class="pill">Bloque medio-alto</span>
+      </div>
+    </article>
+
+    <!-- FICHA CABO VERDE -->
+    <article class="card">
+      <div class="flag-header">
+        <span class="flag-emoji">🇨🇻</span>
+        <div>
+          <h2 style="border:none; padding:0; margin:0;">Cabo Verde</h2>
+          <div style="font-size:0.8rem; color:var(--text-muted);">Os Tubarões Azuis &mdash; Los Tiburones Azules</div>
+        </div>
+      </div>
+      <span class="badge badge-green">🎉 Debut histórico en un Mundial</span>
+
+      <p>Cabo Verde disputa su primera Copa del Mundo tras una clasificación histórica en África, con un equipo compacto, aguerrido y una historia que captura la atención del mundo.</p>
+
+      <div class="section-label">🎽 Datos técnicos</div>
+      <ul>
+        <li><strong>Entrenador:</strong> Bubista (Pedro Brito da Rocha)</li>
+        <li><strong>Clasificación:</strong> Victoria 3–0 ante Eswatini en la última jornada africana</li>
+        <li><strong>Sistema base:</strong> 4-5-1 / 4-3-3 compacto</li>
+        <li><strong>Población del país:</strong> ~600,000 habitantes &mdash; uno de los más pequeños en llegar a un Mundial</li>
+      </ul>
+
+      <div class="section-label">⚽ Jugadores clave</div>
+      <div class="player-card">
+        <div class="player-num" style="background:var(--accent-green);">1</div>
+        <div class="player-info">
+          <div class="name">Vozinha</div>
+          <div class="desc">Portero · Experiencia y liderazgo defensivo, pieza angular del sistema</div>
+        </div>
+      </div>
+      <div class="player-card">
+        <div class="player-num" style="background:var(--accent-green);">5</div>
+        <div class="player-info">
+          <div class="name">Logan Costa</div>
+          <div class="desc">Defensa central · Toulouse FC · Solidez aérea y duelos físicos</div>
+        </div>
+      </div>
+      <div class="player-card">
+        <div class="player-num" style="background:var(--accent-green);">10</div>
+        <div class="player-info">
+          <div class="name">Jamiro Monteiro</div>
+          <div class="desc">Mediocampista · Creatividad y conexión entre defensa y ataque</div>
+        </div>
+      </div>
+      <div class="player-card">
+        <div class="player-num" style="background:var(--accent-green);">7</div>
+        <div class="player-info">
+          <div class="name">Kevin Pina</div>
+          <div class="desc">Mediocampista ofensivo · Desborde y llegada desde segunda línea</div>
+        </div>
+      </div>
+
+      <div class="section-label">📰 Novedades recientes</div>
+      <ul>
+        <li>Medios internacionales destacan la historia de Cabo Verde como inspiración continental africana y global.</li>
+        <li>Enfrentarán en el Grupo H a gigantes como España y Uruguay, lo que obliga a un enfoque eminentemente pragmático.</li>
+        <li>CNN y Al Jazeera han publicado perfiles especiales resaltando su lema &ldquo;nada es imposible&rdquo; de cara al torneo.</li>
+      </ul>
+
+      <div class="pill-row">
+        <span class="pill">Bloque medio-bajo</span>
+        <span class="pill">Transición rápida</span>
+        <span class="pill">Balón parado</span>
+        <span class="pill">Mentalidad competitiva</span>
+        <span class="pill">Juego físico</span>
+      </div>
+    </article>
+
+  </div><!-- /grid-2 -->
+
+  <!-- ===== COMPARACIÓN TÁCTICA ===== -->
+  <div class="card">
+    <h2>⚔️ Comparación de estrategias</h2>
+
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Dimensión táctica</th>
+          <th>🇪🇸 España</th>
+          <th>🇨🇻 Cabo Verde</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Sistema</strong></td>
+          <td>4-3-3 / 4-2-3-1 flexible</td>
+          <td>4-5-1 / 4-3-3 compacto</td>
+        </tr>
+        <tr>
+          <td><strong>Posesión</strong></td>
+          <td>Alta (~65-70 % esperada)</td>
+          <td>Baja, cede el balón deliberadamente</td>
+        </tr>
+        <tr>
+          <td><strong>Pressing</strong></td>
+          <td>Presión alta tras pérdida</td>
+          <td>Pressing medio, repliegue ordenado</td>
+        </tr>
+        <tr>
+          <td><strong>Ataque</strong></td>
+          <td>Juego por bandas, 1v1, centros rasos</td>
+          <td>Transiciones directas y balones largos</td>
+        </tr>
+        <tr>
+          <td><strong>Defensa</strong></td>
+          <td>Línea alta, anticipación y pressing</td>
+          <td>Bloque bajo, 2 líneas de 4, compacto</td>
+        </tr>
+        <tr>
+          <td><strong>Balón parado</strong></td>
+          <td>Jugadas trabajadas, calidad técnica</td>
+          <td>Fortaleza aérea, set pieces como amenaza</td>
+        </tr>
+        <tr>
+          <td><strong>Gestión emocional</strong></td>
+          <td>Presión de ser favorita, no fallar el debut</td>
+          <td>Controlar nervios del primer Mundial</td>
+        </tr>
+        <tr>
+          <td><strong>Objetivo del partido</strong></td>
+          <td>Ganar con solvencia, no arriesgar</td>
+          <td>Resistir, sorprender, escribir historia</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="grid-strategy" style="margin-top:20px;">
+      <div>
+        <h3>Plan recomendado: España 🇪🇸</h3>
+        <ul>
+          <li>Cargar el juego por las bandas con Yamal y Nico Williams para generar 1v1 constantes.</li>
+          <li>Circular el balón con paciencia hasta encontrar el espacio en las líneas compactas de Cabo Verde.</li>
+          <li>Presión alta inmediata tras cada pérdida para evitar cualquier transición peligrosa rival.</li>
+          <li>Aprovechar los cambios de orientación para desordenar el bloque africano y crear superioridades locales.</li>
+          <li>Meter el primer gol temprano para abrir los espacios y evitar la ansiedad.</li>
+        </ul>
+      </div>
+      <div>
+        <h3>Plan recomendado: Cabo Verde 🇨🇻</h3>
+        <ul>
+          <li>Mantener bloque 4-5-1 compacto y cerrar los pasillos interiores que usa España.</li>
+          <li>Salida rápida en transición: buscar la espalda de la línea alta española con los extremos.</li>
+          <li>Maximizar el rendimiento en balón parado como principal vía de gol.</li>
+          <li>Aguantar el 0–0 hasta el descanso para desestabilizar emocionalmente a España.</li>
+          <li>Controlar los nervios del debut histórico y mantener la disciplina táctica 90 minutos.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== QUÉ ESPERAR DEL PARTIDO ===== -->
+  <div class="card">
+    <h2>🔮 Qué esperar del partido</h2>
+
+    <div class="grid-match">
+      <div>
+        <h3>Lectura general y guion probable</h3>
+        <ul class="timeline">
+          <li>
+            <div class="t-icon">0'</div>
+            <div><strong>Inicio:</strong> España instalará el partido en campo rival desde el primer minuto, con alta intensidad de pressing y posesión.</div>
+          </li>
+          <li>
+            <div class="t-icon">15'</div>
+            <div><strong>Primer quiebre:</strong> Probable que España genere las primeras ocasiones claras a través de Yamal por la banda derecha.</div>
+          </li>
+          <li>
+            <div class="t-icon">45'</div>
+            <div><strong>Medio tiempo:</strong> Si Cabo Verde llega al descanso con empate o 0–1, el partido se complica para España emocionalmente.</div>
+          </li>
+          <li>
+            <div class="t-icon">60'</div>
+            <div><strong>Fase decisiva:</strong> España podría abrir el marcador o acelerar la presión; cambios tácticos de Cabo Verde para aguantar.</div>
+          </li>
+          <li>
+            <div class="t-icon">90'</div>
+            <div><strong>Cierre:</strong> Si España ya gana, Cabo Verde buscará el gol del honor para el recuerdo histórico.</div>
+          </li>
+        </ul>
+
+        <div class="section-label" style="margin-top:16px;">🌶️ Factores adicionales de interés</div>
+        <ul>
+          <li><strong>Debut histórico de Cabo Verde</strong> genera expectativa mundial y simpatía global.</li>
+          <li><strong>Lamine Yamal</strong> juega su primer partido mundialista completo con plenas expectativas; cualquier jugada suya será viral.</li>
+          <li><strong>Posible sorpresa:</strong> si Cabo Verde anotara, sería uno de los momentos más emocionantes del torneo hasta ese punto.</li>
+          <li><strong>Variable climática:</strong> el calor de Atlanta puede afectar el pressing español en la segunda parte.</li>
+        </ul>
+      </div>
+
+      <div>
+        <h3>Probabilidades estimadas</h3>
+        <p style="font-size:0.83rem; color:var(--text-muted);">Basadas en simulaciones de datos pre-partido y modelos analíticos.</p>
+
+        <div class="prob-wrap">
+          <div class="prob-row">
+            <span class="prob-label">🇪🇸 Victoria España</span>
+            <div class="prob-bar-bg">
+              <div class="prob-bar-fill" style="width:87%; background:var(--largotek-blue);"></div>
+            </div>
+            <span class="prob-pct">87%</span>
+          </div>
+          <div class="prob-row">
+            <span class="prob-label">🤝 Empate</span>
+            <div class="prob-bar-bg">
+              <div class="prob-bar-fill" style="width:8%; background:var(--text-muted);"></div>
+            </div>
+            <span class="prob-pct">8%</span>
+          </div>
+          <div class="prob-row">
+            <span class="prob-label">🇨🇻 Victoria Cabo Verde</span>
+            <div class="prob-bar-bg">
+              <div class="prob-bar-fill" style="width:5%; background:var(--accent-green);"></div>
+            </div>
+            <span class="prob-pct">5%</span>
+          </div>
+        </div>
+
+        <div class="section-label">🎯 Resultado más probable</div>
+        <div style="text-align:center; padding:14px; background:#EEF6FD; border-radius:10px; margin-top:4px;">
+          <div style="font-size:2rem; font-weight:900; color:var(--largotek-dark);">3 – 0</div>
+          <div style="font-size:0.8rem; color:var(--text-muted); margin-top:4px;">Proyección de simulaciones (10,000 iteraciones)</div>
+        </div>
+
+        <div class="section-label" style="margin-top:14px;">📊 Para seguir en vivo</div>
+        <ul style="font-size:0.85rem;">
+          <li>Actualizar posesión y xG cada 15 minutos.</li>
+          <li>Registrar cada remate de Cabo Verde a puerta.</li>
+          <li>Seguir los cambios tácticos de cada DT.</li>
+          <li>Comparar el guion real vs simulaciones previas.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- FOOTER DEL INFORME -->
+<div style="max-width:1180px; margin: 0 auto 40px; padding: 0 18px;">
+  <div class="report-footer">
+    <div class="ai-tag">
+      <div class="ai-icon">🤖</div>
+      <div>
+        <div style="font-weight:600; color:#fff;">Informe generado con Inteligencia Artificial</div>
+        <div>Análisis automatizado con IA &mdash; Personalizaciones y adecuaciones por <strong style="color:#fff;">Largotek SRL</strong></div>
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-weight:600; color:#fff;">Juan Luis Garvía Ossio</div>
+      <div>Largotek SRL &mdash; La Paz, Bolivia &mdash; <a href="https://largotek.com">largotek.com</a></div>
+      <div style="margin-top:2px; opacity:0.7;">Generado: 15 de junio de 2026</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
