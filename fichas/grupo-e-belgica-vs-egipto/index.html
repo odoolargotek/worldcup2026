@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Bélgica vs Egipto - Ficha Técnica | Copa Mundial FIFA 2026</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    :root {
+      --largotek-blue: #00A3E0;
+      --largotek-dark: #004866;
+      --accent-red:    #E30613;
+      --accent-gold:   #D4A017;
+      --bg-light:      #F5F7FA;
+      --text-main:     #222222;
+      --text-muted:    #555555;
+      --card-bg:       #FFFFFF;
+      --border-soft:   #D6E2F0;
+      --shadow-soft:   0 3px 8px rgba(0,0,0,0.06);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+      background: var(--bg-light);
+      color: var(--text-main);
+      line-height: 1.45;
+      font-size: 12px;
+    }
+
+    /* HEADER */
+    header {
+      background: linear-gradient(90deg, var(--largotek-blue), var(--largotek-dark));
+      color: #fff;
+      padding: 8px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 6px;
+    }
+    .logo-area { display: flex; align-items: center; gap: 10px; }
+    .logo-area img { height: 30px; }
+    .logo-text-block .company { font-size: 0.95rem; font-weight: 700; letter-spacing: 0.04em; }
+    .logo-text-block .tagline { font-size: 0.68rem; opacity: 0.85; margin-top: 1px; }
+    .header-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+    .header-badge {
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.35);
+      border-radius: 999px; padding: 2px 10px;
+      font-size: 0.65rem; font-weight: 600; letter-spacing: 0.05em;
+    }
+
+    /* SELLO IA */
+    .ia-seal {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.22), rgba(255,255,255,0.08));
+      border: 1.5px solid rgba(255,255,255,0.55);
+      border-radius: 999px; padding: 3px 10px 3px 5px;
+      backdrop-filter: blur(4px);
+    }
+    .ia-seal .seal-icon {
+      width: 20px; height: 20px;
+      background: linear-gradient(135deg, #00C6FF, #0072FF);
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; flex-shrink: 0; box-shadow: 0 0 6px rgba(0,198,255,0.6);
+    }
+    .ia-seal .seal-text { display: flex; flex-direction: column; line-height: 1.1; }
+    .ia-seal .seal-line1 { font-size: 0.55rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: rgba(255,255,255,0.95); }
+    .ia-seal .seal-line2 { font-size: 0.55rem; font-weight: 600; color: rgba(255,255,255,0.75); letter-spacing: 0.02em; }
+
+    /* SELLO FOOTER */
+    .ia-seal-footer {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: linear-gradient(135deg, #00A3E0 0%, #0072B5 100%);
+      border: 1.5px solid rgba(255,255,255,0.25);
+      border-radius: 10px; padding: 6px 12px 6px 8px;
+      box-shadow: 0 2px 10px rgba(0,163,224,0.35);
+    }
+    .ia-seal-footer .sf-icon { width: 24px; height: 24px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; flex-shrink: 0; }
+    .ia-seal-footer .sf-text { display: flex; flex-direction: column; line-height: 1.2; }
+    .ia-seal-footer .sf-l1 { font-size: 0.6rem; font-weight: 900; letter-spacing: 0.07em; text-transform: uppercase; color: #fff; }
+    .ia-seal-footer .sf-l2 { font-size: 0.58rem; font-weight: 600; color: rgba(255,255,255,0.8); }
+    .ia-seal-footer .sf-l3 { font-size: 0.55rem; color: rgba(255,255,255,0.65); margin-top: 1px; }
+
+    /* WATERMARK */
+    .page-watermark {
+      position: absolute; top: 50%; right: 14px;
+      transform: translateY(-50%) rotate(-30deg);
+      opacity: 0.04; font-size: 2.2rem; font-weight: 900;
+      letter-spacing: 0.04em; color: var(--largotek-dark);
+      pointer-events: none; white-space: nowrap;
+      text-transform: uppercase; z-index: 0;
+    }
+
+    /* BANDA IA */
+    .ia-banner {
+      background: linear-gradient(90deg, #00172A, #003855, #00172A);
+      color: rgba(255,255,255,0.9);
+      padding: 3px 16px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
+      font-size: 0.62rem; letter-spacing: 0.04em;
+      border-bottom: 1px solid rgba(0,163,224,0.3);
+    }
+    .ia-banner .ib-dot { width: 5px; height: 5px; background: var(--largotek-blue); border-radius: 50%; animation: pulse 2s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.4); } }
+    .ia-banner strong { color: #00C6FF; }
+
+    /* LAYOUT */
+    main { max-width: 100%; margin: 0; padding: 0; }
+    .page { width: 100%; padding: 8px 14px 6px; position: relative; }
+    h2 { font-size: 0.88rem; font-weight: 700; color: var(--largotek-dark); border-bottom: 2px solid var(--largotek-blue); padding-bottom: 3px; margin: 0 0 6px; }
+    h3 { font-size: 0.78rem; font-weight: 700; color: var(--largotek-dark); margin: 0 0 4px; }
+    p { margin: 0 0 5px; font-size: 0.76rem; }
+    .card { background: var(--card-bg); border-radius: 8px; padding: 8px 10px; box-shadow: var(--shadow-soft); border: 1px solid var(--border-soft); }
+    .match-hero {
+      text-align: center;
+      background: linear-gradient(135deg, #FFF8E8, #ffffff);
+      padding: 7px 10px; border-radius: 8px;
+      border: 1px solid var(--border-soft); margin-bottom: 7px;
+    }
+    .match-hero .grupo-label { font-size: 0.62rem; color: var(--text-muted); letter-spacing: 0.07em; text-transform: uppercase; margin-bottom: 3px; }
+    .match-hero .teams { display: flex; align-items: center; justify-content: center; gap: 16px; margin: 3px 0; }
+    .match-hero .team-name { font-weight: 700; font-size: 0.88rem; color: var(--largotek-dark); }
+    .match-hero .flag { font-size: 1.7rem; }
+    .match-hero .vs { font-size: 1.2rem; font-weight: 900; color: var(--largotek-blue); }
+    .match-hero .meta { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; font-size: 0.68rem; color: var(--text-muted); margin-top: 3px; }
+    .match-hero .meta strong { color: var(--largotek-dark); }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid-3col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .grid-3col > div:last-child { grid-column: 1 / -1; }
+    .badge { display: inline-block; padding: 2px 7px; border-radius: 999px; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #fff; margin-bottom: 5px; }
+    .badge-red    { background: var(--accent-red); }
+    .badge-gold   { background: var(--accent-gold); }
+    .badge-blue   { background: var(--largotek-blue); }
+    .flag-header { display: flex; align-items: center; gap: 7px; margin-bottom: 2px; }
+    .flag-emoji { font-size: 1.4rem; }
+    .section-label { font-size: 0.58rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--largotek-blue); margin: 6px 0 3px; }
+    ul { margin: 0; padding-left: 13px; }
+    li { margin-bottom: 2px; font-size: 0.72rem; }
+    .pill-row { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; }
+    .pill { font-size: 0.6rem; padding: 2px 7px; border-radius: 999px; background: #EEF6FD; border: 1px solid #C5DFF2; color: var(--largotek-dark); font-weight: 500; }
+    .player-card { display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-radius: 6px; background: #F4F9FF; border: 1px solid var(--border-soft); margin-bottom: 3px; }
+    .player-num { width: 22px; height: 22px; background: var(--largotek-blue); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.6rem; flex-shrink: 0; }
+    .player-info .name { font-weight: 700; font-size: 0.72rem; }
+    .player-info .desc { font-size: 0.62rem; color: var(--text-muted); }
+    .comp-table { width: 100%; border-collapse: collapse; font-size: 0.7rem; margin-top: 5px; }
+    .comp-table th { background: var(--largotek-dark); color: #fff; padding: 4px 7px; text-align: left; font-weight: 600; }
+    .comp-table td { padding: 4px 7px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+    .comp-table tr:last-child td { border-bottom: none; }
+    .comp-table tr:nth-child(even) td { background: #F8FBFF; }
+    .timeline { list-style: none; padding: 0; margin: 0; }
+    .timeline li { display: flex; align-items: flex-start; gap: 7px; padding: 4px 0; border-bottom: 1px dashed var(--border-soft); font-size: 0.72rem; }
+    .timeline li:last-child { border-bottom: none; }
+    .t-icon { flex-shrink: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--largotek-blue); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.58rem; font-weight: 700; }
+    .prob-wrap { margin: 5px 0 2px; }
+    .prob-row { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; font-size: 0.72rem; }
+    .prob-label { min-width: 120px; }
+    .prob-bar-bg { flex: 1; background: #E3ECF5; border-radius: 999px; height: 10px; overflow: hidden; }
+    .prob-bar-fill { height: 100%; border-radius: 999px; }
+    .prob-pct { min-width: 28px; font-weight: 700; color: var(--largotek-dark); text-align: right; }
+    .score-box { text-align: center; padding: 8px; background: #FFF8E8; border-radius: 7px; margin-top: 4px; }
+    .score-box .score { font-size: 1.6rem; font-weight: 900; color: var(--largotek-dark); }
+    .score-box .score-sub { font-size: 0.62rem; color: var(--text-muted); margin-top: 2px; }
+
+    /* FOOTER */
+    .report-footer {
+      background: var(--largotek-dark); color: rgba(255,255,255,0.85);
+      padding: 8px 14px; font-size: 0.68rem;
+      display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px;
+    }
+    .footer-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .report-footer .ai-tag { display: flex; align-items: center; gap: 6px; }
+    .ai-icon { background: var(--largotek-blue); border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+    .report-footer a { color: var(--largotek-blue); text-decoration: none; }
+    .footer-sep { width: 1px; height: 32px; background: rgba(255,255,255,0.15); }
+
+    /* CARTAS FIFA */
+    .players-grid, .players-grid-eg {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 10px; margin-top: 5px;
+    }
+    .fut-card {
+      position: relative; border-radius: 10px; padding: 8px 6px 6px;
+      display: flex; flex-direction: column; align-items: center;
+      text-align: center; overflow: hidden; min-height: 185px;
+    }
+    .fut-card.gold { background: linear-gradient(160deg, #C8980A 0%, #F5D060 35%, #E8B820 65%, #A67C00 100%); border: 2px solid #C8980A; box-shadow: 0 4px 14px rgba(200,152,10,0.35); }
+    .fut-card.silver { background: linear-gradient(160deg, #7A8C99 0%, #C8D6DF 35%, #9FB3BC 65%, #5A6E79 100%); border: 2px solid #8AA0A9; box-shadow: 0 4px 14px rgba(90,110,121,0.3); }
+    .fut-card.bronze { background: linear-gradient(160deg, #8B4513 0%, #D2956A 35%, #B5681A 65%, #6B3410 100%); border: 2px solid #A0522D; box-shadow: 0 4px 14px rgba(107,52,16,0.3); }
+    .fut-card.largotek-special { background: linear-gradient(160deg, #003855 0%, #00A3E0 40%, #005F85 70%, #002840 100%); border: 2px solid #00A3E0; box-shadow: 0 4px 18px rgba(0,163,224,0.4); }
+    .fut-card.belgica-special { background: linear-gradient(160deg, #8B0000 0%, #E30613 40%, #B00010 70%, #600000 100%); border: 2px solid #E30613; box-shadow: 0 4px 18px rgba(227,6,19,0.4); }
+    .fut-overall { font-size: 1.45rem; font-weight: 900; line-height: 1; color: rgba(0,0,0,0.75); text-shadow: 0 1px 0 rgba(255,255,255,0.3); margin-bottom: 1px; }
+    .fut-card.largotek-special .fut-overall,
+    .fut-card.largotek-special .fut-pos,
+    .fut-card.largotek-special .fut-name,
+    .fut-card.largotek-special .fut-club,
+    .fut-card.largotek-special .fut-flag-sm,
+    .fut-card.belgica-special .fut-overall,
+    .fut-card.belgica-special .fut-pos,
+    .fut-card.belgica-special .fut-name,
+    .fut-card.belgica-special .fut-club,
+    .fut-card.belgica-special .fut-flag-sm { color: rgba(255,255,255,0.95); text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+    .fut-pos { font-size: 0.6rem; font-weight: 700; color: rgba(0,0,0,0.6); letter-spacing: 0.06em; margin-bottom: 3px; }
+    .fut-flag-sm { font-size: 1rem; margin-bottom: 2px; }
+    .fut-avatar { width: 46px; height: 46px; border-radius: 50%; background: rgba(0,0,0,0.18); border: 2px solid rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: 900; color: rgba(255,255,255,0.9); margin: 2px 0; text-shadow: 0 1px 2px rgba(0,0,0,0.4); letter-spacing: -1px; }
+    .fut-name { font-size: 0.65rem; font-weight: 800; color: rgba(0,0,0,0.8); text-transform: uppercase; letter-spacing: 0.04em; margin: 2px 0 1px; line-height: 1.1; }
+    .fut-club { font-size: 0.53rem; color: rgba(0,0,0,0.55); margin-bottom: 5px; }
+    .fut-divider { width: 80%; height: 1px; background: rgba(0,0,0,0.2); margin: 3px auto; }
+    .fut-card.largotek-special .fut-divider,
+    .fut-card.belgica-special .fut-divider { background: rgba(255,255,255,0.25); }
+    .fut-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 6px; width: 100%; margin-top: 2px; }
+    .fut-stat { display: flex; justify-content: space-between; align-items: center; font-size: 0.58rem; }
+    .fut-stat .s-val { font-weight: 900; font-size: 0.67rem; color: rgba(0,0,0,0.75); }
+    .fut-stat .s-lbl { font-weight: 600; color: rgba(0,0,0,0.5); letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.52rem; }
+    .fut-card.largotek-special .fut-stat .s-val,
+    .fut-card.largotek-special .fut-stat .s-lbl,
+    .fut-card.belgica-special .fut-stat .s-val,
+    .fut-card.belgica-special .fut-stat .s-lbl { color: rgba(255,255,255,0.85); }
+    .skill-bar-wrap { width: 100%; padding: 0 5px; margin-top: 5px; }
+    .skill-row { display: flex; align-items: center; gap: 4px; margin-bottom: 2px; }
+    .skill-row .sk-lbl { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: rgba(0,0,0,0.5); min-width: 24px; text-align: right; }
+    .fut-card.largotek-special .skill-row .sk-lbl,
+    .fut-card.belgica-special .skill-row .sk-lbl { color: rgba(255,255,255,0.6); }
+    .skill-row .sk-val { font-size: 0.58rem; font-weight: 900; min-width: 18px; color: rgba(0,0,0,0.7); }
+    .fut-card.largotek-special .skill-row .sk-val,
+    .fut-card.belgica-special .skill-row .sk-val { color: rgba(255,255,255,0.9); }
+    .sk-bar-bg { flex: 1; height: 4px; background: rgba(0,0,0,0.15); border-radius: 999px; overflow: hidden; }
+    .fut-card.largotek-special .sk-bar-bg,
+    .fut-card.belgica-special .sk-bar-bg { background: rgba(255,255,255,0.15); }
+    .sk-bar-fill { height: 100%; border-radius: 999px; background: rgba(0,0,0,0.45); }
+    .fut-card.largotek-special .sk-bar-fill,
+    .fut-card.belgica-special .sk-bar-fill { background: rgba(255,255,255,0.7); }
+    .bar-elite { background: #1a7a1a !important; }
+    .bar-high  { background: #4da832 !important; }
+    .bar-mid   { background: #c8a800 !important; }
+    .bar-low   { background: #d44c00 !important; }
+    .team-section-title { display: flex; align-items: center; gap: 7px; margin: 10px 0 5px; padding: 5px 8px; border-radius: 7px; }
+    .team-section-title.belgica  { background: linear-gradient(90deg, #000000, #E30613, #FDDA24); color: #fff; }
+    .team-section-title.egipto   { background: linear-gradient(90deg, #CE1126, #CE1126, #C09300); color: #fff; }
+    .team-section-title .ts-flag { font-size: 1.1rem; }
+    .team-section-title .ts-name { font-weight: 700; font-size: 0.78rem; }
+    .team-section-title .ts-sub  { font-size: 0.62rem; opacity: 0.85; margin-left: auto; }
+
+    /* PRINT — A4 PORTRAIT */
+    @media print {
+      @page { size: A4 portrait; margin: 7mm 9mm; }
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+      body { background: #fff !important; font-size: 10px; }
+      header { padding: 5px 12px; }
+      .logo-area img { height: 24px; }
+      .ia-banner { padding: 2px 12px; font-size: 0.58rem; }
+      .ia-banner .ib-dot { animation: none !important; }
+      .page-break { page-break-before: always; break-before: page; }
+      .card, article, .match-hero, .report-footer, .fut-card { page-break-inside: avoid; break-inside: avoid; }
+      .card { box-shadow: none !important; }
+      .page { padding: 5px 0 3px; }
+      .print-btn { display: none !important; }
+      .report-footer { margin-top: 5px; border-radius: 0; }
+      .fut-card { min-height: 170px; }
+      .page-watermark { opacity: 0.03; }
+      .grid-2 { grid-template-columns: 1fr 1fr; }
+      .grid-3col { grid-template-columns: 1fr 1fr; }
+      .grid-3col > div:last-child { grid-column: 1 / -1; }
+      .players-grid, .players-grid-eg { grid-template-columns: repeat(4, 1fr); gap: 7px; }
+    }
+    @media screen {
+      .print-btn {
+        position: fixed; bottom: 22px; right: 22px;
+        background: var(--largotek-blue); color: #fff;
+        border: none; border-radius: 50px;
+        padding: 10px 22px; font-size: 0.88rem; font-weight: 700;
+        cursor: pointer; box-shadow: 0 4px 14px rgba(0,163,224,0.4);
+        z-index: 999; letter-spacing: 0.03em;
+      }
+      .print-btn:hover { background: var(--largotek-dark); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="logo-area">
+    <img src="https://raw.githubusercontent.com/odoolargotek/worldcup2026/main/fichas/assets/largotek-logo.png"
+         onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';"
+         alt="Largotek Logo">
+    <div id="logo-fallback" style="display:none; align-items:center; justify-content:center; background:#00A3E0; border-radius:6px; padding:3px 10px; font-size:1.1rem; font-weight:900; letter-spacing:0.04em; color:#fff;">largotek</div>
+    <div class="logo-text-block">
+      <div class="company">Largotek Analytics</div>
+      <div class="tagline">Inteligencia Deportiva con IA &mdash; Copa Mundial FIFA 2026</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="header-badge">🏆 Copa Mundial FIFA 2026 &nbsp;|&nbsp; Informe Técnico</span>
+    <div class="ia-seal">
+      <div class="seal-icon">🤖</div>
+      <div class="seal-text">
+        <span class="seal-line1">Hecha con Inteligencia Artificial</span>
+        <span class="seal-line2">entrenada por Largotek</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- BANDA IA -->
+<div class="ia-banner">
+  <div class="ib-dot"></div>
+  <span>Este informe fue <strong>generado y analizado con Inteligencia Artificial entrenada por Largotek</strong> &mdash; Largotek SRL &middot; La Paz, Bolivia &middot; largotek.com</span>
+  <div class="ib-dot"></div>
+</div>
+
+<main>
+
+<!-- ============================================================
+     PÁGINA 1 — Cabecera + Fichas de equipos
+============================================================ -->
+<div class="page">
+  <div class="page-watermark">Largotek IA</div>
+  <div class="match-hero">
+    <div class="grupo-label">Grupo E &middot; Jornada 1 &middot; Copa Mundial FIFA 2026</div>
+    <div class="teams">
+      <div><div class="flag">🇧🇪</div><div class="team-name">Bélgica</div></div>
+      <div class="vs">vs</div>
+      <div><div class="flag">🇪🇬</div><div class="team-name">Egipto</div></div>
+    </div>
+    <div class="meta">
+      <span>📅 <strong>15 de junio, 2026</strong></span>
+      <span>🏟️ <strong>SoFi Stadium, Inglewood, EE.UU.</strong></span>
+      <span>⏰ <strong>15:00 ET</strong></span>
+      <span>📺 <strong>Grupo E &mdash; Jornada 1</strong></span>
+    </div>
+  </div>
+  <div class="grid-2">
+    <article class="card">
+      <div class="flag-header"><span class="flag-emoji">🇧🇪</span><div><h2 style="border:none;padding:0;margin:0;font-size:0.88rem;">Bélgica &mdash; Los Diablos Rojos</h2></div></div>
+      <span class="badge badge-red">Generación de oro 2.0 &middot; Ranking FIFA #4</span>
+      <p>La "segunda generación dorada" belga llega con hambre de revancha tras años de decepciones en torneos. Nuevo ciclo liderado por Thibaut Courtois y una mezcla de veteranos y jóvenes talentos.</p>
+      <div class="section-label">🎽 Datos técnicos</div>
+      <ul>
+        <li><strong>Entrenador:</strong> Domenico Tedesco</li>
+        <li><strong>Sistema base:</strong> 4-3-3 / 3-4-3 dinámico</li>
+        <li><strong>Fortaleza:</strong> Solidez defensiva + calidad individual en ataque</li>
+      </ul>
+      <div class="section-label">⚽ Jugadores clave</div>
+      <div class="player-card"><div class="player-num" style="background:#E30613;">1</div><div class="player-info"><div class="name">Thibaut Courtois</div><div class="desc">Portero &middot; Real Madrid &middot; Mejor portero del mundo en su nivel</div></div></div>
+      <div class="player-card"><div class="player-num" style="background:#E30613;">7</div><div class="player-info"><div class="name">Kevin De Bruyne</div><div class="desc">Mediocampista &middot; Manchester City &middot; Motor creativo y capitán</div></div></div>
+      <div class="player-card"><div class="player-num" style="background:#E30613;">11</div><div class="player-info"><div class="name">Lois Openda</div><div class="desc">Delantero centro &middot; RB Leipzig &middot; Rapidez y gol</div></div></div>
+      <div class="player-card"><div class="player-num" style="background:#E30613;">10</div><div class="player-info"><div class="name">Amadou Onana</div><div class="desc">Mediocampista &middot; Aston Villa &middot; Poder físico y despliegue</div></div></div>
+      <div class="section-label">📰 Novedades</div>
+      <ul>
+        <li>Lukaku no convocado; Openda es el referente en punta para este torneo.</li>
+        <li>De Bruyne, a sus 35 años, llega en forma para su última Copa del Mundo.</li>
+        <li>Courtois regresa al 100% tras su recuperación de lesión de rodilla.</li>
+      </ul>
+      <div class="pill-row">
+        <span class="pill">Juego posicional</span><span class="pill">Contraataque letal</span>
+        <span class="pill">Pressing moderado</span><span class="pill">Calidad individual</span>
+      </div>
+    </article>
+    <article class="card">
+      <div class="flag-header"><span class="flag-emoji">🇪🇬</span><div><h2 style="border:none;padding:0;margin:0;font-size:0.88rem;">Egipto &mdash; Los Faraones</h2></div></div>
+      <span class="badge badge-gold">⭐ Mo Salah &middot; Ranking FIFA #33</span>
+      <p>Regresa al Mundial tras ausencias en 2014 y 2018 (fallaron la clasificación). Llegan como sorpresa potencial gracias al astro Mohamed Salah, que posiblemente disputa su última Copa del Mundo.</p>
+      <div class="section-label">🎽 Datos técnicos</div>
+      <ul>
+        <li><strong>Entrenador:</strong> Hossam Hassan</li>
+        <li><strong>Sistema base:</strong> 4-2-3-1 / 4-4-2 compacto</li>
+        <li><strong>Clasificación:</strong> Venció a Guinea en play-off africano de repechaje</li>
+      </ul>
+      <div class="section-label">⚽ Jugadores clave</div>
+      <div class="player-card"><div class="player-num" style="background:#CE1126;">11</div><div class="player-info"><div class="name">Mohamed Salah</div><div class="desc">Extremo izq &middot; Liverpool &middot; Uno de los mejores del mundo; todo el equipo gira entorno a él</div></div></div>
+      <div class="player-card"><div class="player-num" style="background:#CE1126;">1</div><div class="player-info"><div class="name">Mohamed El-Shenawy</div><div class="desc">Portero &middot; Al-Ahly &middot; Seguridad bajo los palos</div></div></div>
+      <div class="player-card"><div class="player-num" style="background:#CE1126;">8</div><div class="player-info"><div class="name">Tarek Hamed</div><div class="desc">Mediocampista defensivo &middot; Motor del juego y filtro defensivo</div></div></div>
+      <div class="player-card"><div class="player-num" style="background:#CE1126;">9</div><div class="player-info"><div class="name">Omar Marmoush</div><div class="desc">Delantero &middot; Manchester City &middot; Apoyo en ataque junto a Salah</div></div></div>
+      <div class="section-label">📰 Novedades</div>
+      <ul>
+        <li>Salah declaró que este Mundial es "el sueño de toda mi carrera".</li>
+        <li>Marmoush llega en gran nivel tras su temporada en Manchester City.</li>
+        <li>Tácticamente apuestan al bloque defensivo y transición rápida a Salah.</li>
+      </ul>
+      <div class="pill-row">
+        <span class="pill">Dependencia de Salah</span><span class="pill">Bloque bajo</span>
+        <span class="pill">Transición directa</span><span class="pill">Balón parado</span>
+      </div>
+    </article>
+  </div>
+</div>
+
+<!-- ============================================================
+     PÁGINA 2 — Estrategias + Proyecciones
+============================================================ -->
+<div class="page page-break">
+  <div class="page-watermark">Largotek IA</div>
+  <div class="grid-3col">
+    <div><div class="card">
+      <h2>⚔️ Comparación de estrategias</h2>
+      <table class="comp-table">
+        <thead><tr><th>Dimensión</th><th>🇧🇪 Bélgica</th><th>🇪🇬 Egipto</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Sistema</strong></td><td>4-3-3 / 3-4-3</td><td>4-2-3-1 compacto</td></tr>
+          <tr><td><strong>Posesión</strong></td><td>~60-65% dominante</td><td>Baja, cede el balón</td></tr>
+          <tr><td><strong>Pressing</strong></td><td>Moderado, organizado</td><td>Repliegue ordenado</td></tr>
+          <tr><td><strong>Ataque</strong></td><td>Combinaciones KDB + Openda</td><td>Transición a Salah</td></tr>
+          <tr><td><strong>Defensa</strong></td><td>Línea media, Courtois clave</td><td>Bloque bajo, compacto</td></tr>
+          <tr><td><strong>Bal. parado</strong></td><td>Centros y jugadas fijas</td><td>Peligro aéreo</td></tr>
+          <tr><td><strong>Objetivo</strong></td><td>Victoria convincente</td><td>Sorprender, aguantar</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:8px;"><h3>Plan: Bélgica 🇧🇪</h3>
+        <ul>
+          <li>De Bruyne como eje: distribución desde el centro hacia Openda.</li>
+          <li>Pressing moderado para no exponer la espalda a transiciones de Salah.</li>
+          <li>Aprovechar el físico y la velocidad de Openda contra la zaga egipcia.</li>
+          <li>Courtois para neutralizar cualquier acción de Salah que rompa el bloque.</li>
+        </ul>
+      </div>
+      <div style="margin-top:6px;"><h3>Plan: Egipto 🇪🇬</h3>
+        <ul>
+          <li>Bloque 4-4-2 cerrado, proteger el área central del campo.</li>
+          <li>Transición rápida: balón a Salah en espacio cuando Bélgica suba.</li>
+          <li>Marmoush como segunda amenaza para no depender solo de Salah.</li>
+          <li>Balón parado: la mayor oportunidad real de gol ante rivales superiores.</li>
+        </ul>
+      </div>
+    </div></div>
+    <div><div class="card">
+      <h2>🔮 Qué esperar del partido</h2>
+      <h3>Guion probable</h3>
+      <ul class="timeline">
+        <li><div class="t-icon">0'</div><div><strong>Inicio:</strong> Bélgica establece posesión; Egipto cierra espacios en bloque defensivo organizado.</div></li>
+        <li><div class="t-icon">20'</div><div><strong>Primera ocasión:</strong> De Bruyne intenta filtrar pases entre líneas; Salah espera el contraataque.</div></li>
+        <li><div class="t-icon">45'</div><div><strong>Descanso:</strong> Si sigue 0-0, la presión mediática sobre Bélgica será enorme.</div></li>
+        <li><div class="t-icon">60'</div><div><strong>Cambios:</strong> Bélgica acelera con sustituciones; Egipto ajusta para resistir los últimos 30'.</div></li>
+        <li><div class="t-icon">85'</div><div><strong>Final:</strong> Momento decisivo: ¿errará Bélgica o resistirá Egipto para el empate histórico?</div></li>
+      </ul>
+      <div class="section-label" style="margin-top:8px;">🌶️ Factores de interés</div>
+      <ul>
+        <li><strong>Mo Salah</strong> en su posiblemente último Mundial: enorme expectativa global.</li>
+        <li><strong>De Bruyne</strong> a sus 35: ¿el partido definitivo de su carrera mundialista?</li>
+        <li>Duelo entre dos jugadores top del fútbol europeo en el mismo campo.</li>
+        <li><strong>SoFi Stadium</strong> lleno de aficionados neutrales que apoyarán al underdog.</li>
+      </ul>
+    </div></div>
+    <div><div class="card">
+      <h2>📊 Proyecciones y análisis</h2>
+      <h3>Probabilidades estimadas</h3>
+      <p style="font-size:0.65rem;color:var(--text-muted);">Simulaciones pre-partido &mdash; 10,000 iteraciones.</p>
+      <div class="prob-wrap">
+        <div class="prob-row"><span class="prob-label">🇧🇪 Victoria Bélgica</span><div class="prob-bar-bg"><div class="prob-bar-fill" style="width:68%;background:var(--accent-red);"></div></div><span class="prob-pct">68%</span></div>
+        <div class="prob-row"><span class="prob-label">🤝 Empate</span><div class="prob-bar-bg"><div class="prob-bar-fill" style="width:20%;background:var(--text-muted);"></div></div><span class="prob-pct">20%</span></div>
+        <div class="prob-row"><span class="prob-label">🇪🇬 Victoria Egipto</span><div class="prob-bar-bg"><div class="prob-bar-fill" style="width:12%;background:var(--accent-gold);"></div></div><span class="prob-pct">12%</span></div>
+      </div>
+      <div class="section-label">🎯 Resultado más probable</div>
+      <div class="score-box"><div class="score">2 &ndash; 0</div><div class="score-sub">Proyección consenso de simulaciones</div></div>
+      <div class="section-label" style="margin-top:8px;">🏆 Grupo E &mdash; contexto</div>
+      <table class="comp-table" style="margin-top:3px;">
+        <thead><tr><th>Equipo</th><th>Favorito</th><th>Objetivo</th></tr></thead>
+        <tbody>
+          <tr><td>🇧🇪 Bélgica</td><td>Sí</td><td>Clasificar 1.º</td></tr>
+          <tr><td>🇫🇷 Francia</td><td>Sí</td><td>Top 2</td></tr>
+          <tr><td>🇪🇬 Egipto</td><td>No</td><td>Sorpresa / 3.º</td></tr>
+          <tr><td>🇵🇾 Paraguay</td><td>No</td><td>Competir</td></tr>
+        </tbody>
+      </table>
+    </div></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     PÁGINA 3 — CARTAS DE JUGADORES
+============================================================ -->
+<div class="page page-break">
+  <div class="page-watermark">Largotek IA</div>
+  <div class="card">
+    <h2>🎮 Fichas de jugadores &mdash; Estilo EA Sports FC 26 &mdash; Ratings Oficiales</h2>
+    <p style="font-size:0.68rem;color:var(--text-muted);margin-bottom:6px;">Ratings basados en EA Sports FC 26 (temporada 2025-26). PAC=Velocidad &middot; SHO=Tiro &middot; PAS=Pase &middot; DRI=Regate &middot; DEF=Defensa &middot; PHY=Físico</p>
+
+    <div class="team-section-title belgica">
+      <span class="ts-flag">🇧🇪</span><span class="ts-name">BÉLGICA &mdash; Los Diablos Rojos</span>
+      <span class="ts-sub">Cartas doradas &middot; EA Sports FC 26</span>
+    </div>
+    <div class="players-grid">
+      <!-- De Bruyne -->
+      <div class="fut-card belgica-special">
+        <div class="fut-overall">91</div><div class="fut-pos">CM</div><div class="fut-flag-sm">🇧🇪</div>
+        <div class="fut-avatar">KDB</div><div class="fut-name">De Bruyne</div><div class="fut-club">Manchester City</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">76</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">86</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">94</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">88</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">64</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">78</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">PAS</span><span class="sk-val">94</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-elite" style="width:94%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">DRI</span><span class="sk-val">88</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:88%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">SHO</span><span class="sk-val">86</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:86%"></div></div></div>
+        </div>
+      </div>
+      <!-- Courtois -->
+      <div class="fut-card gold">
+        <div class="fut-overall">90</div><div class="fut-pos">GK</div><div class="fut-flag-sm">🇧🇪</div>
+        <div class="fut-avatar">TC</div><div class="fut-name">Courtois</div><div class="fut-club">Real Madrid</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">92</span><span class="s-lbl">DIV</span></div>
+          <div class="fut-stat"><span class="s-val">90</span><span class="s-lbl">HAN</span></div>
+          <div class="fut-stat"><span class="s-val">88</span><span class="s-lbl">KIC</span></div>
+          <div class="fut-stat"><span class="s-val">85</span><span class="s-lbl">REF</span></div>
+          <div class="fut-stat"><span class="s-val">94</span><span class="s-lbl">SPD</span></div>
+          <div class="fut-stat"><span class="s-val">91</span><span class="s-lbl">POS</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">DIV</span><span class="sk-val">92</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-elite" style="width:92%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">SPD</span><span class="sk-val">94</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-elite" style="width:94%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">HAN</span><span class="sk-val">90</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-elite" style="width:90%"></div></div></div>
+        </div>
+      </div>
+      <!-- Openda -->
+      <div class="fut-card gold">
+        <div class="fut-overall">84</div><div class="fut-pos">ST</div><div class="fut-flag-sm">🇧🇪</div>
+        <div class="fut-avatar">LO</div><div class="fut-name">L. Openda</div><div class="fut-club">RB Leipzig</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">92</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">82</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">71</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">84</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">38</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">68</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">PAC</span><span class="sk-val">92</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-elite" style="width:92%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">DRI</span><span class="sk-val">84</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:84%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">SHO</span><span class="sk-val">82</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:82%"></div></div></div>
+        </div>
+      </div>
+      <!-- Onana -->
+      <div class="fut-card gold">
+        <div class="fut-overall">83</div><div class="fut-pos">CDM</div><div class="fut-flag-sm">🇧🇪</div>
+        <div class="fut-avatar">AO</div><div class="fut-name">A. Onana</div><div class="fut-club">Aston Villa</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">74</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">66</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">76</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">74</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">82</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">88</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">PHY</span><span class="sk-val">88</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:88%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">DEF</span><span class="sk-val">82</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:82%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PAS</span><span class="sk-val">76</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:76%"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="team-section-title egipto" style="margin-top:12px;">
+      <span class="ts-flag">🇪🇬</span><span class="ts-name">EGIPTO &mdash; Los Faraones</span>
+      <span class="ts-sub">Cartas oro/plata &middot; EA Sports FC 26</span>
+    </div>
+    <div class="players-grid-eg">
+      <!-- Salah -->
+      <div class="fut-card largotek-special">
+        <div class="fut-overall">90</div><div class="fut-pos">LW</div><div class="fut-flag-sm">🇪🇬</div>
+        <div class="fut-avatar">MS</div><div class="fut-name">Mo Salah</div><div class="fut-club">Liverpool FC</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">87</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">89</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">82</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">91</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">45</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">75</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">DRI</span><span class="sk-val">91</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-elite" style="width:91%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">SHO</span><span class="sk-val">89</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-elite" style="width:89%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PAC</span><span class="sk-val">87</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:87%"></div></div></div>
+        </div>
+      </div>
+      <!-- Marmoush -->
+      <div class="fut-card gold">
+        <div class="fut-overall">83</div><div class="fut-pos">ST</div><div class="fut-flag-sm">🇪🇬</div>
+        <div class="fut-avatar">OM</div><div class="fut-name">O. Marmoush</div><div class="fut-club">Manchester City</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">85</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">82</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">73</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">82</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">36</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">71</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">PAC</span><span class="sk-val">85</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:85%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">SHO</span><span class="sk-val">82</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:82%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">DRI</span><span class="sk-val">82</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-high" style="width:82%"></div></div></div>
+        </div>
+      </div>
+      <!-- El-Shenawy -->
+      <div class="fut-card silver">
+        <div class="fut-overall">75</div><div class="fut-pos">GK</div><div class="fut-flag-sm">🇪🇬</div>
+        <div class="fut-avatar">ES</div><div class="fut-name">El-Shenawy</div><div class="fut-club">Al-Ahly SC</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">78</span><span class="s-lbl">DIV</span></div>
+          <div class="fut-stat"><span class="s-val">74</span><span class="s-lbl">HAN</span></div>
+          <div class="fut-stat"><span class="s-val">68</span><span class="s-lbl">KIC</span></div>
+          <div class="fut-stat"><span class="s-val">76</span><span class="s-lbl">REF</span></div>
+          <div class="fut-stat"><span class="s-val">70</span><span class="s-lbl">SPD</span></div>
+          <div class="fut-stat"><span class="s-val">77</span><span class="s-lbl">POS</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">DIV</span><span class="sk-val">78</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:78%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">REF</span><span class="sk-val">76</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:76%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">POS</span><span class="sk-val">77</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:77%"></div></div></div>
+        </div>
+      </div>
+      <!-- Tarek Hamed -->
+      <div class="fut-card silver">
+        <div class="fut-overall">72</div><div class="fut-pos">CDM</div><div class="fut-flag-sm">🇪🇬</div>
+        <div class="fut-avatar">TH</div><div class="fut-name">T. Hamed</div><div class="fut-club">Al-Zamalek SC</div>
+        <div class="fut-divider"></div>
+        <div class="fut-stats">
+          <div class="fut-stat"><span class="s-val">68</span><span class="s-lbl">PAC</span></div>
+          <div class="fut-stat"><span class="s-val">55</span><span class="s-lbl">SHO</span></div>
+          <div class="fut-stat"><span class="s-val">70</span><span class="s-lbl">PAS</span></div>
+          <div class="fut-stat"><span class="s-val">66</span><span class="s-lbl">DRI</span></div>
+          <div class="fut-stat"><span class="s-val">76</span><span class="s-lbl">DEF</span></div>
+          <div class="fut-stat"><span class="s-val">74</span><span class="s-lbl">PHY</span></div>
+        </div>
+        <div class="skill-bar-wrap">
+          <div class="skill-row"><span class="sk-lbl">DEF</span><span class="sk-val">76</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:76%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PHY</span><span class="sk-val">74</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:74%"></div></div></div>
+          <div class="skill-row"><span class="sk-lbl">PAS</span><span class="sk-val">70</span><div class="sk-bar-bg"><div class="sk-bar-fill bar-mid" style="width:70%"></div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leyenda + Sello IA -->
+    <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;align-items:center;">
+      <div style="display:flex;align-items:center;gap:5px;font-size:0.62rem;color:var(--text-muted);"><div style="width:14px;height:14px;border-radius:3px;background:linear-gradient(135deg,#8B0000,#E30613);"></div><span><strong>Diablos Rojos</strong> (Bélgica especial)</span></div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:0.62rem;color:var(--text-muted);"><div style="width:14px;height:14px;border-radius:3px;background:linear-gradient(135deg,#003855,#00A3E0);"></div><span><strong>Edición Largotek</strong> (Salah)</span></div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:0.62rem;color:var(--text-muted);"><div style="width:14px;height:14px;border-radius:3px;background:linear-gradient(135deg,#C8980A,#F5D060);"></div><span><strong>Oro</strong></span></div>
+      <div style="display:flex;align-items:center;gap:5px;font-size:0.62rem;color:var(--text-muted);"><div style="width:14px;height:14px;border-radius:3px;background:linear-gradient(135deg,#7A8C99,#C8D6DF);"></div><span><strong>Plata</strong></span></div>
+      <div style="margin-left:auto;">
+        <div style="display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#003855,#005F85);border:1.5px solid #00A3E0;border-radius:7px;padding:4px 10px;">
+          <span style="font-size:0.9rem;">🤖</span>
+          <div style="display:flex;flex-direction:column;line-height:1.15;">
+            <span style="font-size:0.55rem;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;color:#fff;">Hecha con Inteligencia Artificial</span>
+            <span style="font-size:0.52rem;font-weight:600;color:#00C6FF;">entrenada por Largotek &mdash; largotek.com</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<!-- FOOTER -->
+<div class="report-footer">
+  <div class="footer-left">
+    <div class="ia-seal-footer">
+      <div class="sf-icon">🤖</div>
+      <div class="sf-text">
+        <span class="sf-l1">Hecha con Inteligencia Artificial</span>
+        <span class="sf-l2">entrenada por Largotek</span>
+        <span class="sf-l3">largotek.com &middot; La Paz, Bolivia</span>
+      </div>
+    </div>
+    <div class="footer-sep"></div>
+    <div class="ai-tag">
+      <div class="ai-icon">📊</div>
+      <div>
+        <div style="font-weight:600;color:#fff;">Informe Técnico &mdash; Copa Mundial FIFA 2026</div>
+        <div>Análisis y simulaciones con IA &middot; Largotek Analytics SRL</div>
+      </div>
+    </div>
+  </div>
+  <div style="text-align:right;">
+    <div style="font-weight:600;color:#fff;">Juan Luis Garvía Ossio</div>
+    <div>Largotek SRL &mdash; La Paz, Bolivia &mdash; <a href="https://largotek.com">largotek.com</a></div>
+    <div style="margin-top:1px;opacity:0.7;">Generado: 15 de junio de 2026</div>
+  </div>
+</div>
+
+<button class="print-btn" onclick="window.print()">🖨️ Imprimir / Guardar PDF (3 hojas)</button>
+
+</body>
+</html>
