@@ -7,11 +7,11 @@ import {
 
 // ── Estado global
 const state = {
-  groups:   [],   // { id, name, code }
-  members:  [],   // { uid, display_name, email, member_doc_id }
-  matches:  [],   // { id, home_team, away_team, home_flag, away_flag, phase, city, kickoff, finished, home_score, away_score }
-  existing: null, // doc existente si ya hay pronóstico
-  history:  [],   // registros de esta sesión
+  groups:   [],
+  members:  [],
+  matches:  [],
+  existing: null,
+  history:  [],
 };
 
 // ── Elementos UI
@@ -77,7 +77,6 @@ selGroup.addEventListener('change', async () => {
   const snap = await getDocs(query(collection(db, 'group_members'), where('group_id', '==', gid)));
   const uids = snap.docs.map(d => ({ member_doc_id: d.id, ...d.data() }));
 
-  // Cargar nombres desde users
   const usersSnap = await getDocs(collection(db, 'users'));
   const usersMap  = {};
   usersSnap.forEach(d => usersMap[d.id] = d.data());
@@ -144,7 +143,6 @@ selMatch.addEventListener('change', async () => {
   homeLabel.textContent = (match.home_flag||'') + ' ' + match.home_team;
   awayLabel.textContent = (match.away_flag||'') + ' ' + match.away_team;
 
-  // Verificar si ya existe pronóstico
   const gid = selGroup.value;
   const uid = selPlayer.value;
   const docId = `${gid}_${uid}_${match.id}`;
@@ -185,9 +183,10 @@ function updatePreview() {
   const pa = parseInt(scoreAway.value);
   const ah = match.home_score;
   const aa = match.away_score;
+  const isFinished = match.finished === true;
 
   let pts, ptsBadge;
-  if (match.finished && ah != null) {
+  if (isFinished && ah != null) {
     pts = calcPoints(ah, aa, ph, pa);
     const cls = pts === 6 ? 'pts-6' : pts === 3 ? 'pts-3' : 'pts-0';
     ptsBadge = `<span class="pts-badge ${cls}">${pts} pts</span>`;
@@ -200,11 +199,10 @@ function updatePreview() {
   document.getElementById('pvPlayer').textContent  = member.display_name;
   document.getElementById('pvMatch').textContent   = `${match.home_flag||''}${match.home_team} vs ${match.away_team}${match.away_flag||''} — ${match.phase}`;
   document.getElementById('pvScore').textContent   = `${ph} - ${pa}`;
-  document.getElementById('pvResult').textContent  = match.finished ? `${ah} - ${aa} FINAL` : match.home_score != null ? `${ah} - ${aa} en juego` : 'Sin resultado aún';
+  document.getElementById('pvResult').textContent  = isFinished ? `${ah} - ${aa} FINAL` : match.home_score != null ? `${ah} - ${aa} en juego` : 'Sin resultado aún';
   document.getElementById('pvPoints').innerHTML    = ptsBadge;
 
   previewCard.classList.add('visible');
-  window._pendingPts = pts;
 }
 
 // ══════════════════════════════════════════
@@ -233,26 +231,27 @@ btnSave.addEventListener('click', async () => {
   saveLog.classList.add('visible');
 
   try {
-    const ah = match.home_score;
-    const aa = match.away_score;
-    const pts = (match.finished && ah != null) ? calcPoints(ah, aa, ph, pa) : 0;
+    const ah = match.home_score ?? null;
+    const aa = match.away_score ?? null;
+    // ✅ FIX: usar === true para evitar undefined
+    const isFinished = match.finished === true;
+    const pts = (isFinished && ah != null) ? calcPoints(ah, aa, ph, pa) : 0;
 
-    // ID del documento: group_id + user_uid + match_id
     const docId = `${gid}_${uid}_${mid}`;
 
     const customDateVal = document.getElementById('customDate').value;
     const createdAt = customDateVal ? Timestamp.fromDate(new Date(customDateVal)) : Timestamp.now();
 
     const payload = {
-      group_id:   gid,
-      match_id:   mid,
-      user_uid:   uid,
-      home_score: ph,
-      away_score: pa,
-      points:     pts,
-      points_synced: match.finished,
-      admin_note: `Registro manual — ${new Date().toISOString()}`,
-      created_at: createdAt,
+      group_id:      gid,
+      match_id:      mid,
+      user_uid:      uid,
+      home_score:    ph,
+      away_score:    pa,
+      points:        pts,
+      points_synced: isFinished,   // ✅ siempre boolean (true o false)
+      admin_note:    `Registro manual — ${new Date().toISOString()}`,
+      created_at:    createdAt,
     };
 
     await setDoc(doc(db, 'predictions', docId), payload);
@@ -260,14 +259,20 @@ btnSave.addEventListener('click', async () => {
     log(`✅ Pronóstico guardado`, '#34d399');
     log(`   👤 ${member.display_name}`);
     log(`   ⚽ ${match.home_team} ${ph} - ${pa} ${match.away_team}`);
-    log(`   🏅 Puntos: ${pts}${!match.finished ? ' (partido pendiente)' : ''}`);
+    log(`   🏅 Puntos: ${pts}${!isFinished ? ' (partido pendiente)' : ''}`);
     log(`   🔑 Doc ID: ${docId}`, '#94a3b8');
 
-    // Agregar al historial de sesión
-    state.history.unshift({ group: group.name, player: member.display_name, match: `${match.home_team} vs ${match.away_team}`, score: `${ph}-${pa}`, pts, docId, time: new Date().toLocaleTimeString('es-BO') });
+    state.history.unshift({
+      group: group.name,
+      player: member.display_name,
+      match: `${match.home_team} vs ${match.away_team}`,
+      score: `${ph}-${pa}`,
+      pts,
+      docId,
+      time: new Date().toLocaleTimeString('es-BO')
+    });
     renderHistory();
 
-    // Reset score fields
     scoreHome.value = 0;
     scoreAway.value = 0;
     warnEl.style.display = 'none';
