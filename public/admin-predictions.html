@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pronósticos Manual — WC2026</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6W7JNJCG36"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-6W7JNJCG36');
+  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .step-card {
+      background: var(--bg-card, rgba(255,255,255,0.04));
+      border: 1px solid var(--border, rgba(255,255,255,0.08));
+      border-radius: 14px;
+      padding: 22px 20px;
+      margin-bottom: 16px;
+    }
+    .step-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--gold, #f5a623); color: #000;
+      font-weight: 800; font-size: 13px; flex-shrink: 0;
+    }
+    .step-title { font-weight: 700; font-size: 0.95rem; color: var(--text, #f1f5f9); }
+    .step-sub   { font-size: 12px; color: var(--text-muted, #94a3b8); margin-top: 2px; }
+    .form-select, .form-control {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text, #f1f5f9);
+      border-radius: 10px;
+    }
+    .form-select:focus, .form-control:focus {
+      background: rgba(255,255,255,0.08);
+      border-color: #4aafd4;
+      color: var(--text, #f1f5f9);
+      box-shadow: none;
+    }
+    .form-select option { background: #1e2d3d; color: #f1f5f9; }
+    .score-box {
+      display: flex; align-items: center; gap: 14px;
+    }
+    .score-input {
+      width: 80px; text-align: center;
+      font-size: 1.6rem; font-weight: 800;
+      padding: 8px 4px;
+    }
+    .score-sep { font-size: 1.6rem; color: var(--text-muted); font-weight: 300; }
+    .team-label { font-size: 0.82rem; color: var(--text-muted); text-align: center; margin-top: 4px; }
+    .preview-card {
+      background: rgba(74,175,212,0.08);
+      border: 1px solid rgba(74,175,212,0.3);
+      border-radius: 12px; padding: 16px 18px;
+      display: none;
+    }
+    .preview-card.visible { display: block; }
+    .preview-row { display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.85rem; padding: 4px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .preview-row:last-child { border: none; }
+    .preview-label { color: var(--text-muted); }
+    .preview-value { font-weight: 700; color: var(--text); }
+    .pts-badge {
+      display: inline-block; padding: 3px 12px; border-radius: 20px;
+      font-weight: 800; font-size: 0.85rem;
+    }
+    .pts-6  { background: rgba(245,166,35,0.2);  color: #f5a623; }
+    .pts-3  { background: rgba(52,211,153,0.2);  color: #34d399; }
+    .pts-0  { background: rgba(148,163,184,0.1); color: #94a3b8; }
+    .pts-pending { background: rgba(74,175,212,0.15); color: #4aafd4; }
+    .log-box {
+      font-size: 12px; padding: 10px 14px; border-radius: 8px;
+      background: rgba(0,0,0,0.25); color: var(--text-muted);
+      display: none; max-height: 180px; overflow-y: auto;
+      white-space: pre-wrap; margin-top: 12px;
+    }
+    .log-box.visible { display: block; }
+    /* Historial */
+    .hist-row {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.82rem;
+    }
+    .hist-row:last-child { border: none; }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar" style="background:linear-gradient(135deg,#0f2d0f,#1a4a1a)!important;border-color:#34d399">
+    <div class="navbar-brand">
+      <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
+      <div>
+        <div>✏️ Pronósticos Manual — WC2026</div>
+        <div class="navbar-powered">Registro administrativo</div>
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="admin.html" class="btn btn-outline-light btn-sm">🛠️ Admin</a>
+      <a href="dashboard.html" class="btn btn-outline-light btn-sm">← Dashboard</a>
+    </div>
+  </nav>
+
+  <div class="container py-4" style="max-width:720px">
+
+    <div class="mb-4">
+      <h5 style="color:var(--gold);font-weight:800;margin:0">✏️ Registro Manual de Pronóstico</h5>
+      <p style="font-size:0.83rem;color:var(--text-muted);margin-top:4px">
+        Ingresa pronósticos en nombre de un jugador — para partidos pasados o futuros.
+        Los puntos se calculan automáticamente si el partido ya tiene resultado.
+      </p>
+    </div>
+
+    <!-- STEP 1: Grupo -->
+    <div class="step-card">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <span class="step-badge">1</span>
+        <div><div class="step-title">Seleccionar Comparsa</div>
+        <div class="step-sub">Elige el grupo al que pertenece el jugador</div></div>
+      </div>
+      <select id="selGroup" class="form-select">
+        <option value="">⏳ Cargando comparsas...</option>
+      </select>
+    </div>
+
+    <!-- STEP 2: Jugador -->
+    <div class="step-card" id="stepPlayer" style="opacity:0.4;pointer-events:none">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <span class="step-badge">2</span>
+        <div><div class="step-title">Seleccionar Jugador</div>
+        <div class="step-sub">Miembros de la comparsa seleccionada</div></div>
+      </div>
+      <select id="selPlayer" class="form-select">
+        <option value="">— Primero elige una comparsa —</option>
+      </select>
+    </div>
+
+    <!-- STEP 3: Partido -->
+    <div class="step-card" id="stepMatch" style="opacity:0.4;pointer-events:none">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <span class="step-badge">3</span>
+        <div><div class="step-title">Seleccionar Partido</div>
+        <div class="step-sub">Puedes elegir partidos pasados o futuros</div></div>
+      </div>
+      <select id="selMatch" class="form-select">
+        <option value="">— Primero elige un jugador —</option>
+      </select>
+      <div id="existingPredWarning" class="mt-2" style="display:none">
+        <span style="color:#f5a623;font-size:12px;font-weight:700">⚠️ Este jugador ya tiene pronóstico para este partido. Se sobreescribirá.</span>
+      </div>
+    </div>
+
+    <!-- STEP 4: Marcador -->
+    <div class="step-card" id="stepScore" style="opacity:0.4;pointer-events:none">
+      <div class="d-flex align-items-center gap-3 mb-3">
+        <span class="step-badge">4</span>
+        <div><div class="step-title">Ingresar Pronóstico</div>
+        <div class="step-sub">Marcador que predice el jugador</div></div>
+      </div>
+      <div class="score-box">
+        <div style="flex:1">
+          <input type="number" id="scoreHome" class="form-control score-input" min="0" value="0" placeholder="0">
+          <div class="team-label" id="homeLabel">Local</div>
+        </div>
+        <span class="score-sep">–</span>
+        <div style="flex:1">
+          <input type="number" id="scoreAway" class="form-control score-input" min="0" value="0" placeholder="0">
+          <div class="team-label" id="awayLabel">Visita</div>
+        </div>
+      </div>
+      <div class="mt-3">
+        <label style="font-size:12px;color:var(--text-muted)">Fecha de registro (opcional — por defecto: ahora)</label>
+        <input type="datetime-local" id="customDate" class="form-control mt-1" style="font-size:13px">
+      </div>
+    </div>
+
+    <!-- PREVIEW -->
+    <div class="preview-card" id="previewCard">
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">📋 Resumen del pronóstico</div>
+      <div class="preview-row"><span class="preview-label">Comparsa</span><span class="preview-value" id="pvGroup">—</span></div>
+      <div class="preview-row"><span class="preview-label">Jugador</span><span class="preview-value" id="pvPlayer">—</span></div>
+      <div class="preview-row"><span class="preview-label">Partido</span><span class="preview-value" id="pvMatch">—</span></div>
+      <div class="preview-row"><span class="preview-label">Pronóstico</span><span class="preview-value" id="pvScore">—</span></div>
+      <div class="preview-row"><span class="preview-label">Resultado real</span><span class="preview-value" id="pvResult">—</span></div>
+      <div class="preview-row"><span class="preview-label">Puntos</span><span class="preview-value" id="pvPoints">—</span></div>
+    </div>
+
+    <!-- BOTÓN GUARDAR -->
+    <div class="mt-3" id="saveSection" style="display:none">
+      <button id="btnSave" class="btn w-100" style="background:linear-gradient(135deg,#059669,#34d399);color:#fff;font-weight:800;font-size:1rem;padding:12px">
+        💾 Guardar pronóstico
+      </button>
+      <div id="saveLog" class="log-box"></div>
+    </div>
+
+    <!-- HISTORIAL -->
+    <div class="step-card mt-4" id="histSection" style="display:none">
+      <div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">🕐 Últimos registros manuales (esta sesión)</div>
+      <div id="histList"></div>
+    </div>
+
+  </div>
+
+  <div class="footer-brand">
+    <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
+    Largotek Transformación Digital
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/admin-predictions.js"></script>
+
+</body>
+</html>
