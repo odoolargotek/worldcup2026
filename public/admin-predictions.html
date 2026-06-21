@@ -80,13 +80,28 @@
       white-space: pre-wrap; margin-top: 12px;
     }
     .log-box.visible { display: block; }
-    /* Historial */
     .hist-row {
       display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
       padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
       font-size: 0.82rem;
     }
     .hist-row:last-child { border: none; }
+
+    /* ---- Filtros de comparsa en sección futura ---- */
+    .fp-tab {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: var(--text-muted, #94a3b8);
+      border-radius: 20px;
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+    }
+    .fp-tab:hover  { border-color: #a78bfa; color: #a78bfa; }
+    .fp-tab.active { background: rgba(167,139,250,0.15); border-color: #a78bfa; color: #a78bfa; font-weight: 800; }
   </style>
 </head>
 <body>
@@ -107,12 +122,44 @@
 
   <div class="container py-4" style="max-width:720px">
 
-    <div class="mb-4">
-      <h5 style="color:var(--gold);font-weight:800;margin:0">✏️ Registro Manual de Pronóstico</h5>
-      <p style="font-size:0.83rem;color:var(--text-muted);margin-top:4px">
-        Ingresa pronósticos en nombre de un jugador — para partidos pasados o futuros.
-        Los puntos se calculan automáticamente si el partido ya tiene resultado.
-      </p>
+    <!-- Título y botón de sección futura -->
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-3 mb-4">
+      <div>
+        <h5 style="color:var(--gold);font-weight:800;margin:0">✏️ Registro Manual de Pronóstico</h5>
+        <p style="font-size:0.83rem;color:var(--text-muted);margin-top:4px;margin-bottom:0">
+          Ingresa pronósticos en nombre de un jugador — para partidos pasados o futuros.
+          Los puntos se calculan automáticamente si el partido ya tiene resultado.
+        </p>
+      </div>
+      <button id="btnToggleFuture"
+        style="background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.35);color:#a78bfa;border-radius:10px;padding:9px 16px;font-weight:700;font-size:13px;white-space:nowrap;cursor:pointer">
+        🔮 Ver pronósticos de partidos futuros
+      </button>
+    </div>
+
+    <!-- ═══════════════════════════════════════════ -->
+    <!-- SECCIÓN: PRONÓSTICOS FUTUROS               -->
+    <!-- ═══════════════════════════════════════════ -->
+    <div id="futurePredSection" style="display:none;margin-bottom:28px">
+      <div class="step-card" style="border-color:rgba(167,139,250,0.3)">
+        <div class="d-flex align-items-center gap-2 mb-3" style="flex-wrap:wrap">
+          <span style="font-size:1.2rem">🔮</span>
+          <div>
+            <div style="font-weight:800;font-size:0.95rem;color:#a78bfa">Pronósticos de Partidos Futuros</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-top:1px">Todos los pronósticos registrados para partidos que aún no han comenzado. El estado <span style="color:#a78bfa;font-weight:700">⏰ A FUTURO</span> indica que el resultado no es oficial todavía.</div>
+          </div>
+        </div>
+
+        <!-- Filtro de comparsa -->
+        <div id="futureGroupTabs" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+          <span style="color:var(--text-muted);font-size:12px;align-self:center">⏳ Cargando…</span>
+        </div>
+
+        <!-- Contenido -->
+        <div id="futurePredContent">
+          <div style="color:var(--text-muted);text-align:center;padding:30px">⏳ Cargando…</div>
+        </div>
+      </div>
     </div>
 
     <!-- STEP 1: Grupo -->
