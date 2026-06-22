@@ -11,7 +11,6 @@ document.querySelectorAll('[data-atab]').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('[data-atab]').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    // 'streams' incluido para que atab-streams no quede con d-none
     ['overview','results','matches','groupsmgr','tvaccess','streams'].forEach(t => {
       document.getElementById('atab-' + t)?.classList.toggle('d-none', btn.dataset.atab !== t);
     });
@@ -64,7 +63,6 @@ async function loadMatchesInProgress() {
 async function loadMatchesDone() {
   const snap = await getDocs(query(collection(db, 'matches'), orderBy('kickoff')));
 
-  // Select resetear: solo los cerrados (finished=true)
   const sel = document.getElementById('matchSelectDone');
   if (sel) {
     const done = snap.docs.filter(d => d.data().finished === true);
@@ -76,7 +74,6 @@ async function loadMatchesDone() {
       : '<option>Sin partidos cerrados</option>';
   }
 
-  // Select recalcular: TODOS los partidos con marcador (abiertos o cerrados)
   const selRecalc = document.getElementById('matchSelectRecalc');
   if (selRecalc) {
     const withScore = snap.docs.filter(d => {
@@ -91,16 +88,47 @@ async function loadMatchesDone() {
         }).join('')
       : '<option>Sin partidos con marcador</option>';
   }
+
+  // Selector para recalc-favs
+  const selFavs = document.getElementById('matchSelectRecalcFavs');
+  if (selFavs) {
+    const withScore = snap.docs.filter(d => {
+      const m = d.data();
+      return m.home_score !== undefined && m.home_score !== null;
+    });
+    selFavs.innerHTML = withScore.length
+      ? withScore.map(d => {
+          const m = d.data();
+          const badge2 = m.finished ? ' ✅' : ' 🔴';
+          return '<option value="' + d.id + '">' + (m.home_flag||'') + ' ' + m.home_team + ' ' + m.home_score + '-' + m.away_score + ' ' + m.away_team + ' ' + (m.away_flag||'') + badge2 + ' — ' + m.phase + '</option>';
+        }).join('')
+      : '<option>Sin partidos con marcador</option>';
+  }
 }
 
-// ── HELPER: calcula puntos ──
-// Los pronósticos se guardan como home_score / away_score en la colección predictions
+// ── HELPER: calcula puntos de pronósticos ──
 function calcPoints(actualH, actualA, predH, predA) {
   if (predH === undefined || predH === null || predA === undefined || predA === null) return 0;
   if (predH === actualH && predA === actualA) return 6;
   const predOut   = predH > predA ? 'H' : predA > predH ? 'A' : 'D';
   const actualOut = actualH > actualA ? 'H' : actualA > actualH ? 'A' : 'D';
   return predOut === actualOut ? 3 : 0;
+}
+
+/**
+ * FIX: Calcula puntos de favorito normalizando nombres (trim + lowercase).
+ * Evita que diferencias de espacios o tildes rompan el match.
+ * Retorna 0, 1 o 3.
+ */
+function calcFavPts(favTeam, homeTeam, awayTeam, hs, as_) {
+  if (!favTeam) return 0;
+  const norm = s => String(s).trim().toLowerCase();
+  const fav  = norm(favTeam);
+  const home = norm(homeTeam);
+  const away = norm(awayTeam);
+  if (fav === home) return hs > as_ ? 3 : hs === as_ ? 1 : 0;
+  if (fav === away) return as_ > hs ? 3 : hs === as_ ? 1 : 0;
+  return 0;
 }
 
 // ── GUARDAR RESULTADO PARCIAL ──
@@ -116,7 +144,7 @@ document.getElementById('saveResultBtn')?.addEventListener('click', async () => 
   const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id', '==', mid)));
   const batch = writeBatch(db);
   predsSnap.forEach(predDoc => {
-    const p  = predDoc.data();
+    const p   = predDoc.data();
     const pts = calcPoints(hs, as_, p.home_score, p.away_score);
     batch.update(predDoc.ref, { points: pts });
   });
@@ -130,6 +158,7 @@ document.getElementById('saveResultBtn')?.addEventListener('click', async () => 
 });
 
 // ── CERRAR PARTIDO (finished = true) ──
+// FIX: ahora usa recalcFavoritesForMatch() que es idempotente — nunca suma doble.
 document.getElementById('closeMatchBtn')?.addEventListener('click', async () => {
   const mid = document.getElementById('matchSelectClose').value;
   const msg = document.getElementById('closeMatchMsg');
@@ -140,32 +169,19 @@ document.getElementById('closeMatchBtn')?.addEventListener('click', async () => 
   const matchData = matchSnap.data();
   const hs    = matchData.home_score;
   const as_   = matchData.away_score;
-  const phase = matchData.phase || '';
 
   await updateDoc(doc(db, 'matches', mid), { finished: true, match_status: 'FT' });
 
   const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id', '==', mid)));
   const batch = writeBatch(db);
   predsSnap.forEach(predDoc => {
-    const p  = predDoc.data();
+    const p   = predDoc.data();
     const pts = calcPoints(hs, as_, p.home_score, p.away_score);
     batch.update(predDoc.ref, { points: pts, points_synced: true });
   });
 
-  const allMembersSnap = await getDocs(collection(db, 'group_members'));
-  let favCount = 0;
-  allMembersSnap.forEach(mDoc => {
-    const m       = mDoc.data();
-    const favTeam = (m.favorites || {})[phase];
-    let favPts = 0;
-    if (favTeam === matchData.home_team)      favPts = hs > as_ ? 3 : hs === as_ ? 1 : 0;
-    else if (favTeam === matchData.away_team) favPts = as_ > hs ? 3 : hs === as_ ? 1 : 0;
-    if (favPts > 0) {
-      const current = (m.favorites_pts || {})[phase] || 0;
-      batch.update(mDoc.ref, { ['favorites_pts.' + phase]: current + favPts });
-      favCount++;
-    }
-  });
+  // ✅ FIX: recalcular favoritos de forma IDEMPOTENTE
+  const { favCount } = await recalcFavoritesForMatch(matchData, mid, batch);
   await batch.commit();
 
   msg.innerHTML = '<div class="mt-2 p-2 rounded" style="background:rgba(22,163,74,0.15);border:1px solid var(--green);color:var(--green-light)">' +
@@ -175,7 +191,63 @@ document.getElementById('closeMatchBtn')?.addEventListener('click', async () => 
   await loadMatchesDone();
 });
 
-// ── RECALCULAR PUNTOS (abierto o cerrado, mientras tenga marcador) ──
+/**
+ * FIX PRINCIPAL: Recalcula favorites_pts[phase] de forma IDEMPOTENTE.
+ * - Guarda los puntos por partido en favorites_pts_by_match[matchId]
+ * - Recalcula el total del grupo sumando TODOS los partidos con resultado
+ * - Nunca acumula doble aunque se llame varias veces
+ */
+async function recalcFavoritesForMatch(matchData, mid, existingBatch) {
+  const hs    = matchData.home_score;
+  const as_   = matchData.away_score;
+  const phase = matchData.phase || '';
+
+  // Todos los partidos del mismo grupo con resultado para recalcular el acumulado
+  const allMatchesSnap = await getDocs(query(collection(db, 'matches'), orderBy('kickoff')));
+  const phaseMatches   = allMatchesSnap.docs
+    .filter(d => d.data().phase === phase && d.data().home_score != null)
+    .map(d => ({ id: d.id, ...d.data() }));
+
+  const allMembersSnap = await getDocs(collection(db, 'group_members'));
+  const useBatch = existingBatch || writeBatch(db);
+  let favCount = 0;
+
+  allMembersSnap.forEach(mDoc => {
+    const m       = mDoc.data();
+    const favTeam = (m.favorites || {})[phase];
+    if (!favTeam) return;
+
+    const byMatch = { ...(m.favorites_pts_by_match || {}) };
+
+    // Puntos del partido actual
+    const ptsThisMatch = calcFavPts(favTeam, matchData.home_team, matchData.away_team, hs, as_);
+    byMatch[mid] = ptsThisMatch;
+
+    // Total del grupo = suma de TODOS los partidos del grupo con resultado
+    let phaseTotal = 0;
+    phaseMatches.forEach(pm => {
+      if (pm.id === mid) {
+        phaseTotal += ptsThisMatch;
+      } else {
+        const stored = byMatch[pm.id];
+        phaseTotal += stored !== undefined
+          ? stored
+          : calcFavPts(favTeam, pm.home_team, pm.away_team, pm.home_score, pm.away_score);
+      }
+    });
+
+    useBatch.update(mDoc.ref, {
+      ['favorites_pts.' + phase]:        phaseTotal,
+      ['favorites_pts_by_match.' + mid]: ptsThisMatch,
+    });
+    favCount++;
+  });
+
+  if (!existingBatch) await useBatch.commit();
+  return { favCount };
+}
+
+// ── RECALCULAR PUNTOS DE PRONÓSTICOS ──
 document.getElementById('recalcPtsBtn')?.addEventListener('click', async () => {
   const mid = document.getElementById('matchSelectRecalc').value;
   const msg = document.getElementById('recalcMsg');
@@ -196,7 +268,7 @@ document.getElementById('recalcPtsBtn')?.addEventListener('click', async () => {
   let recalcCount = 0;
 
   predsSnap.forEach(predDoc => {
-    const p  = predDoc.data();
+    const p   = predDoc.data();
     const pts = calcPoints(hs, as_, p.home_score, p.away_score);
     batch.update(predDoc.ref, { points: pts, points_synced: true });
     recalcCount++;
@@ -211,6 +283,38 @@ document.getElementById('recalcPtsBtn')?.addEventListener('click', async () => {
   await loadMatchesDone();
 });
 
+// ── RECALCULAR FAVORITOS (botón nuevo) ──
+document.getElementById('recalcFavsBtn')?.addEventListener('click', async () => {
+  const mid = document.getElementById('matchSelectRecalcFavs').value;
+  const msg = document.getElementById('recalcFavsMsg');
+  if (!mid) { msg.innerHTML = badge('Selecciona un partido', 'danger'); return; }
+
+  const btn = document.getElementById('recalcFavsBtn');
+  btn.disabled = true; btn.textContent = '⏳ Recalculando...';
+
+  const matchSnap = await getDoc(doc(db, 'matches', mid));
+  const matchData = matchSnap.data();
+
+  if (matchData.home_score == null) {
+    msg.innerHTML = badge('El partido no tiene marcador aún', 'danger');
+    btn.disabled = false; btn.textContent = '🏆 Recalcular favoritos';
+    return;
+  }
+
+  const { favCount } = await recalcFavoritesForMatch(matchData, mid, null);
+
+  const hs  = matchData.home_score;
+  const as_ = matchData.away_score;
+  const estado = matchData.finished ? '✅ FINAL' : '🔴 EN JUEGO';
+  msg.innerHTML = '<div class="mt-2 p-2 rounded" style="background:rgba(52,211,153,0.12);border:1px solid #34d399;color:#34d399">' +
+    '✅ Favoritos recalculados — ' + favCount + ' jugadores actualizados — ' +
+    matchData.home_team + ' ' + hs + '-' + as_ + ' ' + matchData.away_team +
+    ' (' + matchData.phase + ') <span style="font-size:11px;opacity:0.7">(' + estado + ')</span></div>';
+
+  btn.disabled = false; btn.textContent = '🏆 Recalcular favoritos';
+  await loadMatchesDone();
+});
+
 // ── RESETEAR RESULTADO ──
 document.getElementById('resetResultBtn')?.addEventListener('click', async () => {
   const mid = document.getElementById('matchSelectDone').value;
@@ -221,8 +325,6 @@ document.getElementById('resetResultBtn')?.addEventListener('click', async () =>
   const matchSnap = await getDoc(doc(db, 'matches', mid));
   const matchData = matchSnap.data();
   const phase = matchData.phase || '';
-  const hs    = matchData.home_score;
-  const as_   = matchData.away_score;
 
   const predsSnap      = await getDocs(query(collection(db, 'predictions'), where('match_id', '==', mid)));
   const allMembersSnap = await getDocs(collection(db, 'group_members'));
@@ -230,17 +332,22 @@ document.getElementById('resetResultBtn')?.addEventListener('click', async () =>
 
   predsSnap.forEach(predDoc => batch.update(predDoc.ref, { points: 0, points_synced: false }));
 
+  // FIX: usar el valor guardado en favorites_pts_by_match para restar exactamente lo correcto
   allMembersSnap.forEach(mDoc => {
     const m       = mDoc.data();
     const favTeam = (m.favorites || {})[phase];
-    let favPts = 0;
-    if (favTeam === matchData.home_team)      favPts = hs > as_ ? 3 : hs === as_ ? 1 : 0;
-    else if (favTeam === matchData.away_team) favPts = as_ > hs ? 3 : hs === as_ ? 1 : 0;
-    if (favPts > 0) {
+    if (!favTeam) return;
+    const byMatch  = m.favorites_pts_by_match || {};
+    const ptsToRem = byMatch[mid] || 0;
+    if (ptsToRem > 0) {
       const current = (m.favorites_pts || {})[phase] || 0;
-      batch.update(mDoc.ref, { ['favorites_pts.' + phase]: Math.max(0, current - favPts) });
+      batch.update(mDoc.ref, {
+        ['favorites_pts.' + phase]:        Math.max(0, current - ptsToRem),
+        ['favorites_pts_by_match.' + mid]: 0,
+      });
     }
   });
+
   await batch.commit();
   await updateDoc(doc(db, 'matches', mid), { home_score: null, away_score: null, finished: false, match_status: '' });
 
