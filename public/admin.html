@@ -170,18 +170,32 @@
         </div>
       </div>
 
-      <!-- FILA 2: Recalcular puntos + Resetear -->
+      <!-- FILA 2: Recalcular puntos + Recalcular favoritos -->
       <div class="row g-4 mb-4">
         <div class="col-md-6">
           <div class="card p-4" style="border-color:rgba(167,139,250,0.35);background:rgba(167,139,250,0.04)">
-            <h6 style="color:#a78bfa;font-weight:700" class="mb-3">🔁 Recalcular puntos de partido cerrado</h6>
-            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px">Vuelve a calcular los puntos de todos los pronósticos de un partido ya cerrado. Útil si los puntos quedaron en 0 por un bug anterior.</p>
-            <label class="form-label">Partido cerrado (FINAL)</label>
+            <h6 style="color:#a78bfa;font-weight:700" class="mb-3">🔁 Recalcular puntos de pronósticos</h6>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px">Vuelve a calcular los puntos de todos los pronósticos de un partido. Útil si los puntos quedaron en 0 por un bug anterior.</p>
+            <label class="form-label">Partido con marcador</label>
             <select id="matchSelectRecalc" class="form-select mb-3"></select>
             <button id="recalcPtsBtn" class="btn w-100" style="background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;font-weight:700">🔁 Recalcular puntos ahora</button>
             <div id="recalcMsg" class="mt-3"></div>
           </div>
         </div>
+        <div class="col-md-6">
+          <div class="card p-4" style="border-color:rgba(52,211,153,0.45);background:rgba(52,211,153,0.04)">
+            <h6 style="color:#34d399;font-weight:700" class="mb-3">🏆 Recalcular favoritos</h6>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px">Recalcula los puntos de favoritos de un partido de forma <strong style="color:#34d399">idempotente</strong>. Corrige empates o victorias que no sumaron correctamente. <strong>No resetea el partido.</strong></p>
+            <label class="form-label">Partido con marcador</label>
+            <select id="matchSelectRecalcFavs" class="form-select mb-3"></select>
+            <button id="recalcFavsBtn" class="btn w-100" style="background:linear-gradient(135deg,#059669,#34d399);color:#fff;font-weight:700">🏆 Recalcular favoritos</button>
+            <div id="recalcFavsMsg" class="mt-3"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILA 3: Resetear -->
+      <div class="row g-4 mb-4">
         <div class="col-md-6">
           <div class="card p-4">
             <h6 style="color:#f87171;font-weight:700" class="mb-3">🔄 Resetear Resultado</h6>
@@ -371,7 +385,6 @@
     <!-- TAB STREAMS MANUALES -->
     <div id="atab-streams" class="d-none">
 
-      <!-- Aviso informativo -->
       <div class="sync-card mb-4" style="border-color:rgba(74,175,212,0.4);background:rgba(74,175,212,0.05)">
         <div class="d-flex align-items-start gap-3">
           <div style="font-size:2rem">📡</div>
@@ -387,7 +400,6 @@
       </div>
 
       <div class="row g-4">
-        <!-- Editor JSON -->
         <div class="col-lg-7">
           <div class="card p-4">
             <div class="d-flex align-items-center justify-content-between mb-3">
@@ -417,7 +429,6 @@
           </div>
         </div>
 
-        <!-- Vista previa + estado actual -->
         <div class="col-lg-5">
           <div class="card p-4 mb-3">
             <h6 style="color:#a78bfa;font-weight:700;margin-bottom:12px">👁️ Vista previa</h6>
@@ -760,90 +771,4 @@
 
     function renderPreview(data){
       if (!Array.isArray(data) || data.length === 0){
-        previewEl.innerHTML = '<span style="color:var(--text-muted)">Array vacío — no se mostrarán streams.</span>';
-        return;
-      }
-      previewEl.innerHTML = data.map(item => `
-        <div class="streams-preview-item">
-          <div class="streams-preview-match">⚽ ${item.match || '(sin nombre)'}</div>
-          <div>${(item.streams||[]).map(s=>
-            `<a class="streams-preview-link" href="${s.url}" target="_blank" rel="noopener">
-              ${s.label || 'Link'} <span style="font-size:10px;opacity:0.6">↗</span>
-            </a>`
-          ).join('')}</div>
-        </div>
-      `).join('');
-    }
-
-    async function loadCurrentStreams(){
-      statusEl.innerHTML = '<span style="color:var(--text-muted)">⏳ Cargando...</span>';
-      try {
-        const snap = await getDoc(DOCREF());
-        if (!snap.exists()) {
-          statusEl.innerHTML = '<span style="color:var(--text-muted)">Sin datos guardados todavía.</span>';
-          editor.value = '[]';
-          return;
-        }
-        const data = snap.data();
-        const streams = data.streams || [];
-        const ts = data.updated_at?.toDate?.();
-        const fmt = ts ? ts.toLocaleString('es-BO',{timeZone:'America/La_Paz',day:'2-digit',month:'short',hour:'numeric',minute:'2-digit',hour12:true}) : 'fecha desconocida';
-        statusEl.innerHTML = `
-          <div style="margin-bottom:8px">🕐 Guardado: <strong style="color:#34d399">${fmt}</strong></div>
-          <div>📋 Partidos: <strong style="color:#4aafd4">${streams.length}</strong> | 
-               🔗 Links totales: <strong style="color:#a78bfa">${streams.reduce((acc,m)=>acc+(m.streams?.length||0),0)}</strong></div>
-        `;
-        editor.value = JSON.stringify(streams, null, 2);
-        renderPreview(streams);
-      } catch(e) {
-        statusEl.innerHTML = `<span style="color:#f5a0ac">❌ Error: ${e.message}</span>`;
-      }
-    }
-
-    document.getElementById('btnSaveStreams').addEventListener('click', async () => {
-      const btn = document.getElementById('btnSaveStreams');
-      let parsed;
-      try {
-        parsed = JSON.parse(editor.value);
-      } catch(e) {
-        showMsg(`❌ JSON inválido: ${e.message}`, false);
-        return;
-      }
-      if (!Array.isArray(parsed)) { showMsg('❌ Debe ser un array JSON [ ... ]', false); return; }
-      btn.disabled = true; btn.textContent = '⏳ Guardando...';
-      try {
-        await setDoc(DOCREF(), { streams: parsed, updated_at: Timestamp.now() });
-        showMsg(`✅ ${parsed.length} partido(s) guardados correctamente`);
-        await loadCurrentStreams();
-      } catch(e) {
-        showMsg(`❌ Error al guardar: ${e.message}`, false);
-      }
-      btn.disabled = false; btn.textContent = '💾 Guardar en Firestore';
-    });
-
-    document.getElementById('btnPreviewStreams').addEventListener('click', () => {
-      try {
-        const parsed = JSON.parse(editor.value);
-        renderPreview(parsed);
-      } catch(e) {
-        previewEl.innerHTML = `<span style="color:#f5a0ac">❌ JSON inválido: ${e.message}</span>`;
-      }
-    });
-
-    document.getElementById('btnClearStreams').addEventListener('click', () => {
-      editor.value = '[]';
-      previewEl.innerHTML = '<span style="color:var(--text-muted)">Editor limpiado.</span>';
-    });
-
-    document.getElementById('btnLoadStreams').addEventListener('click', loadCurrentStreams);
-    const streamsDiv = document.getElementById('atab-streams'); let streamsLoaded = false;
-    new MutationObserver(() => {
-      if (!streamsDiv.classList.contains('d-none') && !streamsLoaded) {
-        streamsLoaded = true;
-        loadCurrentStreams();
-      }
-    }).observe(streamsDiv, { attributes: true, attributeFilter: ['class'] });
-  </script>
-
-</body>
-</html>
+        previewEl.innerHTML = '<span style="color:var(--text-muted)">Array
