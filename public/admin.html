@@ -55,7 +55,6 @@
     .sync-log { font-size: 12px; margin-top: 12px; padding: 10px 14px; border-radius: 8px; background: rgba(0,0,0,0.25); color: var(--text-muted); display: none; max-height: 200px; overflow-y: auto; white-space: pre-wrap; }
     .sync-log.visible { display: block; }
     .section-title { font-size: 12px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
-    /* Streams editor */
     #streamsJsonEditor {
       width: 100%; min-height: 380px; font-family: 'Courier New', monospace;
       font-size: 12.5px; line-height: 1.6;
@@ -185,7 +184,7 @@
         <div class="col-md-6">
           <div class="card p-4" style="border-color:rgba(52,211,153,0.45);background:rgba(52,211,153,0.04)">
             <h6 style="color:#34d399;font-weight:700" class="mb-3">🏆 Recalcular favoritos</h6>
-            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px">Recalcula los puntos de favoritos de un partido de forma <strong style="color:#34d399">idempotente</strong>. Corrige empates o victorias que no sumaron correctamente. <strong>No resetea el partido.</strong></p>
+            <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px">Recalcula los puntos de favoritos de un partido de forma <strong style="color:#34d399">idempotente</strong>. Corrige empates o victorias que no sumaron correctamente.</p>
             <label class="form-label">Partido con marcador</label>
             <select id="matchSelectRecalcFavs" class="form-select mb-3"></select>
             <button id="recalcFavsBtn" class="btn w-100" style="background:linear-gradient(135deg,#059669,#34d399);color:#fff;font-weight:700">🏆 Recalcular favoritos</button>
@@ -211,8 +210,6 @@
 
     <!-- TAB PARTIDOS -->
     <div id="atab-matches" class="d-none">
-
-      <!-- FILA: Corregir nombres + Corregir favoritos -->
       <div class="row g-3 mb-3">
         <div class="col-md-6">
           <div class="sync-card orange">
@@ -220,9 +217,7 @@
               <div style="font-size:2rem">🔧</div>
               <div style="flex:1;min-width:0">
                 <div style="font-weight:800;font-size:0.95rem;color:#fb923c">🔧 Corregir nombres duplicados</div>
-                <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
-                  Normaliza nombres inconsistentes. <strong style="color:#fb923c">No borra partidos ni pronósticos.</strong>
-                </div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Normaliza nombres inconsistentes. <strong style="color:#fb923c">No borra partidos ni pronósticos.</strong></div>
               </div>
               <button id="btnFixNames" class="sync-btn sync-btn-orange">🔧 Corregir ahora</button>
             </div>
@@ -235,10 +230,7 @@
               <div style="font-size:2rem">⭐</div>
               <div style="flex:1;min-width:0">
                 <div style="font-weight:800;font-size:0.95rem;color:#f59e0b">⭐ Corregir grupos de favoritos</div>
-                <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
-                  Reasigna cada equipo favorito a su grupo correcto.
-                  <strong style="color:#f59e0b">No toca pronósticos ni puntos.</strong>
-                </div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Reasigna cada equipo favorito a su grupo correcto. <strong style="color:#f59e0b">No toca pronósticos ni puntos.</strong></div>
               </div>
               <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
                 <button id="btnFixFavsDry" class="sync-btn" style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.4);font-size:0.82rem;padding:7px 14px">🔍 Vista previa</button>
@@ -250,7 +242,6 @@
         </div>
       </div>
 
-      <!-- FILA: Parche manual de favoritos + Limpiar penalidades -->
       <div class="row g-3 mb-4">
         <div class="col-md-6">
           <div class="sync-card" style="border-color:rgba(99,179,237,0.45);background:rgba(99,179,237,0.05)">
@@ -258,12 +249,7 @@
               <div style="font-size:2rem">✏️</div>
               <div style="flex:1;min-width:0">
                 <div style="font-weight:800;font-size:0.95rem;color:#63b3ed">✏️ Parche manual de favoritos</div>
-                <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
-                  Fuerza valores específicos que el script automático no pudo resolver.
-                  <span style="color:#63b3ed;font-weight:700">El Bedre</span>:
-                  <span style="color:#34d399">Grupo K → 🇵🇹 Portugal</span> &nbsp;|&nbsp;
-                  <span style="color:#34d399">Grupo L → 🏴󠁧󠁢󠁥󠁮󠁧󠁿 Inglaterra</span>
-                </div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Fuerza valores específicos que el script automático no pudo resolver.</div>
               </div>
               <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
                 <button id="btnPatchFavsDry" class="sync-btn" style="background:rgba(99,179,237,0.15);color:#63b3ed;border:1px solid rgba(99,179,237,0.4);font-size:0.82rem;padding:7px 14px">🔍 Vista previa</button>
@@ -279,12 +265,7 @@
               <div style="font-size:2rem">🧹</div>
               <div style="flex:1;min-width:0">
                 <div style="font-weight:800;font-size:0.95rem;color:#f87171">🧹 Limpiar penalidades de grupos vacíos</div>
-                <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
-                  Elimina penalidades de grupos donde el jugador <strong style="color:#f87171">aún no eligió</strong> equipo.
-                  <span style="color:#63b3ed;font-weight:700">El Bedre</span>:
-                  <span style="color:#fca5a5">Grupo B</span> &nbsp;|&nbsp;
-                  <span style="color:#fca5a5">Grupo D</span>
-                </div>
+                <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Elimina penalidades de grupos donde el jugador <strong style="color:#f87171">aún no eligió</strong> equipo.</div>
               </div>
               <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
                 <button id="btnCleanPenDry" class="sync-btn" style="background:rgba(239,68,68,0.12);color:#f87171;border:1px solid rgba(239,68,68,0.35);font-size:0.82rem;padding:7px 14px">🔍 Vista previa</button>
@@ -356,17 +337,13 @@
           <div style="font-size:2rem">📡</div>
           <div style="flex:1;min-width:0">
             <div style="font-weight:800;font-size:0.95rem;color:#a78bfa">Sincronizar canales de streaming</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">
-              Actualiza los canales de transmisión desde TheSportsDB para los partidos de hoy.
-              <span style="color:rgba(167,139,250,0.8)">Se ejecuta automáticamente cada día a las 9:30 AM (Bolivia).</span>
-            </div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Actualiza los canales desde TheSportsDB para los partidos de hoy. <span style="color:rgba(167,139,250,0.8)">Se ejecuta automáticamente cada día a las 9:30 AM (Bolivia).</span></div>
           </div>
           <button id="btnSyncStreaming" class="sync-btn sync-btn-purple">📡 Actualizar canales hoy</button>
         </div>
         <div id="logSyncStreaming" class="sync-log"></div>
         <div id="streamingLastSync" style="margin-top:10px;font-size:11px;color:var(--text-muted)"></div>
       </div>
-
       <div class="card p-4">
         <h6 style="color:#4aafd4;font-weight:700" class="mb-1">📺 Gestión de acceso TV</h6>
         <p style="font-size:0.83rem;color:var(--text-muted);margin-bottom:20px">Solo los usuarios con acceso habilitado verán la pestaña "Ver en vivo" en su dashboard.</p>
@@ -384,7 +361,6 @@
 
     <!-- TAB STREAMS MANUALES -->
     <div id="atab-streams" class="d-none">
-
       <div class="sync-card mb-4" style="border-color:rgba(74,175,212,0.4);background:rgba(74,175,212,0.05)">
         <div class="d-flex align-items-start gap-3">
           <div style="font-size:2rem">📡</div>
@@ -393,7 +369,7 @@
             <div style="font-size:12px;color:var(--text-muted);margin-top:4px;line-height:1.7">
               Pega aquí el JSON con los streams del día. Se guarda en <code style="color:#a78bfa">app_config/live_streams</code> en Firestore
               y los usuarios con acceso TV lo verán de inmediato en la pestaña <strong>Ver en vivo</strong>.
-              <br>Si el array está vacío o no hay JSON guardado, se muestra el mensaje "Sin transmisiones disponibles".
+              <br>Si el array está vacío o no hay JSON guardado, se muestra "Sin transmisiones disponibles".
             </div>
           </div>
         </div>
@@ -410,7 +386,7 @@
               </div>
             </div>
             <p style="font-size:11px;color:var(--text-muted);margin-bottom:10px">
-              Formato: array de objetos <code style="color:#a78bfa">[{ "match": "...", "streams": [{"label": "🇪🇸 Español", "url": "..."}] }]</code>
+              Formato: <code style="color:#a78bfa">[{ "match": "...", "streams": [{"label": "🇪🇸 Español", "url": "..."}] }]</code>
             </p>
             <textarea id="streamsJsonEditor" placeholder='[
   {
@@ -423,7 +399,7 @@
 ]'></textarea>
             <div class="d-flex gap-2 mt-3">
               <button id="btnPreviewStreams" class="btn btn-sm" style="background:rgba(167,139,250,0.15);color:#a78bfa;border:1px solid rgba(167,139,250,0.3);font-weight:700">👁️ Vista previa</button>
-              <button id="btnSaveStreams" class="btn btn-sm sync-btn-blue sync-btn" style="padding:6px 20px">💾 Guardar en Firestore</button>
+              <button id="btnSaveStreams" class="sync-btn sync-btn-blue" style="padding:6px 20px;font-size:0.85rem">💾 Guardar en Firestore</button>
             </div>
             <div id="streamsMsg" class="mt-3"></div>
           </div>
@@ -436,7 +412,7 @@
           </div>
           <div class="card p-4">
             <h6 style="color:#34d399;font-weight:700;margin-bottom:8px">☁️ Estado actual en Firestore</h6>
-            <div id="streamsCurrentStatus" style="color:var(--text-muted);font-size:12px">Pulsa «Cargar actual» para ver el JSON guardado.</div>
+            <div id="streamsCurrentStatus" style="color:var(--text-muted);font-size:12px">Cargando automáticamente al abrir este tab...</div>
           </div>
         </div>
       </div>
@@ -444,7 +420,7 @@
 
   </div>
 
-  <!-- Modales -->
+  <!-- Modal eliminar comparsa -->
   <div class="modal fade" id="confirmDeleteModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content" style="background:var(--bg-card);border:1px solid #ef4444;color:var(--text)">
@@ -479,17 +455,10 @@
       log.innerHTML = ''; log.classList.add('visible');
       document.getElementById('btnFixNames').disabled = true;
       document.getElementById('btnFixNames').textContent = '⏳ Corrigiendo...';
-      function addLine(msg, color) {
-        log.innerHTML += `<span style="color:${color||'var(--text-muted)'}">${msg}</span>\n`;
-        log.scrollTop = log.scrollHeight;
-      }
+      const addLine = (msg, color) => { log.innerHTML += `<span style="color:${color||'var(--text-muted)'}">${msg}</span>\n`; log.scrollTop = log.scrollHeight; };
       addLine('🔍 Revisando partidos en Firestore...');
-      try {
-        const { checked, fixed } = await fixTeamNames(addLine);
-        if (fixed === 0) addLine('✅ Todos los nombres ya estaban correctos', '#34d399');
-      } catch(e) {
-        addLine(`❌ Error: ${e.message}`, '#f5a0ac');
-      }
+      try { const { fixed } = await fixTeamNames(addLine); if (fixed === 0) addLine('✅ Todos los nombres ya estaban correctos', '#34d399'); }
+      catch(e) { addLine(`❌ Error: ${e.message}`, '#f5a0ac'); }
       document.getElementById('btnFixNames').disabled = false;
       document.getElementById('btnFixNames').textContent = '🔧 Corregir ahora';
     });
@@ -498,183 +467,108 @@
   <!-- FIX FAVORITOS -->
   <script type="module">
     import { fixFavoritesGroups } from './js/fix-favorites-groups.js';
-
     function setupFixFavsBtn(btnId, dryRun) {
       document.getElementById(btnId).addEventListener('click', async () => {
-        const log    = document.getElementById('logFixFavs');
-        const btnDry = document.getElementById('btnFixFavsDry');
-        const btnApp = document.getElementById('btnFixFavsApply');
-        log.innerHTML = ''; log.classList.add('visible');
-        btnDry.disabled = true; btnApp.disabled = true;
+        const log = document.getElementById('logFixFavs');
+        const btnDry = document.getElementById('btnFixFavsDry'), btnApp = document.getElementById('btnFixFavsApply');
+        log.innerHTML = ''; log.classList.add('visible'); btnDry.disabled = true; btnApp.disabled = true;
         btnDry.textContent = dryRun ? '⏳ Analizando...' : '🔍 Vista previa';
         btnApp.textContent = dryRun ? '⭐ Aplicar corrección' : '⏳ Aplicando...';
-
-        function addLine(msg, color) {
-          log.innerHTML += `<span style="color:${color||'var(--text-muted)'}">${msg}</span>\n`;
-          log.scrollTop = log.scrollHeight;
-        }
-
-        try {
-          const { checked, fixed, skipped, conflicts } = await fixFavoritesGroups({ dryRun, onLog: addLine });
-          if (!dryRun && conflicts.length === 0) {
-            addLine(`\n🎉 ${fixed} jugador(es) corregidos exitosamente.`, '#34d399');
-          }
-        } catch(e) {
-          addLine(`❌ Error: ${e.message}`, '#f5a0ac');
-        }
-
+        const addLine = (msg, color) => { log.innerHTML += `<span style="color:${color||'var(--text-muted)'}">${msg}</span>\n`; log.scrollTop = log.scrollHeight; };
+        try { const { fixed, conflicts } = await fixFavoritesGroups({ dryRun, onLog: addLine }); if (!dryRun && conflicts.length === 0) addLine(`\n🎉 ${fixed} jugador(es) corregidos.`, '#34d399'); }
+        catch(e) { addLine(`❌ Error: ${e.message}`, '#f5a0ac'); }
         btnDry.disabled = false; btnApp.disabled = false;
-        btnDry.textContent = '🔍 Vista previa';
-        btnApp.textContent = '⭐ Aplicar corrección';
+        btnDry.textContent = '🔍 Vista previa'; btnApp.textContent = '⭐ Aplicar corrección';
       });
     }
-
-    setupFixFavsBtn('btnFixFavsDry',   true);
-    setupFixFavsBtn('btnFixFavsApply', false);
+    setupFixFavsBtn('btnFixFavsDry', true); setupFixFavsBtn('btnFixFavsApply', false);
   </script>
 
-  <!-- PARCHE MANUAL DE FAVORITOS -->
+  <!-- PARCHE MANUAL + LIMPIAR PENALIDADES -->
   <script type="module">
-    import { patchFavorites } from './js/fix-favorites-manual.js';
-
-    function setupPatchBtn(btnId, dryRun) {
+    import { patchFavorites, cleanPenalties } from './js/fix-favorites-manual.js';
+    function setupBtn(btnId, fn, logId, dryBtnId, appBtnId, dryRun, labels) {
       document.getElementById(btnId).addEventListener('click', async () => {
-        const log    = document.getElementById('logPatchFavs');
-        const btnDry = document.getElementById('btnPatchFavsDry');
-        const btnApp = document.getElementById('btnPatchFavsApply');
-        log.innerHTML = ''; log.classList.add('visible');
-        btnDry.disabled = true; btnApp.disabled = true;
-        btnDry.textContent = dryRun ? '⏳ Analizando...' : '🔍 Vista previa';
-        btnApp.textContent = dryRun ? '✏️ Aplicar parche' : '⏳ Parcheando...';
-
-        function addLine(msg, color) {
-          log.innerHTML += `<span style="color:${color||'var(--text-muted)'}">${msg}</span>\n`;
-          log.scrollTop = log.scrollHeight;
-        }
-
-        try {
-          await patchFavorites({ dryRun, onLog: addLine });
-        } catch(e) {
-          addLine(`❌ Error: ${e.message}`, '#f5a0ac');
-        }
-
+        const log = document.getElementById(logId);
+        const btnDry = document.getElementById(dryBtnId), btnApp = document.getElementById(appBtnId);
+        log.innerHTML = ''; log.classList.add('visible'); btnDry.disabled = true; btnApp.disabled = true;
+        btnDry.textContent = dryRun ? '⏳...' : labels.dry; btnApp.textContent = dryRun ? labels.apply : '⏳...';
+        const addLine = (msg, color) => { log.innerHTML += `<span style="color:${color||'var(--text-muted)'}">${msg}</span>\n`; log.scrollTop = log.scrollHeight; };
+        try { await fn({ dryRun, onLog: addLine }); } catch(e) { addLine(`❌ Error: ${e.message}`, '#f5a0ac'); }
         btnDry.disabled = false; btnApp.disabled = false;
-        btnDry.textContent = '🔍 Vista previa';
-        btnApp.textContent = '✏️ Aplicar parche';
+        btnDry.textContent = labels.dry; btnApp.textContent = labels.apply;
       });
     }
-
-    setupPatchBtn('btnPatchFavsDry',   true);
-    setupPatchBtn('btnPatchFavsApply', false);
-  </script>
-
-  <!-- LIMPIAR PENALIDADES DE GRUPOS VACÍOS -->
-  <script type="module">
-    import { cleanPenalties } from './js/fix-favorites-manual.js';
-
-    function setupCleanPenBtn(btnId, dryRun) {
-      document.getElementById(btnId).addEventListener('click', async () => {
-        const log    = document.getElementById('logCleanPen');
-        const btnDry = document.getElementById('btnCleanPenDry');
-        const btnApp = document.getElementById('btnCleanPenApply');
-        log.innerHTML = ''; log.classList.add('visible');
-        btnDry.disabled = true; btnApp.disabled = true;
-        btnDry.textContent = dryRun ? '⏳ Analizando...' : '🔍 Vista previa';
-        btnApp.textContent = dryRun ? '🧹 Limpiar penalidades' : '⏳ Limpiando...';
-
-        function addLine(msg, color) {
-          log.innerHTML += `<span style="color:${color||'var(--text-muted)'}">${msg}</span>\n`;
-          log.scrollTop = log.scrollHeight;
-        }
-
-        try {
-          await cleanPenalties({ dryRun, onLog: addLine });
-        } catch(e) {
-          addLine(`❌ Error: ${e.message}`, '#f5a0ac');
-        }
-
-        btnDry.disabled = false; btnApp.disabled = false;
-        btnDry.textContent = '🔍 Vista previa';
-        btnApp.textContent = '🧹 Limpiar penalidades';
-      });
-    }
-
-    setupCleanPenBtn('btnCleanPenDry',   true);
-    setupCleanPenBtn('btnCleanPenApply', false);
+    setupBtn('btnPatchFavsDry',   patchFavorites,  'logPatchFavs', 'btnPatchFavsDry', 'btnPatchFavsApply', true,  { dry:'🔍 Vista previa', apply:'✏️ Aplicar parche' });
+    setupBtn('btnPatchFavsApply', patchFavorites,  'logPatchFavs', 'btnPatchFavsDry', 'btnPatchFavsApply', false, { dry:'🔍 Vista previa', apply:'✏️ Aplicar parche' });
+    setupBtn('btnCleanPenDry',    cleanPenalties,  'logCleanPen',  'btnCleanPenDry',  'btnCleanPenApply',  true,  { dry:'🔍 Vista previa', apply:'🧹 Limpiar' });
+    setupBtn('btnCleanPenApply',  cleanPenalties,  'logCleanPen',  'btnCleanPenDry',  'btnCleanPenApply',  false, { dry:'🔍 Vista previa', apply:'🧹 Limpiar' });
   </script>
 
   <!-- SYNC RESULTADOS + GRUPOS -->
   <script type="module">
     import { db } from './js/firebase-config.js';
     import { collection, getDocs, doc, updateDoc, writeBatch, Timestamp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
-    const TSDB = 'https://www.thesportsdb.com/api/v1/json/3';
-    const WC_LEAGUE_ID = '4429';
-    function log(elId,msg,color='var(--text-muted)'){const el=document.getElementById(elId);if(!el)return;el.classList.add('visible');el.innerHTML+=`<span style="color:${color}">${msg}</span>\n`;el.scrollTop=el.scrollHeight;}
-    function clearLog(elId){const el=document.getElementById(elId);if(el){el.innerHTML='';el.classList.add('visible');}}
-    function setBusy(id,busy,label){const b=document.getElementById(id);if(b){b.disabled=busy;b.textContent=label;}}
+    const TSDB='https://www.thesportsdb.com/api/v1/json/3',WC='4429';
+    const slog=(id,msg,c='var(--text-muted)')=>{const e=document.getElementById(id);if(!e)return;e.classList.add('visible');e.innerHTML+=`<span style="color:${c}">${msg}</span>\n`;e.scrollTop=e.scrollHeight;};
+    const clr=id=>{const e=document.getElementById(id);if(e){e.innerHTML='';e.classList.add('visible');}};
+    const busy=(id,b,l)=>{const e=document.getElementById(id);if(e){e.disabled=b;e.textContent=l;}};
     const ALIASES={'mexico':['mexico','méxico'],'usa':['usa','united states','estados unidos','united states of america'],'south korea':['south korea','corea del sur','korea republic'],'czechia':['czechia','chequia','czech republic'],'ivory coast':['ivory coast','costa de marfil',"côte d'ivoire"],'dr congo':['dr congo','rd congo','congo dr','democratic republic of congo'],'scotland':['scotland','escocia'],'netherlands':['netherlands','países bajos','holland'],'saudi arabia':['saudi arabia','arabia saudita'],'cape verde':['cape verde','cabo verde'],'bosnia':['bosnia','bosnia y herzegovina','bosnia and herzegovina'],'new zealand':['new zealand','nueva zelanda'],'turkey':['turkey','turquía','türkiye'],'qatar':['qatar','catar']};
-    function norm(n){const s=(n||'').toLowerCase().trim();for(const[c,vs]of Object.entries(ALIASES))if(vs.includes(s))return c;return s;}
-    function teamsEq(a,b){return norm(a)===norm(b);}
-    function calcPts(h,a,ph,pa){if(h===ph&&a===pa)return 6;return Math.sign(h-a)===Math.sign(ph-pa)?3:0;}
+    const norm=n=>{const s=(n||'').toLowerCase().trim();for(const[c,vs]of Object.entries(ALIASES))if(vs.includes(s))return c;return s;};
+    const teamsEq=(a,b)=>norm(a)===norm(b);
+    const calcPts=(h,a,ph,pa)=>{if(h===ph&&a===pa)return 6;return Math.sign(h-a)===Math.sign(ph-pa)?3:0;};
 
     document.getElementById('btnSyncMatches').addEventListener('click',async()=>{
-      clearLog('logSyncMatches');setBusy('btnSyncMatches',true,'⏳ Sincronizando...');
-      log('logSyncMatches','🔍 Buscando partidos activos...');
+      clr('logSyncMatches');busy('btnSyncMatches',true,'⏳ Sincronizando...');
+      slog('logSyncMatches','🔍 Buscando partidos activos...');
       try{
         const now=new Date(),from4h=new Date(now-4*3600*1000),plus1h=new Date(now+3600*1000);
         const snap=await getDocs(collection(db,'matches'));
         const active=snap.docs.filter(d=>{const ko=d.data().kickoff?.toDate?.()||new Date(d.data().kickoff);return !d.data().finished&&ko>=from4h&&ko<=plus1h;});
-        if(!active.length){log('logSyncMatches','⚠️ No hay partidos en ventana activa (±4h)','#f5a0ac');setBusy('btnSyncMatches',false,'🔄 Sincronizar partidos');return;}
-        log('logSyncMatches',`📋 ${active.length} partido(s) en ventana activa`);
-        const dates=[...new Set(active.map(d=>{const ko=d.data().kickoff?.toDate?.()||new Date(d.data().kickoff);return ko.toISOString().slice(0,10);}))];
-        const events=[];
+        if(!active.length){slog('logSyncMatches','⚠️ No hay partidos en ventana activa (±4h)','#f5a0ac');busy('btnSyncMatches',false,'🔄 Sincronizar partidos');return;}
+        slog('logSyncMatches',`📋 ${active.length} partido(s) en ventana activa`);
+        const dates=[...new Set(active.map(d=>{const ko=d.data().kickoff?.toDate?.()||new Date(d.data().kickoff);return ko.toISOString().slice(0,10);}))], events=[];
         for(const date of dates){
-          log('logSyncMatches',`📡 Consultando TheSportsDB ${date}...`);
-          const r=await fetch(`${TSDB}/eventsday.php?d=${date}&id=${WC_LEAGUE_ID}`);
-          const j=await r.json();
-          if(j.events?.length){events.push(...j.events);log('logSyncMatches',`  ✅ ${j.events.length} eventos`,'#34d399');}
-          else log('logSyncMatches',`  ⚠️ Sin eventos para ${date}`,'#f5a0ac');
+          slog('logSyncMatches',`📡 Consultando TheSportsDB ${date}...`);
+          const r=await fetch(`${TSDB}/eventsday.php?d=${date}&id=${WC}`),j=await r.json();
+          if(j.events?.length){events.push(...j.events);slog('logSyncMatches',`  ✅ ${j.events.length} eventos`,'#34d399');}
+          else slog('logSyncMatches',`  ⚠️ Sin eventos para ${date}`,'#f5a0ac');
         }
-        if(!events.length){log('logSyncMatches','❌ Sin eventos','#f5a0ac');setBusy('btnSyncMatches',false,'🔄 Sincronizar partidos');return;}
+        if(!events.length){slog('logSyncMatches','❌ Sin eventos','#f5a0ac');busy('btnSyncMatches',false,'🔄 Sincronizar partidos');return;}
         let updated=0;
-        for(const docSnap of active){
-          const m=docSnap.data();
-          const ev=events.find(e=>teamsEq(e.strHomeTeam,m.home_team)&&teamsEq(e.strAwayTeam,m.away_team));
-          if(!ev){log('logSyncMatches',`  ⚠️ Sin match: ${m.home_team} vs ${m.away_team}`);continue;}
-          const hg=ev.intHomeScore!==null&&ev.intHomeScore!==''?parseInt(ev.intHomeScore):null;
-          const ag=ev.intAwayScore!==null&&ev.intAwayScore!==''?parseInt(ev.intAwayScore):null;
-          if(hg===null&&ag===null){log('logSyncMatches',`  ⏳ Sin marcador: ${m.home_team} vs ${m.away_team}`);continue;}
-          const status=ev.strStatus||'',finished=['Match Finished','FT','AOT','PEN'].includes(status);
-          await updateDoc(doc(db,'matches',docSnap.id),{home_score:hg,away_score:ag,match_status:finished?'FT':'LIVE',finished,last_synced:Timestamp.now()});
-          log('logSyncMatches',`  ⚽ ${m.home_team} ${hg}–${ag} ${m.away_team}`,finished?'#34d399':'#4aafd4');updated++;
-          if(finished){
-            const predsSnap=await getDocs(collection(db,'predictions'));
-            const batch=writeBatch(db);let pts=0;
-            predsSnap.docs.filter(p=>p.data().match_id===docSnap.id&&!p.data().points_synced).forEach(p=>{
-              const points=calcPts(hg,ag,p.data().pred_home,p.data().pred_away);
-              batch.update(p.ref,{points,points_synced:true});pts++;
-            });
-            if(pts){await batch.commit();log('logSyncMatches',`    🏅 ${pts} pronósticos`,'#f5a0ac');}
+        for(const ds of active){
+          const m=ds.data(),ev=events.find(e=>teamsEq(e.strHomeTeam,m.home_team)&&teamsEq(e.strAwayTeam,m.away_team));
+          if(!ev){slog('logSyncMatches',`  ⚠️ Sin match: ${m.home_team} vs ${m.away_team}`);continue;}
+          const hg=ev.intHomeScore!=null&&ev.intHomeScore!==''?parseInt(ev.intHomeScore):null;
+          const ag=ev.intAwayScore!=null&&ev.intAwayScore!==''?parseInt(ev.intAwayScore):null;
+          if(hg===null&&ag===null){slog('logSyncMatches',`  ⏳ Sin marcador: ${m.home_team} vs ${m.away_team}`);continue;}
+          const fin=['Match Finished','FT','AOT','PEN'].includes(ev.strStatus||'');
+          await updateDoc(doc(db,'matches',ds.id),{home_score:hg,away_score:ag,match_status:fin?'FT':'LIVE',finished:fin,last_synced:Timestamp.now()});
+          slog('logSyncMatches',`  ⚽ ${m.home_team} ${hg}–${ag} ${m.away_team}`,fin?'#34d399':'#4aafd4');updated++;
+          if(fin){
+            const ps=await getDocs(collection(db,'predictions')),batch=writeBatch(db);let c=0;
+            ps.docs.filter(p=>p.data().match_id===ds.id&&!p.data().points_synced).forEach(p=>{batch.update(p.ref,{points:calcPts(hg,ag,p.data().pred_home,p.data().pred_away),points_synced:true});c++;});
+            if(c){await batch.commit();slog('logSyncMatches',`    🏅 ${c} pronósticos`,'#f5a0ac');}
           }
         }
-        log('logSyncMatches',`\n✅ ${updated} actualizado(s)`,'#34d399');
-      }catch(e){log('logSyncMatches',`❌ Error: ${e.message}`,'#f5a0ac');}
-      setBusy('btnSyncMatches',false,'🔄 Sincronizar partidos');
+        slog('logSyncMatches',`\n✅ ${updated} actualizado(s)`,'#34d399');
+      }catch(e){slog('logSyncMatches',`❌ Error: ${e.message}`,'#f5a0ac');}
+      busy('btnSyncMatches',false,'🔄 Sincronizar partidos');
     });
 
     document.getElementById('btnSyncGroups').addEventListener('click',async()=>{
-      clearLog('logSyncGroups');setBusy('btnSyncGroups',true,'⏳ Calculando...');
-      log('logSyncGroups','📊 Leyendo partidos...');
+      clr('logSyncGroups');busy('btnSyncGroups',true,'⏳ Calculando...');
+      slog('logSyncGroups','📊 Leyendo partidos...');
       try{
-        const snap=await getDocs(collection(db,'matches'));const standings={};
-        snap.docs.forEach(d=>{const m=d.data();if(m.home_score===null||m.home_score===undefined||!m.finished)return;if(!m.phase?.startsWith('Grupo'))return;const g=m.phase;if(!standings[g])standings[g]={};[m.home_team,m.away_team].forEach(t=>{if(!standings[g][t])standings[g][t]={pj:0,g:0,e:0,p:0,gf:0,gc:0,pts:0,flag:''};});standings[g][m.home_team].flag=m.home_flag||'';standings[g][m.away_team].flag=m.away_flag||'';const h=m.home_score,a=m.away_score;standings[g][m.home_team].pj++;standings[g][m.away_team].pj++;standings[g][m.home_team].gf+=h;standings[g][m.home_team].gc+=a;standings[g][m.away_team].gf+=a;standings[g][m.away_team].gc+=h;if(h>a){standings[g][m.home_team].g++;standings[g][m.home_team].pts+=3;standings[g][m.away_team].p++;}else if(h<a){standings[g][m.away_team].g++;standings[g][m.away_team].pts+=3;standings[g][m.home_team].p++;}else{standings[g][m.home_team].e++;standings[g][m.home_team].pts++;standings[g][m.away_team].e++;standings[g][m.away_team].pts++;}});
-        const groups=Object.keys(standings).sort();
-        if(!groups.length){log('logSyncGroups','⚠️ No hay partidos terminados','#f5a0ac');setBusy('btnSyncGroups',false,'📊 Recalcular grupos');return;}
+        const snap=await getDocs(collection(db,'matches')),st={};
+        snap.docs.forEach(d=>{const m=d.data();if(m.home_score==null||!m.finished||!m.phase?.startsWith('Grupo'))return;const g=m.phase;if(!st[g])st[g]={};[m.home_team,m.away_team].forEach(t=>{if(!st[g][t])st[g][t]={pj:0,g:0,e:0,p:0,gf:0,gc:0,pts:0,flag:''};});st[g][m.home_team].flag=m.home_flag||'';st[g][m.away_team].flag=m.away_flag||'';const h=m.home_score,a=m.away_score;st[g][m.home_team].pj++;st[g][m.away_team].pj++;st[g][m.home_team].gf+=h;st[g][m.home_team].gc+=a;st[g][m.away_team].gf+=a;st[g][m.away_team].gc+=h;if(h>a){st[g][m.home_team].g++;st[g][m.home_team].pts+=3;st[g][m.away_team].p++;}else if(h<a){st[g][m.away_team].g++;st[g][m.away_team].pts+=3;st[g][m.home_team].p++;}else{st[g][m.home_team].e++;st[g][m.home_team].pts++;st[g][m.away_team].e++;st[g][m.away_team].pts++;}});
+        const groups=Object.keys(st).sort();
+        if(!groups.length){slog('logSyncGroups','⚠️ No hay partidos terminados','#f5a0ac');busy('btnSyncGroups',false,'📊 Recalcular grupos');return;}
         const batch=writeBatch(db);
-        for(const grupo of groups){const teams=Object.entries(standings[grupo]).map(([name,s])=>({name,...s,gd:s.gf-s.gc})).sort((a,b)=>b.pts-a.pts||(b.gd-a.gd)||(b.gf-a.gf));batch.set(doc(db,'standings',grupo.replace(' ','')),{grupo,teams,updated:Timestamp.now()});log('logSyncGroups',`  📋 ${grupo}: ${teams.map(t=>`${t.flag}${t.name} ${t.pts}pts`).join(' · ')}`);}
-        await batch.commit();log('logSyncGroups',`\n✅ ${groups.length} tablas guardadas`,'#34d399');
-      }catch(e){log('logSyncGroups',`❌ Error: ${e.message}`,'#f5a0ac');}
-      setBusy('btnSyncGroups',false,'📊 Recalcular grupos');
+        for(const g of groups){const teams=Object.entries(st[g]).map(([name,s])=>({name,...s,gd:s.gf-s.gc})).sort((a,b)=>b.pts-a.pts||(b.gd-a.gd)||(b.gf-a.gf));batch.set(doc(db,'standings',g.replace(' ','')),{grupo:g,teams,updated:Timestamp.now()});slog('logSyncGroups',`  📋 ${g}: ${teams.map(t=>`${t.flag}${t.name} ${t.pts}pts`).join(' · ')}`);}
+        await batch.commit();slog('logSyncGroups',`\n✅ ${groups.length} tablas guardadas`,'#34d399');
+      }catch(e){slog('logSyncGroups',`❌ Error: ${e.message}`,'#f5a0ac');}
+      busy('btnSyncGroups',false,'📊 Recalcular grupos');
     });
   </script>
 
@@ -682,41 +576,38 @@
   <script type="module">
     import { db } from './js/firebase-config.js';
     import { collection, getDocs, doc, updateDoc, getDoc, setDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
-    const TSDB='https://www.thesportsdb.com/api/v1/json/3';
-    const WC_LEAGUE_ID='4429';
-    function slog(msg,color='var(--text-muted)'){const el=document.getElementById('logSyncStreaming');if(!el)return;el.classList.add('visible');el.innerHTML+=`<span style="color:${color}">${msg}</span>\n`;el.scrollTop=el.scrollHeight;}
-    async function loadLastSync(){try{const snap=await getDoc(doc(db,'app_config','streaming_sync'));if(snap.exists()){const d=snap.data();const ts=d.last_sync?.toDate?.();if(ts){const fmt=ts.toLocaleString('es-BO',{timeZone:'America/La_Paz',day:'2-digit',month:'short',hour:'numeric',minute:'2-digit',hour12:true});document.getElementById('streamingLastSync').innerHTML=`🕐 Última sync: <strong style="color:#a78bfa">${fmt}</strong> — ${d.matches_updated||0} partido(s)`;}}else{document.getElementById('streamingLastSync').textContent='🕐 Nunca sincronizado';}}catch(_){}}
-    async function syncStreamingChannels(){
-      const el=document.getElementById('logSyncStreaming');el.innerHTML='';el.classList.add('visible');
+    const TSDB='https://www.thesportsdb.com/api/v1/json/3',WC='4429';
+    const slog=(msg,c='var(--text-muted)')=>{const e=document.getElementById('logSyncStreaming');if(!e)return;e.classList.add('visible');e.innerHTML+=`<span style="color:${c}">${msg}</span>\n`;e.scrollTop=e.scrollHeight;};
+    async function loadLastSync(){try{const s=await getDoc(doc(db,'app_config','streaming_sync'));if(s.exists()){const d=s.data(),ts=d.last_sync?.toDate?.();if(ts){const fmt=ts.toLocaleString('es-BO',{timeZone:'America/La_Paz',day:'2-digit',month:'short',hour:'numeric',minute:'2-digit',hour12:true});document.getElementById('streamingLastSync').innerHTML=`🕐 Última sync: <strong style="color:#a78bfa">${fmt}</strong> — ${d.matches_updated||0} partido(s)`;}}else document.getElementById('streamingLastSync').textContent='🕐 Nunca sincronizado';}catch(_){}}
+    async function syncStreaming(){
+      document.getElementById('logSyncStreaming').innerHTML='';document.getElementById('logSyncStreaming').classList.add('visible');
       document.getElementById('btnSyncStreaming').disabled=true;document.getElementById('btnSyncStreaming').textContent='⏳ Actualizando...';
       slog('📡 Consultando partidos de hoy...');
       try{
-        const now=new Date(),todayStr=now.toLocaleDateString('en-CA',{timeZone:'America/La_Paz'});
-        const matchesSnap=await getDocs(collection(db,'matches'));
-        const todayMatches=matchesSnap.docs.filter(d=>{const ko=d.data().kickoff?.toDate?.()||new Date(d.data().kickoff);return ko.toLocaleDateString('en-CA',{timeZone:'America/La_Paz'})===todayStr;});
-        if(!todayMatches.length){slog(`⚠️ Sin partidos hoy (${todayStr} Bolivia)`,'#f5a0ac');document.getElementById('btnSyncStreaming').disabled=false;document.getElementById('btnSyncStreaming').textContent='📡 Actualizar canales hoy';return;}
-        slog(`📋 ${todayMatches.length} partido(s) hoy`);
-        const resp=await fetch(`${TSDB}/eventsday.php?d=${todayStr}&id=${WC_LEAGUE_ID}`);
-        const json=await resp.json();const events=json.events||[];
+        const now=new Date(),today=now.toLocaleDateString('en-CA',{timeZone:'America/La_Paz'});
+        const ms=await getDocs(collection(db,'matches'));
+        const todayM=ms.docs.filter(d=>{const ko=d.data().kickoff?.toDate?.()||new Date(d.data().kickoff);return ko.toLocaleDateString('en-CA',{timeZone:'America/La_Paz'})===today;});
+        if(!todayM.length){slog(`⚠️ Sin partidos hoy (${today} Bolivia)`,'#f5a0ac');document.getElementById('btnSyncStreaming').disabled=false;document.getElementById('btnSyncStreaming').textContent='📡 Actualizar canales hoy';return;}
+        slog(`📋 ${todayM.length} partido(s) hoy`);
+        const r=await fetch(`${TSDB}/eventsday.php?d=${today}&id=${WC}`),j=await r.json(),events=j.events||[];
         if(!events.length){slog('⚠️ Sin eventos de TheSportsDB','#f5a0ac');document.getElementById('btnSyncStreaming').disabled=false;document.getElementById('btnSyncStreaming').textContent='📡 Actualizar canales hoy';return;}
         slog(`✅ ${events.length} evento(s) recibidos`,'#34d399');
         const NORM={'mexico':['mexico','méxico'],'usa':['usa','united states','estados unidos'],'south korea':['south korea','corea del sur','korea republic']};
-        function norm(n){const s=(n||'').toLowerCase().trim();for(const[c,vs]of Object.entries(NORM))if(vs.includes(s))return c;return s;}
+        const norm=n=>{const s=(n||'').toLowerCase().trim();for(const[c,vs]of Object.entries(NORM))if(vs.includes(s))return c;return s;};
         let updated=0;
-        for(const mDoc of todayMatches){
-          const m=mDoc.data();
-          const ev=events.find(e=>norm(e.strHomeTeam)===norm(m.home_team)&&norm(e.strAwayTeam)===norm(m.away_team));
+        for(const mDoc of todayM){
+          const m=mDoc.data(),ev=events.find(e=>norm(e.strHomeTeam)===norm(m.home_team)&&norm(e.strAwayTeam)===norm(m.away_team));
           if(!ev){slog(`  ⚠️ Sin datos: ${m.home_team} vs ${m.away_team}`);continue;}
-          const channels=[];if(ev.strTVStation)channels.push(ev.strTVStation);if(ev.strVideo)channels.push(ev.strVideo);
-          await updateDoc(doc(db,'matches',mDoc.id),{channels,tv_station:ev.strTVStation||null,stream_url:ev.strVideo||null,thumb:ev.strThumb||null,tsdb_id:ev.idEvent||null,channels_synced_at:Timestamp.now()});
-          slog(`  📺 ${m.home_team} vs ${m.away_team} → ${channels.length?channels.join(', '):'sin canal'}`,channels.length?'#a78bfa':'var(--text-muted)');updated++;
+          const ch=[];if(ev.strTVStation)ch.push(ev.strTVStation);if(ev.strVideo)ch.push(ev.strVideo);
+          await updateDoc(doc(db,'matches',mDoc.id),{channels:ch,tv_station:ev.strTVStation||null,stream_url:ev.strVideo||null,thumb:ev.strThumb||null,tsdb_id:ev.idEvent||null,channels_synced_at:Timestamp.now()});
+          slog(`  📺 ${m.home_team} vs ${m.away_team} → ${ch.length?ch.join(', '):'sin canal'}`,ch.length?'#a78bfa':'var(--text-muted)');updated++;
         }
-        await setDoc(doc(db,'app_config','streaming_sync'),{last_sync:Timestamp.now(),matches_updated:updated,date_synced:todayStr});
-        slog(`\n✅ ${updated} partido(s) con canales actualizados`,'#34d399');await loadLastSync();
-      }catch(err){slog(`❌ Error: ${err.message}`,'#f5a0ac');}
+        await setDoc(doc(db,'app_config','streaming_sync'),{last_sync:Timestamp.now(),matches_updated:updated,date_synced:today});
+        slog(`\n✅ ${updated} partido(s) actualizados`,'#34d399');await loadLastSync();
+      }catch(e){slog(`❌ Error: ${e.message}`,'#f5a0ac');}
       document.getElementById('btnSyncStreaming').disabled=false;document.getElementById('btnSyncStreaming').textContent='📡 Actualizar canales hoy';
     }
-    document.getElementById('btnSyncStreaming').addEventListener('click',syncStreamingChannels);
+    document.getElementById('btnSyncStreaming').addEventListener('click',syncStreaming);
     const tvDiv=document.getElementById('atab-tvaccess');
     new MutationObserver(()=>{if(!tvDiv.classList.contains('d-none'))loadLastSync();}).observe(tvDiv,{attributes:true,attributeFilter:['class']});
   </script>
@@ -746,7 +637,7 @@
     function renderStats(el){const total=allUsers.length,active=allUsers.filter(u=>u.tv_access===true).length;el.innerHTML=`<div class="tv-stat"><div class="tv-stat-num" style="color:var(--text)">${total}</div><div class="tv-stat-label">Usuarios</div></div><div class="tv-stat"><div class="tv-stat-num" style="color:#34d399">${active}</div><div class="tv-stat-label">Con acceso TV</div></div><div class="tv-stat"><div class="tv-stat-num" style="color:#f5a0ac">${total-active}</div><div class="tv-stat-label">Sin acceso</div></div>`;}
     function renderList(el){const q=filterVal.toLowerCase();const filtered=q?allUsers.filter(u=>(u.display_name||'').toLowerCase().includes(q)||(u.email||'').toLowerCase().includes(q)):allUsers;if(!filtered.length){el.innerHTML=`<div style="color:var(--text-muted);font-size:13px;padding:12px 0">No se encontraron usuarios.</div>`;return;}const withAccess=filtered.filter(u=>u.tv_access===true),withoutAccess=filtered.filter(u=>u.tv_access!==true);el.innerHTML='';if(withAccess.length){const t=document.createElement('div');t.className='tv-section-title';t.innerHTML=`✅ Con acceso <span style="color:#34d399;font-size:13px;font-weight:800">(${withAccess.length})</span>`;el.appendChild(t);withAccess.forEach(u=>el.appendChild(buildRow(u,true)));}if(withoutAccess.length){const t=document.createElement('div');t.className='tv-section-title';t.innerHTML=`🚫 Sin acceso <span style="color:#f5a0ac;font-size:13px;font-weight:800">(${withoutAccess.length})</span>`;el.appendChild(t);withoutAccess.forEach(u=>el.appendChild(buildRow(u,false)));}}
     function buildRow(u,hasAccess){const name=u.display_name||u.email||'Sin nombre',email=u.email||'';const div=document.createElement('div');div.className='tv-user-row'+(hasAccess?' has-access':'');div.id='tvrow-'+u.uid;div.innerHTML=`<div class="tv-user-info"><div class="tv-user-name">${name}</div><div class="tv-user-email">${email}</div></div><div style="display:flex;align-items:center;gap:10px;flex-shrink:0"><span class="${hasAccess?'tv-badge-on':'tv-badge-off'}">${hasAccess?'✅ Activo':'🚫 Sin acceso'}</span><button class="${hasAccess?'tv-toggle-off':'tv-toggle-on'}">${hasAccess?'🚫 Quitar':'✅ Dar acceso'}</button></div>`;div.querySelector('button').addEventListener('click',()=>toggleAccess(u.uid,hasAccess));return div;}
-    async function toggleAccess(uid,currentAccess){const row=document.getElementById('tvrow-'+uid),btn=row?.querySelector('button');if(btn){btn.disabled=true;btn.textContent='⏳';}try{await authReady;await updateDoc(doc(db,'users',uid),{tv_access:!currentAccess});const u=allUsers.find(x=>x.uid===uid);if(u)u.tv_access=!currentAccess;renderStats(document.getElementById('tvStats'));renderList(document.getElementById('tvUserList'));}catch(e){alert('Error: '+e.message);if(btn){btn.disabled=false;btn.textContent=currentAccess?'🚫 Quitar':'✅ Dar acceso';}}}
+    async function toggleAccess(uid,cur){const row=document.getElementById('tvrow-'+uid),btn=row?.querySelector('button');if(btn){btn.disabled=true;btn.textContent='⏳';}try{await authReady;await updateDoc(doc(db,'users',uid),{tv_access:!cur});const u=allUsers.find(x=>x.uid===uid);if(u)u.tv_access=!cur;renderStats(document.getElementById('tvStats'));renderList(document.getElementById('tvUserList'));}catch(e){alert('Error: '+e.message);if(btn){btn.disabled=false;btn.textContent=cur?'🚫 Quitar':'✅ Dar acceso';}}}
     document.getElementById('tvFilterInput').addEventListener('input',e=>{filterVal=e.target.value;renderList(document.getElementById('tvUserList'));});
     document.getElementById('tvClearFilter').addEventListener('click',()=>{document.getElementById('tvFilterInput').value='';filterVal='';renderList(document.getElementById('tvUserList'));});
     const tvDiv=document.getElementById('atab-tvaccess');let loaded=false;
@@ -755,20 +646,9 @@
 
   <!-- GESTOR DE STREAMS MANUALES -->
   <script type="module">
-    import { db } from './js/firebase-config.js';
-    import { doc, getDoc, setDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+    import { initStreamsManager } from './js/streams-manager.js';
+    initStreamsManager();
+  </script>
 
-    const editor   = document.getElementById('streamsJsonEditor');
-    const msgEl    = document.getElementById('streamsMsg');
-    const previewEl= document.getElementById('streamsPreview');
-    const statusEl = document.getElementById('streamsCurrentStatus');
-    const DOCREF   = () => doc(db, 'app_config', 'live_streams');
-
-    function showMsg(text, ok=true){
-      msgEl.innerHTML = `<span style="color:${ok?'#34d399':'#f5a0ac'}">${text}</span>`;
-      setTimeout(()=>{ msgEl.innerHTML=''; }, 4000);
-    }
-
-    function renderPreview(data){
-      if (!Array.isArray(data) || data.length === 0){
-        previewEl.innerHTML = '<span style="color:var(--text-muted)">Array
+</body>
+</html>
