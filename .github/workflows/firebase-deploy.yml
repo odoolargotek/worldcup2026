@@ -29,43 +29,47 @@ jobs:
       - name: Register API_FOOTBALL_KEY secret in Firebase Secret Manager
         continue-on-error: true
         env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           API_FOOTBALL_KEY: ${{ secrets.API_FOOTBALL_KEY }}
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
         run: |
+          echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > /tmp/sa.json
+          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa.json
           echo "$API_FOOTBALL_KEY" | firebase functions:secrets:set API_FOOTBALL_KEY \
             --project "$FIREBASE_PROJECT_ID" \
-            --token "$FIREBASE_TOKEN" \
             --non-interactive
 
       - name: Deploy Hosting to Firebase
         env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
         run: |
+          echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > /tmp/sa.json
+          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa.json
           firebase deploy --only hosting \
             --project "$FIREBASE_PROJECT_ID" \
-            --token "$FIREBASE_TOKEN" \
             --non-interactive
 
       - name: Deploy Firestore Rules
         continue-on-error: true
         env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
         run: |
+          echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > /tmp/sa.json
+          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa.json
           firebase deploy --only firestore:rules \
             --project "$FIREBASE_PROJECT_ID" \
-            --token "$FIREBASE_TOKEN" \
             --non-interactive
 
       - name: Deploy Cloud Functions
         continue-on-error: true
         env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
         run: |
+          echo "$GOOGLE_APPLICATION_CREDENTIALS_JSON" > /tmp/sa.json
+          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/sa.json
           firebase deploy --only functions \
             --project "$FIREBASE_PROJECT_ID" \
-            --token "$FIREBASE_TOKEN" \
             --non-interactive
