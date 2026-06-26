@@ -33,8 +33,14 @@ const warnEl     = document.getElementById('existingPredWarning');
 function enable(id)  { const el = document.getElementById(id); if(el){ el.style.opacity='1'; el.style.pointerEvents='all'; } }
 function disable(id) { const el = document.getElementById(id); if(el){ el.style.opacity='0.4'; el.style.pointerEvents='none'; } }
 
+/**
+ * Calcula puntos de manera consistente.
+ * Siempre convierte a Number para evitar problemas con strings de Firestore.
+ */
 function calcPoints(actualH, actualA, predH, predA) {
-  if (predH == null || predA == null) return null;
+  if (predH == null || predA == null || actualH == null || actualA == null) return null;
+  actualH = Number(actualH); actualA = Number(actualA);
+  predH   = Number(predH);   predA   = Number(predA);
   if (predH === actualH && predA === actualA) return 6;
   const pOut = predH > predA ? 'H' : predA > predH ? 'A' : 'D';
   const aOut = actualH > actualA ? 'H' : actualA > actualH ? 'A' : 'D';
@@ -181,8 +187,8 @@ function updatePreview() {
 
   const ph = parseInt(scoreHome.value);
   const pa = parseInt(scoreAway.value);
-  const ah = match.home_score;
-  const aa = match.away_score;
+  const ah = match.home_score != null ? Number(match.home_score) : null;
+  const aa = match.away_score != null ? Number(match.away_score) : null;
   const isFinished = match.finished === true;
 
   let pts, ptsBadge;
@@ -231,10 +237,16 @@ btnSave.addEventListener('click', async () => {
   saveLog.classList.add('visible');
 
   try {
-    const ah = match.home_score ?? null;
-    const aa = match.away_score ?? null;
+    const ah = match.home_score != null ? Number(match.home_score) : null;
+    const aa = match.away_score != null ? Number(match.away_score) : null;
     const isFinished = match.finished === true;
-    const pts = (isFinished && ah != null) ? calcPoints(ah, aa, ph, pa) : 0;
+
+    // Calcular puntos correctamente:
+    // - Si el partido está finalizado: calcular desde los scores reales
+    // - Si no: guardar null (no 0) para que el sistema sepa que está pendiente
+    const pts = (isFinished && ah != null && aa != null)
+      ? calcPoints(ah, aa, ph, pa)
+      : null;
 
     const docId = `${gid}_${uid}_${mid}`;
 
@@ -247,18 +259,20 @@ btnSave.addEventListener('click', async () => {
       user_uid:      uid,
       home_score:    ph,
       away_score:    pa,
-      points:        pts,
-      points_synced: isFinished,
+      points:        pts,          // null si partido pendiente, número si ya jugó
+      points_synced: isFinished,   // true solo si el partido está cerrado
       admin_note:    `Registro manual — ${new Date().toISOString()}`,
       created_at:    createdAt,
+      updated_at:    Timestamp.now(),
     };
 
     await setDoc(doc(db, 'predictions', docId), payload);
 
+    const ptsLabel = pts !== null ? `${pts} pts` : 'pendiente (partido sin resultado)';
     log(`✅ Pronóstico guardado`, '#34d399');
     log(`   👤 ${member.display_name}`);
     log(`   ⚽ ${match.home_team} ${ph} - ${pa} ${match.away_team}`);
-    log(`   🏅 Puntos: ${pts}${!isFinished ? ' (partido pendiente)' : ''}`);
+    log(`   🏅 Puntos: ${ptsLabel}`);
     log(`   🔑 Doc ID: ${docId}`, '#94a3b8');
 
     state.history.unshift({
@@ -299,14 +313,15 @@ function renderHistory() {
   if (!state.history.length) return;
   histSection.style.display = 'block';
   histList.innerHTML = state.history.map(h => {
-    const ptsCls = h.pts === 6 ? '#f5a623' : h.pts === 3 ? '#34d399' : '#94a3b8';
+    const ptsCls = h.pts === 6 ? '#f5a623' : h.pts === 3 ? '#34d399' : h.pts === null ? '#94a3b8' : '#94a3b8';
+    const ptsLabel = h.pts !== null ? `${h.pts} pts` : 'pendiente';
     return `<div class="hist-row">
       <span style="color:var(--text-muted);font-size:11px">${h.time}</span>
       <span style="font-weight:700">${h.player}</span>
       <span style="color:var(--text-muted)">·</span>
       <span>${h.match}</span>
       <span style="color:#4aafd4;font-weight:700">${h.score}</span>
-      <span class="pts-badge" style="background:rgba(0,0,0,0.2);color:${ptsCls}">${h.pts} pts</span>
+      <span class="pts-badge" style="background:rgba(0,0,0,0.2);color:${ptsCls}">${ptsLabel}</span>
     </div>`;
   }).join('');
 }
@@ -324,7 +339,6 @@ async function loadFuturePredictions() {
   const container = document.getElementById('futurePredContent');
   container.innerHTML = '<div style="color:var(--text-muted);text-align:center;padding:30px">⏳ Cargando…</div>';
 
-  // Cargar datos base si no existen
   const [matchSnap, predSnap, userSnap, groupSnap, memberSnap] = await Promise.all([
     getDocs(query(collection(db, 'matches'), orderBy('kickoff'))),
     getDocs(collection(db, 'predictions')),
@@ -343,7 +357,6 @@ async function loadFuturePredictions() {
   const userMap  = {}; allUsers.forEach(u => { userMap[u.id] = u.display_name || u.displayName || u.email || u.id; });
   const groupMap = {}; allGroups.forEach(g => { groupMap[g.id] = g.name; });
 
-  // Sólo partidos que aun no han comenzado
   const future = matches.filter(m => {
     const ko = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
     return ko > now;
@@ -354,7 +367,6 @@ async function loadFuturePredictions() {
     return;
   }
 
-  // Construir filtros de comparsa
   const groupTabsEl = document.getElementById('futureGroupTabs');
   const activeGroups = [...new Set(allMembers.map(m => m.group_id))]
     .map(gid => ({ id: gid, name: groupMap[gid] || gid }))
@@ -381,12 +393,10 @@ async function loadFuturePredictions() {
 function renderFutureTable(future, preds, userMap, groupMap) {
   const container = document.getElementById('futurePredContent');
 
-  // Miembros filtrados
   const filteredMembers = futureGroupFilter === 'all'
     ? allMembers
     : allMembers.filter(m => m.group_id === futureGroupFilter);
 
-  // UIDs únicos participantes (en orden alfabético por nombre)
   const uidSet  = [...new Set(filteredMembers.map(m => m.user_uid))];
   const players = uidSet
     .map(uid => ({ uid, name: userMap[uid] || uid }))
@@ -397,7 +407,6 @@ function renderFutureTable(future, preds, userMap, groupMap) {
     return;
   }
 
-  // Mapa rápido: match_id + user_uid -> pred
   const predMap = {};
   preds.forEach(p => { predMap[`${p.match_id}_${p.user_uid}`] = p; });
 
@@ -406,15 +415,12 @@ function renderFutureTable(future, preds, userMap, groupMap) {
   future.forEach(m => {
     const ko = fmtKickoff(m.kickoff);
 
-    // Calcular cobertura para este partido
     const withPred = players.filter(p => predMap[`${m.id}_${p.uid}`]).length;
     const pct = players.length ? Math.round((withPred / players.length) * 100) : 0;
     const pctColor = pct >= 80 ? '#34d399' : pct >= 50 ? '#f59e0b' : '#f87171';
 
     html += `
     <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:14px 16px;margin-bottom:14px">
-
-      <!-- Cabecera del partido -->
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:12px">
         <div style="flex:1;min-width:200px">
           <div style="font-weight:800;font-size:0.95rem">
@@ -426,9 +432,7 @@ function renderFutureTable(future, preds, userMap, groupMap) {
             📅 ${ko} &nbsp;·&nbsp; ${m.phase}${m.city ? ' &nbsp;·&nbsp; 📍 '+m.city : ''}
           </div>
         </div>
-        <!-- Badge FUTURO -->
         <span style="background:rgba(167,139,250,0.12);color:#a78bfa;border:1px solid rgba(167,139,250,0.3);border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700">⏰ A FUTURO</span>
-        <!-- Cobertura -->
         <div style="text-align:right;min-width:90px">
           <div style="font-size:12px;font-weight:800;color:${pctColor}">${withPred}/${players.length} pron. (${pct}%)</div>
           <div style="height:5px;background:rgba(255,255,255,0.06);border-radius:5px;margin-top:3px">
@@ -436,13 +440,10 @@ function renderFutureTable(future, preds, userMap, groupMap) {
           </div>
         </div>
       </div>
-
-      <!-- Pronósticos por jugador -->
       <div style="display:flex;flex-wrap:wrap;gap:8px">
         ${players.map(p => {
           const pred = predMap[`${m.id}_${p.uid}`];
           if (pred) {
-            // Determinar a qué comparsa(s) pertenece
             const playerGroups = allMembers
               .filter(mb => mb.user_uid === p.uid)
               .map(mb => groupMap[mb.group_id] || mb.group_id)
@@ -468,7 +469,6 @@ function renderFutureTable(future, preds, userMap, groupMap) {
   container.innerHTML = html || '<p style="color:var(--text-muted)">Sin pronósticos aún.</p>';
 }
 
-// Botón toggle de la sección
 const btnToggleFuture = document.getElementById('btnToggleFuture');
 const futurePredSection = document.getElementById('futurePredSection');
 

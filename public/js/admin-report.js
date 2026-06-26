@@ -1,14 +1,17 @@
 // admin-report.js — Reporte global y por comparsa de pronósticos vs resultado real
 import { db } from './firebase-config.js';
 import {
-  collection, getDocs, query, orderBy
+  collection, getDocs, query, orderBy, onSnapshot
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
 let DATA = {};
 let activeGroup = null;
+let _unsubPreds = null;   // listener activo de predictions
+let _staticData = null;   // matches, users, groups, members (cambian poco)
 
 function calcPoints(ah, aa, ph, pa) {
   if (ph == null || pa == null || ah == null || aa == null) return null;
+  ph = Number(ph); pa = Number(pa); ah = Number(ah); aa = Number(aa);
   if (ph === ah && pa === aa) return 6;
   const pOut = ph > pa ? 'H' : pa > ph ? 'A' : 'D';
   const aOut = ah > aa ? 'H' : aa > ah ? 'A' : 'D';
@@ -33,7 +36,6 @@ function pctBar(pct, color) {
   return `<div class="pct-bar"><div class="pct-fill" style="width:${pct}%;background:${color}"></div></div>`;
 }
 
-// Dos barras apiladas: exacto (amarillo) + ganador (verde)
 function doublePctBar(exactPct, resultPct) {
   return `
   <div class="pct-bar" style="position:relative">
@@ -42,29 +44,76 @@ function doublePctBar(exactPct, resultPct) {
   </div>`;
 }
 
-// ── Cargar datos
-async function loadData() {
-  document.getElementById('loader').style.display = 'block';
-  document.getElementById('reportContent').style.display = 'none';
-
-  const [matchSnap, predSnap, userSnap, groupSnap, memberSnap] = await Promise.all([
+// ── Carga estática (matches, users, groups, members) — solo al init o en refresh manual
+async function loadStatic() {
+  const [matchSnap, userSnap, groupSnap, memberSnap] = await Promise.all([
     getDocs(query(collection(db, 'matches'), orderBy('kickoff'))),
-    getDocs(collection(db, 'predictions')),
     getDocs(collection(db, 'users')),
     getDocs(collection(db, 'groups')),
     getDocs(collection(db, 'group_members')),
   ]);
 
   const matches = matchSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-  const preds   = predSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const users   = userSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const groups  = groupSnap.docs.map(d => ({ id: d.id, ...d.data() }));
   const members = memberSnap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-  const userMap  = {};  users.forEach(u => { userMap[u.id] = u.display_name || u.displayName || u.email || u.id; });
-  const matchMap = {};  matches.forEach(m => { matchMap[m.id] = m; });
+  const userMap  = {};
+  users.forEach(u => { userMap[u.id] = u.display_name || u.displayName || u.email || u.id; });
+
+  const matchMap = {};
+  matches.forEach(m => { matchMap[m.id] = m; });
+
+  const membersByGroup = {};
+  members.forEach(m => {
+    if (!membersByGroup[m.group_id]) membersByGroup[m.group_id] = [];
+    membersByGroup[m.group_id].push(m.user_uid);
+  });
 
   const played = matches.filter(m => m.finished === true && m.home_score != null);
+
+  _staticData = { matches, users, groups, members, userMap, matchMap, membersByGroup, played };
+}
+
+// ── Suscribirse a predictions con onSnapshot (reactivo)
+function subscribeToRealtimePreds() {
+  // Cancelar listener anterior si existía
+  if (_unsubPreds) { _unsubPreds(); _unsubPreds = null; }
+
+  let firstSnapshot = true;
+
+  _unsubPreds = onSnapshot(collection(db, 'predictions'), snap => {
+    const preds = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    buildAndRender(preds, firstSnapshot);
+    if (firstSnapshot) {
+      firstSnapshot = false;
+      document.getElementById('loader').style.display = 'none';
+      document.getElementById('reportContent').style.display = 'block';
+    } else {
+      // Actualización en tiempo real — mostrar indicador breve
+      showLiveIndicator();
+    }
+  });
+}
+
+function showLiveIndicator() {
+  let el = document.getElementById('liveIndicator');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'liveIndicator';
+    el.style.cssText = 'position:fixed;top:16px;right:16px;background:#34d399;color:#0f172a;font-size:12px;font-weight:800;padding:6px 14px;border-radius:20px;z-index:9999;transition:opacity 0.5s';
+    document.body.appendChild(el);
+  }
+  el.textContent = '🔄 Datos actualizados';
+  el.style.opacity = '1';
+  clearTimeout(el._timer);
+  el._timer = setTimeout(() => { el.style.opacity = '0'; }, 2500);
+}
+
+// ── Construir DATA y renderizar
+function buildAndRender(preds, showLoader = false) {
+  if (!_staticData) return;
+  const { matches, users, groups, members, userMap, matchMap, membersByGroup, played } = _staticData;
 
   const matchStats = played.map(m => {
     const mPreds = preds.filter(p => p.match_id === m.id);
@@ -75,10 +124,10 @@ async function loadData() {
       else if (pts === 3) result++;
       else miss++;
     });
-    const total      = mPreds.length;
-    const hitPct     = total ? Math.round(((exact + result) / total) * 100) : 0;
-    const exactPct   = total ? Math.round((exact  / total) * 100) : 0;
-    const resultPct  = total ? Math.round((result / total) * 100) : 0;
+    const total     = mPreds.length;
+    const hitPct    = total ? Math.round(((exact + result) / total) * 100) : 0;
+    const exactPct  = total ? Math.round((exact  / total) * 100) : 0;
+    const resultPct = total ? Math.round((result / total) * 100) : 0;
     return { match: m, total, exact, result, miss, hitPct, exactPct, resultPct };
   });
 
@@ -87,16 +136,19 @@ async function loadData() {
   const gHit      = gTotal ? Math.round(((gExact + gResult) / gTotal) * 100) : 0;
   const gExactPct = gTotal ? Math.round((gExact  / gTotal) * 100) : 0;
 
-  const membersByGroup = {};
-  members.forEach(m => {
-    if (!membersByGroup[m.group_id]) membersByGroup[m.group_id] = [];
-    membersByGroup[m.group_id].push(m.user_uid);
-  });
-
   DATA = { matches, preds, users, groups, members, userMap, matchMap, played,
            matchStats, membersByGroup, gTotal, gExact, gResult, gMiss, gHit, gExactPct };
 
   render();
+}
+
+// ── Carga completa inicial
+async function loadData() {
+  document.getElementById('loader').style.display = 'block';
+  document.getElementById('reportContent').style.display = 'none';
+
+  await loadStatic();
+  subscribeToRealtimePreds(); // el primer snapshot también renderiza
 }
 
 // ── Render principal
@@ -106,17 +158,16 @@ function render() {
   document.getElementById('loader').style.display = 'none';
   document.getElementById('reportContent').style.display = 'block';
 
-  // KPIs globales — ahora 7 tarjetas (fila de 4 + fila de 3)
   const hitColor   = pctColor(gHit);
   const exactColor = pctColor(gExactPct);
   document.getElementById('kpiGlobal').innerHTML = [
-    kpi('⚽', played.length,       'Partidos jugados',    '#4aafd4'),
-    kpi('🔮', gTotal,               'Total pronósticos',   '#a78bfa'),
-    kpi('🟡', gExact,               'Exactos (6 pts)',     '#f59e0b'),
-    kpi('🟢', gResult,              'Ganador (3 pts)',     '#34d399'),
-    kpi('🔴', gMiss,               'Fallos (0 pts)',      '#f87171'),
-    kpi('📊', gHit    + '%',        'Acierto (gan.+exact)', hitColor),
-    kpi('🎯', gExactPct + '%',      'Exactos %',           exactColor),
+    kpi('⚽', played.length,    'Partidos jugados',     '#4aafd4'),
+    kpi('🔮', gTotal,            'Total pronósticos',    '#a78bfa'),
+    kpi('🟡', gExact,            'Exactos (6 pts)',      '#f59e0b'),
+    kpi('🟢', gResult,           'Ganador (3 pts)',      '#34d399'),
+    kpi('🔴', gMiss,             'Fallos (0 pts)',       '#f87171'),
+    kpi('📊', gHit    + '%',     'Acierto (gan.+exact)', hitColor),
+    kpi('🎯', gExactPct + '%',   'Exactos %',            exactColor),
   ].join('');
 
   // Tabla por partido
@@ -148,7 +199,8 @@ function render() {
     }).join('');
   }
 
-  // Tabs de comparsa
+  // Tabs de comparsa — conservar tab activo si ya había uno
+  const prevActive = activeGroup;
   const tabs = document.getElementById('groupTabs');
   tabs.innerHTML = DATA.groups
     .sort((a,b) => a.name.localeCompare(b.name))
@@ -164,8 +216,16 @@ function render() {
     });
   });
 
-  const first = tabs.querySelector('.gtab');
-  if (first) { first.classList.add('active'); activeGroup = first.dataset.gid; renderGroupReport(activeGroup); }
+  // Restaurar tab activo anterior o seleccionar primero
+  const targetTab = prevActive
+    ? tabs.querySelector(`.gtab[data-gid="${prevActive}"]`)
+    : tabs.querySelector('.gtab');
+
+  if (targetTab) {
+    targetTab.classList.add('active');
+    activeGroup = targetTab.dataset.gid;
+    renderGroupReport(activeGroup);
+  }
 }
 
 // ── Reporte por comparsa
@@ -185,6 +245,7 @@ function renderGroupReport(gid) {
     played.forEach(m => {
       const pred = myPreds.find(p => p.match_id === m.id);
       if (!pred) { rows.push({ match: m, pred: null, pts: null, status: 'sin' }); return; }
+      // Siempre recalcular puntos desde los scores reales (no confiar en el campo points guardado)
       const pts = calcPoints(m.home_score, m.away_score, pred.home_score, pred.away_score);
       if (pts === 6) exact++;
       else if (pts === 3) result++;
@@ -337,4 +398,10 @@ function kpi(icon, value, label, color) {
 }
 
 loadData();
-document.getElementById('btnRefresh').addEventListener('click', loadData);
+// Refresh manual: recarga también los datos estáticos (matches, grupos, etc.)
+document.getElementById('btnRefresh').addEventListener('click', async () => {
+  await loadStatic();
+  // El listener de onSnapshot ya tiene los preds actualizados;
+  // forzamos un re-render con los preds actuales
+  if (DATA.preds) buildAndRender(DATA.preds);
+});
