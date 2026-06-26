@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fix Predicciones — WC2026</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <nav class="navbar" style="background:linear-gradient(135deg,#0f2d0f,#1a4a1a)!important;border-color:#34d399">
+    <div class="navbar-brand">
+      <div>
+        <div>🔧 Fix Predicciones — WC2026</div>
+        <div class="navbar-powered">Migración y limpieza de datos</div>
+      </div>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="admin-predictions.html" class="btn btn-outline-light btn-sm">✏️ Pronósticos</a>
+      <a href="admin.html" class="btn btn-outline-light btn-sm">🛠️ Admin</a>
+    </div>
+  </nav>
+
+  <div class="container py-4" style="max-width:800px">
+    <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:14px;padding:20px;margin-bottom:24px">
+      <div style="font-weight:800;color:#f59e0b;margin-bottom:8px">⚠️ Herramienta de Migración</div>
+      <div style="font-size:13px;color:var(--text-muted)">
+        Esta herramienta detecta pronósticos con <strong>ID incorrecto</strong> (autogenerado por Firestore)
+        y los migra al formato estructurado <code>grupo_usuario_partido</code> que usa el reporte.
+        Si hay duplicados (ID correcto + ID incorrecto para el mismo jugador/partido), conserva el más reciente y elimina el viejo.
+      </div>
+    </div>
+
+    <div style="background:var(--bg-card,rgba(255,255,255,0.04));border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:14px;padding:22px;margin-bottom:16px">
+      <div style="font-weight:800;font-size:1rem;margin-bottom:16px">🔍 Paso 1 — Analizar predicciones</div>
+      <button id="btnAnalyze" class="btn w-100" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:#fff;font-weight:800;padding:12px">
+        🔍 Analizar todos los pronósticos
+      </button>
+      <div id="analyzeResult" style="margin-top:16px"></div>
+    </div>
+
+    <div id="migrateSection" style="display:none;background:var(--bg-card,rgba(255,255,255,0.04));border:1px solid var(--border,rgba(255,255,255,0.08));border-radius:14px;padding:22px;margin-bottom:16px">
+      <div style="font-weight:800;font-size:1rem;margin-bottom:16px">🔧 Paso 2 — Migrar y limpiar</div>
+      <button id="btnMigrate" class="btn w-100" style="background:linear-gradient(135deg,#059669,#34d399);color:#fff;font-weight:800;padding:12px">
+        🔧 Ejecutar migración y limpieza
+      </button>
+      <div id="migrateLog" style="margin-top:16px;font-size:12px;background:rgba(0,0,0,0.3);border-radius:8px;padding:12px;max-height:400px;overflow-y:auto;white-space:pre-wrap;display:none;color:var(--text-muted)"></div>
+    </div>
+  </div>
+
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/admin-fix-predictions.js"></script>
+</body>
+</html>
