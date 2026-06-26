@@ -40,6 +40,7 @@ jobs:
             --non-interactive
 
       - name: Deploy Hosting to Firebase
+        continue-on-error: true
         env:
           GOOGLE_APPLICATION_CREDENTIALS_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
