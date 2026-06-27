@@ -106,7 +106,15 @@
         <div class="col-md-6"><div class="card p-4">
           <h6 style="color:var(--primary-light);font-weight:700" class="mb-3">➕ Crear grupo</h6>
           <input type="text" id="newGroupName" class="form-control mb-2" placeholder="Nombre del grupo">
-          <select id="newGroupStage" class="form-select mb-2"><option value="">-- Etapa de inicio --</option><option value="Grupos">Fase de Grupos</option><option value="Octavos">Desde Octavos</option><option value="Cuartos">Desde Cuartos</option><option value="Semifinal">Desde Semifinal</option><option value="Final">Solo Final</option></select>
+          <select id="newGroupStage" class="form-select mb-2">
+            <option value="">-- Etapa de inicio --</option>
+            <option value="Grupos">Fase de Grupos</option>
+            <option value="Ronda de 32">🆕 Ronda de 32 (actual)</option>
+            <option value="Octavos">Desde Octavos</option>
+            <option value="Cuartos">Desde Cuartos</option>
+            <option value="Semifinal">Desde Semifinal</option>
+            <option value="Final">Solo Final</option>
+          </select>
           <select id="newGroupCurrency" class="form-select mb-2"><option value="USD">💵 USD — Dólares americanos ($)</option><option value="BOB">🇧🇴 BOB — Bolivianos (Bs.)</option></select>
           <select id="newGroupType" class="form-select mb-2"><option value="open">🌐 Abierta — Pozo acumulable</option><option value="closed">🔒 Cerrada — Premio fijo</option></select>
           <div id="openFields"><input type="number" id="newGroupFeeOpen" class="form-control mb-2" placeholder="Cuota por participante"></div>
