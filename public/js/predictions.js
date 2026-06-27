@@ -1,4 +1,6 @@
-// predictions.js — Guardar pronóstico + countdown + navegación + penales (solo eliminatoria)
+// predictions.js — Guardar pronóstico + countdown + navegación
+// Puntuación: score exacto +6 | resultado correcto +3 | incorrecto 0
+// Sin penales, aplica para todas las fases
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
@@ -14,13 +16,9 @@ const GROUP_ID = params.get('gid');
 document.getElementById('backLink')?.setAttribute('href', `group.html?gid=${GROUP_ID}`);
 document.getElementById('dashboardLink')?.setAttribute('href', `group.html?gid=${GROUP_ID}`);
 
-let kickoffDate = null;
+let kickoffDate      = null;
 let countdownInterval = null;
-let matchData = null;
-let isKnockout = false; // true si NO es fase de grupos
-
-// Ganador por penales: 'home' | 'away' | null
-let penaltyWinner = null;
+let matchData        = null;
 
 onAuthStateChanged(auth, async (user) => {
   if (!user || !MATCH_ID) return;
@@ -29,11 +27,8 @@ onAuthStateChanged(auth, async (user) => {
 
   const mSnap = await getDoc(doc(db, 'matches', MATCH_ID));
   if (!mSnap.exists()) return;
-  matchData = mSnap.data();
+  matchData   = mSnap.data();
   kickoffDate = matchData.kickoff?.toDate ? matchData.kickoff.toDate() : new Date(matchData.kickoff);
-
-  // Determinar si es eliminatoria (phase NO empieza con "Grupo")
-  isKnockout = !String(matchData.phase || '').startsWith('Grupo');
 
   document.getElementById('matchPhase').textContent   = matchData.phase || '';
   document.getElementById('homeFlag').textContent     = matchData.home_flag || '⚽';
@@ -42,11 +37,6 @@ onAuthStateChanged(auth, async (user) => {
   document.getElementById('awayName').textContent     = matchData.away_team;
   document.getElementById('matchKickoff').textContent = fmtLong(kickoffDate);
   if (matchData.city) document.getElementById('matchCity').textContent = '📍 ' + matchData.city;
-
-  // Botones de penales: solo en eliminatoria
-  if (isKnockout) {
-    buildPenaltyButtons(matchData.home_team, matchData.away_team, matchData.home_flag, matchData.away_flag);
-  }
 
   startCountdown(kickoffDate);
 
@@ -66,18 +56,7 @@ onAuthStateChanged(auth, async (user) => {
     const p = predSnap.data();
     document.getElementById('homeScore').value = p.home_score;
     document.getElementById('awayScore').value = p.away_score;
-    if (isKnockout && p.home_score === p.away_score && p.penalty_winner) {
-      penaltyWinner = p.penalty_winner;
-      updatePenaltyUI();
-    }
-    if (isKnockout) checkDrawState();
     document.getElementById('submitPrediction').textContent = '✏️ Actualizar pronóstico';
-  }
-
-  // Listener de empate solo en eliminatoria
-  if (isKnockout) {
-    document.getElementById('homeScore').addEventListener('input', checkDrawState);
-    document.getElementById('awayScore').addEventListener('input', checkDrawState);
   }
 
   document.getElementById('predictForm').addEventListener('submit', async (e) => {
@@ -86,74 +65,31 @@ onAuthStateChanged(auth, async (user) => {
     const as = parseInt(document.getElementById('awayScore').value);
     if (isNaN(hs) || isNaN(as)) return;
 
-    // En eliminatoria, empate requiere ganador por penales
-    if (isKnockout && hs === as && !penaltyWinner) {
-      showMsg('⚠️ Debes elegir el ganador en penales.', '#f59e0b');
-      document.getElementById('penaltyWinnerWrap')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      return;
-    }
-
     const nowCheck = new Date();
     if (kickoffDate <= nowCheck) { lockForm('Plazo vencido.'); return; }
 
     const btn = document.getElementById('submitPrediction');
-    btn.disabled = true;
+    btn.disabled    = true;
     btn.textContent = 'Guardando...';
     try {
-      const payload = {
+      await setDoc(doc(db, 'predictions', predId), {
         group_id:   GROUP_ID,
         match_id:   MATCH_ID,
         user_uid:   user.uid,
         home_score: hs,
         away_score: as,
         created_at: new Date()
-      };
-      if (isKnockout && hs === as && penaltyWinner) {
-        payload.penalty_winner = penaltyWinner;
-      } else {
-        payload.penalty_winner = null;
-      }
-      await setDoc(doc(db, 'predictions', predId), payload);
+      });
       showMsg('✅ ¡Pronóstico guardado!', 'var(--green-light)');
       btn.textContent = '✏️ Actualizar pronóstico';
-      btn.disabled = false;
+      btn.disabled    = false;
     } catch(err) {
       showMsg('❌ Error: ' + err.message, 'var(--danger)');
-      btn.disabled = false;
+      btn.disabled    = false;
       btn.textContent = '💾 Guardar pronóstico';
     }
   });
 });
-
-// ── Botones de penales ──
-function buildPenaltyButtons(homeTeam, awayTeam, homeFlag, awayFlag) {
-  const container = document.getElementById('penaltyBtns');
-  if (!container) return;
-  container.innerHTML = `
-    <button type="button" class="penalty-btn" id="penBtn_home">
-      ${homeFlag || '⚽'} ${homeTeam}
-    </button>
-    <button type="button" class="penalty-btn" id="penBtn_away">
-      ${awayFlag || '⚽'} ${awayTeam}
-    </button>`;
-  document.getElementById('penBtn_home')?.addEventListener('click', () => { penaltyWinner = 'home'; updatePenaltyUI(); });
-  document.getElementById('penBtn_away')?.addEventListener('click', () => { penaltyWinner = 'away'; updatePenaltyUI(); });
-}
-
-function updatePenaltyUI() {
-  document.getElementById('penBtn_home')?.classList.toggle('selected', penaltyWinner === 'home');
-  document.getElementById('penBtn_away')?.classList.toggle('selected', penaltyWinner === 'away');
-}
-
-function checkDrawState() {
-  const hs = parseInt(document.getElementById('homeScore').value);
-  const as = parseInt(document.getElementById('awayScore').value);
-  const wrap = document.getElementById('penaltyWinnerWrap');
-  if (!wrap) return;
-  const isDraw = !isNaN(hs) && !isNaN(as) && hs === as;
-  wrap.classList.toggle('show', isDraw);
-  if (!isDraw) { penaltyWinner = null; updatePenaltyUI(); }
-}
 
 // ── Navegación anterior / siguiente ──
 async function loadMatchNavigation() {
@@ -162,9 +98,9 @@ async function loadMatchNavigation() {
   const navCounter = document.getElementById('navCounter');
   if (!navPrev || !navNext || !navCounter) return;
   try {
-    const snap = await getDocs(query(collection(db, 'matches'), orderBy('kickoff')));
+    const snap       = await getDocs(query(collection(db, 'matches'), orderBy('kickoff')));
     const allMatches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    const idx = allMatches.findIndex(m => m.id === MATCH_ID);
+    const idx        = allMatches.findIndex(m => m.id === MATCH_ID);
     if (idx === -1) { navCounter.textContent = ''; return; }
     const total = allMatches.length;
     navCounter.innerHTML =
