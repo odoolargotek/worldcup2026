@@ -16,53 +16,74 @@ document.getElementById('dashboardLink')?.setAttribute('href', `group.html?gid=$
 
 let kickoffDate = null;
 let countdownInterval = null;
+let matchData = null;
+
+// Ganador por penales seleccionado: 'home' | 'away' | null
+let penaltyWinner = null;
 
 onAuthStateChanged(auth, async (user) => {
   if (!user || !MATCH_ID) return;
 
-  // Carga todos los partidos para navegación anterior/siguiente
   await loadMatchNavigation();
 
   const mSnap = await getDoc(doc(db, 'matches', MATCH_ID));
   if (!mSnap.exists()) return;
-  const m = mSnap.data();
-  kickoffDate = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+  matchData = mSnap.data();
+  kickoffDate = matchData.kickoff?.toDate ? matchData.kickoff.toDate() : new Date(matchData.kickoff);
 
-  document.getElementById('matchPhase').textContent   = m.phase || '';
-  document.getElementById('homeFlag').textContent     = m.home_flag || '⚽';
-  document.getElementById('awayFlag').textContent     = m.away_flag || '⚽';
-  document.getElementById('homeName').textContent     = m.home_team;
-  document.getElementById('awayName').textContent     = m.away_team;
+  document.getElementById('matchPhase').textContent   = matchData.phase || '';
+  document.getElementById('homeFlag').textContent     = matchData.home_flag || '⚽';
+  document.getElementById('awayFlag').textContent     = matchData.away_flag || '⚽';
+  document.getElementById('homeName').textContent     = matchData.home_team;
+  document.getElementById('awayName').textContent     = matchData.away_team;
   document.getElementById('matchKickoff').textContent = fmtLong(kickoffDate);
-  if (m.city) document.getElementById('matchCity').textContent = '📍 ' + m.city;
+  if (matchData.city) document.getElementById('matchCity').textContent = '📍 ' + matchData.city;
+
+  // Generar botones de penales con nombres reales de los equipos
+  buildPenaltyButtons(matchData.home_team, matchData.away_team, matchData.home_flag, matchData.away_flag);
 
   startCountdown(kickoffDate);
 
-  // --- Sugerencia Perplexity --- SIEMPRE se carga, antes de cualquier lockForm
-  const suggestion = await findPerplexitySuggestion(m.home_team, m.away_team);
-  renderPerplexityButton(m.home_team, m.away_team, suggestion);
-  // -----------------------------
+  const suggestion = await findPerplexitySuggestion(matchData.home_team, matchData.away_team);
+  renderPerplexityButton(matchData.home_team, matchData.away_team, suggestion);
 
   const now = new Date();
-  if (kickoffDate <= now || (m.home_score !== undefined && m.home_score !== null)) {
+  if (kickoffDate <= now || (matchData.home_score !== undefined && matchData.home_score !== null)) {
     lockForm('Este partido ya no acepta pronósticos.');
     return;
   }
 
+  // Cargar pronóstico existente
   const predId   = `${GROUP_ID}_${MATCH_ID}_${user.uid}`;
   const predSnap = await getDoc(doc(db, 'predictions', predId));
   if (predSnap.exists()) {
     const p = predSnap.data();
     document.getElementById('homeScore').value = p.home_score;
     document.getElementById('awayScore').value = p.away_score;
+    if (p.home_score === p.away_score && p.penalty_winner) {
+      penaltyWinner = p.penalty_winner;
+      updatePenaltyUI();
+    }
+    checkDrawState();
     document.getElementById('submitPrediction').textContent = '✏️ Actualizar pronóstico';
   }
+
+  // Mostrar/ocultar penales en tiempo real al cambiar scores
+  document.getElementById('homeScore').addEventListener('input', checkDrawState);
+  document.getElementById('awayScore').addEventListener('input', checkDrawState);
 
   document.getElementById('predictForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const hs = parseInt(document.getElementById('homeScore').value);
     const as = parseInt(document.getElementById('awayScore').value);
     if (isNaN(hs) || isNaN(as)) return;
+
+    // Si es empate, exigir ganador por penales
+    if (hs === as && !penaltyWinner) {
+      showMsg('⚠️ Debes elegir el ganador en penales.', '#f59e0b');
+      document.getElementById('penaltyWinnerWrap')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
 
     const nowCheck = new Date();
     if (kickoffDate <= nowCheck) { lockForm('Plazo vencido.'); return; }
@@ -71,14 +92,20 @@ onAuthStateChanged(auth, async (user) => {
     btn.disabled = true;
     btn.textContent = 'Guardando...';
     try {
-      await setDoc(doc(db, 'predictions', predId), {
+      const payload = {
         group_id:   GROUP_ID,
         match_id:   MATCH_ID,
         user_uid:   user.uid,
         home_score: hs,
         away_score: as,
         created_at: new Date()
-      });
+      };
+      if (hs === as && penaltyWinner) {
+        payload.penalty_winner = penaltyWinner; // 'home' | 'away'
+      } else {
+        payload.penalty_winner = null;
+      }
+      await setDoc(doc(db, 'predictions', predId), payload);
       showMsg('✅ ¡Pronóstico guardado!', 'var(--green-light)');
       btn.textContent = '✏️ Actualizar pronóstico';
       btn.disabled = false;
@@ -90,39 +117,57 @@ onAuthStateChanged(auth, async (user) => {
   });
 });
 
+// ── Construir botones de penales ──
+function buildPenaltyButtons(homeTeam, awayTeam, homeFlag, awayFlag) {
+  const container = document.getElementById('penaltyBtns');
+  if (!container) return;
+  container.innerHTML = `
+    <button type="button" class="penalty-btn" id="penBtn_home">
+      ${homeFlag || '⚽'} ${homeTeam}
+    </button>
+    <button type="button" class="penalty-btn" id="penBtn_away">
+      ${awayFlag || '⚽'} ${awayTeam}
+    </button>`;
+  document.getElementById('penBtn_home')?.addEventListener('click', () => { penaltyWinner = 'home'; updatePenaltyUI(); });
+  document.getElementById('penBtn_away')?.addEventListener('click', () => { penaltyWinner = 'away'; updatePenaltyUI(); });
+}
+
+function updatePenaltyUI() {
+  document.getElementById('penBtn_home')?.classList.toggle('selected', penaltyWinner === 'home');
+  document.getElementById('penBtn_away')?.classList.toggle('selected', penaltyWinner === 'away');
+}
+
+function checkDrawState() {
+  const hs = parseInt(document.getElementById('homeScore').value);
+  const as = parseInt(document.getElementById('awayScore').value);
+  const wrap = document.getElementById('penaltyWinnerWrap');
+  if (!wrap) return;
+  const isDraw = !isNaN(hs) && !isNaN(as) && hs === as;
+  wrap.classList.toggle('show', isDraw);
+  if (!isDraw) { penaltyWinner = null; updatePenaltyUI(); }
+}
+
 // ── Navegación anterior / siguiente ──
 async function loadMatchNavigation() {
   const navPrev    = document.getElementById('navPrev');
   const navNext    = document.getElementById('navNext');
   const navCounter = document.getElementById('navCounter');
   if (!navPrev || !navNext || !navCounter) return;
-
   try {
     const snap = await getDocs(query(collection(db, 'matches'), orderBy('kickoff')));
     const allMatches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     const idx = allMatches.findIndex(m => m.id === MATCH_ID);
-
-    if (idx === -1) {
-      navCounter.textContent = '';
-      return;
-    }
-
+    if (idx === -1) { navCounter.textContent = ''; return; }
     const total = allMatches.length;
     navCounter.innerHTML =
       `<span style="font-size:0.75rem;color:var(--text-muted)">Partido</span><br>` +
       `<strong style="color:var(--text)">${idx + 1} / ${total}</strong>`;
-
-    // Anterior
     if (idx > 0) {
-      const prevId = allMatches[idx - 1].id;
-      navPrev.setAttribute('href', `predict.html?gid=${GROUP_ID}&mid=${prevId}`);
+      navPrev.setAttribute('href', `predict.html?gid=${GROUP_ID}&mid=${allMatches[idx-1].id}`);
       navPrev.classList.remove('disabled');
     }
-
-    // Siguiente
     if (idx < total - 1) {
-      const nextId = allMatches[idx + 1].id;
-      navNext.setAttribute('href', `predict.html?gid=${GROUP_ID}&mid=${nextId}`);
+      navNext.setAttribute('href', `predict.html?gid=${GROUP_ID}&mid=${allMatches[idx+1].id}`);
       navNext.classList.remove('disabled');
     }
   } catch (err) {
