@@ -1,6 +1,6 @@
 // matches.js — Partidos agrupados por FECHA
-// Si el grupo es de Fase de Grupos: muestra solo partidos de grupos (Grupo A…L)
-// Si el grupo es de Knockout (Ronda de 32 en adelante): muestra solo partidos de eliminatoria
+// Grupos de Fase de Grupos: muestran TODOS los partidos con phase 'Grupo X' (históricos + hoy)
+// Grupos de Knockout (Ronda de 32+): muestran SOLO partidos de eliminatoria
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
@@ -17,7 +17,7 @@ let unsub           = null;
 let activeFilter    = 'all'; // 'all' | 'upcoming' | 'nopred'
 let isKnockoutGroup = false; // true = grupo de eliminatoria
 
-// Retorna true si el partido es de fase de grupos
+// Retorna true si el partido es de fase de grupos (Grupo A…L)
 function isGroupStageMatch(m) {
   return String(m.phase || '').startsWith('Grupo');
 }
@@ -28,7 +28,7 @@ onAuthStateChanged(auth, async (user) => {
   // Leer stage del grupo para decidir qué partidos mostrar
   const groupSnap  = await getDoc(doc(db, 'groups', GROUP_ID));
   const groupStage = groupSnap.exists() ? (groupSnap.data().stage || '') : '';
-  // Solo es knockout si el stage está explícitamente definido y no es Fase de Grupos
+  // Es knockout solo si el stage está explícitamente definido y NO es Fase de Grupos
   isKnockoutGroup  = groupStage !== '' && groupStage !== 'Fase de Grupos';
 
   const predsSnap = await getDocs(
@@ -49,7 +49,7 @@ onAuthStateChanged(auth, async (user) => {
   );
 });
 
-// ── Barra de filtros ────────────────────────────────────────────────────────
+// ── Barra de filtros ────────────────────────────────────────────────────
 function injectFilterBar() {
   const existing = document.getElementById('matchFilterBar');
   if (existing) return;
@@ -143,7 +143,7 @@ function applyFilter() {
   }
 }
 
-// ── Helpers de fecha ─────────────────────────────────────────────────────────
+// ── Helpers de fecha ─────────────────────────────────────────────────────
 function toLocalDateKey(date) {
   return date.toLocaleDateString('en-CA', { timeZone: TZ });
 }
@@ -165,7 +165,7 @@ function dateLabel(key) {
   return { text: label, color: 'var(--gold)', emoji: '📆' };
 }
 
-// ── Badge de urgencia ─────────────────────────────────────────────────────────
+// ── Badge de urgencia ─────────────────────────────────────────────────────
 function deadlineBadge(kickoff, isFinal, hasScore, hasMyPred) {
   if (isFinal) return '';
   const now      = new Date();
@@ -183,7 +183,7 @@ function deadlineBadge(kickoff, isFinal, hasScore, hasMyPred) {
   return '';
 }
 
-// ── Badge resultado ───────────────────────────────────────────────────────────
+// ── Badge resultado ───────────────────────────────────────────────────────
 function predResult(pred, match) {
   if (!pred || match.home_score === undefined || match.home_score === null) return null;
   const ph=Number(pred.home_score),pa=Number(pred.away_score),mh=Number(match.home_score),ma=Number(match.away_score);
@@ -215,7 +215,7 @@ function resultBadge(type) {
   return '';
 }
 
-// ── Render principal ──────────────────────────────────────────────────────────
+// ── Render principal ───────────────────────────────────────────────────────
 function renderMatches(snap) {
   const container = document.getElementById('matchList');
   if (!container) return;
@@ -226,10 +226,10 @@ function renderMatches(snap) {
     const m = d.data();
     const groupMatch = isGroupStageMatch(m);
 
-    // Grupos de fase de grupos: mostrar SOLO partidos de grupos
-    // Grupos de knockout: mostrar SOLO partidos de eliminatoria
-    if (!isKnockoutGroup && !groupMatch) return;  // grupo comparsa: ocultar knockout
-    if (isKnockoutGroup  &&  groupMatch) return;  // grupo knockout: ocultar fase de grupos
+    // Grupos de Fase de Grupos: mostrar SOLO partidos de fase de grupos (Grupo A…L)
+    // Grupos de Knockout: mostrar SOLO partidos de eliminatoria
+    if (!isKnockoutGroup && !groupMatch) return; // fase de grupos: ocultar partidos de knockout
+    if ( isKnockoutGroup &&  groupMatch) return; // knockout: ocultar partidos de fase de grupos
 
     const kickoff = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
     const key     = toLocalDateKey(kickoff);
@@ -242,7 +242,7 @@ function renderMatches(snap) {
   if (Object.keys(byDate).length === 0) {
     const msg = isKnockoutGroup
       ? '<div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:6px">Partidos de eliminatoria próximamente</div><div style="font-size:0.85rem">Los partidos desde Ronda de 32 en adelante aparecerán aquí.</div>'
-      : '<div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:6px">No hay partidos de fase de grupos disponibles</div><div style="font-size:0.85rem">Los partidos de los grupos A–L aparecerán aquí.</div>';
+      : '<div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:6px">No hay partidos de fase de grupos disponibles</div><div style="font-size:0.85rem">Los partidos de los grupos A–L aparecerán aquí en cuanto estén cargados.</div>';
     container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--text-muted)"><div style="font-size:3rem;margin-bottom:12px">⚽</div>${msg}</div>`;
     return;
   }
