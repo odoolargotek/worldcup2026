@@ -9,10 +9,13 @@ const GROUP_ID = params.get('gid');
 const PHASES = ['Grupo A','Grupo B','Grupo C','Grupo D','Grupo E','Grupo F',
                 'Grupo G','Grupo H','Grupo I','Grupo J','Grupo K','Grupo L'];
 
-// ─────────────────────────────────────────────────────────────────
-// 48 clasificados oficiales FIFA World Cup 2026 — Grupos A–L
-// Fuente: FIFA / ESPN / BBC (junio 2026)
-// ─────────────────────────────────────────────────────────────────
+// Retorna true si el stage del grupo es de fase de grupos
+function isGroupStage(stage) {
+  const s = String(stage || '').trim();
+  return s === '' || s === 'Fase de Grupos';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 const TEAMS_BY_PHASE = {
   'Grupo A': [
     { name: 'México',          flag: '🇲🇽' },
@@ -95,6 +98,17 @@ const pendingSelects = {};
 onAuthStateChanged(auth, async (user) => {
   if (!user || !GROUP_ID) return;
   memberRef  = doc(db, 'group_members', `${GROUP_ID}_${user.uid}`);
+
+  // Leer el stage del grupo para decidir si mostrar favoritos
+  const groupSnap = await getDoc(doc(db, 'groups', GROUP_ID));
+  const groupStage = groupSnap.exists() ? (groupSnap.data().stage || '') : '';
+
+  // Si NO es fase de grupos, ocultar todo el widget de favoritos
+  if (!isGroupStage(groupStage)) {
+    hideFavsWidget();
+    return;
+  }
+
   const snap = await getDoc(memberRef);
   if (!snap.exists()) return;
   memberData = snap.data();
@@ -107,6 +121,16 @@ onAuthStateChanged(auth, async (user) => {
     }, 50);
   });
 });
+
+function hideFavsWidget() {
+  // Ocultar tarjeta de favoritos en el dashboard y el botón
+  const summaryCard = document.getElementById('myFavsSummary');
+  const manageBtn   = document.getElementById('manageFavsBtn');
+  const favsSection = document.getElementById('favsInlineSection');
+  if (summaryCard) summaryCard.closest('.col-6, .col-md-3')?.style && (summaryCard.closest('[class*="col"]').style.display = 'none');
+  if (manageBtn)   manageBtn.style.display   = 'none';
+  if (favsSection) favsSection.style.display = 'none';
+}
 
 function getFavorites() { return memberData.favorites     || {}; }
 function getPenalties() { return memberData.penalties     || {}; }
