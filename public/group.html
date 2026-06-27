@@ -235,6 +235,128 @@
     import { renderRules }        from './js/rules.js';
     import { renderDisclaimer }   from './js/disclaimer.js';
     import { renderPayment }      from './js/payment.js';
+    import { auth, db }           from './js/firebase-config.js';
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
+    import {
+      collection, getDocs, getDoc, doc, query, where
+    } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+    const GROUP_ID = new URLSearchParams(window.location.search).get('gid');
+
+    // ── Carga del dashboard (código, premio, mis puntos) al entrar — independiente del Ranking ──
+    async function loadDashboard(user) {
+      if (!GROUP_ID) return;
+      try {
+        const gSnap = await getDoc(doc(db, 'groups', GROUP_ID));
+        if (!gSnap.exists()) return;
+        const g = gSnap.data();
+
+        const nameEl = document.getElementById('groupNameNav');
+        if (nameEl) nameEl.textContent = g.name || 'Grupo';
+        const codeEl = document.getElementById('groupCodeDisplay');
+        if (codeEl) codeEl.textContent = g.code || '';
+        document.getElementById('copyCodeBtn')?.addEventListener('click', () => {
+          navigator.clipboard.writeText(g.code || '').then(() => alert('✅ Código copiado: ' + g.code));
+        });
+
+        const membersSnap = await getDocs(query(collection(db, 'group_members'), where('group_id', '==', GROUP_ID)));
+        const memberCount = membersSnap.size;
+        const sym = g.currency === 'BOB' ? 'Bs.' : '$';
+        const totalPrize = g.type === 'open' ? (g.fee || 0) * memberCount : (g.prize || 0);
+
+        const prizeEl = document.getElementById('groupPrize');
+        const feeEl   = document.getElementById('groupFee');
+        if (prizeEl) {
+          if (g.type === 'open') {
+            prizeEl.innerHTML = totalPrize
+              ? `<span style="color:var(--primary-light)">💰 Pozo: ${sym}${totalPrize}</span>`
+              : '<span style="color:var(--text-muted)">Sin cuota</span>';
+          } else {
+            prizeEl.textContent = totalPrize ? `${sym}${totalPrize}` : 'Sin definir';
+          }
+        }
+        if (feeEl) {
+          feeEl.textContent = g.fee
+            ? `Cuota: ${sym}${g.fee} · ${memberCount} participantes`
+            : `${memberCount} participantes`;
+        }
+
+        // Mis puntos desde predicciones
+        const predsSnap = await getDocs(query(
+          collection(db, 'predictions'),
+          where('group_id', '==', GROUP_ID),
+          where('user_uid',  '==', user.uid)
+        ));
+        let exactos = 0, resultados = 0, predPts = 0;
+        predsSnap.forEach(p => {
+          const pts = p.data().points || 0;
+          if (pts === 6) exactos++;
+          else if (pts === 3) resultados++;
+          predPts += pts;
+        });
+
+        // Favoritos del miembro
+        const myMemberSnap = await getDoc(doc(db, 'group_members', `${GROUP_ID}_${user.uid}`));
+        let totalFavPts = 0, totalPenalty = 0;
+        if (myMemberSnap.exists()) {
+          const md = myMemberSnap.data();
+          totalFavPts  = Object.values(md.favorites_pts  || {}).reduce((a,b)=>a+b,0);
+          totalPenalty = Object.values(md.penalties       || {}).reduce((a,b)=>a+b,0);
+        }
+        const total = predPts + totalFavPts - totalPenalty;
+
+        // Posición en el ranking
+        let position = 1;
+        for (const mDoc of membersSnap.docs) {
+          if (mDoc.data().user_uid === user.uid) continue;
+          const uid = mDoc.data().user_uid;
+          const uPreds = await getDocs(query(
+            collection(db, 'predictions'),
+            where('group_id', '==', GROUP_ID),
+            where('user_uid',  '==', uid)
+          ));
+          let uPts = 0;
+          uPreds.forEach(p => { uPts += p.data().points || 0; });
+          const uMem = await getDoc(doc(db, 'group_members', `${GROUP_ID}_${uid}`));
+          if (uMem.exists()) {
+            const ud = uMem.data();
+            uPts += Object.values(ud.favorites_pts  || {}).reduce((a,b)=>a+b,0);
+            uPts -= Object.values(ud.penalties       || {}).reduce((a,b)=>a+b,0);
+          }
+          if (uPts > total) position++;
+        }
+
+        const cats = [{min:150,label:'🔥 Leyenda',color:'#f59e0b'},{min:100,label:'🏆 Experto',color:'#4aafd4'},{min:60,label:'⚽ Competidor',color:'#34d399'},{min:30,label:'🌱 En forma',color:'#a78bfa'}];
+        const cat = cats.find(c=>total>=c.min) || {label:'🐶 Novato',color:'#94a3b8'};
+        const nextCat = [{min:150,label:'🔥 Leyenda'},{min:100,label:'🏆 Experto'},{min:60,label:'⚽ Competidor'},{min:30,label:'🌱 En forma'}].find(c=>total<c.min);
+        const progress = nextCat ? Math.round((total/nextCat.min)*100) : 100;
+
+        const myPointsCard = document.getElementById('myPointsCard');
+        if (myPointsCard) {
+          myPointsCard.innerHTML = `
+            <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Mis puntos</div>
+            <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:8px;margin-top:4px">
+              <span style="font-size:2rem;font-weight:800;color:${cat.color};line-height:1">${total}</span>
+              <span style="font-size:12px;color:var(--text-muted)">pts</span>
+              <span style="margin-left:auto;font-size:11px;color:var(--text-muted)">#${position} de ${memberCount}</span>
+            </div>
+            <div style="display:inline-block;background:rgba(0,0,0,0.2);color:${cat.color};border:1px solid ${cat.color}33;border-radius:20px;padding:3px 12px;font-size:12px;font-weight:700;margin-bottom:8px">${cat.label}</div>
+            ${nextCat?`<div><div style="display:flex;justify-content:space-between;font-size:10px;color:var(--text-muted);margin-bottom:3px"><span>Hacia ${nextCat.label}</span><span>${total} / ${nextCat.min} pts</span></div><div style="background:var(--border);border-radius:99px;height:5px;overflow:hidden"><div style="height:100%;width:${progress}%;background:${cat.color};border-radius:99px"></div></div></div>`:'<div style="font-size:11px;color:var(--gold);font-weight:700">🔥 ¡Nivel máximo!</div>'}
+            <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
+              <div style="font-size:11px;color:var(--text-muted)"><span style="color:#f59e0b;font-weight:700">${exactos}</span> exactos</div>
+              <div style="font-size:11px;color:var(--text-muted)">·</div>
+              <div style="font-size:11px;color:var(--text-muted)"><span style="color:#4aafd4;font-weight:700">${resultados}</span> result.</div>
+            </div>`;
+        }
+      } catch(e) {
+        console.error('[dashboard] Error cargando datos:', e);
+      }
+    }
+
+    // Iniciar dashboard apenas haya usuario autenticado
+    onAuthStateChanged(auth, (user) => {
+      if (user) loadDashboard(user);
+    });
 
     let groupsLoaded = false, newsLoaded = false, rulesLoaded = false,
         disclaimerLoaded = false, paymentLoaded = false, rankingLoaded = false;
@@ -287,7 +409,7 @@
       }
     }
 
-    // ── Indicador de scroll en tabs ────────────────────────────────────────────────────
+    // ── Indicador de scroll en tabs ────────────────────────────────────────
     const tabsEl = document.getElementById('mainTabs');
     const fadeEl = document.getElementById('tabsFadeRight');
     const hintEl = document.getElementById('tabsHint');

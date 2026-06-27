@@ -14,6 +14,7 @@ let myPreds      = {};
 let unsub        = null;
 let activeFilter = 'all'; // 'all' | 'upcoming' | 'nopred'
 let groupStage   = null;  // valor de groups.stage: 'fase_grupos' | 'eliminacion'
+let _snapCache   = null;  // último snapshot recibido, para re-render tras cargar groupStage
 
 // ── Determina si un partido es de fase de grupos ──────────────────────────
 function isGroupPhase(phase) {
@@ -48,7 +49,7 @@ onAuthStateChanged(auth, async (user) => {
   );
   predsSnap.forEach(d => { myPreds[d.data().match_id] = d.data(); });
 
-  // Cargar el stage del grupo para filtrar partidos compatibles
+  // Cargar el stage del grupo ANTES de suscribirse al snapshot
   if (GROUP_ID) {
     const gSnap = await getDoc(doc(db, 'groups', GROUP_ID));
     if (gSnap.exists()) groupStage = gSnap.data().stage || null;
@@ -59,12 +60,15 @@ onAuthStateChanged(auth, async (user) => {
   if (unsub) unsub();
   unsub = onSnapshot(
     query(collection(db, 'matches'), orderBy('kickoff')),
-    (snap) => renderMatches(snap),
-    (err)  => console.error('[matches] onSnapshot error:', err)
+    (snap) => {
+      _snapCache = snap;
+      renderMatches(snap);
+    },
+    (err) => console.error('[matches] onSnapshot error:', err)
   );
 });
 
-// ── Barra de filtros ────────────────────────────────────────────────────
+// ── Barra de filtros ──────────────────────────────────────────────────────
 function injectFilterBar() {
   const existing = document.getElementById('matchFilterBar');
   if (existing) return;
@@ -157,7 +161,7 @@ function applyFilter() {
   }
 }
 
-// ── Helpers de fecha ─────────────────────────────────────────────────────
+// ── Helpers de fecha ──────────────────────────────────────────────────────
 function toLocalDateKey(date) {
   return date.toLocaleDateString('en-CA', { timeZone: TZ });
 }
@@ -229,7 +233,7 @@ function resultBadge(type) {
   return '';
 }
 
-// ── Render principal ───────────────────────────────────────────────────────
+// ── Render principal ──────────────────────────────────────────────────────
 function renderMatches(snap) {
   const container = document.getElementById('matchList');
   if (!container) return;
