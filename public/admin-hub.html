@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Admin — WC2026</title>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    body { min-height: 100vh; }
+
+    .hub-hero {
+      text-align: center;
+      padding: 36px 20px 24px;
+    }
+    .hub-hero-title {
+      font-size: 2rem;
+      font-weight: 900;
+      background: linear-gradient(135deg, #f59e0b, #fbbf24, #34d399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 6px;
+    }
+    .hub-hero-sub {
+      font-size: 13px;
+      color: var(--text-muted, #94a3b8);
+    }
+    .hub-user-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(245,158,11,0.1);
+      border: 1px solid rgba(245,158,11,0.25);
+      border-radius: 20px;
+      padding: 6px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #f59e0b;
+      margin-top: 10px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted, #94a3b8);
+      margin: 28px 0 12px;
+      padding-left: 4px;
+    }
+
+    .tool-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 16px;
+      padding: 18px 20px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.18s ease;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .tool-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--card-accent, #4aafd4);
+      border-radius: 3px 0 0 3px;
+      opacity: 0;
+      transition: opacity 0.18s;
+    }
+    .tool-card:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: var(--card-accent, #4aafd4);
+      color: inherit;
+      text-decoration: none;
+      transform: translateY(-1px);
+    }
+    .tool-card:hover::before { opacity: 1; }
+
+    .tool-icon {
+      font-size: 1.8rem;
+      flex-shrink: 0;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--icon-bg, rgba(74,175,212,0.1));
+      border-radius: 12px;
+    }
+    .tool-info { flex: 1; min-width: 0; }
+    .tool-title {
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: #f1f5f9;
+      margin-bottom: 3px;
+    }
+    .tool-desc {
+      font-size: 12px;
+      color: var(--text-muted, #94a3b8);
+      line-height: 1.4;
+    }
+    .tool-arrow {
+      font-size: 1.1rem;
+      color: var(--text-muted, #94a3b8);
+      flex-shrink: 0;
+      transition: transform 0.15s;
+    }
+    .tool-card:hover .tool-arrow { transform: translateX(4px); }
+
+    .tool-badge {
+      font-size: 10px;
+      font-weight: 800;
+      border-radius: 20px;
+      padding: 2px 9px;
+      flex-shrink: 0;
+    }
+    .badge-new  { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+    .badge-tool { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+
+    #accessDenied {
+      display: none;
+      text-align: center;
+      padding: 80px 20px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar" style="background: linear-gradient(135deg,#0d1117,#1a1a2e) !important; border-color: rgba(245,158,11,0.3)">
+    <div class="navbar-brand">
+      <div>
+        <div style="font-weight:900;font-size:1.05rem">🏆 WC2026 — Panel Admin</div>
+        <div class="navbar-powered">by Largotek</div>
+      </div>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+      <button id="themeToggleBtn">☀️ Claro</button>
+      <a href="dashboard.html" class="btn btn-outline-light btn-sm">🏠 Inicio</a>
+      <button id="logoutBtn" class="btn btn-outline-danger btn-sm d-none">Salir</button>
+    </div>
+  </nav>
+
+  <!-- ACCESO DENEGADO -->
+  <div id="accessDenied">
+    <div style="font-size:3rem;margin-bottom:16px">🔒</div>
+    <div style="font-weight:800;font-size:1.2rem;color:#f87171;margin-bottom:8px">Acceso restringido</div>
+    <div style="font-size:13px;color:var(--text-muted)">Esta página es solo para administradores.</div>
+    <a href="dashboard.html" class="btn btn-outline-light mt-4">← Volver al inicio</a>
+  </div>
+
+  <!-- CONTENIDO ADMIN -->
+  <div id="adminContent" style="display:none">
+    <div class="hub-hero">
+      <div class="hub-hero-title">🛠️ Panel de Administración</div>
+      <div class="hub-hero-sub">Todas las herramientas de gestión en un solo lugar</div>
+      <div class="hub-user-badge">👑 Super Admin &nbsp;<span id="adminName" style="font-weight:600;color:#fbbf24"></span></div>
+    </div>
+
+    <div class="container pb-5" style="max-width:780px">
+
+      <!-- PARTIDOS -->
+      <div class="section-label">⚽ Partidos y resultados</div>
+      <div class="d-flex flex-column gap-3">
+
+        <a href="admin.html" class="tool-card" style="--card-accent:#4aafd4;--icon-bg:rgba(74,175,212,0.1)">
+          <div class="tool-icon">⚙️</div>
+          <div class="tool-info">
+            <div class="tool-title">Administrador principal</div>
+            <div class="tool-desc">Gestionar partidos, resultados, grupos de usuarios, configuración general</div>
+          </div>
+          <div class="tool-arrow">→</div>
+        </a>
+
+        <a href="admin-kickoffs.html" class="tool-card" style="--card-accent:#f59e0b;--icon-bg:rgba(245,158,11,0.1)">
+          <div class="tool-icon">⏰</div>
+          <div class="tool-info">
+            <div class="tool-title">Horarios y kickoffs</div>
+            <div class="tool-desc">Actualizar fechas y horas de inicio de los partidos masivamente</div>
+          </div>
+          <div class="tool-arrow">→</div>
+        </a>
+
+        <a href="load-matches.html" class="tool-card" style="--card-accent:#a78bfa;--icon-bg:rgba(167,139,250,0.1)">
+          <div class="tool-icon">📥</div>
+          <div class="tool-info">
+            <div class="tool-title">Cargar partidos</div>
+            <div class="tool-desc">Importar partidos desde JSON o carga masiva inicial</div>
+          </div>
+          <div class="tool-arrow">→</div>
+        </a>
+
+      </div>
+
+      <!-- PRONOSTICOS -->
+      <div class="section-label">📊 Pronósticos y puntaje</div>
+      <div class="d-flex flex-column gap-3">
+
+        <a href="admin-predictions.html" class="tool-card" style="--card-accent:#34d399;--icon-bg:rgba(52,211,153,0.1)">
+          <div class="tool-icon">✏️</div>
+          <div class="tool-info">
+            <div class="tool-title">Editor de pronósticos</div>
+            <div class="tool-desc">Ver y editar los pronósticos de cada jugador por grupo y partido</div>
+          </div>
+          <div class="tool-arrow">→</div>
+        </a>
+
+        <a href="admin-report.html" class="tool-card" style="--card-accent:#f87171;--icon-bg:rgba(248,113,113,0.1)">
+          <div class="tool-icon">📊</div>
+          <div class="tool-info">
+            <div class="tool-title">Reporte de puntos</div>
+            <div class="tool-desc">Ver tabla de posiciones y puntos acumulados por grupo</div>
+          </div>
+          <div class="tool-arrow">→</div>
+        </a>
+
+        <a href="admin-fix-predictions.html" class="tool-card" style="--card-accent:#fb923c;--icon-bg:rgba(251,146,60,0.1)">
+          <div class="tool-icon">🔧</div>
+          <div class="tool-info">
+            <div class="tool-title">Migrar pronósticos</div>
+            <div class="tool-desc">Detectar y corregir pronósticos con ID incorrecto (autogenerado por Firestore)</div>
+          </div>
+          <span class="tool-badge badge-tool">🛠️ Utilidad</span>
+          <div class="tool-arrow">→</div>
+        </a>
+
+      </div>
+
+      <!-- COMUNICACION -->
+      <div class="section-label">💬 Comunicación</div>
+      <div class="d-flex flex-column gap-3">
+
+        <a href="admin-messages.html" class="tool-card" style="--card-accent:#c084fc;--icon-bg:rgba(192,132,252,0.1)">
+          <div class="tool-icon">💬</div>
+          <div class="tool-info">
+            <div class="tool-title">Mensajes de bienvenida</div>
+            <div class="tool-desc">Crear mensajes que aparecen al usuario al ingresar — globales o personalizados</div>
+          </div>
+          <span class="tool-badge badge-new">✨ Nuevo</span>
+          <div class="tool-arrow">→</div>
+        </a>
+
+      </div>
+
+      <!-- ACCESOS RAPIDOS -->
+      <div class="section-label">🔗 Accesos rápidos externos</div>
+      <div class="d-flex flex-column gap-3">
+
+        <a href="https://console.firebase.google.com" target="_blank" class="tool-card" style="--card-accent:#f59e0b;--icon-bg:rgba(245,158,11,0.08)">
+          <div class="tool-icon">🔥</div>
+          <div class="tool-info">
+            <div class="tool-title">Firebase Console</div>
+            <div class="tool-desc">Firestore, Auth, Hosting, Reglas — consola oficial de Google Firebase</div>
+          </div>
+          <div class="tool-arrow">↗</div>
+        </a>
+
+        <a href="https://github.com/odoolargotek/worldcup2026" target="_blank" class="tool-card" style="--card-accent:#94a3b8;--icon-bg:rgba(148,163,184,0.08)">
+          <div class="tool-icon">💙</div>
+          <div class="tool-info">
+            <div class="tool-title">Repositorio GitHub</div>
+            <div class="tool-desc">Código fuente, commits, historial de cambios</div>
+          </div>
+          <div class="tool-arrow">↗</div>
+        </a>
+
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module">
+    import { auth, db } from './js/firebase-config.js';
+    import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
+    import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+    const SUPER_ADMIN_UID = 'j4nrnj5mFfYkwXSbXYs46MqFf2p2';
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { window.location.href = 'index.html'; return; }
+
+      if (user.uid !== SUPER_ADMIN_UID) {
+        document.getElementById('accessDenied').style.display = 'block';
+        return;
+      }
+
+      document.getElementById('adminContent').style.display = 'block';
+      document.getElementById('logoutBtn').classList.remove('d-none');
+
+      const snap = await getDoc(doc(db, 'users', user.uid));
+      const name = snap.exists() ? (snap.data().display_name || user.email) : user.email;
+      document.getElementById('adminName').textContent = name;
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await signOut(auth);
+      window.location.href = 'index.html';
+    });
+
+    // Theme toggle
+    const btn = document.getElementById('themeToggleBtn');
+    if (btn) {
+      const updateLabel = () => { btn.textContent = document.body.classList.contains('theme-light') ? '🌙 Oscuro' : '☀️ Claro'; };
+      updateLabel();
+      btn.addEventListener('click', () => {
+        document.body.classList.toggle('theme-light');
+        localStorage.setItem('theme', document.body.classList.contains('theme-light') ? 'light' : 'dark');
+        updateLabel();
+      });
+    }
+  </script>
+</body>
+</html>
