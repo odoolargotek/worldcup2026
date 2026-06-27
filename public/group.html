@@ -16,7 +16,6 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="css/sponsor.css">
   <style>
-    /* ── Tab scroll wrapper ── */
     .tabs-scroll-wrapper {
       position: relative;
       margin-bottom: 1.2rem;
@@ -29,8 +28,6 @@
       padding-bottom: 2px;
     }
     #mainTabs::-webkit-scrollbar { display: none; }
-
-    /* Fade derecho */
     .tabs-fade-right {
       position: absolute;
       top: 0; right: 0;
@@ -45,8 +42,6 @@
       padding-right: 6px;
     }
     .tabs-fade-right.hidden { opacity: 0; }
-
-    /* Flecha pulsante */
     .tabs-arrow {
       font-size: 18px;
       animation: arrowPulse 1.2s ease-in-out infinite;
@@ -57,8 +52,6 @@
       0%, 100% { transform: translateX(0);   opacity: 1; }
       50%       { transform: translateX(4px); opacity: 0.5; }
     }
-
-    /* Hint "desliza" — solo móvil, solo primera vez */
     .tabs-hint {
       font-size: 10px;
       color: var(--text-muted, #94a3b8);
@@ -70,6 +63,28 @@
       transition: opacity 0.5s;
     }
     .tabs-hint.hidden { opacity: 0; pointer-events: none; }
+
+    /* Skeleton loader */
+    .skeleton-card {
+      background: var(--bg-card, #1e293b);
+      border: 1px solid var(--border, #334155);
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 10px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .skeleton-pulse {
+      background: linear-gradient(90deg, rgba(255,255,255,0.04) 25%, rgba(255,255,255,0.09) 50%, rgba(255,255,255,0.04) 75%);
+      background-size: 200% 100%;
+      animation: skeletonShimmer 1.4s infinite;
+      border-radius: 6px;
+    }
+    @keyframes skeletonShimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
   </style>
 </head>
 <body>
@@ -97,7 +112,6 @@
     <a href="legal.html" target="_blank" style="color:#f5a0ac;text-decoration:underline;margin-left:6px">Aviso legal completo</a>
   </div>
 
-  <!-- Banner Largotek -->
   <div class="sponsor-banner" style="cursor:pointer" onclick="window.open('https://www.largotek.com','_blank')">
     <div class="sponsor-banner-accent" style="background:#1D90C6"></div>
     <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
@@ -147,7 +161,6 @@
 
     <div id="favsInlineSection"></div>
 
-    <!-- Tabs con indicador de scroll -->
     <div class="tabs-scroll-wrapper">
       <ul class="nav nav-tabs" id="mainTabs">
         <li class="nav-item" style="white-space:nowrap"><button class="nav-link active" data-tab="matches">📅 Partidos</button></li>
@@ -158,16 +171,43 @@
         <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="rules">ℹ️ Cómo jugar</button></li>
         <li class="nav-item" style="white-space:nowrap"><button class="nav-link" data-tab="disclaimer">⚖️ Aviso Legal</button></li>
       </ul>
-      <!-- Indicador fade + flecha derecha -->
       <div class="tabs-fade-right" id="tabsFadeRight">
         <span class="tabs-arrow">›</span>
       </div>
     </div>
-    <!-- Hint desliza (solo móvil) -->
     <div class="tabs-hint" id="tabsHint">👆 Desliza para ver más opciones</div>
 
-    <div id="matchesTab"><div id="matchList"><div class="text-center py-4" style="color:var(--text-muted)">Cargando partidos...</div></div></div>
-    <div id="rankingTab" class="d-none"></div>
+    <div id="matchesTab">
+      <div id="matchList">
+        <div id="matchSkeleton">
+          <div class="skeleton-card">
+            <div class="skeleton-pulse" style="width:44px;height:44px;border-radius:50%"></div>
+            <div style="flex:1">
+              <div class="skeleton-pulse" style="height:14px;width:60%;margin-bottom:8px"></div>
+              <div class="skeleton-pulse" style="height:11px;width:40%"></div>
+            </div>
+            <div class="skeleton-pulse" style="width:72px;height:32px;border-radius:8px"></div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton-pulse" style="width:44px;height:44px;border-radius:50%"></div>
+            <div style="flex:1">
+              <div class="skeleton-pulse" style="height:14px;width:55%;margin-bottom:8px"></div>
+              <div class="skeleton-pulse" style="height:11px;width:35%"></div>
+            </div>
+            <div class="skeleton-pulse" style="width:72px;height:32px;border-radius:8px"></div>
+          </div>
+          <div class="skeleton-card">
+            <div class="skeleton-pulse" style="width:44px;height:44px;border-radius:50%"></div>
+            <div style="flex:1">
+              <div class="skeleton-pulse" style="height:14px;width:65%;margin-bottom:8px"></div>
+              <div class="skeleton-pulse" style="height:11px;width:45%"></div>
+            </div>
+            <div class="skeleton-pulse" style="width:72px;height:32px;border-radius:8px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="rankingTab" class="d-none"><div style="text-align:center;padding:40px;color:var(--text-muted)">Cargando ranking...</div></div>
     <div id="groupsTab" class="d-none"></div>
     <div id="paymentTab" class="d-none"></div>
     <div id="newsTab" class="d-none"></div>
@@ -187,18 +227,17 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script src="js/firebase-config.js" type="module"></script>
   <script src="js/auth.js" type="module"></script>
-  <script src="js/matches.js?v=3" type="module"></script>
-  <script src="js/standings.js?v=3" type="module"></script>
-  <script src="js/favorite.js?v=3" type="module"></script>
+  <script src="js/matches.js" type="module"></script>
+  <script src="js/favorite.js" type="module"></script>
   <script type="module">
-    import { renderGroupsTables } from './js/groups-table.js?v=3';
-    import { renderNews }         from './js/news.js?v=3';
-    import { renderRules }        from './js/rules.js?v=3';
-    import { renderDisclaimer }   from './js/disclaimer.js?v=3';
-    import { renderPayment }      from './js/payment.js?v=1';
+    import { renderGroupsTables } from './js/groups-table.js';
+    import { renderNews }         from './js/news.js';
+    import { renderRules }        from './js/rules.js';
+    import { renderDisclaimer }   from './js/disclaimer.js';
+    import { renderPayment }      from './js/payment.js';
 
     let groupsLoaded = false, newsLoaded = false, rulesLoaded = false,
-        disclaimerLoaded = false, paymentLoaded = false;
+        disclaimerLoaded = false, paymentLoaded = false, rankingLoaded = false;
     const TABS = ['matches','ranking','groups','payment','news','rules','disclaimer'];
 
     function activateTab(tabName) {
@@ -206,7 +245,6 @@
       const btn = document.querySelector(`[data-tab="${tabName}"]`);
       if (btn) {
         btn.classList.add('active');
-        // Scroll suave al tab activo
         btn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
       }
       TABS.forEach(t => document.getElementById(t+'Tab')?.classList.toggle('d-none', t !== tabName));
@@ -216,6 +254,18 @@
       btn.addEventListener('click', async () => {
         const tab = btn.dataset.tab;
         activateTab(tab);
+
+        // standings.js carga LAZY — solo cuando el usuario abre Ranking
+        if (tab === 'ranking' && !rankingLoaded) {
+          rankingLoaded = true;
+          try {
+            const { initStandings } = await import('./js/standings.js');
+            initStandings();
+          } catch(e) {
+            document.getElementById('rankingTab').innerHTML =
+              '<div style="text-align:center;padding:40px;color:var(--accent)">❌ Error al cargar ranking. Recarga la página.</div>';
+          }
+        }
         if (tab === 'groups'     && !groupsLoaded)     { groupsLoaded     = true; await renderGroupsTables(); }
         if (tab === 'news'       && !newsLoaded)       { newsLoaded       = true; renderNews(); }
         if (tab === 'rules'      && !rulesLoaded)      { rulesLoaded      = true; renderRules(); }
@@ -227,15 +277,21 @@
     const initTab = new URLSearchParams(window.location.search).get('tab');
     if (initTab && TABS.includes(initTab)) {
       activateTab(initTab);
-      if (initTab === 'payment') { paymentLoaded = true; renderPayment(document.getElementById('paymentTab')); }
+      if (initTab === 'ranking') {
+        rankingLoaded = true;
+        import('./js/standings.js').then(({ initStandings }) => initStandings()).catch(() => {});
+      }
+      if (initTab === 'payment') {
+        paymentLoaded = true;
+        renderPayment(document.getElementById('paymentTab'));
+      }
     }
 
-    // ── Indicador de scroll en tabs ──────────────────────────────────
-    const tabsEl   = document.getElementById('mainTabs');
-    const fadeEl   = document.getElementById('tabsFadeRight');
-    const hintEl   = document.getElementById('tabsHint');
+    // ── Indicador de scroll en tabs ────────────────────────────────────────────────────
+    const tabsEl = document.getElementById('mainTabs');
+    const fadeEl = document.getElementById('tabsFadeRight');
+    const hintEl = document.getElementById('tabsHint');
 
-    // Leer el color de fondo real para el fade gradient
     function syncFadeBg() {
       const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim() || '#0f172a';
       fadeEl.style.background = `linear-gradient(to right, transparent, ${bg} 80%)`;
@@ -245,26 +301,19 @@
     function updateFade() {
       const atEnd = tabsEl.scrollLeft + tabsEl.clientWidth >= tabsEl.scrollWidth - 4;
       fadeEl.classList.toggle('hidden', atEnd);
-      // Ocultar hint tras primer scroll
       if (tabsEl.scrollLeft > 10 && hintEl) hintEl.classList.add('hidden');
     }
 
     tabsEl.addEventListener('scroll', updateFade, { passive: true });
     window.addEventListener('resize', updateFade);
 
-    // Solo mostrar hint en móvil
     const isMobile = () => window.innerWidth < 768;
     if (!isMobile() || tabsEl.scrollWidth <= tabsEl.clientWidth) {
       if (hintEl) hintEl.classList.add('hidden');
     }
-
-    // Ocultar hint automáticamente después de 4s
     setTimeout(() => { if (hintEl) hintEl.classList.add('hidden'); }, 4000);
-
-    // También ocultar fade si no hay overflow
     setTimeout(updateFade, 200);
 
-    // Re-sincronizar color al cambiar tema
     document.getElementById('themeToggleBtn')?.addEventListener('click', () => {
       setTimeout(syncFadeBg, 50);
     });
