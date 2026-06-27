@@ -11,17 +11,18 @@
 <div class="container py-5" style="max-width:640px">
   <h4 style="color:var(--gold);font-weight:800">🔧 Migrar <code>stage</code> de grupos</h4>
   <p style="color:var(--text-muted);font-size:14px">
-    Este script actualiza el campo <code>stage</code> de todos los grupos en Firestore
-    para que use los mismos valores que <code>type</code> de los partidos:
+    Este script actualiza el campo <code>stage</code> de todos los grupos en Firestore.
+    Ahora también detecta grupos de eliminatoria por su <strong>nombre</strong> (ej: "knockout", "octavos", etc.).
   </p>
   <table class="table table-sm table-dark" style="font-size:13px;margin-bottom:16px">
-    <thead><tr><th>Valor anterior</th><th>Nuevo valor</th></tr></thead>
+    <thead><tr><th>Condición</th><th>Resultado</th></tr></thead>
     <tbody>
-      <tr><td><code>Fase de Grupos</code> / <code>fase_grupos</code> / <code>""</code></td><td><strong style="color:#34d399">fase_grupos</strong></td></tr>
-      <tr><td><code>Octavos</code> / <code>Cuartos</code> / <code>Semifinal</code> / <code>Final</code> / <code>eliminacion</code></td><td><strong style="color:#4aafd4">eliminacion</strong></td></tr>
+      <tr><td>stage o nombre contiene: <code>knockout / octavo / cuarto / semifinal / final / eliminacion / playoff</code></td><td><strong style="color:#4aafd4">eliminacion</strong></td></tr>
+      <tr><td>Todo lo demás (vacío, <code>Fase de Grupos</code>, etc.)</td><td><strong style="color:#34d399">fase_grupos</strong></td></tr>
+      <tr><td>Ya tiene el valor correcto</td><td><em style="color:var(--text-muted)">sin cambio</em></td></tr>
     </tbody>
   </table>
-  <p style="color:#f5a0ac;font-size:13px">⚠️ Los grupos que ya tienen <code>fase_grupos</code> o <code>eliminacion</code> se saltarán.</p>
+  <p style="color:#f5a0ac;font-size:13px">⚠️ Si un grupo tiene stage="fase_grupos" pero su nombre contiene "knockout", será corregido a <code>eliminacion</code>.</p>
   <button id="btnRun" class="btn btn-warning fw-bold">🚀 Ejecutar migración</button>
   <div id="log" style="margin-top:20px;font-family:monospace;font-size:13px;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:16px;white-space:pre-wrap;min-height:80px;color:var(--text)">Listo para migrar...</div>
 </div>
@@ -32,12 +33,22 @@ import { collection, getDocs, doc, updateDoc } from 'https://www.gstatic.com/fir
 
 const KNOCKOUT_KEYWORDS = ['octavo', 'cuarto', 'semifinal', 'final', 'eliminacion', 'knockout', 'playoff'];
 
-function resolveStage(raw) {
-  if (!raw) return 'fase_grupos';
-  const lower = raw.toLowerCase().trim();
-  if (lower === 'fase_grupos' || lower === 'eliminacion') return null; // ya migrado
-  if (KNOCKOUT_KEYWORDS.some(k => lower.includes(k))) return 'eliminacion';
-  return 'fase_grupos'; // default: Fase de Grupos u otros
+function resolveStage(stage, name) {
+  const lowerStage = (stage || '').toLowerCase().trim();
+  const lowerName  = (name  || '').toLowerCase().trim();
+
+  // Detectar eliminatoria por stage O por nombre
+  const isKnockout = KNOCKOUT_KEYWORDS.some(k => lowerStage.includes(k) || lowerName.includes(k));
+
+  if (isKnockout) {
+    // Si ya está correcto, no tocar
+    if (lowerStage === 'eliminacion') return null;
+    return 'eliminacion';
+  }
+
+  // Todo lo demás es fase de grupos
+  if (lowerStage === 'fase_grupos') return null; // ya correcto
+  return 'fase_grupos';
 }
 
 const log = document.getElementById('log');
@@ -52,9 +63,9 @@ document.getElementById('btnRun').addEventListener('click', async () => {
 
   for (const d of snap.docs) {
     const g = d.data();
-    const newStage = resolveStage(g.stage);
+    const newStage = resolveStage(g.stage, g.name);
     if (newStage === null) {
-      appendLog(`⏭️ ${g.name} — ya tiene stage="${g.stage}" (skip)`);
+      appendLog(`⏭️ ${g.name} — stage="${g.stage}" ya es correcto (skip)`);
       skipped++;
       continue;
     }
