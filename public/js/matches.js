@@ -15,6 +15,27 @@ let unsub        = null;
 let activeFilter = 'all'; // 'all' | 'upcoming' | 'nopred'
 let groupStage   = null;  // valor de groups.stage: 'fase_grupos' | 'eliminacion'
 
+// ── Determina si un partido es de fase de grupos ──────────────────────────
+function isGroupPhase(phase) {
+  if (!phase) return true;
+  const s = String(phase).trim().toLowerCase();
+  return s.startsWith('grupo') || s === 'fase_grupos' || s === 'fase de grupos' || s === 'grupos';
+}
+
+// ── Determina si el grupo es fase de grupos ───────────────────────────────
+function groupIsGroupStage() {
+  if (!groupStage) return true; // sin stage definido → asumir fase de grupos
+  const s = String(groupStage).trim().toLowerCase();
+  return s === 'fase_grupos' || s === '' || s === 'fase de grupos' || s === 'grupos';
+}
+
+// ── Filtra si un partido corresponde al stage del grupo ───────────────────
+function matchBelongsToGroup(m) {
+  const matchIsGroup = isGroupPhase(m.phase);
+  const gIsGroup     = groupIsGroupStage();
+  return matchIsGroup === gIsGroup;
+}
+
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
 
@@ -216,9 +237,10 @@ function renderMatches(snap) {
 
   const byDate = {};
   snap.forEach(d => {
-    const m       = d.data();
-    // ── Filtrar por type del partido == stage del grupo ──
-    if (groupStage && m.type && m.type !== groupStage) return;
+    const m = d.data();
+
+    // ── Filtrar: solo mostrar partidos que correspondan al stage del grupo ──
+    if (!matchBelongsToGroup(m)) return;
 
     const kickoff = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
     const key     = toLocalDateKey(kickoff);
