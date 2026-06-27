@@ -22,14 +22,21 @@ function isGroupStageMatch(m) {
   return String(m.phase || '').startsWith('Grupo');
 }
 
+// Retorna true si el stage del grupo es de eliminatoria (cualquier valor que NO sea
+// vacío, null, undefined, o alguna variante de 'fase de grupos')
+function stageIsKnockout(stage) {
+  if (!stage) return false; // null, undefined, ''
+  const s = String(stage).trim().toLowerCase();
+  return s !== 'fase de grupos' && s !== 'grupos' && s !== 'fase grupos';
+}
+
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
 
   // Leer stage del grupo para decidir qué partidos mostrar
   const groupSnap  = await getDoc(doc(db, 'groups', GROUP_ID));
-  const groupStage = groupSnap.exists() ? (groupSnap.data().stage || '') : '';
-  // Es knockout solo si el stage está explícitamente definido y NO es Fase de Grupos
-  isKnockoutGroup  = groupStage !== '' && groupStage !== 'Fase de Grupos';
+  const groupStage = groupSnap.exists() ? (groupSnap.data().stage ?? null) : null;
+  isKnockoutGroup  = stageIsKnockout(groupStage);
 
   const predsSnap = await getDocs(
     query(collection(db, 'predictions'),
