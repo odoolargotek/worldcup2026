@@ -1,4 +1,4 @@
-// standings.js
+// standings.js — Ranking puro por puntos de pronósticos (sin favoritos ni fases)
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
@@ -7,8 +7,6 @@ import {
 
 const params   = new URLSearchParams(window.location.search);
 const GROUP_ID = params.get('gid');
-const PHASES   = ['Grupo A','Grupo B','Grupo C','Grupo D','Grupo E','Grupo F',
-                  'Grupo G','Grupo H','Grupo I','Grupo J','Grupo K','Grupo L'];
 
 let groupData = null;
 
@@ -20,11 +18,11 @@ function sym() {
 }
 
 function getCategory(pts) {
-  if (pts >= 150) return { label: '\ud83d\udd25 Leyenda',   color: '#f59e0b', bg: 'rgba(245,158,11,0.15)',  border: 'rgba(245,158,11,0.4)' };
-  if (pts >= 100) return { label: '\ud83c\udfc6 Experto',   color: '#4aafd4', bg: 'rgba(29,144,198,0.15)',  border: 'rgba(29,144,198,0.4)' };
-  if (pts >=  60) return { label: '\u26bd Competidor', color: '#34d399', bg: 'rgba(52,211,153,0.12)',  border: 'rgba(52,211,153,0.35)' };
-  if (pts >=  30) return { label: '\ud83c\udf31 En forma',  color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.35)' };
-  return                  { label: '\ud83d\udc36 Novato',    color: '#94a3b8', bg: 'rgba(148,163,184,0.1)',  border: 'rgba(148,163,184,0.3)' };
+  if (pts >= 150) return { label: '🔥 Leyenda',   color: '#f59e0b', bg: 'rgba(245,158,11,0.15)',  border: 'rgba(245,158,11,0.4)' };
+  if (pts >= 100) return { label: '🏆 Experto',   color: '#4aafd4', bg: 'rgba(29,144,198,0.15)',  border: 'rgba(29,144,198,0.4)' };
+  if (pts >=  60) return { label: '⚽ Competidor', color: '#34d399', bg: 'rgba(52,211,153,0.12)',  border: 'rgba(52,211,153,0.35)' };
+  if (pts >=  30) return { label: '🌱 En forma',  color: '#a78bfa', bg: 'rgba(167,139,250,0.12)', border: 'rgba(167,139,250,0.35)' };
+  return                  { label: '🐶 Novato',    color: '#94a3b8', bg: 'rgba(148,163,184,0.1)',  border: 'rgba(148,163,184,0.3)' };
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -42,63 +40,40 @@ function openScoringModal() {
   modal.innerHTML = `
   <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:420px;position:relative;max-height:90vh;overflow-y:auto">
     <button id="closeScoringModal" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;color:var(--text-muted);cursor:pointer">&times;</button>
-    <h5 style="font-weight:800;margin-bottom:4px;color:var(--primary-light)">\ud83d\udcca \u00bfC\u00f3mo se calculan los puntos?</h5>
-    <p style="font-size:12px;color:var(--text-muted);margin-bottom:18px">Cada partido tiene dos formas de sumar puntos:</p>
+    <h5 style="font-weight:800;margin-bottom:4px;color:var(--primary-light)">📊 ¿Cómo se calculan los puntos?</h5>
+    <p style="font-size:12px;color:var(--text-muted);margin-bottom:18px">Cada partido sumas puntos según qué tan bien pronosticaste:</p>
 
-    <!-- Pronósticos -->
-    <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">\ud83c\udfaf Pron\u00f3sticos de partido</div>
     <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
       <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
         <div>
-          <div style="font-weight:700;color:var(--gold)">\ud83c\udfaf Score exacto</div>
+          <div style="font-weight:700;color:var(--gold)">🎯 Score exacto</div>
           <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Adivinas el marcador exacto<br><span style="font-style:italic">Ej: pronosticas 2-1 y termina 2-1</span></div>
         </div>
         <div style="font-size:1.6rem;font-weight:800;color:var(--gold)">+6</div>
       </div>
       <div style="background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.3);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
         <div>
-          <div style="font-weight:700;color:#34d399">\u2705 Resultado correcto</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Aciertas qui\u00e9n gana o empate<br><span style="font-style:italic">Ej: pronosticas 1-0 y termina 3-0</span></div>
+          <div style="font-weight:700;color:#34d399">✅ Resultado correcto</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:2px">Aciertas quién gana o el empate<br><span style="font-style:italic">Ej: pronosticas 1-0 y termina 3-0</span></div>
         </div>
         <div style="font-size:1.6rem;font-weight:800;color:#34d399">+3</div>
       </div>
       <div style="background:rgba(148,163,184,0.06);border:1px solid rgba(148,163,184,0.15);border-radius:10px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center">
         <div>
-          <div style="font-weight:700;color:var(--text-muted)">\u274c Resultado incorrecto</div>
+          <div style="font-weight:700;color:var(--text-muted)">❌ Resultado incorrecto</div>
           <div style="font-size:12px;color:var(--text-muted);margin-top:2px">No aciertas el ganador</div>
         </div>
         <div style="font-size:1.6rem;font-weight:800;color:var(--text-muted)">0</div>
       </div>
     </div>
 
-    <!-- Favoritos -->
-    <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">\ud83c\udfc6 Favoritos por grupo</div>
-    <div style="background:rgba(29,144,198,0.08);border:1px solid rgba(29,144,198,0.3);border-radius:10px;padding:12px 16px;margin-bottom:18px">
-      <div style="font-size:13px;color:var(--text);margin-bottom:6px">Elige un favorito por cada grupo (A\u2013L). Si tu equipo avanza a la siguiente fase, \u00a1sumas puntos extra!</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-        <span style="background:rgba(29,144,198,0.15);color:#4aafd4;border:1px solid rgba(29,144,198,0.3);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700">\ud83e\udd47 1\u00b0 del grupo = m\u00e1s pts</span>
-        <span style="background:rgba(52,211,153,0.1);color:#34d399;border:1px solid rgba(52,211,153,0.3);border-radius:20px;padding:3px 10px;font-size:12px;font-weight:700">\u2705 Pasa de fase = pts extra</span>
-      </div>
-    </div>
-
-    <!-- Niveles -->
-    <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">\ud83d\udd25 Niveles de jugador</div>
-    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:6px">
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
-        <span style="color:#94a3b8">\ud83d\udc36 Novato</span><span style="color:var(--text-muted)">0 – 29 pts</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
-        <span style="color:#a78bfa">\ud83c\udf31 En forma</span><span style="color:var(--text-muted)">30 – 59 pts</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
-        <span style="color:#34d399">\u26bd Competidor</span><span style="color:var(--text-muted)">60 – 99 pts</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
-        <span style="color:#4aafd4">\ud83c\udfc6 Experto</span><span style="color:var(--text-muted)">100 – 149 pts</span>
-      </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px">
-        <span style="color:#f59e0b">\ud83d\udd25 Leyenda</span><span style="color:var(--text-muted)">150+ pts</span>
-      </div>
+    <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">🔥 Niveles</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:#94a3b8">🐶 Novato</span><span style="color:var(--text-muted)">0 – 29 pts</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:#a78bfa">🌱 En forma</span><span style="color:var(--text-muted)">30 – 59 pts</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:#34d399">⚽ Competidor</span><span style="color:var(--text-muted)">60 – 99 pts</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:#4aafd4">🏆 Experto</span><span style="color:var(--text-muted)">100 – 149 pts</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px"><span style="color:#f59e0b">🔥 Leyenda</span><span style="color:var(--text-muted)">150+ pts</span></div>
     </div>
   </div>`;
   document.body.appendChild(modal);
@@ -106,7 +81,6 @@ function openScoringModal() {
   modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
 }
 
-// Retorna { name, email } para el uid dado
 async function getUserInfo(uid) {
   if (userInfoCache[uid]) return userInfoCache[uid];
   let name  = null;
@@ -131,10 +105,6 @@ async function getUserInfo(uid) {
   return info;
 }
 
-async function getUserName(uid) {
-  return (await getUserInfo(uid)).name;
-}
-
 onAuthStateChanged(auth, async (user) => {
   if (!user || !GROUP_ID) return;
   const gSnap = await getDoc(doc(db, 'groups', GROUP_ID));
@@ -146,7 +116,7 @@ onAuthStateChanged(auth, async (user) => {
   const codeEl = document.getElementById('groupCodeDisplay');
   if (codeEl) codeEl.textContent = groupData.code;
   document.getElementById('copyCodeBtn')?.addEventListener('click', () => {
-    navigator.clipboard.writeText(groupData.code).then(() => alert('\u2705 C\u00f3digo copiado: ' + groupData.code));
+    navigator.clipboard.writeText(groupData.code).then(() => alert('✅ Código copiado: ' + groupData.code));
   });
 
   const prizeEl = document.getElementById('groupPrize');
@@ -170,15 +140,15 @@ function renderAdminPanel(user, g) {
   panel.id = 'adminPanel';
   panel.style.cssText = 'background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.3);border-radius:12px;padding:14px 18px;margin-bottom:16px';
   panel.innerHTML = `
-    <div style="font-size:12px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">\u2699\ufe0f Panel de administrador</div>
+    <div style="font-size:12px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">⚙️ Panel de administrador</div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
       <button id="toggleOpenBtn" class="btn btn-sm ${
         g.is_open === false ? 'btn-outline-success' : 'btn-outline-danger'
       }" style="font-size:12px;font-weight:700">
-        ${g.is_open === false ? '\ud83d\udfe2 Reabrir inscripciones' : '\ud83d\udd34 Cerrar inscripciones'}
+        ${g.is_open === false ? '🟢 Reabrir inscripciones' : '🔴 Cerrar inscripciones'}
       </button>
       <button id="editGroupBtn" class="btn btn-sm btn-outline-warning" style="font-size:12px;font-weight:700">
-        \u270f\ufe0f Editar configuraci\u00f3n
+        ✏️ Editar configuración
       </button>
     </div>
     <div id="adminMsg" style="margin-top:8px;font-size:12px"></div>`;
@@ -190,13 +160,13 @@ function renderAdminPanel(user, g) {
     g.is_open = !newState;
     const btn = document.getElementById('toggleOpenBtn');
     if (btn) {
-      btn.textContent = g.is_open === false ? '\ud83d\udfe2 Reabrir inscripciones' : '\ud83d\udd34 Cerrar inscripciones';
+      btn.textContent = g.is_open === false ? '🟢 Reabrir inscripciones' : '🔴 Cerrar inscripciones';
       btn.className   = `btn btn-sm ${g.is_open === false ? 'btn-outline-success' : 'btn-outline-danger'}`;
     }
     const msg = document.getElementById('adminMsg');
     if (msg) {
       msg.style.color = g.is_open === false ? '#f5a0ac' : '#4aafd4';
-      msg.textContent = g.is_open === false ? '\ud83d\udd34 Inscripciones cerradas.' : '\ud83d\udfe2 Inscripciones reabiertas.';
+      msg.textContent = g.is_open === false ? '🔴 Inscripciones cerradas.' : '🟢 Inscripciones reabiertas.';
     }
   });
 
@@ -234,14 +204,14 @@ async function openEditModal(g) {
 
   modal.innerHTML = `
   <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:16px;padding:24px;width:100%;max-width:480px;position:relative">
-    <button id="closeEditModal" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;color:var(--text-muted);cursor:pointer">\u00d7</button>
-    <h5 style="font-weight:800;margin-bottom:18px;color:var(--gold)">\u270f\ufe0f Editar comparsa</h5>
+    <button id="closeEditModal" style="position:absolute;top:14px;right:16px;background:none;border:none;font-size:1.4rem;color:var(--text-muted);cursor:pointer">×</button>
+    <h5 style="font-weight:800;margin-bottom:18px;color:var(--gold)">✏️ Editar comparsa</h5>
 
     <div style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap">
-      <button class="edit-tab-btn active" data-etab="general" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:rgba(245,158,11,0.15);color:var(--gold);cursor:pointer">\ud83d\udcdd General</button>
-      <button class="edit-tab-btn" data-etab="montos" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer">\ud83d\udcb0 Montos</button>
-      <button class="edit-tab-btn" data-etab="pago" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer">\ud83d\udcb3 Pago</button>
-      <button class="edit-tab-btn" data-etab="participantes" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer">\ud83d\udc65 Participantes</button>
+      <button class="edit-tab-btn active" data-etab="general" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:rgba(245,158,11,0.15);color:var(--gold);cursor:pointer">📝 General</button>
+      <button class="edit-tab-btn" data-etab="montos" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer">💰 Montos</button>
+      <button class="edit-tab-btn" data-etab="pago" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer">💳 Pago</button>
+      <button class="edit-tab-btn" data-etab="participantes" style="font-size:12px;font-weight:700;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--text-muted);cursor:pointer">👥 Participantes</button>
     </div>
 
     <!-- TAB: GENERAL -->
@@ -251,7 +221,7 @@ async function openEditModal(g) {
         <input type="text" id="editName" class="form-control" value="${escHtml(g.name || '')}" maxlength="50">
       </div>
       <div class="mb-3">
-        <label style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:block">Descripci\u00f3n (opcional)</label>
+        <label style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:block">Descripción (opcional)</label>
         <textarea id="editDesc" class="form-control" rows="2" maxlength="200" style="resize:none">${escHtml(g.description || '')}</textarea>
       </div>
     </div>
@@ -261,8 +231,8 @@ async function openEditModal(g) {
       <div class="mb-3">
         <label style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:block">Moneda</label>
         <select id="editCurrency" class="form-select">
-          <option value="USD" ${(g.currency||'USD')==='USD'?'selected':''}>USD \u2014 D\u00f3lar</option>
-          <option value="BOB" ${g.currency==='BOB'?'selected':''}>BOB \u2014 Boliviano</option>
+          <option value="USD" ${(g.currency||'USD')==='USD'?'selected':''}>USD — Dólar</option>
+          <option value="BOB" ${g.currency==='BOB'?'selected':''}>BOB — Boliviano</option>
         </select>
       </div>
       <div class="mb-3">
@@ -273,21 +243,20 @@ async function openEditModal(g) {
       <div class="mb-3">
         <label style="font-size:12px;color:var(--text-muted);margin-bottom:4px;display:block">Premio fijo (solo comparsa cerrada)</label>
         <input type="number" id="editPrize" class="form-control" min="0" value="${g.prize||0}">
-        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Si es comparsa abierta el pozo se calcula (cuota × participantes).</div>
       </div>
       <div class="mb-1">
-        <label style="font-size:12px;color:var(--text-muted);margin-bottom:6px;display:block">Distribuci\u00f3n del premio (%)</label>
+        <label style="font-size:12px;color:var(--text-muted);margin-bottom:6px;display:block">Distribución del premio (%)</label>
         <div style="display:flex;gap:8px;align-items:center">
           <div style="flex:1;text-align:center">
-            <div style="font-size:11px;color:#f59e0b;margin-bottom:4px">\ud83e\udd47 1\u00b0</div>
+            <div style="font-size:11px;color:#f59e0b;margin-bottom:4px">🥇 1°</div>
             <input type="number" id="editP1" class="form-control" min="0" max="100" value="${pct.p1||60}">
           </div>
           <div style="flex:1;text-align:center">
-            <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">\ud83e\udd48 2\u00b0</div>
+            <div style="font-size:11px;color:#9ca3af;margin-bottom:4px">🥈 2°</div>
             <input type="number" id="editP2" class="form-control" min="0" max="100" value="${pct.p2||30}">
           </div>
           <div style="flex:1;text-align:center">
-            <div style="font-size:11px;color:#d97706;margin-bottom:4px">\ud83e\udd49 3\u00b0</div>
+            <div style="font-size:11px;color:#d97706;margin-bottom:4px">🥉 3°</div>
             <input type="number" id="editP3" class="form-control" min="0" max="100" value="${pctP3}">
           </div>
         </div>
@@ -299,7 +268,7 @@ async function openEditModal(g) {
     <!-- TAB: PAGO -->
     <div id="etab-pago" class="d-none">
       <p style="font-size:12px;color:var(--text-muted);margin-bottom:14px">
-        Sube el QR de tu m\u00e9todo de pago para que los participantes puedan escanearlo.
+        Sube el QR de tu método de pago para que los participantes puedan escanearlo.
       </p>
       <div id="qrPreviewWrap" style="margin-bottom:14px;${existingQR ? '' : 'display:none'}">
         <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px">QR actual:</div>
@@ -307,7 +276,7 @@ async function openEditModal(g) {
           <img id="qrPreviewImg" src="${existingQR}" alt="QR de pago"
             style="width:120px;height:120px;object-fit:contain;border-radius:10px;border:1px solid var(--border);background:#fff;padding:6px">
           <button id="removeQrBtn" style="background:rgba(201,52,75,0.15);color:#f5a0ac;border:1px solid rgba(201,52,75,0.3);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer">
-            \ud83d\uddd1\ufe0f Quitar QR
+            🗑️ Quitar QR
           </button>
         </div>
       </div>
@@ -316,9 +285,9 @@ async function openEditModal(g) {
           ${existingQR ? 'Reemplazar QR' : 'Subir QR de pago'}
         </label>
         <input type="file" id="editQrInput" accept="image/*" class="form-control" style="font-size:12px">
-        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Formatos: JPG, PNG, WebP. M\u00e1x ~600 KB.</div>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:4px">Formatos: JPG, PNG, WebP. Máx ~600 KB.</div>
         <div id="qrUploadPreview" style="margin-top:10px;display:none">
-          <div style="font-size:11px;color:#34d399;margin-bottom:4px">\u2705 Nuevo QR seleccionado:</div>
+          <div style="font-size:11px;color:#34d399;margin-bottom:4px">✅ Nuevo QR seleccionado:</div>
           <img id="qrUploadImg" src="" alt="Preview" style="width:100px;height:100px;object-fit:contain;border-radius:8px;border:1px solid var(--border);background:#fff;padding:4px">
         </div>
       </div>
@@ -328,7 +297,7 @@ async function openEditModal(g) {
           placeholder="Ej: Transferir a cuenta 7XXXXXXX, poner tu nombre en referencia">${escHtml(existingInst)}</textarea>
       </div>
       <div style="display:flex;justify-content:flex-end">
-        <button id="savePayBtn" class="btn btn-sm btn-success" style="font-weight:700">\ud83d\udcbe Guardar pago</button>
+        <button id="savePayBtn" class="btn btn-sm btn-success" style="font-weight:700">💾 Guardar pago</button>
       </div>
       <div id="payMsg" style="margin-top:8px;font-size:12px;text-align:right"></div>
     </div>
@@ -340,14 +309,14 @@ async function openEditModal(g) {
         ${members.map(m => {
           const noName = !m.name || m.name === 'Sin nombre';
           const emailLine = m.email
-            ? `<div style="font-size:10px;color:var(--text-muted);margin-top:1px" title="${escHtml(m.email)}">\ud83d\udce7 ${escHtml(m.email)}</div>`
+            ? `<div style="font-size:10px;color:var(--text-muted);margin-top:1px">📧 ${escHtml(m.email)}</div>`
             : '';
           return `
-          <div id="member-row-${m.uid}" title="${m.email ? escHtml(m.email) : ''}" style="display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px">
+          <div id="member-row-${m.uid}" style="display:flex;align-items:center;gap:10px;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 14px">
             <div style="flex:1">
               <div style="font-weight:600;font-size:0.9rem${noName ? ';color:var(--text-muted);font-style:italic' : ''}">${escHtml(m.name)}</div>
               ${emailLine}
-              <div style="font-size:11px;color:var(--text-muted)">${m.role === 'admin' ? '\u2B50 Administrador' : 'Participante'}</div>
+              <div style="font-size:11px;color:var(--text-muted)">${m.role === 'admin' ? '⭐ Administrador' : 'Participante'}</div>
             </div>
             ${m.role !== 'admin' ? `
             <button onclick="window._kickMember('${m.uid}','${escHtml(m.name)}','${m.docId}')" style="background:rgba(201,52,75,0.15);color:#f5a0ac;border:1px solid rgba(201,52,75,0.3);border-radius:8px;padding:5px 12px;font-size:12px;font-weight:700;cursor:pointer">
@@ -360,7 +329,7 @@ async function openEditModal(g) {
 
     <div style="margin-top:20px;display:flex;gap:10px;justify-content:flex-end" id="editModalActions">
       <button id="cancelEditBtn" class="btn btn-outline-light btn-sm">Cancelar</button>
-      <button id="saveEditBtn" class="btn btn-warning btn-sm" style="font-weight:700">\ud83d\udcbe Guardar cambios</button>
+      <button id="saveEditBtn" class="btn btn-warning btn-sm" style="font-weight:700">💾 Guardar cambios</button>
     </div>
     <div id="editSaveMsg" style="margin-top:10px;font-size:12px;text-align:right"></div>
   </div>`;
@@ -385,14 +354,14 @@ async function openEditModal(g) {
   });
 
   document.getElementById('removeQrBtn')?.addEventListener('click', async () => {
-    if (!confirm('\u00bfQuitar el QR de pago?')) return;
+    if (!confirm('¿Quitar el QR de pago?')) return;
     try {
       await updateDoc(doc(db, 'groups', GROUP_ID), { payment_qr: '' });
       g.payment_qr = '';
       document.getElementById('qrPreviewWrap').style.display = 'none';
-      document.getElementById('payMsg').innerHTML = '<span style="color:#34d399">\u2705 QR eliminado.</span>';
+      document.getElementById('payMsg').innerHTML = '<span style="color:#34d399">✅ QR eliminado.</span>';
     } catch(e) {
-      document.getElementById('payMsg').innerHTML = '<span style="color:#f5a0ac">\u26a0\ufe0f Error al quitar el QR.</span>';
+      document.getElementById('payMsg').innerHTML = '<span style="color:#f5a0ac">⚠️ Error al quitar el QR.</span>';
     }
   });
 
@@ -421,11 +390,11 @@ async function openEditModal(g) {
       }
       await updateDoc(doc(db, 'groups', GROUP_ID), updates);
       g.payment_instructions = inst;
-      if (payMsg) payMsg.innerHTML = '<span style="color:#34d399">\u2705 Datos de pago guardados correctamente.</span>';
+      if (payMsg) payMsg.innerHTML = '<span style="color:#34d399">✅ Datos de pago guardados correctamente.</span>';
     } catch(err) {
-      if (payMsg) payMsg.innerHTML = '<span style="color:#f5a0ac">\u26a0\ufe0f Error al guardar. Intenta de nuevo.</span>';
+      if (payMsg) payMsg.innerHTML = '<span style="color:#f5a0ac">⚠️ Error al guardar. Intenta de nuevo.</span>';
     } finally {
-      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '\ud83d\udcbe Guardar pago'; }
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '💾 Guardar pago'; }
     }
   });
 
@@ -454,8 +423,8 @@ async function openEditModal(g) {
     const p3       = parseInt(document.getElementById('editP3')?.value) || 0;
     const saveMsg  = document.getElementById('editSaveMsg');
     const pctErr   = document.getElementById('pctError');
-    if (!name) { if (saveMsg) saveMsg.innerHTML = '<span style="color:#f5a0ac">\u26a0\ufe0f El nombre no puede estar vac\u00edo</span>'; return; }
-    if (p1 + p2 + p3 !== 100) { if (pctErr) pctErr.textContent = '\u26a0\ufe0f La distribuci\u00f3n debe sumar exactamente 100%'; if (saveMsg) saveMsg.innerHTML = ''; return; }
+    if (!name) { if (saveMsg) saveMsg.innerHTML = '<span style="color:#f5a0ac">⚠️ El nombre no puede estar vacío</span>'; return; }
+    if (p1 + p2 + p3 !== 100) { if (pctErr) pctErr.textContent = '⚠️ La distribución debe sumar exactamente 100%'; if (saveMsg) saveMsg.innerHTML = ''; return; }
     if (pctErr) pctErr.textContent = '';
     const btn = document.getElementById('saveEditBtn');
     if (btn) { btn.disabled = true; btn.textContent = 'Guardando...'; }
@@ -464,16 +433,16 @@ async function openEditModal(g) {
       Object.assign(g, { name, description: desc, currency, fee, prize, prize_pct: { p1, p2, p3 } });
       const nameNav = document.getElementById('groupNameNav');
       if (nameNav) nameNav.textContent = name;
-      if (saveMsg) saveMsg.innerHTML = '<span style="color:#34d399">\u2705 Guardado correctamente. Recarga para ver todos los cambios.</span>';
+      if (saveMsg) saveMsg.innerHTML = '<span style="color:#34d399">✅ Guardado correctamente. Recarga para ver todos los cambios.</span>';
     } catch(e) {
-      if (saveMsg) saveMsg.innerHTML = '<span style="color:#f5a0ac">\u26a0\ufe0f Error al guardar. Intenta de nuevo.</span>';
+      if (saveMsg) saveMsg.innerHTML = '<span style="color:#f5a0ac">⚠️ Error al guardar. Intenta de nuevo.</span>';
     } finally {
-      if (btn) { btn.disabled = false; btn.textContent = '\ud83d\udcbe Guardar cambios'; }
+      if (btn) { btn.disabled = false; btn.textContent = '💾 Guardar cambios'; }
     }
   });
 
   window._kickMember = async (uid, name, docId) => {
-    if (!confirm(`\u00bfExpulsar a ${name} de la comparsa?`)) return;
+    if (!confirm(`¿Expulsar a ${name} de la comparsa?`)) return;
     try {
       await deleteDoc(doc(db, 'group_members', docId));
       document.getElementById(`member-row-${uid}`)?.remove();
@@ -498,9 +467,9 @@ function distLabel(g, memberCount) {
   const s   = sym();
   const pct = g.prize_pct || { p1:100, p2:0, p3:0 };
   const lines = [];
-  if (pct.p1) lines.push(`\ud83e\udd47 ${s}${Math.round(total * pct.p1 / 100)} (${pct.p1}%)`);
-  if (pct.p2) lines.push(`\ud83e\udd48 ${s}${Math.round(total * pct.p2 / 100)} (${pct.p2}%)`);
-  if (pct.p3) lines.push(`\ud83e\udd49 ${s}${Math.round(total * pct.p3 / 100)} (${pct.p3}%)`);
+  if (pct.p1) lines.push(`🥇 ${s}${Math.round(total * pct.p1 / 100)} (${pct.p1}%)`);
+  if (pct.p2) lines.push(`🥈 ${s}${Math.round(total * pct.p2 / 100)} (${pct.p2}%)`);
+  if (pct.p3) lines.push(`🥉 ${s}${Math.round(total * pct.p3 / 100)} (${pct.p3}%)`);
   return lines;
 }
 
@@ -509,10 +478,10 @@ function renderMyPointsCard(me, position, total) {
   if (!el) return;
   const cat = getCategory(me.total);
   const nextCat = [
-    { min: 150, label: '\ud83d\udd25 Leyenda' },
-    { min: 100, label: '\ud83c\udfc6 Experto' },
-    { min:  60, label: '\u26bd Competidor' },
-    { min:  30, label: '\ud83c\udf31 En forma' },
+    { min: 150, label: '🔥 Leyenda' },
+    { min: 100, label: '🏆 Experto' },
+    { min:  60, label: '⚽ Competidor' },
+    { min:  30, label: '🌱 En forma' },
   ].find(c => me.total < c.min);
   const progress = nextCat ? Math.round((me.total / nextCat.min) * 100) : 100;
   el.innerHTML = `
@@ -531,15 +500,11 @@ function renderMyPointsCard(me, position, total) {
       <div style="background:var(--border);border-radius:99px;height:5px;overflow:hidden">
         <div style="height:100%;width:${progress}%;background:${cat.color};border-radius:99px;transition:width 0.6s ease"></div>
       </div>
-    </div>` : `<div style="font-size:11px;color:var(--gold);font-weight:700">\ud83d\udd25 \u00a1Nivel m\u00e1ximo!</div>`}
+    </div>` : `<div style="font-size:11px;color:var(--gold);font-weight:700">🔥 ¡Nivel máximo!</div>`}
     <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;align-items:center">
-      <div style="font-size:11px;color:var(--text-muted)"><span style="color:#f59e0b;font-weight:700">${me.exactos}</span> exactos</div>
-      <div style="font-size:11px;color:var(--text-muted)">&middot;</div>
-      <div style="font-size:11px;color:var(--text-muted)"><span style="color:#4aafd4;font-weight:700">${me.resultados}</span> result.</div>
-      <div style="font-size:11px;color:var(--text-muted)">&middot;</div>
-      <div style="font-size:11px;color:var(--text-muted)"><span style="color:#34d399;font-weight:700">${me.totalFavPts}</span> favs</div>
-      ${me.totalPenalty ? `<div style="font-size:11px;color:var(--text-muted)">&middot;</div>
-      <div style="font-size:11px;color:#f5a0ac"><span style="font-weight:700">-${me.totalPenalty}</span> pen</div>` : ''}
+      <div style="font-size:11px;color:var(--text-muted)"><span style="color:#f59e0b;font-weight:700">${me.exactos}</span> exactos (+${me.exactos*6})</div>
+      <div style="font-size:11px;color:var(--text-muted)">·</div>
+      <div style="font-size:11px;color:var(--text-muted)"><span style="color:#4aafd4;font-weight:700">${me.resultados}</span> result. (+${me.resultados*3})</div>
     </div>
   `;
 }
@@ -558,7 +523,7 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
   if (prizeEl) {
     if (groupData.type === 'open') {
       prizeEl.innerHTML = totalPrize
-        ? `<span style="color:var(--primary-light)">\ud83d\udcb0 Pozo: ${s}${totalPrize}</span>`
+        ? `<span style="color:var(--primary-light)">💰 Pozo: ${s}${totalPrize}</span>`
         : '<span style="color:var(--text-muted)">Sin cuota</span>';
     } else {
       prizeEl.textContent = totalPrize ? `${s}${totalPrize}` : 'Sin definir';
@@ -566,10 +531,11 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
   }
   if (feeEl) {
     feeEl.textContent = groupData.fee
-      ? `Cuota: ${s}${groupData.fee} \u00b7 ${memberCount} participantes`
+      ? `Cuota: ${s}${groupData.fee} · ${memberCount} participantes`
       : `${memberCount} participantes`;
   }
 
+  // Agrupar pronósticos por usuario
   const predsByUser = {};
   predsSnap.forEach(d => {
     const p = d.data();
@@ -577,17 +543,11 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
     predsByUser[p.user_uid].push(p);
   });
 
+  // Construir filas solo con puntos de pronósticos
   const rows = [];
   for (const mDoc of membersSnap.docs) {
     const m    = mDoc.data();
     const info = await getUserInfo(m.user_uid);
-    const name = info.name;
-
-    const favs      = m.favorites     || {};
-    const favsPts   = m.favorites_pts || {};
-    const penalties = m.penalties     || {};
-    const totalFavPts  = Object.values(favsPts).reduce((a,b)=>a+b, 0);
-    const totalPenalty = Object.values(penalties).reduce((a,b)=>a+b, 0);
     const userPreds = predsByUser[m.user_uid] || [];
     let exactos = 0, resultados = 0, predPts = 0;
     userPreds.forEach(p => {
@@ -595,9 +555,14 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
       else if (p.points === 3) resultados++;
       predPts += p.points || 0;
     });
-    const chosenCount = PHASES.filter(ph => favs[ph]).length;
-    const total = totalFavPts + predPts - totalPenalty;
-    rows.push({ name, email: info.email, isMe: m.user_uid === currentUser.uid, favs, favsPts, penalties, totalFavPts, totalPenalty, exactos, resultados, predPts, chosenCount, total });
+    rows.push({
+      name:       info.name,
+      email:      info.email,
+      isMe:       m.user_uid === currentUser.uid,
+      exactos,
+      resultados,
+      total:      predPts,
+    });
   }
 
   rows.sort((a, b) => b.total - a.total);
@@ -607,27 +572,26 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
 
   rankingTab.innerHTML = '';
 
+  // Banner de distribución de premios
   const distLines = distLabel(groupData, memberCount);
   if (distLines && distLines.length && totalPrize > 0) {
     const podio = document.createElement('div');
     podio.style.cssText = 'background:linear-gradient(135deg,rgba(245,158,11,0.1),rgba(29,144,198,0.05));border:1px solid rgba(245,158,11,0.3);border-radius:12px;padding:14px 18px;margin-bottom:16px';
     podio.innerHTML = `
       <div style="font-size:12px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">
-        \ud83c\udfc6 Distribuci\u00f3n del premio \u2014 Pozo: ${s}${totalPrize}
-        ${groupData.type === 'open' ? `<span style="color:var(--text-muted);font-weight:400"> (${s}${groupData.fee||0} \u00d7 ${memberCount} personas)</span>` : ''}
+        🏆 Distribución del premio — Pozo: ${s}${totalPrize}
+        ${groupData.type === 'open' ? `<span style="color:var(--text-muted);font-weight:400"> (${s}${groupData.fee||0} × ${memberCount} personas)</span>` : ''}
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         ${distLines.map(l => `<div style="background:rgba(0,0,0,0.2);border-radius:8px;padding:8px 14px;font-size:0.88rem;font-weight:700;color:var(--gold)">${l}</div>`).join('')}
       </div>
-      ${rows.length >= 1 ? `<div style="margin-top:10px;font-size:12px;color:var(--text-muted)">L\u00edder actual: <strong style="color:var(--gold)">${rows[0].name}</strong> con ${rows[0].total} pts</div>` : ''}`;
+      ${rows.length >= 1 ? `<div style="margin-top:10px;font-size:12px;color:var(--text-muted)">Líder actual: <strong style="color:var(--gold)">${rows[0].name}</strong> con ${rows[0].total} pts</div>` : ''}`;
     rankingTab.appendChild(podio);
   }
 
-  const medals = ['\ud83e\udd47','\ud83e\udd48','\ud83e\udd49'];
+  const medals = ['🥇','🥈','🥉'];
   const pct    = groupData?.prize_pct || { p1:100, p2:0, p3:0 };
   const pctArr = [pct.p1, pct.p2, pct.p3];
-
-  // ID único por carta para el botón de scoring
   let cardIndex = 0;
 
   rows.forEach((r, i) => {
@@ -638,28 +602,12 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
     let prizeChip = '';
     if (totalPrize > 0 && i < 3 && pctArr[i] > 0) {
       const amount = Math.round(totalPrize * pctArr[i] / 100);
-      prizeChip = `<span style="font-size:11px;background:rgba(245,158,11,0.15);color:var(--gold);border:1px solid rgba(245,158,11,0.3);border-radius:20px;padding:2px 8px;margin-left:6px">\ud83d\udcb0 ${s}${amount}</span>`;
+      prizeChip = `<span style="font-size:11px;background:rgba(245,158,11,0.15);color:var(--gold);border:1px solid rgba(245,158,11,0.3);border-radius:20px;padding:2px 8px;margin-left:6px">💰 ${s}${amount}</span>`;
     }
 
-    const favsLines = PHASES
-      .filter(ph => r.favs[ph])
-      .map(ph => {
-        const pts = r.favsPts[ph] || 0;
-        const pen = r.penalties[ph] || 0;
-        return `<div class="ranking-concept" style="font-size:0.8rem">
-          <span style="color:var(--text-muted)">${ph}: <strong style="color:var(--text)">${r.favs[ph]}</strong></span>
-          <span><span style="color:var(--primary-light)">+${pts}</span>${pen ? `<span style="color:var(--accent)"> -${pen}</span>` : ''}</span>
-        </div>`;
-      }).join('');
-
-    const noFavsMsg = r.chosenCount === 0
-      ? `<div style="color:var(--text-muted);font-size:0.82rem;font-style:italic">Sin favoritos elegidos</div>` : '';
-    const penLine = r.totalPenalty > 0
-      ? `<div class="ranking-concept" style="color:var(--accent);font-weight:600"><span>\u26a0\ufe0f Penalidades</span><span>-${r.totalPenalty} pts</span></div>` : '';
-
-    const noName = r.name === 'Sin nombre';
+    const noName  = r.name === 'Sin nombre';
     const nameHtml = noName && r.email
-      ? `<span title="${escHtml(r.email)}" style="color:var(--text-muted);font-style:italic">Sin nombre</span> <span style="font-size:10px;color:var(--text-muted)">\ud83d\udce7 ${escHtml(r.email)}</span>`
+      ? `<span title="${escHtml(r.email)}" style="color:var(--text-muted);font-style:italic">Sin nombre</span> <span style="font-size:10px;color:var(--text-muted)">📧 ${escHtml(r.email)}</span>`
       : escHtml(r.name);
 
     const card = document.createElement('div');
@@ -671,10 +619,10 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
           <div style="flex:1">
             <div style="font-weight:700;font-size:1rem">
               ${nameHtml}
-              ${r.isMe ? '<span style="color:#4aafd4;font-size:11px;margin-left:6px">(t\u00fa)</span>' : ''}
+              ${r.isMe ? '<span style="color:#4aafd4;font-size:11px;margin-left:6px">(tú)</span>' : ''}
               ${prizeChip}
             </div>
-            <div style="font-size:12px;color:var(--text-muted)">\ud83c\udfc6 ${r.chosenCount}/12 favs \u00b7 \ud83c\udfaf ${r.exactos} exactos \u00b7 \u2705 ${r.resultados} resultados</div>
+            <div style="font-size:12px;color:var(--text-muted)">🎯 ${r.exactos} exactos · ✅ ${r.resultados} resultados</div>
           </div>
           <div style="text-align:right">
             <div style="font-size:1.8rem;font-weight:800;color:${i===0?'var(--gold)':i===1?'#9ca3af':i===2?'#d97706':'var(--primary-light)'}">${r.total}</div>
@@ -682,28 +630,30 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
           </div>
         </div>
         <details>
-          <summary style="padding:10px 18px;cursor:pointer;font-size:12px;color:var(--text-muted);list-style:none">\u25bc Ver desglose</summary>
+          <summary style="padding:10px 18px;cursor:pointer;font-size:12px;color:var(--text-muted);list-style:none">▼ Ver desglose</summary>
           <div style="padding:4px 18px 12px">
-            <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin:8px 0 4px">\ud83c\udfc6 Favoritos</div>
-            ${favsLines || noFavsMsg}
-            <div class="ranking-concept" style="font-weight:700;margin-top:4px">
-              <span>Subtotal favs</span><span style="color:var(--primary-light)">+${r.totalFavPts} pts</span>
+            <div style="display:flex;align-items:center;gap:8px;margin:10px 0 8px">
+              <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">🎯 Pronósticos</div>
+              <button id="${scoringBtnId}" style="background:none;border:1px solid var(--border);border-radius:20px;padding:1px 8px;font-size:10px;color:var(--text-muted);cursor:pointer;line-height:1.6">ℹ️ ¿Cómo se punta?</button>
             </div>
-            <div style="display:flex;align-items:center;gap:8px;margin:10px 0 4px">
-              <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">\ud83c\udfaf Pron\u00f3sticos</div>
-              <button id="${scoringBtnId}" style="background:none;border:1px solid var(--border);border-radius:20px;padding:1px 8px;font-size:10px;color:var(--text-muted);cursor:pointer;line-height:1.6">\u2139\ufe0f \u00bfC\u00f3mo se punta?</button>
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0">
+              <span>🎯 Exactos ×${r.exactos}</span>
+              <span style="color:var(--gold);font-weight:700">+${r.exactos * 6} pts</span>
             </div>
-            <div class="ranking-concept"><span>Exactos \u00d7${r.exactos}</span><span style="color:var(--primary-light)">+${r.exactos*6} pts</span></div>
-            <div class="ranking-concept"><span>Resultados \u00d7${r.resultados}</span><span style="color:var(--primary-light)">+${r.resultados*3} pts</span></div>
-            ${penLine}
+            <div style="display:flex;justify-content:space-between;font-size:13px;padding:4px 0">
+              <span>✅ Resultados ×${r.resultados}</span>
+              <span style="color:#34d399;font-weight:700">+${r.resultados * 3} pts</span>
+            </div>
             <div style="height:1px;background:var(--border);margin:8px 0"></div>
-            <div class="ranking-concept" style="font-weight:700"><span>Total</span><span style="color:var(--gold);font-size:1rem">${r.total} pts</span></div>
+            <div style="display:flex;justify-content:space-between;font-size:14px;font-weight:800;padding:4px 0">
+              <span>Total</span>
+              <span style="color:var(--gold)">${r.total} pts</span>
+            </div>
           </div>
         </details>
       </div>`;
     rankingTab.appendChild(card);
 
-    // Vincular el botón ℹ️ después de que el DOM exista
     card.querySelector(`#${scoringBtnId}`)?.addEventListener('click', (e) => {
       e.stopPropagation();
       openScoringModal();
@@ -711,6 +661,6 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
   });
 
   if (rows.length === 0) {
-    rankingTab.innerHTML += '<p style="color:var(--text-muted);text-align:center;padding:40px 0">A\u00fan no hay participantes.</p>';
+    rankingTab.innerHTML += '<p style="color:var(--text-muted);text-align:center;padding:40px 0">Aún no hay participantes.</p>';
   }
 }
