@@ -21,8 +21,12 @@ function sym() {
 }
 
 function isGroupStage() {
-  const s = (groupData?.stage || '').toLowerCase();
-  return s === '' || s === 'fase de grupos' || s.startsWith('grupo');
+  const s = (groupData?.stage || '').toLowerCase().trim();
+  // Nuevo valor canónico
+  if (s === 'fase_grupos') return true;
+  // Valores legacy por si acaso aún no se migró
+  if (s === '' || s === 'fase de grupos' || s.startsWith('grupo')) return true;
+  return false;
 }
 
 function getCategory(pts) {
@@ -115,7 +119,6 @@ async function getUserInfo(uid) {
 export function initStandings() {
   const user = auth.currentUser;
   if (!user || !GROUP_ID) {
-    // Si aún no hay usuario (raro), esperar
     onAuthStateChanged(auth, (u) => { if (u) _load(u); });
     return;
   }
