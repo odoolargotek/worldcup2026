@@ -1,6 +1,4 @@
 // matches.js — Partidos agrupados por FECHA
-// Grupos de Fase de Grupos: muestran TODOS los partidos con phase 'Grupo X' (históricos + hoy)
-// Grupos de Knockout (Ronda de 32+): muestran SOLO partidos de eliminatoria
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
@@ -12,31 +10,12 @@ const params   = new URLSearchParams(window.location.search);
 const GROUP_ID = params.get('gid');
 const TZ       = 'America/La_Paz';
 
-let myPreds         = {};
-let unsub           = null;
-let activeFilter    = 'all'; // 'all' | 'upcoming' | 'nopred'
-let isKnockoutGroup = false; // true = grupo de eliminatoria
-
-// Retorna true si el partido es de fase de grupos (Grupo A…L)
-function isGroupStageMatch(m) {
-  return String(m.phase || '').startsWith('Grupo');
-}
-
-// Retorna true si el stage del grupo es de eliminatoria (cualquier valor que NO sea
-// vacío, null, undefined, o alguna variante de 'fase de grupos')
-function stageIsKnockout(stage) {
-  if (!stage) return false; // null, undefined, ''
-  const s = String(stage).trim().toLowerCase();
-  return s !== 'fase de grupos' && s !== 'grupos' && s !== 'fase grupos';
-}
+let myPreds      = {};
+let unsub        = null;
+let activeFilter = 'all'; // 'all' | 'upcoming' | 'nopred'
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
-
-  // Leer stage del grupo para decidir qué partidos mostrar
-  const groupSnap  = await getDoc(doc(db, 'groups', GROUP_ID));
-  const groupStage = groupSnap.exists() ? (groupSnap.data().stage ?? null) : null;
-  isKnockoutGroup  = stageIsKnockout(groupStage);
 
   const predsSnap = await getDocs(
     query(collection(db, 'predictions'),
@@ -131,7 +110,6 @@ function applyFilter() {
     if (show) visibleTotal++;
   });
 
-  // Ocultar headers de fecha sin tarjetas visibles
   const headers = container.querySelectorAll('[data-date-header]');
   headers.forEach(header => {
     const dateKey  = header.dataset.dateHeader;
@@ -230,14 +208,7 @@ function renderMatches(snap) {
 
   const byDate = {};
   snap.forEach(d => {
-    const m = d.data();
-    const groupMatch = isGroupStageMatch(m);
-
-    // Grupos de Fase de Grupos: mostrar SOLO partidos de fase de grupos (Grupo A…L)
-    // Grupos de Knockout: mostrar SOLO partidos de eliminatoria
-    if (!isKnockoutGroup && !groupMatch) return; // fase de grupos: ocultar partidos de knockout
-    if ( isKnockoutGroup &&  groupMatch) return; // knockout: ocultar partidos de fase de grupos
-
+    const m       = d.data();
     const kickoff = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
     const key     = toLocalDateKey(kickoff);
     if (!byDate[key]) byDate[key] = [];
@@ -247,10 +218,7 @@ function renderMatches(snap) {
   container.innerHTML = '';
 
   if (Object.keys(byDate).length === 0) {
-    const msg = isKnockoutGroup
-      ? '<div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:6px">Partidos de eliminatoria próximamente</div><div style="font-size:0.85rem">Los partidos desde Ronda de 32 en adelante aparecerán aquí.</div>'
-      : '<div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:6px">No hay partidos de fase de grupos disponibles</div><div style="font-size:0.85rem">Los partidos de los grupos A–L aparecerán aquí en cuanto estén cargados.</div>';
-    container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--text-muted)"><div style="font-size:3rem;margin-bottom:12px">⚽</div>${msg}</div>`;
+    container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--text-muted)"><div style="font-size:3rem;margin-bottom:12px">⚽</div><div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:6px">No hay partidos disponibles</div><div style="font-size:0.85rem">Los partidos aparecerán aquí en cuanto estén cargados.</div></div>`;
     return;
   }
 
