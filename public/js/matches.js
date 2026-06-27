@@ -1,4 +1,4 @@
-// matches.js — Partidos agrupados por FECHA
+// matches.js — Partidos agrupados por FECHA, filtrados por group.stage
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
@@ -13,10 +13,12 @@ const TZ       = 'America/La_Paz';
 let myPreds      = {};
 let unsub        = null;
 let activeFilter = 'all'; // 'all' | 'upcoming' | 'nopred'
+let groupStage   = null;  // valor de groups.stage: 'fase_grupos' | 'eliminacion'
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
 
+  // Cargar predicciones del usuario
   const predsSnap = await getDocs(
     query(collection(db, 'predictions'),
       where('group_id', '==', GROUP_ID),
@@ -24,6 +26,12 @@ onAuthStateChanged(auth, async (user) => {
     )
   );
   predsSnap.forEach(d => { myPreds[d.data().match_id] = d.data(); });
+
+  // Cargar el stage del grupo para filtrar partidos compatibles
+  if (GROUP_ID) {
+    const gSnap = await getDoc(doc(db, 'groups', GROUP_ID));
+    if (gSnap.exists()) groupStage = gSnap.data().stage || null;
+  }
 
   injectFilterBar();
 
@@ -209,6 +217,9 @@ function renderMatches(snap) {
   const byDate = {};
   snap.forEach(d => {
     const m       = d.data();
+    // ── Filtrar por type del partido == stage del grupo ──
+    if (groupStage && m.type && m.type !== groupStage) return;
+
     const kickoff = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
     const key     = toLocalDateKey(kickoff);
     if (!byDate[key]) byDate[key] = [];
