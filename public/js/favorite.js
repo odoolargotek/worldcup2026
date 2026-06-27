@@ -10,14 +10,16 @@ const PHASES = ['Grupo A','Grupo B','Grupo C','Grupo D','Grupo E','Grupo F',
                 'Grupo G','Grupo H','Grupo I','Grupo J','Grupo K','Grupo L'];
 
 // Retorna true si el stage del grupo es de fase de grupos
-// Acepta cualquier variante de mayusculas/minusculas y valores nulos
 function isGroupStage(stage) {
   if (!stage) return true; // null, undefined, '' → fase de grupos
   const s = String(stage).trim().toLowerCase();
-  return s === 'fase de grupos' || s === 'grupos' || s === 'fase grupos';
+  // Nuevo valor canónico
+  if (s === 'fase_grupos') return true;
+  // Valores legacy
+  return s === 'fase de grupos' || s === 'grupos' || s === 'fase grupos' || s.startsWith('grupo');
 }
 
-// ───────────────────────────────────────────────────────────────────────────────
+// ────────────────────────────────────────────────────────────────────────────────
 const TEAMS_BY_PHASE = {
   'Grupo A': [
     { name: 'México',          flag: '🇲🇽' },
