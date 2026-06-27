@@ -10,7 +10,6 @@ import {
 const params   = new URLSearchParams(window.location.search);
 const GROUP_ID = params.get('gid');
 
-// Grupos de fase de grupos (para favoritos)
 const PHASES = ['Grupo A','Grupo B','Grupo C','Grupo D','Grupo E','Grupo F',
                 'Grupo G','Grupo H','Grupo I','Grupo J','Grupo K','Grupo L'];
 
@@ -21,7 +20,6 @@ function sym() {
   return (groupData?.currency === 'BOB') ? 'Bs.' : '$';
 }
 
-// true si el grupo aún está en fase de grupos
 function isGroupStage() {
   const s = (groupData?.stage || '').toLowerCase();
   return s === '' || s === 'fase de grupos' || s.startsWith('grupo');
@@ -113,8 +111,18 @@ async function getUserInfo(uid) {
   return info;
 }
 
-onAuthStateChanged(auth, async (user) => {
-  if (!user || !GROUP_ID) return;
+// ─── ENTRY POINT — llamado desde group.html al abrir pestaña Ranking ────────
+export function initStandings() {
+  const user = auth.currentUser;
+  if (!user || !GROUP_ID) {
+    // Si aún no hay usuario (raro), esperar
+    onAuthStateChanged(auth, (u) => { if (u) _load(u); });
+    return;
+  }
+  _load(user);
+}
+
+async function _load(user) {
   const gSnap = await getDoc(doc(db, 'groups', GROUP_ID));
   if (!gSnap.exists()) return;
   groupData = gSnap.data();
@@ -135,7 +143,7 @@ onAuthStateChanged(auth, async (user) => {
   if (myRole === 'admin') renderAdminPanel(user, groupData);
 
   await renderStandings(user, prizeEl, feeEl);
-});
+}
 
 // ─── PANEL ADMIN ────────────────────────────────────────────────────────────
 function renderAdminPanel(user, g) {
@@ -395,7 +403,6 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
     userPreds.forEach(p => { if(p.points===6) exactos++; else if(p.points===3) resultados++; predPts+=p.points||0; });
 
     if (groupStage) {
-      // Fase de grupos: incluir favoritos y penalidades
       const favs         = m.favorites     || {};
       const favsPts      = m.favorites_pts || {};
       const penalties    = m.penalties     || {};
@@ -405,7 +412,6 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
       const total = totalFavPts + predPts - totalPenalty;
       rows.push({ name:info.name, email:info.email, isMe:m.user_uid===currentUser.uid, favs, favsPts, penalties, totalFavPts, totalPenalty, exactos, resultados, predPts, chosenCount, total });
     } else {
-      // Eliminatoria: solo pronósticos
       rows.push({ name:info.name, email:info.email, isMe:m.user_uid===currentUser.uid, exactos, resultados, total:predPts, totalFavPts:0, totalPenalty:0, chosenCount:0, favs:{}, favsPts:{}, penalties:{} });
     }
   }
@@ -446,7 +452,6 @@ async function renderStandings(currentUser, prizeEl, feeEl) {
       ? `<span title="${escHtml(r.email)}" style="color:var(--text-muted);font-style:italic">Sin nombre</span> <span style="font-size:10px;color:var(--text-muted)">📧 ${escHtml(r.email)}</span>`
       : escHtml(r.name);
 
-    // Desglose según fase
     let desgloseHTML;
     if (groupStage) {
       const favsLines = PHASES.filter(ph=>r.favs[ph]).map(ph => {
