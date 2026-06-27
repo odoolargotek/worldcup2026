@@ -37,7 +37,6 @@
     #saveNicknameBtn:hover{background:rgba(245,158,11,0.35)}#saveNicknameBtn:disabled{opacity:0.5;cursor:default}
     #nicknameMsg{font-size:12px;margin-top:6px;min-height:16px}
     #tab-tv{display:none}#tv-nav-item{display:none}
-    /* Tarjetas de stream (nuevo formato) */
     .stream-match-card{background:var(--bg-card,#1c2333);border:1px solid var(--border,rgba(255,255,255,0.07));border-radius:14px;padding:16px 18px;margin-bottom:14px;transition:border-color 0.2s}
     .stream-match-card:hover{border-color:rgba(29,144,198,0.45)}
     .stream-match-title{font-size:0.98rem;font-weight:700;margin-bottom:10px;color:var(--text,#e2e8f0)}
@@ -214,6 +213,7 @@
   <script type="module" src="js/firebase-config.js"></script>
   <script type="module" src="js/auth.js"></script>
   <script type="module" src="js/groups.js?v=5"></script>
+  <script type="module" src="js/welcome-message.js"></script>
 
   <script type="module">
     import { auth, db } from './js/firebase-config.js';
@@ -245,12 +245,9 @@
     document.getElementById('nicknameInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('saveNicknameBtn').click();});
   </script>
 
-  <!-- TAB TV — carga desde Firestore via live-streams.js -->
   <script type="module">
     import { getLiveStreams } from './js/live-streams.js';
-
     let tvLoaded = false;
-
     window.switchDashTab = function(tab) {
       document.getElementById('tab-comparsas').style.display = tab==='comparsas' ? 'block' : 'none';
       document.getElementById('tab-tv').style.display        = tab==='tv'         ? 'block' : 'none';
@@ -258,7 +255,6 @@
       document.getElementById('tab-tv-btn').classList.toggle('active', tab==='tv');
       if (tab==='tv' && !tvLoaded) loadTvMatches();
     };
-
     window.retryTvLoad = function() {
       tvLoaded = false;
       document.getElementById('tvMatchesError').style.display = 'none';
@@ -266,67 +262,27 @@
       document.getElementById('tvMatchesGrid').innerHTML = '';
       loadTvMatches();
     };
-
     async function loadTvMatches() {
       tvLoaded = true;
-      const grid    = document.getElementById('tvMatchesGrid');
-      const loading = document.getElementById('tvMatchesLoading');
-      const errDiv  = document.getElementById('tvMatchesError');
-      const errDetail = document.getElementById('tvErrorDetail');
-
+      const grid=document.getElementById('tvMatchesGrid'),loading=document.getElementById('tvMatchesLoading'),errDiv=document.getElementById('tvMatchesError'),errDetail=document.getElementById('tvErrorDetail');
       try {
         const streams = await getLiveStreams();
         loading.style.display = 'none';
-
         if (!streams || streams.length === 0) {
-          grid.innerHTML = `
-            <div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
-              <div style="font-size:3rem;margin-bottom:16px">📺</div>
-              <div style="font-weight:700;font-size:1rem;margin-bottom:8px;color:var(--text)">Sin transmisiones disponibles</div>
-              <div style="font-size:0.85rem">El administrador aún no ha cargado links para hoy.<br>Vuelve a revisar cuando comiencen los partidos.</div>
-            </div>`;
+          grid.innerHTML=`<div style="text-align:center;padding:60px 20px;color:var(--text-muted)"><div style="font-size:3rem;margin-bottom:16px">📺</div><div style="font-weight:700;font-size:1rem;margin-bottom:8px;color:var(--text)">Sin transmisiones disponibles</div><div style="font-size:0.85rem">El administrador aún no ha cargado links para hoy.<br>Vuelve a revisar cuando comiencen los partidos.</div></div>`;
           return;
         }
-
-        // Contador de streams totales
-        const totalLinks = streams.reduce((acc, m) => acc + (m.streams?.length || 0), 0);
-        const header = `
-          <div style="margin-bottom:14px">
-            <span style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">
-              📡 ${streams.length} partido(s) · ${totalLinks} link(s) disponibles
-            </span>
-          </div>`;
-
-        const cards = streams.map(item => {
-          const matchName = item.match || 'Partido';
-          const links = (item.streams || []).map(s =>
-            `<a href="${s.url}"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="stream-link-btn">
-              ${s.label || 'Ver stream'}
-              <span style="font-size:10px;opacity:0.55">↗</span>
-            </a>`
-          ).join('');
-
-          return `
-            <div class="stream-match-card">
-              <div class="stream-match-title">⚽ ${matchName}</div>
-              <div class="stream-links-row">
-                ${links || '<span style="font-size:12px;color:var(--text-muted)">Sin links disponibles</span>'}
-              </div>
-            </div>`;
+        const totalLinks=streams.reduce((acc,m)=>acc+(m.streams?.length||0),0);
+        const header=`<div style="margin-bottom:14px"><span style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">📡 ${streams.length} partido(s) · ${totalLinks} link(s) disponibles</span></div>`;
+        const cards=streams.map(item=>{
+          const links=(item.streams||[]).map(s=>`<a href="${s.url}" target="_blank" rel="noopener noreferrer" class="stream-link-btn">${s.label||'Ver stream'}<span style="font-size:10px;opacity:0.55">↗</span></a>`).join('');
+          return `<div class="stream-match-card"><div class="stream-match-title">⚽ ${item.match||'Partido'}</div><div class="stream-links-row">${links||'<span style="font-size:12px;color:var(--text-muted)">Sin links disponibles</span>'}</div></div>`;
         }).join('');
-
-        grid.innerHTML = header + cards;
-
+        grid.innerHTML=header+cards;
       } catch(e) {
-        loading.style.display = 'none';
-        errDiv.style.display = 'block';
-        errDetail.textContent = e.message || 'Error desconocido';
+        loading.style.display='none';errDiv.style.display='block';errDetail.textContent=e.message||'Error desconocido';
       }
     }
-
     window.hideGroupsLoading=function(){var l=document.getElementById('groupLoadingState'),g=document.getElementById('groupList');if(l)l.style.display='none';if(g)g.style.display='';};
     setTimeout(function(){var l=document.getElementById('groupLoadingState');if(l&&l.style.display!=='none')window.hideGroupsLoading();},5000);
     document.getElementById('newGroupType').addEventListener('change',function(){var c=this.value==='closed';document.getElementById('openFields').classList.toggle('d-none',c);document.getElementById('closedFields').classList.toggle('d-none',!c);});
