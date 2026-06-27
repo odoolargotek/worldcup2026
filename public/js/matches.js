@@ -1,4 +1,4 @@
-// matches.js — Partidos agrupados por FECHA para facilitar pronósticos diarios
+// matches.js — Partidos agrupados por FECHA — solo eliminatorias (Ronda de 32 en adelante)
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
@@ -13,6 +13,11 @@ const TZ       = 'America/La_Paz';
 let myPreds   = {};
 let unsub     = null;
 let activeFilter = 'all'; // 'all' | 'upcoming' | 'nopred'
+
+// Retorna true si el partido es de fase de grupos (excluir)
+function isGroupStageMatch(m) {
+  return String(m.phase || '').startsWith('Grupo');
+}
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
@@ -35,7 +40,7 @@ onAuthStateChanged(auth, async (user) => {
   );
 });
 
-// ── Barra de filtros ──────────────────────────────────────────────────────────
+// ── Barra de filtros ────────────────────────────────────────────────────────────────────────────────
 function injectFilterBar() {
   const existing = document.getElementById('matchFilterBar');
   if (existing) return;
@@ -129,7 +134,7 @@ function applyFilter() {
   }
 }
 
-// ── Helpers de fecha ─────────────────────────────────────────────────────────
+// ── Helpers de fecha ─────────────────────────────────────────────────────────────────────────────
 
 function toLocalDateKey(date) {
   return date.toLocaleDateString('en-CA', { timeZone: TZ });
@@ -152,8 +157,7 @@ function dateLabel(key) {
   return { text: label, color: 'var(--gold)', emoji: '📆' };
 }
 
-// ── Badge de urgencia ──────────────────────────────────────────────────────────
-
+// ── Badge de urgencia ───────────────────────────────────────────────────────────────────────────────
 function deadlineBadge(kickoff, isFinal, hasScore, hasMyPred) {
   if (isFinal) return '';
   const now      = new Date();
@@ -171,7 +175,7 @@ function deadlineBadge(kickoff, isFinal, hasScore, hasMyPred) {
   return '';
 }
 
-// ── Badge resultado ──────────────────────────────────────────────────────────
+// ── Badge resultado ───────────────────────────────────────────────────────────────────────────────────
 function predResult(pred, match) {
   if (!pred || match.home_score === undefined || match.home_score === null) return null;
   const ph=Number(pred.home_score),pa=Number(pred.away_score),mh=Number(match.home_score),ma=Number(match.away_score);
@@ -203,8 +207,7 @@ function resultBadge(type) {
   return '';
 }
 
-// ── Render principal ─────────────────────────────────────────────────────────
-
+// ── Render principal ─────────────────────────────────────────────────────────────────────────────
 function renderMatches(snap) {
   const container = document.getElementById('matchList');
   if (!container) return;
@@ -212,7 +215,9 @@ function renderMatches(snap) {
 
   const byDate = {};
   snap.forEach(d => {
-    const m       = d.data();
+    const m = d.data();
+    // Omitir partidos de fase de grupos
+    if (isGroupStageMatch(m)) return;
     const kickoff = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
     const key     = toLocalDateKey(kickoff);
     if (!byDate[key]) byDate[key] = [];
@@ -220,6 +225,17 @@ function renderMatches(snap) {
   });
 
   container.innerHTML = '';
+
+  // Mensaje si no hay partidos eliminatorios aún
+  if (Object.keys(byDate).length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:60px 20px;color:var(--text-muted)">
+        <div style="font-size:3rem;margin-bottom:12px">⚽</div>
+        <div style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:6px">Partidos de eliminatoria proximamente</div>
+        <div style="font-size:0.85rem">Los partidos desde Ronda de 32 en adelante aparecerán aquí.</div>
+      </div>`;
+    return;
+  }
 
   const tk = todayKey();
   Object.keys(byDate).sort().forEach(function(key) {
@@ -230,7 +246,7 @@ function renderMatches(snap) {
     const pending = open.filter(m => !myPreds[m.id]).length;
 
     let alertChip = '';
-    if (isToday && pending > 0)                    alertChip = '<span style="background:rgba(239,68,68,0.2);color:#fca5a5;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;margin-left:8px">⚠️ '+pending+' sin pronosticar</span>';
+    if (isToday && pending > 0)                     alertChip = '<span style="background:rgba(239,68,68,0.2);color:#fca5a5;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;margin-left:8px">⚠️ '+pending+' sin pronosticar</span>';
     else if (isToday && open.length > 0 && !pending) alertChip = '<span style="background:rgba(34,197,94,0.15);color:#34d399;font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;margin-left:8px">✅ Todo pronosticado</span>';
 
     const header = document.createElement('div');
