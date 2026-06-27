@@ -1,4 +1,4 @@
-// predictions.js — Guardar pronóstico + countdown de plazo + navegación entre partidos
+// predictions.js — Guardar pronóstico + countdown + navegación + penales (solo eliminatoria)
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
@@ -17,8 +17,9 @@ document.getElementById('dashboardLink')?.setAttribute('href', `group.html?gid=$
 let kickoffDate = null;
 let countdownInterval = null;
 let matchData = null;
+let isKnockout = false; // true si NO es fase de grupos
 
-// Ganador por penales seleccionado: 'home' | 'away' | null
+// Ganador por penales: 'home' | 'away' | null
 let penaltyWinner = null;
 
 onAuthStateChanged(auth, async (user) => {
@@ -31,6 +32,9 @@ onAuthStateChanged(auth, async (user) => {
   matchData = mSnap.data();
   kickoffDate = matchData.kickoff?.toDate ? matchData.kickoff.toDate() : new Date(matchData.kickoff);
 
+  // Determinar si es eliminatoria (phase NO empieza con "Grupo")
+  isKnockout = !String(matchData.phase || '').startsWith('Grupo');
+
   document.getElementById('matchPhase').textContent   = matchData.phase || '';
   document.getElementById('homeFlag').textContent     = matchData.home_flag || '⚽';
   document.getElementById('awayFlag').textContent     = matchData.away_flag || '⚽';
@@ -39,8 +43,10 @@ onAuthStateChanged(auth, async (user) => {
   document.getElementById('matchKickoff').textContent = fmtLong(kickoffDate);
   if (matchData.city) document.getElementById('matchCity').textContent = '📍 ' + matchData.city;
 
-  // Generar botones de penales con nombres reales de los equipos
-  buildPenaltyButtons(matchData.home_team, matchData.away_team, matchData.home_flag, matchData.away_flag);
+  // Botones de penales: solo en eliminatoria
+  if (isKnockout) {
+    buildPenaltyButtons(matchData.home_team, matchData.away_team, matchData.home_flag, matchData.away_flag);
+  }
 
   startCountdown(kickoffDate);
 
@@ -60,17 +66,19 @@ onAuthStateChanged(auth, async (user) => {
     const p = predSnap.data();
     document.getElementById('homeScore').value = p.home_score;
     document.getElementById('awayScore').value = p.away_score;
-    if (p.home_score === p.away_score && p.penalty_winner) {
+    if (isKnockout && p.home_score === p.away_score && p.penalty_winner) {
       penaltyWinner = p.penalty_winner;
       updatePenaltyUI();
     }
-    checkDrawState();
+    if (isKnockout) checkDrawState();
     document.getElementById('submitPrediction').textContent = '✏️ Actualizar pronóstico';
   }
 
-  // Mostrar/ocultar penales en tiempo real al cambiar scores
-  document.getElementById('homeScore').addEventListener('input', checkDrawState);
-  document.getElementById('awayScore').addEventListener('input', checkDrawState);
+  // Listener de empate solo en eliminatoria
+  if (isKnockout) {
+    document.getElementById('homeScore').addEventListener('input', checkDrawState);
+    document.getElementById('awayScore').addEventListener('input', checkDrawState);
+  }
 
   document.getElementById('predictForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -78,8 +86,8 @@ onAuthStateChanged(auth, async (user) => {
     const as = parseInt(document.getElementById('awayScore').value);
     if (isNaN(hs) || isNaN(as)) return;
 
-    // Si es empate, exigir ganador por penales
-    if (hs === as && !penaltyWinner) {
+    // En eliminatoria, empate requiere ganador por penales
+    if (isKnockout && hs === as && !penaltyWinner) {
       showMsg('⚠️ Debes elegir el ganador en penales.', '#f59e0b');
       document.getElementById('penaltyWinnerWrap')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
@@ -100,8 +108,8 @@ onAuthStateChanged(auth, async (user) => {
         away_score: as,
         created_at: new Date()
       };
-      if (hs === as && penaltyWinner) {
-        payload.penalty_winner = penaltyWinner; // 'home' | 'away'
+      if (isKnockout && hs === as && penaltyWinner) {
+        payload.penalty_winner = penaltyWinner;
       } else {
         payload.penalty_winner = null;
       }
@@ -117,7 +125,7 @@ onAuthStateChanged(auth, async (user) => {
   });
 });
 
-// ── Construir botones de penales ──
+// ── Botones de penales ──
 function buildPenaltyButtons(homeTeam, awayTeam, homeFlag, awayFlag) {
   const container = document.getElementById('penaltyBtns');
   if (!container) return;
