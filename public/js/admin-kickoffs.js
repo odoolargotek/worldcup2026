@@ -9,7 +9,6 @@ const filterBar = document.getElementById('filterBar');
 const statsBar  = document.getElementById('statsBar');
 const globalMsg = document.getElementById('globalMsg');
 
-// Modal de confirmación
 const modal        = document.getElementById('confirmModal');
 const modalMsg     = document.getElementById('modalMsg');
 const modalConfirm = document.getElementById('modalConfirm');
@@ -18,7 +17,6 @@ const modalCancel  = document.getElementById('modalCancel');
 let allMatches  = [];
 let activeGroup = 'all';
 
-// ── Modal de confirmación
 function confirm(msg) {
   return new Promise(resolve => {
     modalMsg.textContent = msg;
@@ -35,7 +33,6 @@ function confirm(msg) {
   });
 }
 
-// ── Helpers de fecha
 function toLocalInput(ts) {
   const d = ts?.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
   const local = new Date(d.getTime() + (-4 * 60) * 60000);
@@ -87,7 +84,6 @@ function showToast(msg, color = '#059669') {
   setTimeout(() => globalMsg.style.display = 'none', 2800);
 }
 
-// ── Cargar partidos
 async function loadMatches() {
   const snap = await getDocs(query(collection(db, 'matches'), orderBy('kickoff')));
   allMatches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -110,7 +106,6 @@ async function loadMatches() {
   renderList();
 }
 
-// ── Renderizar lista agrupada por fecha
 function renderList() {
   const filtered = activeGroup === 'all'
     ? allMatches
@@ -141,6 +136,12 @@ function renderList() {
           ? '<span class="badge-status badge-live">EN JUEGO</span>'
           : '<span class="badge-status badge-pending">Pendiente</span>';
 
+      // Valores actuales de ET y penales (si existen)
+      const etH  = m.et_home_score  ?? '';
+      const etA  = m.et_away_score  ?? '';
+      const penH = m.pen_home_score ?? '';
+      const penA = m.pen_away_score ?? '';
+
       html += `
       <div class="match-row" id="row-${m.id}">
 
@@ -154,6 +155,35 @@ function renderList() {
             ${badge}
           </div>
           <div class="match-meta">${m.phase} · ${m.city||''} · <span id="display-${m.id}">${fmtDisplay(m.kickoff)}</span></div>
+
+          <!-- Score 90' -->
+          <div style="margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:11px;font-weight:700;color:var(--text-muted)">⏱ Score 90'</span>
+            <input type="number" min="0" max="30" class="score-input" id="hs90-${m.id}"
+              value="${m.home_score ?? ''}" placeholder="–" data-mid="${m.id}" style="width:52px">
+            <span style="color:var(--text-muted)">–</span>
+            <input type="number" min="0" max="30" class="score-input" id="as90-${m.id}"
+              value="${m.away_score ?? ''}" placeholder="–" data-mid="${m.id}" style="width:52px">
+            <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text-muted);margin-left:8px">
+              <input type="checkbox" id="fin-${m.id}" ${m.finished?'checked':''} data-mid="${m.id}"> Partido terminado
+            </label>
+          </div>
+
+          <!-- Score final (ET / penales) -->
+          <div style="margin-top:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span style="font-size:11px;font-weight:700;color:var(--text-muted)">🏆 Prórroga (ET)</span>
+            <input type="number" min="0" max="30" class="score-input" id="etH-${m.id}"
+              value="${etH}" placeholder="–" data-mid="${m.id}" style="width:52px">
+            <span style="color:var(--text-muted)">–</span>
+            <input type="number" min="0" max="30" class="score-input" id="etA-${m.id}"
+              value="${etA}" placeholder="–" data-mid="${m.id}" style="width:52px">
+            <span style="font-size:11px;font-weight:700;color:var(--text-muted);margin-left:8px">🥅 Penales</span>
+            <input type="number" min="0" max="30" class="score-input" id="penH-${m.id}"
+              value="${penH}" placeholder="–" data-mid="${m.id}" style="width:52px">
+            <span style="color:var(--text-muted)">–</span>
+            <input type="number" min="0" max="30" class="score-input" id="penA-${m.id}"
+              value="${penA}" placeholder="–" data-mid="${m.id}" style="width:52px">
+          </div>
         </div>
 
         <input type="datetime-local" class="dt-input" id="input-${m.id}"
@@ -171,13 +201,15 @@ function renderList() {
   attachListeners();
 }
 
-// ── Listeners
 function attachListeners() {
   matchList.querySelectorAll('.dt-input').forEach(input => {
     input.addEventListener('change', () => markDirty(input.dataset.mid));
   });
-  matchList.querySelectorAll('.team-name-input, .team-flag-input').forEach(input => {
+  matchList.querySelectorAll('.team-name-input, .team-flag-input, .score-input').forEach(input => {
     input.addEventListener('input', () => markDirty(input.dataset.mid));
+  });
+  matchList.querySelectorAll('input[type="checkbox"]').forEach(input => {
+    input.addEventListener('change', () => markDirty(input.dataset.mid));
   });
   matchList.querySelectorAll('.save-btn').forEach(btn => {
     btn.addEventListener('click', () => saveOne(btn.dataset.mid));
@@ -196,11 +228,12 @@ function markDirty(mid) {
   const anDirty = m && document.getElementById('aname-' + mid)?.value !== m.away_team;
   const hfDirty = m && document.getElementById('hflag-' + mid)?.value !== (m.home_flag||'');
   const afDirty = m && document.getElementById('aflag-' + mid)?.value !== (m.away_flag||'');
+  const hs90Dirty = document.getElementById('hs90-' + mid)?.value !== String(m?.home_score ?? '');
+  const as90Dirty = document.getElementById('as90-' + mid)?.value !== String(m?.away_score ?? '');
   dtInput?.classList.toggle('dirty', dtDirty);
-  row?.classList.toggle('modified', dtDirty || hnDirty || anDirty || hfDirty || afDirty);
+  row?.classList.toggle('modified', dtDirty || hnDirty || anDirty || hfDirty || afDirty || hs90Dirty || as90Dirty);
 }
 
-// ── Guardar un partido
 async function saveOne(mid) {
   const dtInput = document.getElementById('input-' + mid);
   const btn     = document.getElementById('btn-' + mid);
@@ -217,16 +250,42 @@ async function saveOne(mid) {
 
   if (!newHomeTeam || !newAwayTeam) { showToast('❌ Nombres de equipo vacíos', '#dc2626'); return; }
 
+  // Scores
+  const hs90Raw = document.getElementById('hs90-' + mid)?.value;
+  const as90Raw = document.getElementById('as90-' + mid)?.value;
+  const hs90 = hs90Raw !== '' && hs90Raw != null ? Number(hs90Raw) : null;
+  const as90 = as90Raw !== '' && as90Raw != null ? Number(as90Raw) : null;
+  const finished = document.getElementById('fin-' + mid)?.checked ?? false;
+
+  const etHRaw  = document.getElementById('etH-'  + mid)?.value;
+  const etARaw  = document.getElementById('etA-'  + mid)?.value;
+  const penHRaw = document.getElementById('penH-' + mid)?.value;
+  const penARaw = document.getElementById('penA-' + mid)?.value;
+  const etH  = etHRaw  !== '' && etHRaw  != null ? Number(etHRaw)  : null;
+  const etA  = etARaw  !== '' && etARaw  != null ? Number(etARaw)  : null;
+  const penH = penHRaw !== '' && penHRaw != null ? Number(penHRaw) : null;
+  const penA = penARaw !== '' && penARaw != null ? Number(penARaw) : null;
+
   btn.disabled = true; btn.textContent = '⏳';
 
   try {
-    await updateDoc(doc(db, 'matches', mid), {
-      kickoff: Timestamp.fromDate(newDate),
-      home_team: newHomeTeam, away_team: newAwayTeam,
-      home_flag: newHomeFlag, away_flag: newAwayFlag,
-    });
+    const update = {
+      kickoff:    Timestamp.fromDate(newDate),
+      home_team:  newHomeTeam,
+      away_team:  newAwayTeam,
+      home_flag:  newHomeFlag,
+      away_flag:  newAwayFlag,
+      home_score: hs90,
+      away_score: as90,
+      finished,
+      et_home_score:  etH,
+      et_away_score:  etA,
+      pen_home_score: penH,
+      pen_away_score: penA,
+    };
+    await updateDoc(doc(db, 'matches', mid), update);
     const m = allMatches.find(x => x.id === mid);
-    if (m) Object.assign(m, { kickoff: Timestamp.fromDate(newDate), home_team: newHomeTeam, away_team: newAwayTeam, home_flag: newHomeFlag, away_flag: newAwayFlag });
+    if (m) Object.assign(m, update, { kickoff: Timestamp.fromDate(newDate) });
     dtInput.dataset.original = dtInput.value;
     dtInput.classList.remove('dirty');
     row?.classList.remove('modified');
@@ -241,7 +300,6 @@ async function saveOne(mid) {
   btn.disabled = false; btn.textContent = '💾 Guardar';
 }
 
-// ── Eliminar un partido
 async function deleteOne(mid) {
   const m = allMatches.find(x => x.id === mid);
   const name = m ? `${m.home_flag||''}${m.home_team} vs ${m.away_team}${m.away_flag||''}` : mid;
@@ -258,7 +316,6 @@ async function deleteOne(mid) {
     allMatches = allMatches.filter(x => x.id !== mid);
     row?.remove();
     statsBar.textContent = `${allMatches.length} partidos cargados`;
-    // Limpiar encabezados de día vacíos
     matchList.querySelectorAll('.group-header').forEach(header => {
       const next = header.nextElementSibling;
       if (!next || next.classList.contains('group-header')) header.remove();
@@ -270,7 +327,6 @@ async function deleteOne(mid) {
   }
 }
 
-// ── Guardar TODOS los modificados
 document.getElementById('btnSaveAll').addEventListener('click', async () => {
   const dirty = matchList.querySelectorAll('.match-row.modified');
   if (!dirty.length) { showToast('ℹ️ Sin cambios pendientes', '#1d90c6'); return; }
@@ -282,5 +338,4 @@ document.getElementById('btnSaveAll').addEventListener('click', async () => {
   showToast(`✅ ${ok} partido(s) actualizados`);
 });
 
-// ── Init
 loadMatches();

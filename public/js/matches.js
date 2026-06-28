@@ -12,35 +12,42 @@ const TZ       = 'America/La_Paz';
 
 let myPreds      = {};
 let unsub        = null;
-let activeFilter = 'all'; // 'all' | 'upcoming' | 'nopred'
-let groupStage   = null;  // valor de groups.stage: 'fase_grupos' | 'eliminacion'
-let _snapCache   = null;  // último snapshot recibido, para re-render tras cargar groupStage
+let activeFilter = 'all';
+let groupStage   = null;
+let _snapCache   = null;
 
-// ── Determina si un partido es de fase de grupos ──────────────────────────
 function isGroupPhase(phase) {
   if (!phase) return true;
   const s = String(phase).trim().toLowerCase();
   return s.startsWith('grupo') || s === 'fase_grupos' || s === 'fase de grupos' || s === 'grupos';
 }
 
-// ── Determina si el grupo es fase de grupos ───────────────────────────────
 function groupIsGroupStage() {
-  if (!groupStage) return true; // sin stage definido → asumir fase de grupos
+  if (!groupStage) return true;
   const s = String(groupStage).trim().toLowerCase();
   return s === 'fase_grupos' || s === '' || s === 'fase de grupos' || s === 'grupos';
 }
 
-// ── Filtra si un partido corresponde al stage del grupo ───────────────────
 function matchBelongsToGroup(m) {
   const matchIsGroup = isGroupPhase(m.phase);
   const gIsGroup     = groupIsGroupStage();
   return matchIsGroup === gIsGroup;
 }
 
+// ── Helper: armar badge de score final (ET/penales) ──────────────────────
+function finalScoreBadge(m) {
+  const hasET  = m.et_home_score != null && m.et_away_score != null;
+  const hasPen = m.pen_home_score != null && m.pen_away_score != null;
+  if (!hasET && !hasPen) return '';
+  let parts = [];
+  if (hasET)  parts.push(`ET ${m.et_home_score}–${m.et_away_score}`);
+  if (hasPen) parts.push(`Pen ${m.pen_home_score}–${m.pen_away_score}`);
+  return `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;letter-spacing:0.3px">⏱ Final: ${parts.join(' · ')}</div>`;
+}
+
 onAuthStateChanged(auth, async (user) => {
   if (!user) return;
 
-  // Cargar predicciones del usuario
   const predsSnap = await getDocs(
     query(collection(db, 'predictions'),
       where('group_id', '==', GROUP_ID),
@@ -49,7 +56,6 @@ onAuthStateChanged(auth, async (user) => {
   );
   predsSnap.forEach(d => { myPreds[d.data().match_id] = d.data(); });
 
-  // Cargar el stage del grupo ANTES de suscribirse al snapshot
   if (GROUP_ID) {
     const gSnap = await getDoc(doc(db, 'groups', GROUP_ID));
     if (gSnap.exists()) groupStage = gSnap.data().stage || null;
@@ -68,7 +74,6 @@ onAuthStateChanged(auth, async (user) => {
   );
 });
 
-// ── Barra de filtros ──────────────────────────────────────────────────────
 function injectFilterBar() {
   const existing = document.getElementById('matchFilterBar');
   if (existing) return;
@@ -161,7 +166,6 @@ function applyFilter() {
   }
 }
 
-// ── Helpers de fecha ──────────────────────────────────────────────────────
 function toLocalDateKey(date) {
   return date.toLocaleDateString('en-CA', { timeZone: TZ });
 }
@@ -183,7 +187,6 @@ function dateLabel(key) {
   return { text: label, color: 'var(--gold)', emoji: '📆' };
 }
 
-// ── Badge de urgencia ─────────────────────────────────────────────────────
 function deadlineBadge(kickoff, isFinal, hasScore, hasMyPred) {
   if (isFinal) return '';
   const now      = new Date();
@@ -201,7 +204,6 @@ function deadlineBadge(kickoff, isFinal, hasScore, hasMyPred) {
   return '';
 }
 
-// ── Badge resultado ───────────────────────────────────────────────────────
 function predResult(pred, match) {
   if (!pred || match.home_score === undefined || match.home_score === null) return null;
   const ph=Number(pred.home_score),pa=Number(pred.away_score),mh=Number(match.home_score),ma=Number(match.away_score);
@@ -233,7 +235,6 @@ function resultBadge(type) {
   return '';
 }
 
-// ── Render principal ──────────────────────────────────────────────────────
 function renderMatches(snap) {
   const container = document.getElementById('matchList');
   if (!container) return;
@@ -242,10 +243,7 @@ function renderMatches(snap) {
   const byDate = {};
   snap.forEach(d => {
     const m = d.data();
-
-    // ── Filtrar: solo mostrar partidos que correspondan al stage del grupo ──
     if (!matchBelongsToGroup(m)) return;
-
     const kickoff = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
     const key     = toLocalDateKey(kickoff);
     if (!byDate[key]) byDate[key] = [];
@@ -295,10 +293,14 @@ function renderMatches(snap) {
       const badge    = deadlineBadge(kickoff, isFinal, hasScore, !!myPred);
       const phaseChip = m.phase ? '<span style="background:rgba(245,158,11,0.12);color:var(--gold);font-size:9px;font-weight:700;padding:1px 7px;border-radius:20px;letter-spacing:1px">'+m.phase+'</span>' : '';
 
+      // Score 90' + badge score final (ET/pen)
+      const score90 = hasScore ? (m.home_score + ' – ' + m.away_score) : null;
+      const scoreFinalBadge = isFinal ? finalScoreBadge(m) : '';
+
       let predBadge = '';
       if (myPred) {
         const pts = myPred.points !== undefined ? '<span style="color:var(--gold);font-weight:700"> +'+myPred.points+'pts</span>' : '';
-        predBadge = '<div style="font-size:12px;color:var(--text-muted);margin-top:5px">🔮 <strong style="color:var(--text)">'+myPred.home_score+' - '+myPred.away_score+'</strong>'+pts+'</div>';
+        predBadge = '<div style="font-size:12px;color:var(--text-muted);margin-top:5px">🔮 <strong style="color:var(--text)">'+myPred.home_score+' – '+myPred.away_score+'</strong>'+pts+'</div>';
         if (isFinal) { const rType=predResult(myPred,m); if(rType) predBadge+=resultBadge(rType); }
       } else if (isOpen) {
         predBadge = '<div style="font-size:11px;color:var(--text-muted);margin-top:5px;font-style:italic">Sin pronóstico aún</div>';
@@ -306,9 +308,18 @@ function renderMatches(snap) {
 
       let actionArea = '';
       if (isFinal) {
-        actionArea = '<div style="text-align:center;min-width:64px"><div style="font-size:1.6rem;font-weight:800;color:var(--gold);line-height:1">'+m.home_score+' - '+m.away_score+'</div><div style="font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-top:2px">FINAL</div></div>';
+        actionArea =
+          '<div style="text-align:center;min-width:64px">'+
+            '<div style="font-size:1.4rem;font-weight:800;color:var(--gold);line-height:1">'+(score90||'–')+'</div>'+
+            '<div style="font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-top:2px">90\' FINAL</div>'+
+            scoreFinalBadge+
+          '</div>';
       } else if (isLive) {
-        actionArea = '<div style="text-align:center;min-width:64px"><div style="font-size:1.6rem;font-weight:800;color:#34d399;line-height:1">'+m.home_score+' - '+m.away_score+'</div><div style="font-size:9px;color:#34d399;letter-spacing:1px;margin-top:2px">EN VIVO</div></div>';
+        actionArea =
+          '<div style="text-align:center;min-width:64px">'+
+            '<div style="font-size:1.4rem;font-weight:800;color:#34d399;line-height:1">'+(score90||'–')+'</div>'+
+            '<div style="font-size:9px;color:#34d399;letter-spacing:1px;margin-top:2px">EN VIVO</div>'+
+          '</div>';
       } else if (isOpen) {
         const btnBg=myPred?'transparent':'var(--green)',btnColor=myPred?'var(--green-light)':'#fff',btnLabel=myPred?'✏️ Editar':'⚽ Pronosticar';
         actionArea = '<a class="btn btn-sm px-3" href="predict.html?gid='+GROUP_ID+'&mid='+m.id+'" style="background:'+btnBg+';color:'+btnColor+';border:1px solid var(--green);white-space:nowrap;font-size:12px;font-weight:600">'+btnLabel+'</a>';
