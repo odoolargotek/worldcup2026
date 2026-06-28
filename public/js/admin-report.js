@@ -243,7 +243,9 @@ function renderGroupReport(gid) {
     const rows = [];
 
     played.forEach(m => {
-      const pred = myPreds.find(p => p.match_id === m.id);
+      // FIX: filtrar también por group_id para evitar tomar el pronóstico
+      // de otra comparsa cuando el jugador pertenece a múltiples grupos
+      const pred = myPreds.find(p => p.match_id === m.id && p.group_id === gid);
       if (!pred) { rows.push({ match: m, pred: null, pts: null, status: 'sin' }); return; }
       // Siempre recalcular puntos desde los scores reales (no confiar en el campo points guardado)
       const pts = calcPoints(m.home_score, m.away_score, pred.home_score, pred.away_score);
