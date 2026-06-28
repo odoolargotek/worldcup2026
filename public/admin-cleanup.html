@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🧹 Cleanup Predicciones</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #1e293b;
+      --border: rgba(255,255,255,0.08);
+      --text: #f1f5f9;
+      --muted: #94a3b8;
+      --gold: #f59e0b;
+      --green: #34d399;
+      --red: #f87171;
+      --blue: #4aafd4;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, sans-serif; padding: 32px 16px; }
+    h1 { font-size: 1.4rem; font-weight: 800; margin-bottom: 6px; }
+    .sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 24px; max-width: 860px; margin: 0 auto 24px; }
+    .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 22px; border-radius: 10px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; transition: opacity 0.2s; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-blue  { background: #4aafd4; color: #0f172a; }
+    .btn-red   { background: #ef4444; color: #fff; }
+    .btn-green { background: #34d399; color: #0f172a; }
+    .btn-gray  { background: rgba(255,255,255,0.1); color: var(--text); }
+    .btns { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    #log {
+      background: #020617;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 12px;
+      font-family: monospace;
+      max-height: 420px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      color: #e2e8f0;
+      min-height: 80px;
+    }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .badge-dup  { background: rgba(239,68,68,0.15);  color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+    .badge-ok   { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
+    #summary { display: none; margin-bottom: 20px; }
+    #summary .row { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; }
+    .kpi { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 14px 20px; text-align: center; min-width: 120px; }
+    .kpi-val { font-size: 1.6rem; font-weight: 800; }
+    .kpi-lbl { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    #loader { display:none; color: var(--muted); font-size: 13px; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h1>🧹 Limpieza de pronósticos duplicados</h1>
+  <p class="sub">Detecta y elimina documentos duplicados en la colección <code>predictions</code>.<br>
+  Conserva el doc con ID canónico <code>groupId_userUid_matchId</code> o el más reciente.</p>
+
+  <div class="btns">
+    <button id="btnScan"    class="btn btn-blue">🔎 Solo escanear (sin borrar)</button>
+    <button id="btnCleanup" class="btn btn-red"  disabled>🗑️ Borrar duplicados</button>
+    <button id="btnClear"   class="btn btn-gray">🗑 Limpiar log</button>
+  </div>
+
+  <div id="loader">⏳ Procesando...</div>
+
+  <div id="summary">
+    <div class="row">
+      <div class="kpi"><div class="kpi-val" id="kTotal" style="color:var(--blue)">—</div><div class="kpi-lbl">Total docs</div></div>
+      <div class="kpi"><div class="kpi-val" id="kUnique" style="color:var(--green)">—</div><div class="kpi-lbl">Combinaciones únicas</div></div>
+      <div class="kpi"><div class="kpi-val" id="kDup" style="color:var(--red)">—</div><div class="kpi-lbl">Duplicados a borrar</div></div>
+      <div class="kpi"><div class="kpi-val" id="kKeep" style="color:var(--gold)">—</div><div class="kpi-lbl">Docs a conservar</div></div>
+    </div>
+  </div>
+
+  <pre id="log">Presiona "🔎 Solo escanear" para detectar duplicados sin borrar nada.</pre>
+</div>
+
+<script type="module">
+import { db } from './js/firebase-config.js';
+import {
+  collection, getDocs, doc, deleteDoc, writeBatch
+} from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+const btnScan    = document.getElementById('btnScan');
+const btnCleanup = document.getElementById('btnCleanup');
+const btnClear   = document.getElementById('btnClear');
+const logEl      = document.getElementById('log');
+const loader     = document.getElementById('loader');
+const summary    = document.getElementById('summary');
+
+let pendingDeletes = []; // IDs a borrar tras el escaneo
+
+function log(msg, color = '') {
+  const span = document.createElement('span');
+  if (color) span.style.color = color;
+  span.textContent = msg + '\n';
+  logEl.appendChild(span);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function comboKey(p) {
+  return `${p.group_id || 'NO_GROUP'}|${p.user_uid || 'NO_USER'}|${p.match_id || 'NO_MATCH'}`;
+}
+
+function setKpi(id, val) {
+  document.getElementById(id).textContent = val;
+}
+
+btnClear.addEventListener('click', () => {
+  logEl.textContent = 'Log limpiado.\n';
+  pendingDeletes = [];
+  btnCleanup.disabled = true;
+  summary.style.display = 'none';
+});
+
+// ── ESCANEAR
+btnScan.addEventListener('click', async () => {
+  pendingDeletes = [];
+  btnCleanup.disabled = true;
+  btnScan.disabled = true;
+  logEl.textContent = '';
+  loader.style.display = 'block';
+  summary.style.display = 'none';
+
+  try {
+    log('🔎 Leyendo colección predictions...');
+    const snap = await getDocs(collection(db, 'predictions'));
+    log(`Total docs encontrados: ${snap.size}`);
+
+    const groups = new Map();
+    snap.forEach(d => {
+      const data = d.data();
+      const key  = comboKey(data);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push({ id: d.id, ...data });
+    });
+
+    let dupGroups = 0;
+    for (const [key, docs] of groups.entries()) {
+      if (docs.length <= 1) continue;
+
+      dupGroups++;
+      const [group_id, user_uid, match_id] = key.split('|');
+      const canonicalId = `${group_id}_${user_uid}_${match_id}`;
+
+      docs.sort((a, b) => {
+        const aOk = a.id === canonicalId;
+        const bOk = b.id === canonicalId;
+        if (aOk && !bOk) return -1;
+        if (!aOk && bOk) return 1;
+        return (b.updated_at?.seconds || 0) - (a.updated_at?.seconds || 0);
+      });
+
+      const keep = docs[0];
+      const del  = docs.slice(1);
+
+      log(`\n📌 Duplicado (${docs.length} docs):`, '#f59e0b');
+      log(`   Clave  : ${key}`);
+      log(`   ✅ Conservar : ${keep.id}  h:${keep.home_score} a:${keep.away_score}  upd:${keep.updated_at?.seconds || 'N/A'}`, '#34d399');
+      del.forEach(d => {
+        log(`   🗑️ Borrar    : ${d.id}  h:${d.home_score} a:${d.away_score}  upd:${d.updated_at?.seconds || 'N/A'}`, '#f87171');
+        pendingDeletes.push(d.id);
+      });
+    }
+
+    log(`\n─────────────────────────────────`);
+    if (!pendingDeletes.length) {
+      log('✅ No se encontraron duplicados. ¡Todo limpio!', '#34d399');
+    } else {
+      log(`⚠️  ${dupGroups} grupos con duplicados`, '#f59e0b');
+      log(`🗑️  ${pendingDeletes.length} docs listos para borrar`, '#f87171');
+      log(`   Presiona "Borrar duplicados" para eliminarlos.`, '#f87171');
+      btnCleanup.disabled = false;
+    }
+
+    // KPIs
+    summary.style.display = 'block';
+    setKpi('kTotal',  snap.size);
+    setKpi('kUnique', groups.size);
+    setKpi('kDup',    pendingDeletes.length);
+    setKpi('kKeep',   snap.size - pendingDeletes.length);
+
+  } catch (e) {
+    console.error(e);
+    log('❌ Error: ' + e.message, '#f87171');
+  }
+
+  loader.style.display = 'none';
+  btnScan.disabled = false;
+});
+
+// ── BORRAR
+btnCleanup.addEventListener('click', async () => {
+  if (!pendingDeletes.length) {
+    log('No hay docs pendientes de borrar. Escanea primero.', '#f59e0b');
+    return;
+  }
+  if (!confirm(`¿Borrar ${pendingDeletes.length} docs duplicados? Esta acción no se puede deshacer.`)) return;
+
+  btnCleanup.disabled = true;
+  btnScan.disabled    = true;
+  loader.style.display = 'block';
+  log(`\n🗑️ Eliminando ${pendingDeletes.length} docs...`, '#f87171');
+
+  try {
+    const batchSize = 450;
+    let count = 0;
+    for (let i = 0; i < pendingDeletes.length; i += batchSize) {
+      const batch = writeBatch(db);
+      const chunk = pendingDeletes.slice(i, i + batchSize);
+      chunk.forEach(id => batch.delete(doc(db, 'predictions', id)));
+      await batch.commit();
+      count += chunk.length;
+      log(`   Eliminados ${count} / ${pendingDeletes.length}`);
+    }
+
+    log(`\n✅ Limpieza completada. ${count} docs eliminados.`, '#34d399');
+    log('   Recarga admin-report.html para ver los resultados actualizados.', '#34d399');
+    pendingDeletes = [];
+    setKpi('kDup', 0);
+    setKpi('kKeep', Number(document.getElementById('kTotal').textContent) - count);
+
+  } catch (e) {
+    console.error(e);
+    log('❌ Error al borrar: ' + e.message, '#f87171');
+    btnCleanup.disabled = false;
+  }
+
+  loader.style.display = 'none';
+  btnScan.disabled = false;
+});
+</script>
+</body>
+</html>
