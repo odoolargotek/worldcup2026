@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auditoría de Partidos · Mundial 2026</title>
+<style>
+  :root {
+    --bg:       #0f1115;
+    --surface:  #171a1f;
+    --surface2: #1e2229;
+    --border:   #2a2f3a;
+    --text:     #e2e6ef;
+    --muted:    #7a8394;
+    --faint:    #3e4450;
+    --gold:     #f0c040;
+    --gold2:    #c8960c;
+    --red:      #e05454;
+    --green:    #4caf80;
+    --blue:     #5b9cf6;
+    --orange:   #f0933a;
+    --radius:   8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100dvh;
+    font-size: 14px;
+  }
+
+  /* ── Header ── */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-logo { font-size: 22px; }
+  .header h1 { font-size: 17px; font-weight: 600; color: var(--gold); }
+  .header p  { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .header-spacer { flex: 1; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: var(--radius);
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    border: none; transition: opacity .15s, transform .1s;
+  }
+  .btn:active { transform: scale(.97); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-gold    { background: var(--gold); color: #000; }
+  .btn-red     { background: var(--red);  color: #fff; }
+  .btn-green   { background: var(--green);color: #000; }
+  .btn-ghost   { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+
+  /* ── Main ── */
+  .main { max-width: 1200px; margin: 0 auto; padding: 24px 20px 60px; }
+
+  /* ── Stats Bar ── */
+  .stats { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 20px;
+    min-width: 140px;
+    flex: 1;
+  }
+  .stat-card .label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .stat-card .value { font-size: 28px; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .stat-card.ok   .value { color: var(--green); }
+  .stat-card.warn .value { color: var(--orange); }
+  .stat-card.bad  .value { color: var(--red); }
+  .stat-card.info .value { color: var(--blue); }
+
+  /* ── Section Headers ── */
+  .section { margin-bottom: 32px; }
+  .section-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 12px; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-header h2 { font-size: 15px; font-weight: 600; }
+  .badge {
+    font-size: 11px; font-weight: 600; padding: 2px 8px;
+    border-radius: 999px;
+  }
+  .badge-red    { background: rgba(224,84,84,.2); color: var(--red); }
+  .badge-orange { background: rgba(240,147,58,.2); color: var(--orange); }
+  .badge-green  { background: rgba(76,175,128,.2); color: var(--green); }
+  .badge-blue   { background: rgba(91,156,246,.2); color: var(--blue); }
+
+  /* ── Table ── */
+  .table-wrap { overflow-x: auto; border-radius: var(--radius); border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); }
+  th {
+    text-align: left; padding: 10px 14px;
+    font-size: 11px; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .05em;
+    background: var(--surface2); border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td { padding: 10px 14px; border-bottom: 1px solid var(--faint); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,.02); }
+
+  .team-cell { display: flex; align-items: center; gap: 6px; }
+  .flag { font-size: 18px; line-height: 1; }
+  .vs   { color: var(--muted); font-size: 11px; font-weight: 600; margin: 0 4px; }
+  .phase-tag {
+    font-size: 11px; font-weight: 600; padding: 2px 8px;
+    border-radius: 4px; background: rgba(240,192,64,.12); color: var(--gold);
+    white-space: nowrap;
+  }
+  .doc-id { font-family: monospace; font-size: 11px; color: var(--muted); }
+  .kickoff-cell { white-space: nowrap; font-variant-numeric: tabular-nums; }
+  .city-cell { color: var(--muted); }
+
+  .del-btn {
+    font-size: 12px; padding: 4px 10px; border-radius: 4px;
+    background: rgba(224,84,84,.15); color: var(--red);
+    border: 1px solid rgba(224,84,84,.3); cursor: pointer;
+    transition: background .15s;
+  }
+  .del-btn:hover { background: rgba(224,84,84,.3); }
+  .del-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── Log ── */
+  .log-box {
+    background: #0a0c10; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px;
+    font-family: monospace; font-size: 12px;
+    max-height: 220px; overflow-y: auto;
+    color: var(--muted); line-height: 1.8;
+  }
+  .log-box .ok   { color: var(--green); }
+  .log-box .err  { color: var(--red); }
+  .log-box .info { color: var(--blue); }
+  .log-box .warn { color: var(--orange); }
+
+  /* ── Empty ── */
+  .empty { text-align: center; padding: 40px; color: var(--muted); font-size: 13px; }
+
+  /* ── Loading overlay ── */
+  #loading {
+    position: fixed; inset: 0;
+    background: rgba(10,12,16,.88);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; z-index: 999;
+  }
+  .spinner {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 3px solid var(--faint);
+    border-top-color: var(--gold);
+    animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  #loading p { color: var(--muted); font-size: 13px; }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(60px);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 10px 20px;
+    font-size: 13px; transition: transform .3s; z-index: 200;
+    pointer-events: none;
+  }
+  #toast.show { transform: translateX(-50%) translateY(0); }
+  #toast.success { border-color: var(--green); color: var(--green); }
+  #toast.error   { border-color: var(--red);   color: var(--red);   }
+
+  /* ── Bulk-delete bar ── */
+  .bulk-bar {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 16px; margin-bottom: 10px;
+    background: rgba(224,84,84,.08);
+    border: 1px solid rgba(224,84,84,.25);
+    border-radius: var(--radius); font-size: 13px;
+  }
+  .bulk-bar span { flex: 1; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<div id="loading">
+  <div class="spinner"></div>
+  <p id="loading-msg">Conectando a Firestore…</p>
+</div>
+
+<div id="toast"></div>
+
+<header class="header">
+  <span class="header-logo">🔍</span>
+  <div>
+    <h1>Auditoría de Partidos</h1>
+    <p>Mundial 2026 · worldcup2026-8f27b</p>
+  </div>
+  <div class="header-spacer"></div>
+  <button class="btn btn-ghost" id="btn-refresh" onclick="runAudit()">↺ Actualizar</button>
+  <button class="btn btn-red"   id="btn-delete-all" onclick="deleteAllDuplicates()" disabled>🗑 Eliminar todos los duplicados</button>
+</header>
+
+<main class="main">
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card info"><div class="label">Total en Firestore</div><div class="value" id="stat-total">—</div></div>
+    <div class="stat-card ok">  <div class="label">Partidos esperados</div><div class="value" id="stat-expected">72</div></div>
+    <div class="stat-card bad"> <div class="label">Duplicados exactos</div><div class="value" id="stat-dupes">—</div></div>
+    <div class="stat-card warn"><div class="label">Duplicados invertidos</div><div class="value" id="stat-inv">—</div></div>
+    <div class="stat-card warn"><div class="label">Fase incorrecta</div><div class="value" id="stat-phase">—</div></div>
+    <div class="stat-card bad"> <div class="label">Faltantes</div><div class="value" id="stat-missing">—</div></div>
+  </div>
+
+  <!-- Duplicates exact -->
+  <div class="section" id="sec-dupes">
+    <div class="section-header">
+      <h2>🔴 Duplicados exactos</h2>
+      <span class="badge badge-red" id="badge-dupes">0</span>
+      <span style="flex:1"></span>
+      <button class="btn btn-red" id="btn-del-exact" onclick="deleteSection('exact')" style="display:none">Eliminar todos →</button>
+    </div>
+    <div class="table-wrap" id="table-dupes"><div class="empty">Cargando…</div></div>
+  </div>
+
+  <!-- Duplicates inverted -->
+  <div class="section" id="sec-inv">
+    <div class="section-header">
+      <h2>🟠 Mismos equipos, orden invertido</h2>
+      <span class="badge badge-orange" id="badge-inv">0</span>
+      <span style="flex:1"></span>
+      <button class="btn btn-red" id="btn-del-inv" onclick="deleteSection('inv')" style="display:none">Eliminar sugeridos →</button>
+    </div>
+    <div class="table-wrap" id="table-inv"><div class="empty">Cargando…</div></div>
+  </div>
+
+  <!-- Wrong phase -->
+  <div class="section" id="sec-phase">
+    <div class="section-header">
+      <h2>🟡 Fase posiblemente incorrecta</h2>
+      <span class="badge badge-orange" id="badge-phase">0</span>
+    </div>
+    <div class="table-wrap" id="table-phase"><div class="empty">Cargando…</div></div>
+  </div>
+
+  <!-- Missing -->
+  <div class="section" id="sec-missing">
+    <div class="section-header">
+      <h2>🔵 Partidos faltantes (en canonical pero no en Firestore)</h2>
+      <span class="badge badge-blue" id="badge-missing">0</span>
+      <span style="flex:1"></span>
+      <button class="btn btn-green" id="btn-insert-missing" onclick="insertMissing()" style="display:none">➕ Insertar faltantes</button>
+    </div>
+    <div class="table-wrap" id="table-missing"><div class="empty">Cargando…</div></div>
+  </div>
+
+  <!-- All matches -->
+  <div class="section">
+    <div class="section-header">
+      <h2>📋 Todos los partidos en Firestore</h2>
+      <span class="badge badge-blue" id="badge-all">0</span>
+    </div>
+    <div class="table-wrap" id="table-all"><div class="empty">Cargando…</div></div>
+  </div>
+
+  <!-- Log -->
+  <div class="section">
+    <div class="section-header"><h2>📝 Log de operaciones</h2></div>
+    <div class="log-box" id="log"><span class="info">Iniciando auditoría…</span></div>
+  </div>
+
+</main>
+
+<script type="module">
+import { initializeApp }   from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-app.js';
+import { getFirestore, collection, getDocs, deleteDoc, addDoc, doc, Timestamp }
+  from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+const firebaseConfig = {
+  apiKey:            'AIzaSyBqgyEIJHn6l572fYfHtBvIjua19PKpIa0',
+  authDomain:        'worldcup2026-8f27b.firebaseapp.com',
+  projectId:         'worldcup2026-8f27b',
+  storageBucket:     'worldcup2026-8f27b.firebasestorage.app',
+  messagingSenderId: '767785242897',
+  appId:             '1:767785242897:web:ab306ac8afd5ba7dae3cb0',
+};
+const app = initializeApp(firebaseConfig);
+const db  = getFirestore(app);
+
+// ── Canonical list (72 matches) ──────────────────────────────────────────────
+const CANONICAL = [
+  { home_team:'México',       away_team:'Sudáfrica',              kickoff:'2026-06-11T15:00', phase:'Grupo A', city:'Ciudad de México' },
+  { home_team:'Corea del Sur',away_team:'Chequia',                kickoff:'2026-06-11T22:00', phase:'Grupo A', city:'Los Ángeles' },
+  { home_team:'México',       away_team:'Corea del Sur',          kickoff:'2026-06-15T22:00', phase:'Grupo A', city:'Ciudad de México' },
+  { home_team:'Sudáfrica',    away_team:'Chequia',                kickoff:'2026-06-16T19:00', phase:'Grupo A', city:'Atlanta' },
+  { home_team:'Sudáfrica',    away_team:'Corea del Sur',          kickoff:'2026-06-20T20:00', phase:'Grupo A', city:'Dallas' },
+  { home_team:'Chequia',      away_team:'México',                 kickoff:'2026-06-20T20:00', phase:'Grupo A', city:'Ciudad de México' },
+  { home_team:'Canadá',       away_team:'Bosnia y Herzegovina',   kickoff:'2026-06-12T15:00', phase:'Grupo B', city:'Toronto' },
+  { home_team:'Qatar',        away_team:'Suiza',                  kickoff:'2026-06-12T19:00', phase:'Grupo B', city:'Miami' },
+  { home_team:'Canadá',       away_team:'Qatar',                  kickoff:'2026-06-16T15:00', phase:'Grupo B', city:'Toronto' },
+  { home_team:'Suiza',        away_team:'Bosnia y Herzegovina',   kickoff:'2026-06-16T22:00', phase:'Grupo B', city:'Boston' },
+  { home_team:'Suiza',        away_team:'Canadá',                 kickoff:'2026-06-21T16:00', phase:'Grupo B', city:'Vancouver' },
+  { home_team:'Bosnia y Herzegovina', away_team:'Qatar',          kickoff:'2026-06-21T16:00', phase:'Grupo B', city:'Seattle' },
+  { home_team:'Brasil',       away_team:'Marruecos',              kickoff:'2026-06-13T16:00', phase:'Grupo C', city:'San Francisco' },
+  { home_team:'Haití',        away_team:'Escocia',                kickoff:'2026-06-13T22:00', phase:'Grupo C', city:'Nueva York' },
+  { home_team:'Brasil',       away_team:'Haití',                  kickoff:'2026-06-17T16:00', phase:'Grupo C', city:'Houston' },
+  { home_team:'Marruecos',    away_team:'Escocia',                kickoff:'2026-06-17T22:00', phase:'Grupo C', city:'Filadelfia' },
+  { home_team:'Marruecos',    away_team:'Haití',                  kickoff:'2026-06-22T20:00', phase:'Grupo C', city:'Dallas' },
+  { home_team:'Escocia',      away_team:'Brasil',                 kickoff:'2026-06-22T20:00', phase:'Grupo C', city:'San Francisco' },
+  { home_team:'USA',          away_team:'Paraguay',               kickoff:'2026-06-12T21:00', phase:'Grupo D', city:'Los Ángeles' },
+  { home_team:'Australia',    away_team:'Turquía',                kickoff:'2026-06-13T12:00', phase:'Grupo D', city:'Kansas City' },
+  { home_team:'USA',          away_team:'Australia',              kickoff:'2026-06-17T19:00', phase:'Grupo D', city:'Dallas' },
+  { home_team:'Turquía',      away_team:'Paraguay',               kickoff:'2026-06-17T22:00', phase:'Grupo D', city:'Boston' },
+  { home_team:'Turquía',      away_team:'USA',                    kickoff:'2026-06-22T16:00', phase:'Grupo D', city:'Atlanta' },
+  { home_team:'Paraguay',     away_team:'Australia',              kickoff:'2026-06-22T16:00', phase:'Grupo D', city:'Miami' },
+  { home_team:'Alemania',     away_team:'Curazao',                kickoff:'2026-06-13T19:00', phase:'Grupo E', city:'Nueva York' },
+  { home_team:'Costa de Marfil', away_team:'Ecuador',            kickoff:'2026-06-14T15:00', phase:'Grupo E', city:'Seattle' },
+  { home_team:'Alemania',     away_team:'Costa de Marfil',        kickoff:'2026-06-18T15:00', phase:'Grupo E', city:'Filadelfia' },
+  { home_team:'Ecuador',      away_team:'Curazao',                kickoff:'2026-06-18T19:00', phase:'Grupo E', city:'Los Ángeles' },
+  { home_team:'Ecuador',      away_team:'Alemania',               kickoff:'2026-06-23T20:00', phase:'Grupo E', city:'Houston' },
+  { home_team:'Curazao',      away_team:'Costa de Marfil',        kickoff:'2026-06-23T20:00', phase:'Grupo E', city:'Dallas' },
+  { home_team:'Países Bajos', away_team:'Japón',                  kickoff:'2026-06-14T12:00', phase:'Grupo F', city:'Vancouver' },
+  { home_team:'Suecia',       away_team:'Túnez',                  kickoff:'2026-06-14T19:00', phase:'Grupo F', city:'Atlanta' },
+  { home_team:'Países Bajos', away_team:'Suecia',                 kickoff:'2026-06-18T22:00', phase:'Grupo F', city:'Kansas City' },
+  { home_team:'Japón',        away_team:'Túnez',                  kickoff:'2026-06-19T15:00', phase:'Grupo F', city:'Los Ángeles' },
+  { home_team:'Japón',        away_team:'Suecia',                 kickoff:'2026-06-23T16:00', phase:'Grupo F', city:'Seattle' },
+  { home_team:'Túnez',        away_team:'Países Bajos',           kickoff:'2026-06-23T16:00', phase:'Grupo F', city:'Boston' },
+  { home_team:'Bélgica',      away_team:'Egipto',                 kickoff:'2026-06-14T22:00', phase:'Grupo G', city:'Miami' },
+  { home_team:'Irán',         away_team:'Nueva Zelanda',          kickoff:'2026-06-15T15:00', phase:'Grupo G', city:'Houston' },
+  { home_team:'Bélgica',      away_team:'Irán',                   kickoff:'2026-06-19T19:00', phase:'Grupo G', city:'Nueva York' },
+  { home_team:'Egipto',       away_team:'Nueva Zelanda',          kickoff:'2026-06-19T22:00', phase:'Grupo G', city:'Toronto' },
+  { home_team:'Egipto',       away_team:'Irán',                   kickoff:'2026-06-24T20:00', phase:'Grupo G', city:'San Francisco' },
+  { home_team:'Nueva Zelanda',away_team:'Bélgica',                kickoff:'2026-06-24T20:00', phase:'Grupo G', city:'Vancouver' },
+  { home_team:'España',       away_team:'Cabo Verde',             kickoff:'2026-06-15T12:00', phase:'Grupo H', city:'Los Ángeles' },
+  { home_team:'Arabia Saudita',away_team:'Uruguay',               kickoff:'2026-06-15T19:00', phase:'Grupo H', city:'Kansas City' },
+  { home_team:'España',       away_team:'Arabia Saudita',         kickoff:'2026-06-20T15:00', phase:'Grupo H', city:'Dallas' },
+  { home_team:'Uruguay',      away_team:'Cabo Verde',             kickoff:'2026-06-20T19:00', phase:'Grupo H', city:'Seattle' },
+  { home_team:'Uruguay',      away_team:'España',                 kickoff:'2026-06-25T20:00', phase:'Grupo H', city:'Atlanta' },
+  { home_team:'Cabo Verde',   away_team:'Arabia Saudita',         kickoff:'2026-06-25T20:00', phase:'Grupo H', city:'Boston' },
+  { home_team:'Francia',      away_team:'Senegal',                kickoff:'2026-06-16T12:00', phase:'Grupo I', city:'Filadelfia' },
+  { home_team:'Irak',         away_team:'Noruega',                kickoff:'2026-06-16T19:00', phase:'Grupo I', city:'Miami' },
+  { home_team:'Francia',      away_team:'Irak',                   kickoff:'2026-06-22T12:00', phase:'Grupo I', city:'Nueva York' },
+  { home_team:'Noruega',      away_team:'Senegal',                kickoff:'2026-06-22T19:00', phase:'Grupo I', city:'Houston' },
+  { home_team:'Noruega',      away_team:'Francia',                kickoff:'2026-06-26T16:00', phase:'Grupo I', city:'Los Ángeles' },
+  { home_team:'Senegal',      away_team:'Irak',                   kickoff:'2026-06-26T16:00', phase:'Grupo I', city:'Toronto' },
+  { home_team:'Argentina',    away_team:'Argelia',                kickoff:'2026-06-17T12:00', phase:'Grupo J', city:'Miami' },
+  { home_team:'Austria',      away_team:'Jordania',               kickoff:'2026-06-17T15:00', phase:'Grupo J', city:'Houston' },
+  { home_team:'Argentina',    away_team:'Austria',                kickoff:'2026-06-21T19:00', phase:'Grupo J', city:'Dallas' },
+  { home_team:'Jordania',     away_team:'Argelia',                kickoff:'2026-06-21T22:00', phase:'Grupo J', city:'San Francisco' },
+  { home_team:'Jordania',     away_team:'Argentina',              kickoff:'2026-06-25T16:00', phase:'Grupo J', city:'Atlanta' },
+  { home_team:'Argelia',      away_team:'Austria',                kickoff:'2026-06-25T16:00', phase:'Grupo J', city:'Kansas City' },
+  { home_team:'Portugal',     away_team:'RD Congo',               kickoff:'2026-06-18T12:00', phase:'Grupo K', city:'Boston' },
+  { home_team:'Uzbekistán',   away_team:'Colombia',               kickoff:'2026-06-18T19:00', phase:'Grupo K', city:'Vancouver' },
+  { home_team:'Portugal',     away_team:'Uzbekistán',             kickoff:'2026-06-23T12:00', phase:'Grupo K', city:'Nueva York' },
+  { home_team:'Colombia',     away_team:'RD Congo',               kickoff:'2026-06-23T19:00', phase:'Grupo K', city:'Seattle' },
+  { home_team:'Colombia',     away_team:'Portugal',               kickoff:'2026-06-27T16:00', phase:'Grupo K', city:'Los Ángeles' },
+  { home_team:'RD Congo',     away_team:'Uzbekistán',             kickoff:'2026-06-27T16:00', phase:'Grupo K', city:'Filadelfia' },
+  { home_team:'Inglaterra',   away_team:'Panamá',                 kickoff:'2026-06-19T12:00', phase:'Grupo L', city:'Miami' },
+  { home_team:'Ghana',        away_team:'Croacia',                kickoff:'2026-06-19T16:00', phase:'Grupo L', city:'Kansas City' },
+  { home_team:'Inglaterra',   away_team:'Ghana',                  kickoff:'2026-06-24T12:00', phase:'Grupo L', city:'Toronto' },
+  { home_team:'Croacia',      away_team:'Panamá',                 kickoff:'2026-06-24T16:00', phase:'Grupo L', city:'Atlanta' },
+  { home_team:'Croacia',      away_team:'Inglaterra',             kickoff:'2026-06-27T20:00', phase:'Grupo L', city:'San Francisco' },
+  { home_team:'Panamá',       away_team:'Ghana',                  kickoff:'2026-06-27T20:00', phase:'Grupo L', city:'Houston' },
+];
+
+// ── State ────────────────────────────────────────────────────────────────────
+let allDocs = [];
+let duplicatesToDelete = [];
+let missingToInsert = [];
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+function log(msg, cls = '') {
+  const box = document.getElementById('log');
+  box.innerHTML += `\n<span class="${cls}">[${new Date().toLocaleTimeString()}] ${msg}</span>`;
+  box.scrollTop = box.scrollHeight;
+}
+
+function toast(msg, type = 'success') {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  setTimeout(() => el.className = '', 3000);
+}
+
+function matchKey(doc) {
+  return `${doc.home_team}|${doc.away_team}|${doc.phase}`;
+}
+function pairKey(a, b) {
+  return [a, b].sort().join('||');
+}
+function fmtKickoff(v) {
+  if (!v) return '—';
+  let d;
+  if (v && typeof v.toDate === 'function') d = v.toDate();
+  else d = new Date(v);
+  if (isNaN(d)) return String(v);
+  return d.toLocaleDateString('es', { day:'2-digit', month:'short' }) + ' ' +
+         d.toLocaleTimeString('es', { hour:'2-digit', minute:'2-digit' });
+}
+
+function matchRow(doc, extra = '') {
+  return `<tr>
+    <td><span class="doc-id">${doc.id.slice(0,10)}…</span></td>
+    <td>
+      <div class="team-cell">
+        <span class="flag">${doc.home_flag || ''}</span> ${doc.home_team}
+        <span class="vs">vs</span>
+        <span class="flag">${doc.away_flag || ''}</span> ${doc.away_team}
+      </div>
+    </td>
+    <td><span class="phase-tag">${doc.phase || '—'}</span></td>
+    <td class="kickoff-cell">${fmtKickoff(doc.kickoff)}</td>
+    <td class="city-cell">${doc.city || '—'}</td>
+    ${extra}
+  </tr>`;
+}
+
+function buildTable(rows, withDelete = false) {
+  if (!rows.length) return '<div class="empty">✅ Sin problemas en esta categoría</div>';
+  const extraHead = withDelete ? '<th>Acción</th>' : '';
+  return `<table>
+    <thead><tr><th>ID</th><th>Partido</th><th>Fase</th><th>Kickoff</th><th>Ciudad</th>${extraHead}</tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+// ── Audit ────────────────────────────────────────────────────────────────────
+async function runAudit() {
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('loading-msg').textContent = 'Leyendo Firestore…';
+  duplicatesToDelete = [];
+  missingToInsert    = [];
+  log('── Nueva auditoría iniciada ──', 'info');
+
+  try {
+    const snap = await getDocs(collection(db, 'matches'));
+    allDocs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    log(`${allDocs.length} documentos leídos de Firestore`, 'ok');
+
+    // ── 1. Duplicados exactos (mismo home+away+phase, múltiples docs) ──
+    const keyMap = {};
+    for (const doc of allDocs) {
+      const k = matchKey(doc);
+      if (!keyMap[k]) keyMap[k] = [];
+      keyMap[k].push(doc);
+    }
+    const exactDupes = Object.values(keyMap).filter(g => g.length > 1);
+    let exactRows = '';
+    for (const group of exactDupes) {
+      // Keep the first, delete the rest
+      const [keep, ...remove] = group;
+      for (const r of remove) {
+        duplicatesToDelete.push(r);
+        exactRows += matchRow(r, `<td><button class="del-btn" onclick="deleteSingle('${r.id}')">Eliminar</button></td>`);
+      }
+    }
+    const totalExact = duplicatesToDelete.length;
+    document.getElementById('table-dupes').innerHTML  = buildTable(exactRows, true);
+    document.getElementById('badge-dupes').textContent = totalExact;
+    document.getElementById('stat-dupes').textContent  = totalExact;
+    document.getElementById('btn-del-exact').style.display = totalExact ? '' : 'none';
+    if (totalExact) log(`${totalExact} duplicados exactos encontrados`, 'err');
+    else log('Sin duplicados exactos', 'ok');
+
+    // ── 2. Invertidos (A vs B y B vs A en la misma fase) ──
+    const pairSet  = {};
+    const inverted = [];
+    for (const doc of allDocs) {
+      const pk = `${pairKey(doc.home_team, doc.away_team)}|${doc.phase}`;
+      if (!pairSet[pk]) pairSet[pk] = [];
+      pairSet[pk].push(doc);
+    }
+    let invRows = '';
+    const invertedToDelete = [];
+    for (const [pk, group] of Object.entries(pairSet)) {
+      if (group.length < 2) continue;
+      // Two different home/away combinations — both exist (inverted)
+      const unique = [...new Set(group.map(d => matchKey(d)))];
+      if (unique.length > 1) {
+        // Check which one matches canonical
+        const [a, b] = group;
+        const aKey = matchKey(a);
+        const canonicalKeys = CANONICAL.map(matchKey);
+        const aIsCanonical = canonicalKeys.includes(aKey);
+        const toRemove = aIsCanonical ? b : a;
+        invertedToDelete.push(toRemove);
+        invRows += matchRow(toRemove, `<td><button class="del-btn" onclick="deleteSingle('${toRemove.id}')">Eliminar (no canónico)</button></td>`);
+      }
+    }
+    document.getElementById('table-inv').innerHTML  = buildTable(invRows, true);
+    document.getElementById('badge-inv').textContent = invertedToDelete.length;
+    document.getElementById('stat-inv').textContent  = invertedToDelete.length;
+    document.getElementById('btn-del-inv').style.display = invertedToDelete.length ? '' : 'none';
+    duplicatesToDelete.push(...invertedToDelete.filter(d => !duplicatesToDelete.find(x => x.id === d.id)));
+    if (invertedToDelete.length) log(`${invertedToDelete.length} partidos invertidos encontrados`, 'warn');
+    else log('Sin partidos invertidos', 'ok');
+
+    // ── 3. Fase incorrecta (home+away match canonical pero phase diferente) ──
+    let phaseRows = '';
+    let phaseCount = 0;
+    for (const doc of allDocs) {
+      const can = CANONICAL.find(c => c.home_team === doc.home_team && c.away_team === doc.away_team);
+      if (can && can.phase !== doc.phase) {
+        phaseCount++;
+        phaseRows += matchRow(doc, `<td style="color:var(--orange)">${doc.phase} → <strong>${can.phase}</strong></td>`);
+      }
+    }
+    document.getElementById('table-phase').innerHTML  = buildTable(phaseRows, true);
+    document.getElementById('badge-phase').textContent = phaseCount;
+    document.getElementById('stat-phase').textContent  = phaseCount;
+    if (phaseCount) log(`${phaseCount} partidos con fase incorrecta`, 'warn');
+    else log('Sin fases incorrectas', 'ok');
+
+    // ── 4. Faltantes ──
+    const canonicalKeys = new Set(CANONICAL.map(matchKey));
+    const firestoreKeys = new Set(allDocs.map(matchKey));
+    let missingRows = '';
+    for (const c of CANONICAL) {
+      const k = matchKey(c);
+      if (!firestoreKeys.has(k)) {
+        missingToInsert.push(c);
+        missingRows += `<tr>
+          <td>—</td>
+          <td><div class="team-cell">${c.home_team} <span class="vs">vs</span> ${c.away_team}</div></td>
+          <td><span class="phase-tag">${c.phase}</span></td>
+          <td class="kickoff-cell">${c.kickoff}</td>
+          <td class="city-cell">${c.city}</td>
+          <td style="color:var(--blue)">Faltante</td>
+        </tr>`;
+      }
+    }
+    document.getElementById('table-missing').innerHTML  = buildTable(missingRows, true);
+    document.getElementById('badge-missing').textContent = missingToInsert.length;
+    document.getElementById('stat-missing').textContent  = missingToInsert.length;
+    document.getElementById('btn-insert-missing').style.display = missingToInsert.length ? '' : 'none';
+    if (missingToInsert.length) log(`${missingToInsert.length} partidos faltantes`, 'warn');
+    else log('Ningún partido faltante', 'ok');
+
+    // ── 5. All docs table ──
+    const allRows = allDocs
+      .sort((a,b) => {
+        const da = a.kickoff?.toDate ? a.kickoff.toDate() : new Date(a.kickoff);
+        const db2 = b.kickoff?.toDate ? b.kickoff.toDate() : new Date(b.kickoff);
+        return da - db2;
+      })
+      .map(d => matchRow(d, `<td><button class="del-btn" onclick="deleteSingle('${d.id}')">✕</button></td>`))
+      .join('');
+    document.getElementById('table-all').innerHTML  = buildTable(allRows, true);
+    document.getElementById('badge-all').textContent = allDocs.length;
+    document.getElementById('stat-total').textContent = allDocs.length;
+
+    // Enable bulk delete button if there's anything to clean
+    const totalIssues = totalExact + invertedToDelete.length;
+    document.getElementById('btn-delete-all').disabled = totalIssues === 0;
+    log(`Auditoría completa. ${totalIssues} documentos marcados para eliminar.`,
+      totalIssues ? 'warn' : 'ok');
+
+  } catch(err) {
+    log('Error leyendo Firestore: ' + err.message, 'err');
+    toast('Error: ' + err.message, 'error');
+  } finally {
+    document.getElementById('loading').style.display = 'none';
+  }
+}
+
+// ── Delete single ─────────────────────────────────────────────────────────────
+window.deleteSingle = async function(id) {
+  if (!confirm(`¿Eliminar documento ${id.slice(0,10)}…?`)) return;
+  try {
+    await deleteDoc(doc(db, 'matches', id));
+    toast('Documento eliminado', 'success');
+    log(`Eliminado: ${id}`, 'ok');
+    await runAudit();
+  } catch(e) {
+    toast('Error: ' + e.message, 'error');
+    log('Error: ' + e.message, 'err');
+  }
+};
+
+// ── Delete section ────────────────────────────────────────────────────────────
+window.deleteSection = async function(type) {
+  if (!confirm(`¿Eliminar todos los duplicados sugeridos? Esta acción no se puede deshacer.`)) return;
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('loading-msg').textContent = 'Eliminando duplicados…';
+  let count = 0;
+  for (const d of duplicatesToDelete) {
+    try {
+      await deleteDoc(doc(db, 'matches', d.id));
+      log(`Eliminado: ${d.home_team} vs ${d.away_team} (${d.id.slice(0,8)})`, 'ok');
+      count++;
+    } catch(e) {
+      log(`Error eliminando ${d.id}: ${e.message}`, 'err');
+    }
+  }
+  toast(`${count} documentos eliminados`, 'success');
+  await runAudit();
+};
+
+// ── Delete all duplicates ─────────────────────────────────────────────────────
+window.deleteAllDuplicates = async function() {
+  if (!duplicatesToDelete.length) { toast('No hay duplicados', 'error'); return; }
+  if (!confirm(`¿Eliminar ${duplicatesToDelete.length} documentos duplicados?\n\nEsta acción no se puede deshacer.`)) return;
+  await deleteSection('all');
+};
+
+// ── Insert missing ─────────────────────────────────────────────────────────────
+window.insertMissing = async function() {
+  if (!missingToInsert.length) return;
+  if (!confirm(`¿Insertar ${missingToInsert.length} partidos faltantes?`)) return;
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('loading-msg').textContent = 'Insertando partidos faltantes…';
+  let count = 0;
+  const ref = collection(db, 'matches');
+  for (const m of missingToInsert) {
+    try {
+      await addDoc(ref, {
+        home_team: m.home_team, home_flag: m.home_flag || '',
+        away_team: m.away_team, away_flag: m.away_flag || '',
+        kickoff: new Date(m.kickoff),
+        phase: m.phase, city: m.city || '', type: 'fase_grupos',
+      });
+      log(`Insertado: ${m.home_team} vs ${m.away_team} (${m.phase})`, 'ok');
+      count++;
+    } catch(e) {
+      log(`Error insertando ${m.home_team} vs ${m.away_team}: ${e.message}`, 'err');
+    }
+  }
+  toast(`${count} partidos insertados`, 'success');
+  await runAudit();
+};
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+window.runAudit = runAudit;
+runAudit();
+</script>
+</body>
+</html>
