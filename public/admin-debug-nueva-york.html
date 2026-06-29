@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Debug Nueva York</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body{background:#0f1a2d;color:#f1f5f9;font-family:monospace;padding:30px}
+    h2{color:#4aafd4}
+    .log{background:#1a2d4a;border-radius:10px;padding:20px;margin-top:20px;max-height:80vh;overflow-y:auto}
+    .warn{color:#fbbf24}.ok{color:#34d399}.err{color:#f87171}
+    button{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:16px;font-weight:700;cursor:pointer;margin-top:10px;margin-right:10px}
+    button.red{background:#dc2626}
+    button:disabled{opacity:.5}
+  </style>
+</head>
+<body>
+  <h2>🔍 Debug + Borrar partido Nueva York 3-jul</h2>
+  <button id="btnDebug">🔍 Ver partidos 3-jul Nueva York</button>
+  <button id="btnDel" class="red" disabled>🗑️ Borrar los encontrados</button>
+  <div class="log" id="log"><em style="color:#94a3b8">Esperando...</em></div>
+
+  <script type="module">
+    import { db } from './js/firebase-config.js';
+    import { collection, getDocs, deleteDoc, doc }
+      from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+    const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+    const fmt  = d => d.toLocaleString('es-BO',{timeZone:'America/La_Paz',hour12:true,day:'2-digit',month:'short',hour:'numeric',minute:'2-digit'});
+
+    const logEl = document.getElementById('log');
+    const btnDebug = document.getElementById('btnDebug');
+    const btnDel   = document.getElementById('btnDel');
+    const log = (m,c='') => { logEl.innerHTML+=`<div class="${c}">${m}</div>`; logEl.scrollTop=logEl.scrollHeight; };
+
+    // Ventana 3-jul Bolivia (todo el día)
+    const dayStart = new Date(Date.UTC(2026,6,3,4,0));  // 3-jul 00:00 Bolivia = 04:00 UTC
+    const dayEnd   = new Date(Date.UTC(2026,6,4,4,0));  // 4-jul 00:00 Bolivia = 04:00 UTC
+
+    let candidates = [];
+
+    btnDebug.addEventListener('click', async () => {
+      btnDebug.disabled = true;
+      logEl.innerHTML = '';
+      log('🔍 Cargando todos los partidos...');
+      const snap = await getDocs(collection(db,'matches'));
+      const all  = snap.docs.map(d=>({id:d.id,...d.data()}));
+      log(`📊 ${all.length} partidos totales`);
+
+      // Todos los partidos del 3-jul en Nueva York
+      const nyJul3 = all.filter(m => {
+        const city = norm(m.city||'');
+        if (!city.includes('nueva york') && !city.includes('new york') && !city.includes('east rutherford') && !city.includes('metlife')) return false;
+        const ko = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+        return ko >= dayStart && ko < dayEnd;
+      });
+
+      log(`<br>📍 Partidos 3-jul Nueva York: ${nyJul3.length}`, 'warn');
+      nyJul3.forEach(m => {
+        const ko = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+        log(`  [${m.id}]<br>  home: "${m.home_team||''}" | away: "${m.away_team||''}"<br>  phase: "${m.phase||''}" | type: "${m.type||''}"<br>  city: "${m.city||''}" | ${fmt(ko)}`, 'warn');
+      });
+
+      // Todos con phase=octavos sin importar fecha
+      const allOct = all.filter(m => {
+        const p = norm(m.phase||'') + ' ' + norm(m.type||'');
+        return p.includes('octavo');
+      });
+      const cutoff = new Date(Date.UTC(2026,6,4,0,0));
+      const badOct = allOct.filter(m => {
+        const ko = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+        return ko < cutoff;
+      });
+      log(`<br>📍 Octavos con fecha antes del 4-jul: ${badOct.length}`, 'warn');
+      badOct.forEach(m => {
+        const ko = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+        log(`  [${m.id}]<br>  phase: "${m.phase||''}" | type: "${m.type||''}" | city: "${m.city||''}" | ${fmt(ko)}`, 'warn');
+      });
+
+      candidates = [...new Map([...nyJul3,...badOct].map(m=>[m.id,m])).values()];
+      log(`<br>⚠️ Total a borrar: ${candidates.length}`);
+      if (candidates.length > 0) btnDel.disabled = false;
+    });
+
+    btnDel.addEventListener('click', async () => {
+      btnDel.disabled = true;
+      for (const m of candidates) {
+        try {
+          await deleteDoc(doc(db,'matches',m.id));
+          log(`✅ Borrado: [${m.id}] ${m.home_team||'TBC'} vs ${m.away_team||'TBC'}`, 'ok');
+        } catch(e) { log(`❌ ${e.message}`, 'err'); }
+      }
+      log('<br>🏁 <strong>Listo. Recarga el dashboard.</strong>', 'ok');
+    });
+  </script>
+</body>
+</html>
