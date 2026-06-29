@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Fix R32 Faltantes — WC2026</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body { background:#0f1a2d; color:#f1f5f9; font-family:monospace; padding:30px; }
+    h2 { color:#4aafd4; }
+    .log { background:#1a2d4a; border-radius:10px; padding:20px; margin-top:20px; max-height:70vh; overflow-y:auto; }
+    .ok  { color:#34d399; }
+    .err { color:#f87171; }
+    .skip{ color:#94a3b8; }
+    .warn{ color:#fbbf24; }
+    button { background:#dc2626; color:#fff; border:none; border-radius:8px; padding:12px 28px; font-size:16px; font-weight:700; cursor:pointer; margin-top:20px; }
+    button:disabled { opacity:0.5; cursor:not-allowed; }
+    .preview { background:#1e3a5f; border-radius:8px; padding:16px; margin-top:16px; border:1px solid #2563eb; }
+    .preview h3 { color:#93c5fd; margin:0 0 10px; }
+    .prow { padding:4px 0; border-bottom:1px solid #1e40af; }
+  </style>
+</head>
+<body>
+  <h2>🗑️ Fix R32 — Borrar y recrear partidos incompletos</h2>
+  <p style="color:#94a3b8">Busca partidos de Ronda de 32 sin nombre de equipo (TBC/vacío) y los elimina + recrea con los datos correctos.</p>
+
+  <div class="preview">
+    <h3>📋 Partidos a recrear</h3>
+    <div class="prow">🇲🇽 México vs 🇪🇨 Ecuador — mar, 30 jun, 21:00 Bolivia — Ciudad de México</div>
+    <div class="prow">🇧🇪 Bélgica vs 🇸🇳 Senegal — mié, 01 jul, 16:00 Bolivia — Seattle</div>
+    <div class="prow">🇵🇹 Portugal vs 🇭🇷 Croacia — jue, 02 jul, 19:00 Bolivia — Toronto</div>
+  </div>
+
+  <button id="btnRun">🗑️ Borrar y recrear los 3 partidos</button>
+  <div class="log" id="log"><em style="color:#94a3b8">Esperando...</em></div>
+
+  <script type="module">
+    import { db } from './js/firebase-config.js';
+    import {
+      collection, getDocs, addDoc, deleteDoc, doc, Timestamp
+    } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+    // Bolivia UTC-4: sumar 4h para UTC
+    function bToUTC(y,mo,d,h,mi) {
+      return new Date(Date.UTC(y, mo-1, d, h+4, mi));
+    }
+
+    const CORRECT = [
+      {
+        home_team:'México',      home_flag:'🇲🇽',
+        away_team:'Ecuador',     away_flag:'🇪🇨',
+        kickoff: bToUTC(2026,6,30,21,0),
+        phase:'Ronda de 32', type:'ronda_32',
+        city:'Ciudad de México',
+        city_aliases:['ciudad de mexico','ciudad de m\u00e9xico','mexico city'],
+        // ventana: ±12h alrededor del kickoff correcto en Bolivia
+        windowH: 12
+      },
+      {
+        home_team:'B\u00e9lgica',     home_flag:'🇧🇪',
+        away_team:'Senegal',     away_flag:'🇸🇳',
+        kickoff: bToUTC(2026,7,1,16,0),
+        phase:'Ronda de 32', type:'ronda_32',
+        city:'Seattle',
+        city_aliases:['seattle'],
+        windowH: 12
+      },
+      {
+        home_team:'Portugal',    home_flag:'🇵🇹',
+        away_team:'Croacia',     away_flag:'🇭🇷',
+        kickoff: bToUTC(2026,7,2,19,0),
+        phase:'Ronda de 32', type:'ronda_32',
+        city:'Toronto',
+        city_aliases:['toronto','vancouver'],
+        windowH: 15
+      },
+    ];
+
+    const logEl = document.getElementById('log');
+    const btn   = document.getElementById('btnRun');
+
+    function log(msg, cls='') {
+      logEl.innerHTML += `<div class="${cls}">${msg}</div>`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+    function norm(s) {
+      return (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+    }
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      logEl.innerHTML = '';
+      log('🔍 Cargando todos los partidos...');
+
+      const snap = await getDocs(collection(db, 'matches'));
+      const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      log(`📊 ${all.length} partidos cargados`);
+
+      const r32 = all.filter(m =>
+        (m.phase||'').toLowerCase().includes('32') ||
+        (m.type||'').toLowerCase().includes('32')
+      );
+      log(`🎯 Ronda de 32: ${r32.length} partidos`);
+
+      for (const fix of CORRECT) {
+        log(`<br>🔍 Procesando: ${fix.home_team} vs ${fix.away_team}...`);
+
+        const windowMs = fix.windowH * 3600000;
+
+        // Buscar candidatos: ciudad + fecha cercana en R32
+        const candidates = r32.filter(m => {
+          const cityOk = fix.city_aliases.some(a => norm(m.city||'').includes(norm(a)) || norm(a).includes(norm(m.city||'')));
+          if (!cityOk) return false;
+          const ko = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+          return Math.abs(ko - fix.kickoff) < windowMs;
+        });
+
+        // También buscar los que tengan home_team vacío/TBC en R32 en esa ciudad
+        const tbcInCity = r32.filter(m => {
+          const ht = norm(m.home_team||'');
+          const isEmpty = !ht || ht === 'tbc' || ht === '?';
+          if (!isEmpty) return false;
+          return fix.city_aliases.some(a => norm(m.city||'').includes(norm(a)) || norm(a).includes(norm(m.city||'')));
+        });
+
+        const toDelete = [...new Map([...candidates, ...tbcInCity].map(m => [m.id, m])).values()];
+
+        if (toDelete.length === 0) {
+          log(`  ⚠️ No se encontró partido candidato para borrar. Se creará directamente.`, 'warn');
+        } else {
+          for (const m of toDelete) {
+            const ko = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+            const koStr = ko.toLocaleString('es-BO', { timeZone:'America/La_Paz', hour12:true, day:'2-digit', month:'short', hour:'numeric', minute:'2-digit' });
+            try {
+              await deleteDoc(doc(db, 'matches', m.id));
+              log(`  🗑️ Borrado: ${m.home_team||'TBC'} vs ${m.away_team||'TBC'} • ${m.city} • ${koStr}`, 'warn');
+            } catch(e) {
+              log(`  ❌ Error borrando ${m.id}: ${e.message}`, 'err');
+            }
+          }
+        }
+
+        // Recrear con datos correctos
+        try {
+          await addDoc(collection(db, 'matches'), {
+            home_team: fix.home_team,
+            home_flag: fix.home_flag,
+            away_team: fix.away_team,
+            away_flag: fix.away_flag,
+            kickoff:   Timestamp.fromDate(fix.kickoff),
+            phase:     fix.phase,
+            type:      fix.type,
+            city:      fix.city,
+          });
+          const koStr = fix.kickoff.toLocaleString('es-BO', { timeZone:'America/La_Paz', hour12:true, day:'2-digit', month:'short', hour:'numeric', minute:'2-digit' });
+          log(`  ✅ Creado: ${fix.home_team} vs ${fix.away_team} • ${fix.city} • ${koStr}`, 'ok');
+        } catch(e) {
+          log(`  ❌ Error creando ${fix.home_team} vs ${fix.away_team}: ${e.message}`, 'err');
+        }
+      }
+
+      log(`<br>🏁 <strong>Proceso completado. Verifica en admin-kickoffs.</strong>`, 'ok');
+      btn.disabled = false;
+      btn.textContent = '🔄 Volver a ejecutar';
+    });
+  </script>
+</body>
+</html>
