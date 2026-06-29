@@ -1,21 +1,18 @@
 /**
  * chat-widget.js
  * Chat flotante: canal de grupo + mensajes individuales
- * Incluir con: <script type="module" src="js/chat-widget.js"></script>
- * Requiere ?gid= en la URL para el canal de grupo.
  */
 import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
-  collection, addDoc, query, orderBy, limit,
-  onSnapshot, serverTimestamp, doc, getDoc,
-  getDocs, where, updateDoc, setDoc
+  collection, addDoc, query, orderBy, limit, where,
+  onSnapshot, serverTimestamp, doc, getDoc, getDocs
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
 const params = new URLSearchParams(location.search);
 const GID    = params.get('gid') || '';
 
-// ── Estilos ──────────────────────────────────────────────────────────────────
+// ── Estilos ────────────────────────────────────────────────────────────────────
 const style = document.createElement('style');
 style.textContent = `
 #cw-fab {
@@ -47,22 +44,14 @@ style.textContent = `
   font-size: 13px; font-weight: 700; color: #f1f5f9;
   border-bottom: 1px solid #1e3a5f;
 }
-#cw-header .cw-back {
-  cursor: pointer; font-size: 16px; opacity: .7; flex-shrink: 0;
-  display: none;
-}
+#cw-header .cw-back { cursor: pointer; font-size: 16px; opacity: .7; flex-shrink: 0; display: none; }
 #cw-header .cw-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-#cw-header .cw-close {
-  cursor: pointer; font-size: 16px; opacity: .7; flex-shrink: 0;
-}
-#cw-tabs {
-  display: flex; border-bottom: 1px solid #1e3a5f;
-}
+#cw-header .cw-close { cursor: pointer; font-size: 16px; opacity: .7; flex-shrink: 0; }
+#cw-tabs { display: flex; border-bottom: 1px solid #1e3a5f; }
 .cw-tab {
   flex: 1; padding: 8px 0; text-align: center;
   font-size: 12px; font-weight: 600; color: #94a3b8;
-  cursor: pointer; transition: background .15s;
-  position: relative;
+  cursor: pointer; transition: background .15s; position: relative;
 }
 .cw-tab.active { color: #4aafd4; border-bottom: 2px solid #4aafd4; }
 .cw-tab .cw-tab-badge {
@@ -82,15 +71,12 @@ style.textContent = `
   max-height: 280px; min-height: 160px;
   scrollbar-width: thin; scrollbar-color: #1e3a5f transparent;
 }
-.cw-msg {
-  display: flex; flex-direction: column; max-width: 80%;
-}
+.cw-msg { display: flex; flex-direction: column; max-width: 80%; }
 .cw-msg.mine { align-self: flex-end; align-items: flex-end; }
 .cw-msg.theirs { align-self: flex-start; }
 .cw-msg .cw-name { font-size: 10px; color: #64748b; margin-bottom: 2px; }
 .cw-msg .cw-bubble {
-  padding: 7px 11px; border-radius: 12px; font-size: 12px; line-height: 1.4;
-  word-break: break-word;
+  padding: 7px 11px; border-radius: 12px; font-size: 12px; line-height: 1.4; word-break: break-word;
 }
 .cw-msg.mine .cw-bubble { background: #2563eb; color: #fff; border-bottom-right-radius: 3px; }
 .cw-msg.theirs .cw-bubble { background: #1e3a5f; color: #e2e8f0; border-bottom-left-radius: 3px; }
@@ -107,8 +93,7 @@ style.textContent = `
 .cw-input::placeholder { color: #64748b; }
 .cw-send {
   background: #2563eb; border: none; border-radius: 8px;
-  padding: 7px 12px; color: #fff; font-size: 14px; cursor: pointer;
-  flex-shrink: 0;
+  padding: 7px 12px; color: #fff; font-size: 14px; cursor: pointer; flex-shrink: 0;
 }
 .cw-send:hover { background: #1d4ed8; }
 .cw-dm-list { flex: 1; overflow-y: auto; max-height: 340px; }
@@ -127,17 +112,12 @@ style.textContent = `
 .cw-dm-info { flex: 1; overflow: hidden; }
 .cw-dm-name { font-size: 12px; font-weight: 600; color: #f1f5f9; }
 .cw-dm-preview { font-size: 11px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.cw-dm-unread {
-  background: #ef4444; color: #fff; font-size: 10px; font-weight: 800;
-  border-radius: 50%; min-width: 18px; height: 18px;
-  display: none; align-items: center; justify-content: center;
-}
 .cw-no-gid { padding: 20px; text-align: center; font-size: 12px; color: #64748b; }
 .cw-loading { padding: 16px; text-align: center; font-size: 12px; color: #64748b; }
 `;
 document.head.appendChild(style);
 
-// ── HTML del widget ───────────────────────────────────────────────────────────
+// ── HTML del widget ──────────────────────────────────────────────────────────────────
 const wrap = document.createElement('div');
 wrap.innerHTML = `
 <button id="cw-fab">
@@ -161,7 +141,6 @@ wrap.innerHTML = `
     </div>
   </div>
   <div id="cw-body">
-    <!-- Vista: canal grupo -->
     <div id="cw-view-group" class="active">
       <div class="cw-messages" id="cw-group-msgs"><div class="cw-loading">⏳ Cargando...</div></div>
       <div class="cw-input-row">
@@ -169,11 +148,9 @@ wrap.innerHTML = `
         <button class="cw-send" id="cw-group-send">➤</button>
       </div>
     </div>
-    <!-- Vista: lista DMs -->
     <div id="cw-view-dms">
       <div class="cw-dm-list" id="cw-dm-list"><div class="cw-loading">⏳ Cargando miembros...</div></div>
     </div>
-    <!-- Vista: chat individual -->
     <div id="cw-view-chat">
       <div class="cw-messages" id="cw-chat-msgs"></div>
       <div class="cw-input-row">
@@ -186,43 +163,41 @@ wrap.innerHTML = `
 `;
 document.body.appendChild(wrap);
 
-// ── Referencias DOM ───────────────────────────────────────────────────────────
-const fab       = document.getElementById('cw-fab');
-const badge     = document.getElementById('cw-badge');
-const panel     = document.getElementById('cw-panel');
-const closeBtn  = document.getElementById('cw-close');
-const backBtn   = document.getElementById('cw-back');
-const titleEl   = document.getElementById('cw-title');
-const tabs      = document.querySelectorAll('.cw-tab');
-const tabBadgeG = document.getElementById('cw-tab-badge-group');
-const tabBadgeD = document.getElementById('cw-tab-badge-dms');
+// ── DOM refs ─────────────────────────────────────────────────────────────────────────
+const fab        = document.getElementById('cw-fab');
+const badge      = document.getElementById('cw-badge');
+const panel      = document.getElementById('cw-panel');
+const closeBtn   = document.getElementById('cw-close');
+const backBtn    = document.getElementById('cw-back');
+const titleEl    = document.getElementById('cw-title');
+const tabs       = document.querySelectorAll('.cw-tab');
+const tabBadgeG  = document.getElementById('cw-tab-badge-group');
+const tabBadgeD  = document.getElementById('cw-tab-badge-dms');
+const viewGroup  = document.getElementById('cw-view-group');
+const viewDms    = document.getElementById('cw-view-dms');
+const viewChat   = document.getElementById('cw-view-chat');
+const groupMsgs  = document.getElementById('cw-group-msgs');
+const groupInput = document.getElementById('cw-group-input');
+const groupSend  = document.getElementById('cw-group-send');
+const dmList     = document.getElementById('cw-dm-list');
+const chatMsgs   = document.getElementById('cw-chat-msgs');
+const chatInput  = document.getElementById('cw-chat-input');
+const chatSend   = document.getElementById('cw-chat-send');
 
-const viewGroup = document.getElementById('cw-view-group');
-const viewDms   = document.getElementById('cw-view-dms');
-const viewChat  = document.getElementById('cw-view-chat');
-const groupMsgs = document.getElementById('cw-group-msgs');
-const groupInput= document.getElementById('cw-group-input');
-const groupSend = document.getElementById('cw-group-send');
-const dmList    = document.getElementById('cw-dm-list');
-const chatMsgs  = document.getElementById('cw-chat-msgs');
-const chatInput = document.getElementById('cw-chat-input');
-const chatSend  = document.getElementById('cw-chat-send');
-
-// ── Estado ────────────────────────────────────────────────────────────────────
-let currentUser   = null;
-let currentView   = 'group'; // 'group' | 'dms' | 'chat'
-let activeDmUid   = null;
-let activeDmName  = '';
-let groupUnsub    = null;
-let dmUnsub       = null;
-let groupUnread   = 0;
-let dmUnread      = 0;
-let panelOpen     = false;
-let groupMembers  = []; // [{uid, name, email}]
+// ── Estado ───────────────────────────────────────────────────────────────────────────
+let currentUser  = null;
+let currentView  = 'group';
+let activeDmUid  = null;
+let activeDmName = '';
+let groupUnsub   = null;
+let dmUnsub      = null;
+let groupUnread  = 0;
+let dmUnread     = 0;
+let panelOpen    = false;
+let groupMembers = [];
 let lastGroupRead = 0;
-let lastDmRead    = {};
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────────
 const dmChannelId = (a, b) => [a, b].sort().join('__');
 
 function tsToStr(ts) {
@@ -240,6 +215,10 @@ function setBadge(el, n) {
   else { el.style.display = 'none'; }
 }
 
+function escHtml(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 function renderMessages(container, docs, myUid, showName = true) {
   container.innerHTML = '';
   if (!docs.length) {
@@ -251,7 +230,7 @@ function renderMessages(container, docs, myUid, showName = true) {
     const div = document.createElement('div');
     div.className = `cw-msg ${isMine ? 'mine' : 'theirs'}`;
     div.innerHTML = `
-      ${!isMine && showName ? `<div class="cw-name">${d.name || d.email || 'Usuario'}</div>` : ''}
+      ${!isMine && showName ? `<div class="cw-name">${escHtml(d.name || d.email || 'Usuario')}</div>` : ''}
       <div class="cw-bubble">${escHtml(d.text)}</div>
       <div class="cw-time">${tsToStr(d.createdAt)}</div>
     `;
@@ -260,42 +239,42 @@ function renderMessages(container, docs, myUid, showName = true) {
   scrollBottom(container);
 }
 
-function escHtml(s) {
-  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-// ── Auth ──────────────────────────────────────────────────────────────────────
+// ── Auth ─────────────────────────────────────────────────────────────────────────────
 onAuthStateChanged(auth, async user => {
   currentUser = user;
   if (user && GID) {
     await loadMembers();
     subscribeGroup();
-    subscribeDmUnread();
   }
 });
 
-// ── Cargar miembros del grupo ─────────────────────────────────────────────────
+// ── Cargar miembros desde group_members (igual que groups.js) ──────────────────────
 async function loadMembers() {
   groupMembers = [];
+  if (!GID || !currentUser) return;
   try {
-    // Leer miembros desde el grupo
-    const gSnap = await getDoc(doc(db, 'groups', GID));
-    const gData = gSnap.data();
-    const memberUids = gData?.members || gData?.member_uids || [];
-
-    // Intentar leer perfiles desde colección 'users'
-    for (const uid of memberUids) {
-      if (uid === currentUser.uid) continue;
+    // Leer todos los miembros del grupo desde la coleccion group_members
+    const snap = await getDocs(
+      query(collection(db, 'group_members'), where('group_id', '==', GID))
+    );
+    // Para cada miembro (excepto yo), buscar su perfil en 'users'
+    const otherDocs = snap.docs.filter(d => d.data().user_uid !== currentUser.uid);
+    await Promise.all(otherDocs.map(async memberDoc => {
+      const mData = memberDoc.data();
+      const uid   = mData.user_uid;
+      let name    = mData.email?.split('@')[0] || uid.slice(0, 8);
+      let email   = mData.email || '';
       try {
         const uSnap = await getDoc(doc(db, 'users', uid));
-        const uData = uSnap.data();
-        groupMembers.push({
-          uid,
-          name: uData?.displayName || uData?.name || uData?.email?.split('@')[0] || uid.slice(0,8),
-          email: uData?.email || ''
-        });
-      } catch { groupMembers.push({ uid, name: uid.slice(0,8), email: '' }); }
-    }
+        if (uSnap.exists()) {
+          const u = uSnap.data();
+          // El campo correcto en tu app es display_name (ver groups.js / welcome-message.js)
+          name  = u.display_name || u.displayName || u.name || email.split('@')[0] || uid.slice(0, 8);
+          email = u.email || email;
+        }
+      } catch { /* usa fallback */ }
+      groupMembers.push({ uid, name, email });
+    }));
   } catch(e) {
     console.warn('[chat] loadMembers error', e);
   }
@@ -316,21 +295,19 @@ function renderDmList() {
     const item = document.createElement('div');
     item.className = 'cw-dm-item';
     const initials = (m.name||'?').slice(0,2).toUpperCase();
-    const unread = lastDmRead[m.uid] || 0;
     item.innerHTML = `
       <div class="cw-dm-avatar">${initials}</div>
       <div class="cw-dm-info">
         <div class="cw-dm-name">${escHtml(m.name)}</div>
         <div class="cw-dm-preview">${escHtml(m.email)}</div>
       </div>
-      <div class="cw-dm-unread" style="${unread>0?'display:flex':''}"><span>${unread>9?'9+':unread}</span></div>
     `;
     item.addEventListener('click', () => openDm(m));
     dmList.appendChild(item);
   });
 }
 
-// ── Suscripción canal grupo ───────────────────────────────────────────────────
+// ── Suscripción canal grupo ────────────────────────────────────────────────────────────
 function subscribeGroup() {
   if (!GID || !currentUser) return;
   if (groupUnsub) groupUnsub();
@@ -346,11 +323,9 @@ function subscribeGroup() {
       lastGroupRead = docs.length;
       groupUnread = 0;
     } else {
-      const newCount = docs.length - lastGroupRead;
-      groupUnread = Math.max(0, newCount);
+      groupUnread = Math.max(0, docs.length - lastGroupRead);
     }
     updateBadges();
-    // Guardar docs para render al abrir
     groupUnsub._cachedDocs = docs;
   });
 }
@@ -361,12 +336,9 @@ function renderGroupFromCache() {
     lastGroupRead = groupUnsub._cachedDocs.length;
     groupUnread = 0;
     updateBadges();
+  } else {
+    groupMsgs.innerHTML = '<div class="cw-loading">⏳ Cargando...</div>';
   }
-}
-
-// ── Suscripción DM unread total ───────────────────────────────────────────────
-function subscribeDmUnread() {
-  // No hace query global; se actualiza al abrir DMs
 }
 
 function updateBadges() {
@@ -376,43 +348,34 @@ function updateBadges() {
   setBadge(tabBadgeD, dmUnread);
 }
 
-// ── Panel abrir/cerrar ────────────────────────────────────────────────────────
+// ── Panel abrir/cerrar ────────────────────────────────────────────────────────────────
 fab.addEventListener('click', () => {
   panelOpen = !panelOpen;
   panel.style.display = panelOpen ? 'flex' : 'none';
   if (panelOpen) {
     if (!GID) {
-      groupMsgs.innerHTML = '<div class="cw-no-gid">Abrí un grupo para chatear con sus miembros.</div>';
+      groupMsgs.innerHTML = '<div class="cw-no-gid">Abrí un grupo para chatear.</div>';
     } else {
       renderGroupFromCache();
     }
   }
 });
 
-closeBtn.addEventListener('click', () => {
-  panelOpen = false;
-  panel.style.display = 'none';
-});
+closeBtn.addEventListener('click', () => { panelOpen = false; panel.style.display = 'none'; });
 
-// ── Tabs ──────────────────────────────────────────────────────────────────────
-tabs.forEach(tab => {
-  tab.addEventListener('click', () => {
-    const t = tab.dataset.tab;
-    showView(t);
-  });
-});
+// ── Tabs ─────────────────────────────────────────────────────────────────────────────
+tabs.forEach(tab => tab.addEventListener('click', () => showView(tab.dataset.tab)));
 
 function showView(v) {
   currentView = v;
   tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === v));
   backBtn.style.display = 'none';
-
   viewGroup.classList.toggle('active', v === 'group');
   viewDms.classList.toggle('active',   v === 'dms');
   viewChat.classList.toggle('active',  v === 'chat');
 
   if (v === 'group') {
-    titleEl.textContent = GID ? `📢 Canal del grupo` : '📢 Grupo';
+    titleEl.textContent = GID ? '📢 Canal del grupo' : '📢 Grupo';
     renderGroupFromCache();
   } else if (v === 'dms') {
     titleEl.textContent = '💬 Mensajes privados';
@@ -427,7 +390,7 @@ function showView(v) {
 
 backBtn.addEventListener('click', () => showView('dms'));
 
-// ── DM: abrir chat privado ────────────────────────────────────────────────────
+// ── DM ────────────────────────────────────────────────────────────────────────────────
 function openDm(member) {
   activeDmUid  = member.uid;
   activeDmName = member.name;
@@ -445,21 +408,20 @@ function subscribeDm() {
     limit(60)
   );
   dmUnsub = onSnapshot(q, snap => {
-    const docs = snap.docs.map(d => d.data());
-    renderMessages(chatMsgs, docs, currentUser.uid, false);
+    renderMessages(chatMsgs, snap.docs.map(d => d.data()), currentUser.uid, false);
   });
 }
 
-// ── Enviar mensaje de grupo ───────────────────────────────────────────────────
+// ── Enviar mensaje grupo ──────────────────────────────────────────────────────────────
 async function sendGroupMsg() {
   const text = groupInput.value.trim();
   if (!text || !currentUser || !GID) return;
   groupInput.value = '';
   try {
     await addDoc(collection(db, 'chats', GID, 'messages'), {
-      uid: currentUser.uid,
-      name: currentUser.displayName || currentUser.email?.split('@')[0] || 'Usuario',
-      email: currentUser.email || '',
+      uid:       currentUser.uid,
+      name:      currentUser.displayName || currentUser.email?.split('@')[0] || 'Usuario',
+      email:     currentUser.email || '',
       text,
       createdAt: serverTimestamp()
     });
@@ -471,7 +433,7 @@ groupInput.addEventListener('keydown', e => {
   if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendGroupMsg(); }
 });
 
-// ── Enviar mensaje privado ────────────────────────────────────────────────────
+// ── Enviar mensaje privado ────────────────────────────────────────────────────────────
 async function sendDmMsg() {
   const text = chatInput.value.trim();
   if (!text || !currentUser || !activeDmUid) return;
@@ -479,9 +441,9 @@ async function sendDmMsg() {
   const cid = dmChannelId(currentUser.uid, activeDmUid);
   try {
     await addDoc(collection(db, 'dms', cid, 'messages'), {
-      uid: currentUser.uid,
-      name: currentUser.displayName || currentUser.email?.split('@')[0] || 'Usuario',
-      email: currentUser.email || '',
+      uid:       currentUser.uid,
+      name:      currentUser.displayName || currentUser.email?.split('@')[0] || 'Usuario',
+      email:     currentUser.email || '',
       text,
       createdAt: serverTimestamp()
     });
