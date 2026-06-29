@@ -44,7 +44,8 @@ onAuthStateChanged(auth, async (user) => {
   renderPerplexityButton(matchData.home_team, matchData.away_team, suggestion);
 
   const now = new Date();
-  if (kickoffDate <= now || (matchData.home_score !== undefined && matchData.home_score !== null)) {
+  // Solo bloqueamos por hora de inicio — el score puede existir antes del partido
+  if (kickoffDate <= now) {
     lockForm('Este partido ya no acepta pronósticos.');
     return;
   }
