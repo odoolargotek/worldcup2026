@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Fix Kickoffs R32 — WC2026</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body { background:#0f1a2d; color:#f1f5f9; font-family:monospace; padding:30px; }
+    h2 { color:#4aafd4; }
+    .log { background:#1a2d4a; border-radius:10px; padding:20px; margin-top:20px; max-height:70vh; overflow-y:auto; }
+    .ok  { color:#34d399; }
+    .err { color:#f87171; }
+    .skip{ color:#94a3b8; }
+    button { background:#059669; color:#fff; border:none; border-radius:8px; padding:12px 28px; font-size:16px; font-weight:700; cursor:pointer; margin-top:20px; }
+    button:disabled { opacity:0.5; cursor:not-allowed; }
+  </style>
+</head>
+<body>
+  <h2>🔧 Fix Kickoffs Ronda de 32 — Hora Bolivia</h2>
+  <p style="color:#94a3b8">Corrige los 15 partidos de Ronda de 32 al horario Bolivia (UTC-4) correcto según livescore. Solo actualiza los que tienen hora diferente.</p>
+  <button id="btnRun">▶️ Ejecutar corrección</button>
+  <div class="log" id="log"><em style="color:#94a3b8">Esperando...</em></div>
+
+  <script type="module">
+    import { db } from './js/firebase-config.js';
+    import {
+      collection, getDocs, updateDoc, doc, Timestamp
+    } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+    // Bolivia = UTC-4 fijo, sin DST. Sumar 4h para obtener UTC.
+    function boliviaToUTC(y, mo, d, h, mi) {
+      return new Date(Date.UTC(y, mo - 1, d, h + 4, mi));
+    }
+
+    // Horarios correctos Bolivia según livescore
+    const FIXES = [
+      { home: 'Brasil',          away: 'Japón',               y:2026,mo:6,d:29,h:13,mi:0  },
+      { home: 'Alemania',        away: 'Paraguay',            y:2026,mo:6,d:29,h:16,mi:30 },
+      { home: 'Países Bajos',    away: 'Marruecos',           y:2026,mo:6,d:29,h:21,mi:0  },
+      { home: 'Costa de Marfil', away: 'Noruega',             y:2026,mo:6,d:30,h:13,mi:0  },
+      { home: 'Francia',         away: 'Suecia',              y:2026,mo:6,d:30,h:17,mi:0  },
+      { home: 'México',          away: 'Ecuador',             y:2026,mo:6,d:30,h:21,mi:0  },
+      { home: 'Inglaterra',      away: 'RD Congo',            y:2026,mo:7,d:1, h:12,mi:0  },
+      { home: 'Bélgica',         away: 'Senegal',             y:2026,mo:7,d:1, h:16,mi:0  },
+      { home: 'Estados Unidos',  away: 'Bosnia y Herzegovina',y:2026,mo:7,d:1, h:20,mi:0  },
+      { home: 'España',          away: 'Austria',             y:2026,mo:7,d:2, h:15,mi:0  },
+      { home: 'Portugal',        away: 'Croacia',             y:2026,mo:7,d:2, h:19,mi:0  },
+      { home: 'Suiza',           away: 'Argelia',             y:2026,mo:7,d:2, h:23,mi:0  },
+      { home: 'Australia',       away: 'Egipto',              y:2026,mo:7,d:3, h:14,mi:0  },
+      { home: 'Argentina',       away: 'Cabo Verde',          y:2026,mo:7,d:3, h:18,mi:0  },
+      { home: 'Colombia',        away: 'Ghana',               y:2026,mo:7,d:3, h:21,mi:30 },
+    ];
+
+    const logEl = document.getElementById('log');
+    const btn   = document.getElementById('btnRun');
+
+    function log(msg, cls='') {
+      logEl.innerHTML += `<div class="${cls}">${msg}</div>`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function normalize(str) {
+      return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+    }
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      logEl.innerHTML = '';
+      log('🔍 Cargando partidos de Firestore...');
+
+      const snap = await getDocs(collection(db, 'matches'));
+      const allMatches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      log(`📊 ${allMatches.length} partidos cargados`);
+
+      let fixed = 0, skipped = 0, notFound = 0, errors = 0;
+
+      for (const fix of FIXES) {
+        const fh = normalize(fix.home);
+        const fa = normalize(fix.away);
+
+        const match = allMatches.find(m => {
+          const ht = normalize(m.home_team);
+          const at = normalize(m.away_team);
+          return (ht.includes(fh) || fh.includes(ht)) && (at.includes(fa) || fa.includes(at));
+        });
+
+        if (!match) {
+          log(`⚠️ NO ENCONTRADO: ${fix.home} vs ${fix.away}`, 'skip');
+          notFound++;
+          continue;
+        }
+
+        const newKickoff = boliviaToUTC(fix.y, fix.mo, fix.d, fix.h, fix.mi);
+        const oldKickoff = match.kickoff?.toDate ? match.kickoff.toDate() : new Date(match.kickoff);
+        const diffMs = Math.abs(newKickoff - oldKickoff);
+
+        if (diffMs < 60000) {
+          log(`✓ Ya correcto: ${match.home_team} vs ${match.away_team}`, 'skip');
+          skipped++;
+          continue;
+        }
+
+        try {
+          await updateDoc(doc(db, 'matches', match.id), {
+            kickoff: Timestamp.fromDate(newKickoff)
+          });
+          const fmtOpts = { timeZone:'America/La_Paz', hour12:true, day:'2-digit', month:'short', hour:'numeric', minute:'2-digit' };
+          const oldStr = oldKickoff.toLocaleString('es-BO', fmtOpts);
+          const newStr = newKickoff.toLocaleString('es-BO', fmtOpts);
+          log(`✅ ${match.home_team} vs ${match.away_team}<br>&nbsp;&nbsp;&nbsp;${oldStr} → <strong>${newStr}</strong>`, 'ok');
+          fixed++;
+        } catch(e) {
+          log(`❌ ERROR ${match.home_team} vs ${match.away_team}: ${e.message}`, 'err');
+          errors++;
+        }
+      }
+
+      log(`<br>🏁 <strong>Resultado: ${fixed} corregidos • ${skipped} sin cambio • ${notFound} no encontrados • ${errors} errores</strong>`);
+      btn.disabled = false;
+      btn.textContent = '🔄 Volver a ejecutar';
+    });
+  </script>
+</body>
+</html>
