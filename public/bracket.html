@@ -182,11 +182,16 @@ const params  = new URLSearchParams(location.search);
 const GID     = params.get('gid') || '';
 document.getElementById('backLink').href = `group.html?gid=${GID}`;
 
-// ─── Orden fijo de los 16 cruces R32 (izquierda arriba→abajo, derecha arriba→abajo)
-// Cada entrada: { left: true/false, slot: 1-8 }
-// left col: slots 1-8 top-to-bottom; right col: slots 1-8 top-to-bottom
+// Todos los partidos del bracket son eliminatorias → offset +4h
+const ELIM_OFFSET_MS = 4 * 60 * 60 * 1000;
+function getKickoff(m) {
+  const raw = m?.kickoff?.toDate ? m.kickoff.toDate() : (m?.kickoff ? new Date(m.kickoff) : null);
+  if (!raw) return null;
+  return new Date(raw.getTime() + ELIM_OFFSET_MS);
+}
+
+// ─── Orden fijo de los 16 cruces R32
 const R32_ORDER = [
-  // izquierda (rows 1-16, col 1): slots 1-8 = filas 1,3,5,7,9,11,13,15
   { side:'L', slot:1, homeHint:'Alemania',       awayHint:'Paraguay' },
   { side:'L', slot:2, homeHint:'Francia',         awayHint:'Suecia' },
   { side:'L', slot:3, homeHint:'Sudáfrica',       awayHint:'Canadá' },
@@ -195,7 +200,6 @@ const R32_ORDER = [
   { side:'L', slot:6, homeHint:'España',          awayHint:'Austria' },
   { side:'L', slot:7, homeHint:'USA',             awayHint:'Bosnia y Herzegovina' },
   { side:'L', slot:8, homeHint:'Bélgica',         awayHint:'Senegal' },
-  // derecha (col 9): slots 1-8
   { side:'R', slot:1, homeHint:'Brasil',          awayHint:'Japón' },
   { side:'R', slot:2, homeHint:'Costa de Marfil', awayHint:'Noruega' },
   { side:'R', slot:3, homeHint:'México',          awayHint:'Ecuador' },
@@ -208,8 +212,8 @@ const R32_ORDER = [
 
 let currentUser = null;
 let allMatches  = [];
-let predictions = {}; // matchId → {home_score, away_score}
-let matchMap    = {}; // hint key → match doc
+let predictions = {};
+let matchMap    = {};
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
@@ -221,11 +225,9 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 async function loadBracket() {
-  // Cargar partidos eliminatorios
   const snap = await getDocs(query(collection(db, 'matches'), where('type','==','eliminacion')));
   allMatches  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-  // Cargar predicciones del usuario
   if (currentUser && GID) {
     const pSnap = await getDocs(query(collection(db,'predictions'),
       where('user_uid','==',currentUser.uid),
@@ -234,7 +236,6 @@ async function loadBracket() {
     pSnap.forEach(d => { predictions[d.data().match_id] = d.data(); });
   }
 
-  // Mapear partidos por nombre de equipo
   for (const m of allMatches) {
     const key = makeKey(m.home_team, m.away_team);
     matchMap[key] = m;
@@ -254,17 +255,15 @@ function renderBracket() {
   const grid = document.getElementById('bracketGrid');
   grid.innerHTML = '';
 
-  // Helper: place a cell at grid column c, row r, spanning rs rows
   function cell(el, col, row, rowspan=1) {
     el.style.gridColumn = col;
     el.style.gridRow = `${row} / span ${rowspan}`;
     grid.appendChild(el);
   }
 
-  // ── R32 cards (col 1 left, col 9 right)
   R32_ORDER.forEach(entry => {
     const col  = entry.side === 'L' ? 1 : 9;
-    const row  = (entry.slot - 1) * 2 + 1;  // slots → rows 1,3,5,7,9,11,13,15
+    const row  = (entry.slot - 1) * 2 + 1;
     const key  = makeKey(entry.homeHint, entry.awayHint);
     const m    = matchMap[key];
     const card = buildMatchCard(m, entry.homeHint, entry.awayHint);
@@ -273,7 +272,6 @@ function renderBracket() {
     grid.appendChild(card);
   });
 
-  // ── Connectors col 2 (left QF) — vertical lines joining pairs
   for (let i = 0; i < 4; i++) {
     const row = i * 4 + 1;
     const vLine = document.createElement('div');
@@ -281,13 +279,11 @@ function renderBracket() {
     vLine.style.gridColumn = 2;
     vLine.style.gridRow    = `${row} / span 4`;
     grid.appendChild(vLine);
-
     const hLine1 = document.createElement('div');
     hLine1.className = 'connector-h';
     hLine1.style.gridColumn = 2;
     hLine1.style.gridRow = row;
     grid.appendChild(hLine1);
-
     const hLine2 = document.createElement('div');
     hLine2.className = 'connector-h';
     hLine2.style.gridColumn = 2;
@@ -295,7 +291,6 @@ function renderBracket() {
     grid.appendChild(hLine2);
   }
 
-  // ── QF placeholders col 3 (left)
   for (let i = 0; i < 4; i++) {
     const row  = i * 4 + 2;
     const ph   = buildPlaceholder('8vos');
@@ -304,7 +299,6 @@ function renderBracket() {
     grid.appendChild(ph);
   }
 
-  // ── Connectors col 4 (left SF)
   for (let i = 0; i < 2; i++) {
     const row = i * 8 + 2;
     const v = document.createElement('div');
@@ -314,7 +308,6 @@ function renderBracket() {
     grid.appendChild(v);
   }
 
-  // ── SF placeholders col 5 (left)
   for (let i = 0; i < 2; i++) {
     const row = i * 8 + 5;
     const ph  = buildPlaceholder('Cuartos');
@@ -323,14 +316,12 @@ function renderBracket() {
     grid.appendChild(ph);
   }
 
-  // ── Connector col 6 (left → Final)
   const vSemiL = document.createElement('div');
   vSemiL.className = 'connector-v';
   vSemiL.style.gridColumn = 6;
   vSemiL.style.gridRow    = '5 / span 8';
   grid.appendChild(vSemiL);
 
-  // ── Final placeholder col 5 center (using col 5 row 7-10)
   const finalPh = buildPlaceholder('FINAL', true);
   finalPh.style.gridColumn = '5';
   finalPh.style.gridRow    = '7 / span 4';
@@ -338,7 +329,6 @@ function renderBracket() {
   finalPh.style.margin     = '0 2px';
   grid.appendChild(finalPh);
 
-  // ── Trophy col 5 center top
   const trophy = document.createElement('div');
   trophy.className = 'trophy-cell';
   trophy.textContent = '🏆';
@@ -346,8 +336,6 @@ function renderBracket() {
   trophy.style.gridRow    = '5 / span 2';
   grid.appendChild(trophy);
 
-  // ── RIGHT SIDE mirrors (cols 8,7,6)
-  // R32 connectors col 8
   for (let i = 0; i < 4; i++) {
     const row = i * 4 + 1;
     const vLine = document.createElement('div');
@@ -357,7 +345,6 @@ function renderBracket() {
     grid.appendChild(vLine);
   }
 
-  // QF placeholders col 7 (right)
   for (let i = 0; i < 4; i++) {
     const row = i * 4 + 2;
     const ph  = buildPlaceholder('8vos');
@@ -366,7 +353,6 @@ function renderBracket() {
     grid.appendChild(ph);
   }
 
-  // SF connectors col 6 right
   for (let i = 0; i < 2; i++) {
     const row = i * 8 + 2;
     const v = document.createElement('div');
@@ -376,7 +362,6 @@ function renderBracket() {
     grid.appendChild(v);
   }
 
-  // SF placeholders col 5 right... actually use col 5 rows 2-5 and 11-14
   for (let i = 0; i < 2; i++) {
     const row = i * 8 + 5;
     const ph  = buildPlaceholder('Cuartos');
@@ -391,7 +376,7 @@ function buildMatchCard(m, homeHint, awayHint) {
   card.className = 'match-card';
 
   const now         = new Date();
-  const kickoff     = m?.kickoff?.toDate ? m.kickoff.toDate() : (m?.kickoff ? new Date(m.kickoff) : null);
+  const kickoff     = getKickoff(m); // con offset +4h
   const isLocked    = !m || !kickoff || kickoff <= now || m.home_score !== undefined;
   const isFinished  = m?.finished === true;
   const hasPred     = m && !!predictions[m.id];
@@ -406,7 +391,6 @@ function buildMatchCard(m, homeHint, awayHint) {
   const homeFlag = m?.home_flag || '🏳️';
   const awayFlag = m?.away_flag || '🏳️';
 
-  // Determinar ganador
   let homeWinner = false, awayWinner = false;
   if (isFinished && m.home_score !== null && m.away_score !== null) {
     if (m.home_score > m.away_score) homeWinner = true;
@@ -466,18 +450,19 @@ let activeMatch = null;
 
 function openModal(m) {
   activeMatch = m;
-  const kickoff = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+  const kickoff = getKickoff(m); // con offset +4h
 
   document.getElementById('modalPhase').textContent    = m.phase || 'Ronda de 32';
   document.getElementById('modalHomeFlag').textContent = m.home_flag || '🏳️';
   document.getElementById('modalAwayFlag').textContent = m.away_flag || '🏳️';
   document.getElementById('modalHomeName').textContent = m.home_team;
   document.getElementById('modalAwayName').textContent = m.away_team;
-  document.getElementById('modalKickoff').textContent  = kickoff.toLocaleString('es-BO',{timeZone:'America/La_Paz',dateStyle:'long',timeStyle:'short'});
+  document.getElementById('modalKickoff').textContent  = kickoff
+    ? kickoff.toLocaleString('es-BO',{timeZone:'America/La_Paz',dateStyle:'long',timeStyle:'short'})
+    : '';
   document.getElementById('modalCity').textContent     = m.city ? '📍 ' + m.city : '';
   document.getElementById('modalMsg').innerHTML        = '';
 
-  // Pre-cargar pronóstico existente
   const pred = predictions[m.id];
   document.getElementById('modalHomeScore').value = pred ? pred.home_score : '';
   document.getElementById('modalAwayScore').value = pred ? pred.away_score : '';
@@ -505,8 +490,8 @@ document.getElementById('modalSave').addEventListener('click', async () => {
     return;
   }
 
-  const kickoff = activeMatch.kickoff?.toDate ? activeMatch.kickoff.toDate() : new Date(activeMatch.kickoff);
-  if (kickoff <= new Date()) {
+  const kickoff = getKickoff(activeMatch); // con offset +4h
+  if (!kickoff || kickoff <= new Date()) {
     document.getElementById('modalMsg').innerHTML = '<span style="color:#94a3b8">🔒 Plazo vencido</span>';
     return;
   }
@@ -529,7 +514,6 @@ document.getElementById('modalSave').addEventListener('click', async () => {
     document.getElementById('modalMsg').innerHTML = '<span style="color:#86efac">✅ ¡Pronóstico guardado!</span>';
     btn.textContent = '✏️ Actualizar';
     btn.disabled = false;
-    // Refresh card
     setTimeout(() => { renderBracket(); closeModal(); }, 800);
   } catch(err) {
     document.getElementById('modalMsg').innerHTML = `<span style="color:#fca5a5">❌ ${err.message}</span>`;
