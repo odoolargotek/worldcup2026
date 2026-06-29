@@ -3,7 +3,7 @@ import { auth, db } from './firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
   collection, addDoc, onSnapshot, query, orderBy, limit,
-  serverTimestamp, doc, getDoc, getDocs, where
+  serverTimestamp, doc, getDoc, getDocs, where, setDoc
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
 const params  = new URLSearchParams(location.search);
@@ -15,7 +15,10 @@ let activeChannel = 'group'; // 'group' | uid del otro usuario
 let activeDmName  = '';
 let activeDmUid   = '';
 let unsubMessages = null;
-let groupMembers  = []; // [{uid, name, avatar}]
+let groupMembers  = []; // [{uid, name}]
+
+// Caché en memoria: evita releer users/ por la misma sesión
+const _nameCache = {};
 
 // ── Estructura Firestore:
 //   chats/{channelId}/messages/{msgId}
@@ -29,6 +32,26 @@ function channelId(type, otherUid) {
 }
 
 // ──────────────────────────────────────────
+// OBTENER NOMBRE — con caché en memoria
+// Lee users/ SOLO si el doc de group_members no trae nombre embebido
+// ──────────────────────────────────────────
+async function resolveName(uid, embeddedName) {
+  if (embeddedName && embeddedName !== 'Sin nombre') return embeddedName;
+  if (_nameCache[uid]) return _nameCache[uid];
+  try {
+    const uSnap = await getDoc(doc(db, 'users', uid));
+    if (uSnap.exists()) {
+      const d = uSnap.data();
+      const n = (d.display_name || d.displayName || d.name || '').trim()
+             || (d.email ? d.email.split('@')[0] : uid.slice(0, 8));
+      _nameCache[uid] = n;
+      return n;
+    }
+  } catch { /* sin acceso al doc */ }
+  return uid.slice(0, 8);
+}
+
+// ──────────────────────────────────────────
 // INICIALIZACIÓN
 // ──────────────────────────────────────────
 export function initChat() {
@@ -39,20 +62,21 @@ export function initChat() {
     currentUser = user;
     if (!user) return;
 
-    // Obtener nombre del usuario
-    try {
-      const uSnap = await getDoc(doc(db, 'users', user.uid));
-      if (uSnap.exists()) currentName = uSnap.data().name || user.displayName || 'Anónimo';
-      else currentName = user.displayName || 'Anónimo';
-    } catch { currentName = user.displayName || 'Anónimo'; }
+    // Nombre propio — intenta campo embebido primero, luego users/
+    currentName = await resolveName(user.uid, user.displayName);
 
-    // Cargar miembros del grupo para lista de DMs
+    // ── Estrategia lectura eficiente de miembros ────────────────────────
+    // 1. Una sola query sobre group_members filtrando por group_id.
+    // 2. Datos embebidos (display_name en el doc de membresía) evitan
+    //    llamadas N a users/. Si no hay nombre embebido, se resuelve con
+    //    caché en memoria (_nameCache) para no repetir lecturas.
+    // 3. limit(50) evita leer grupos muy grandes de golpe.
+    // ────────────────────────────────────────────────────────────────────
     await loadGroupMembers();
     renderChannelList();
     openChannel('group');
   });
 
-  // Botón flotante
   document.getElementById('chatFab').addEventListener('click', toggleChat);
   document.getElementById('chatClose').addEventListener('click', () => setVisible(false));
   document.getElementById('chatSendBtn').addEventListener('click', sendMessage);
@@ -89,27 +113,31 @@ function scrollToBottom() {
 
 // ──────────────────────────────────────────
 // MIEMBROS DEL GRUPO
+// Una query → group_members where group_id == GID, limit 50
+// Los nombres vienen embebidos (display_name) o se resuelven con caché
 // ──────────────────────────────────────────
 async function loadGroupMembers() {
   if (!GID) return;
   try {
-    const gSnap = await getDoc(doc(db, 'groups', GID));
-    if (!gSnap.exists()) return;
-    const data = gSnap.data();
-    const memberUids = data.members || [];
+    const snap = await getDocs(
+      query(
+        collection(db, 'group_members'),
+        where('group_id', '==', GID),
+        limit(50)
+      )
+    );
     groupMembers = [];
-    for (const uid of memberUids) {
-      if (uid === currentUser.uid) continue;
-      try {
-        const uSnap = await getDoc(doc(db, 'users', uid));
-        const uData = uSnap.exists() ? uSnap.data() : {};
-        groupMembers.push({
-          uid,
-          name: uData.name || uData.displayName || uid.slice(0,8),
-          avatar: uData.avatar || uData.photoURL || null
-        });
-      } catch { groupMembers.push({ uid, name: uid.slice(0,8), avatar: null }); }
-    }
+    const resolveAll = snap.docs
+      .filter(d => d.data().user_uid !== currentUser.uid)
+      .map(async d => {
+        const m = d.data();
+        // Campos embebidos tienen prioridad: evitan leer users/
+        const name = await resolveName(m.user_uid, m.display_name || m.name || '');
+        groupMembers.push({ uid: m.user_uid, name });
+      });
+    await Promise.all(resolveAll);
+    // Orden alfabético para el sidebar
+    groupMembers.sort((a, b) => a.name.localeCompare(b.name, 'es'));
   } catch(e) { console.warn('[chat] loadGroupMembers error', e); }
 }
 
@@ -121,20 +149,17 @@ function renderChannelList() {
   if (!list) return;
   list.innerHTML = '';
 
-  // Canal grupal
   const grpBtn = document.createElement('button');
   grpBtn.className = 'chat-ch-btn' + (activeChannel === 'group' ? ' active' : '');
   grpBtn.innerHTML = `<span class="chat-ch-icon">👥</span><span class="chat-ch-label">Grupo</span>`;
   grpBtn.addEventListener('click', () => openChannel('group'));
   list.appendChild(grpBtn);
 
-  // Separador
   const sep = document.createElement('div');
   sep.className = 'chat-ch-sep';
   sep.textContent = 'Mensajes directos';
   list.appendChild(sep);
 
-  // DMs
   groupMembers.forEach(m => {
     const btn = document.createElement('button');
     btn.className = 'chat-ch-btn' + (activeChannel === m.uid ? ' active' : '');
@@ -154,18 +179,15 @@ function openChannel(type, otherUid, otherName) {
   activeDmUid   = otherUid || '';
   activeDmName  = otherName || '';
 
-  // Actualizar header
   const header = document.getElementById('chatHeader');
   if (header) header.textContent = type === 'group' ? '💬 Canal del Grupo' : `💬 ${otherName}`;
 
-  // Resaltar botón activo
   document.querySelectorAll('.chat-ch-btn').forEach(b => {
     b.classList.toggle('active',
       type === 'group' ? !b.dataset.uid : b.dataset.uid === otherUid
     );
   });
 
-  // Desuscribir anterior
   if (unsubMessages) { unsubMessages(); unsubMessages = null; }
 
   const cid = channelId(type, otherUid);
@@ -230,7 +252,6 @@ function renderMessages(snap) {
     container.appendChild(row);
   });
 
-  // Notificación si está cerrado
   const wrap = document.getElementById('chatWrap');
   const isVisible = wrap.style.display === 'flex';
   if (!isVisible) {
@@ -317,7 +338,7 @@ function injectHTML() {
 }
 
 // ──────────────────────────────────────────
-// ESTILOS INLINE (para no depender de otro archivo)
+// ESTILOS INLINE
 // ──────────────────────────────────────────
 function injectStyles() {
   if (document.getElementById('chatStyles')) return;
