@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Set Winner R32</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body{background:#0f1a2d;color:#f1f5f9;font-family:monospace;padding:30px}
+    h2{color:#4aafd4}
+    .log{background:#1a2d4a;border-radius:10px;padding:20px;margin-top:20px;max-height:70vh;overflow-y:auto}
+    .ok{color:#34d399}.err{color:#f87171}.warn{color:#fbbf24}.skip{color:#94a3b8}
+    button{background:#059669;color:#fff;border:none;border-radius:8px;padding:10px 22px;font-size:15px;font-weight:700;cursor:pointer;margin:6px 4px}
+    button:disabled{opacity:.5}
+    select,input{background:#1e3a5f;color:#f1f5f9;border:1px solid #2563eb;border-radius:6px;padding:6px 10px;font-size:14px;margin:4px 0}
+    label{font-size:13px;color:#94a3b8;display:block;margin-top:10px}
+    .section{background:#1a2d4a;border-radius:10px;padding:16px;margin-bottom:16px}
+  </style>
+</head>
+<body>
+  <h2>🏆 Registrar ganador R32 → Octavos</h2>
+  <p style="color:#94a3b8">1️⃣ Seleccioná el partido R32 terminado<br>2️⃣ Indicar ganador y marcador<br>3️⃣ Se marca finished y se actualiza el partido de Octavos correspondiente</p>
+
+  <div class="section">
+    <label>Partido R32</label>
+    <select id="selMatch" style="width:100%"><option value="">-- Cargando... --</option></select>
+    <div style="display:flex;gap:12px;margin-top:10px;align-items:center">
+      <div>
+        <label>Goles local</label>
+        <input id="homeScore" type="number" min="0" max="20" value="0" style="width:70px">
+      </div>
+      <div>
+        <label>Goles visitante</label>
+        <input id="awayScore" type="number" min="0" max="20" value="0" style="width:70px">
+      </div>
+    </div>
+    <div id="winnerPreview" style="margin-top:10px;font-size:14px;color:#fbbf24"></div>
+    <button id="btnSave">💾 Guardar resultado y pasar a Octavos</button>
+  </div>
+
+  <div class="log" id="log"><em style="color:#94a3b8">Esperando...</em></div>
+
+  <script type="module">
+    import { db } from './js/firebase-config.js';
+    import { collection, getDocs, updateDoc, doc, Timestamp }
+      from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+    const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+    const logEl = document.getElementById('log');
+    const log = (m,c='') => { logEl.innerHTML+=`<div class="${c}">${m}</div>`; logEl.scrollTop=logEl.scrollHeight; };
+
+    // Mapa R32 -> slot Octavos (home/away del partido de octavos)
+    // Cada R32 alimenta un slot en un partido de Octavos
+    // Formato: { matchKey, octavosSlot: 'home'|'away', octavosHint }
+    // octavosHint: par de equipos del partido de octavos (para encontrarlo)
+    const R32_TO_OCTAVOS = [
+      // Lado L: slots 1-4 -> Octavos L1; slots 5-8 -> Octavos L2
+      { r32home:'Alemania',      r32away:'Paraguay',             octSlot:'home', octPair:['Alemania/Paraguay','Francia/Suecia'] },
+      { r32home:'Francia',       r32away:'Suecia',               octSlot:'away', octPair:['Alemania/Paraguay','Francia/Suecia'] },
+      { r32home:'Sud\u00e1frica', r32away:'Canad\u00e1',         octSlot:'home', octPair:['Sud\u00e1frica/Canad\u00e1','Pa\u00edses Bajos/Marruecos'] },
+      { r32home:'Pa\u00edses Bajos', r32away:'Marruecos',        octSlot:'away', octPair:['Sud\u00e1frica/Canad\u00e1','Pa\u00edses Bajos/Marruecos'] },
+      { r32home:'Portugal',      r32away:'Croacia',              octSlot:'home', octPair:['Portugal/Croacia','Espa\u00f1a/Austria'] },
+      { r32home:'Espa\u00f1a',   r32away:'Austria',              octSlot:'away', octPair:['Portugal/Croacia','Espa\u00f1a/Austria'] },
+      { r32home:'Estados Unidos',r32away:'Bosnia y Herzegovina', octSlot:'home', octPair:['Estados Unidos/Bosnia','B\u00e9lgica/Senegal'] },
+      { r32home:'B\u00e9lgica',  r32away:'Senegal',              octSlot:'away', octPair:['Estados Unidos/Bosnia','B\u00e9lgica/Senegal'] },
+      // Lado R
+      { r32home:'Brasil',        r32away:'Jap\u00f3n',           octSlot:'home', octPair:['Brasil/Jap\u00f3n','Costa de Marfil/Noruega'] },
+      { r32home:'Costa de Marfil',r32away:'Noruega',            octSlot:'away', octPair:['Brasil/Jap\u00f3n','Costa de Marfil/Noruega'] },
+      { r32home:'M\u00e9xico',   r32away:'Ecuador',              octSlot:'home', octPair:['M\u00e9xico/Ecuador','Inglaterra/RD Congo'] },
+      { r32home:'Inglaterra',    r32away:'RD Congo',             octSlot:'away', octPair:['M\u00e9xico/Ecuador','Inglaterra/RD Congo'] },
+      { r32home:'Argentina',     r32away:'Cabo Verde',           octSlot:'home', octPair:['Argentina/Cabo Verde','Australia/Egipto'] },
+      { r32home:'Australia',     r32away:'Egipto',               octSlot:'away', octPair:['Argentina/Cabo Verde','Australia/Egipto'] },
+      { r32home:'Suiza',         r32away:'Argelia',              octSlot:'home', octPair:['Suiza/Argelia','Colombia/Ghana'] },
+      { r32home:'Colombia',      r32away:'Ghana',                octSlot:'away', octPair:['Suiza/Argelia','Colombia/Ghana'] },
+    ];
+
+    let r32Matches = [];
+    let allMatches = [];
+
+    const selMatch   = document.getElementById('selMatch');
+    const homeScoreI = document.getElementById('homeScore');
+    const awayScoreI = document.getElementById('awayScore');
+    const winPrev    = document.getElementById('winnerPreview');
+
+    async function loadMatches() {
+      const snap = await getDocs(collection(db,'matches'));
+      allMatches = snap.docs.map(d=>({id:d.id,...d.data()}));
+      r32Matches = allMatches.filter(m => {
+        const t = norm(m.type||''); const p = norm(m.phase||'');
+        return t.includes('ronda_32')||t.includes('ronda32')||p.includes('32');
+      });
+      selMatch.innerHTML = '<option value="">-- Seleccioná partido R32 --</option>';
+      r32Matches.forEach(m => {
+        const ko = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+        const d  = ko.toLocaleString('es-BO',{timeZone:'America/La_Paz',day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+        const opt = document.createElement('option');
+        opt.value = m.id;
+        opt.textContent = `${m.home_team||'?'} vs ${m.away_team||'?'} • ${d}`;
+        if (m.finished) opt.textContent += ' ✅';
+        selMatch.appendChild(opt);
+      });
+    }
+
+    function updatePreview() {
+      const m = r32Matches.find(x => x.id === selMatch.value);
+      if (!m) { winPrev.textContent=''; return; }
+      const hs = parseInt(homeScoreI.value)||0;
+      const as = parseInt(awayScoreI.value)||0;
+      const winner = hs > as ? m.home_team : as > hs ? m.away_team : 'Empate (definir penales)';
+      winPrev.innerHTML = `🏆 Ganador: <strong>${winner}</strong>`;
+    }
+
+    selMatch.addEventListener('change', () => {
+      const m = r32Matches.find(x => x.id === selMatch.value);
+      if (m && m.home_score !== undefined) {
+        homeScoreI.value = m.home_score;
+        awayScoreI.value = m.away_score;
+      }
+      updatePreview();
+    });
+    homeScoreI.addEventListener('input', updatePreview);
+    awayScoreI.addEventListener('input', updatePreview);
+
+    document.getElementById('btnSave').addEventListener('click', async () => {
+      const m = r32Matches.find(x => x.id === selMatch.value);
+      if (!m) { log('⚠️ Seleccioná un partido primero','warn'); return; }
+      const hs = parseInt(homeScoreI.value);
+      const as = parseInt(awayScoreI.value);
+      if (isNaN(hs)||isNaN(as)) { log('⚠️ Ingresá marcador válido','warn'); return; }
+
+      const winner     = hs > as ? m.home_team : m.away_team;
+      const winnerFlag = hs > as ? m.home_flag : m.away_flag;
+      log(`<br>💾 Guardando: ${m.home_team} ${hs}-${as} ${m.away_team} → Ganador: ${winner}`);
+
+      // 1. Marcar R32 como finished
+      try {
+        await updateDoc(doc(db,'matches',m.id), {
+          home_score: hs, away_score: as, finished: true
+        });
+        log(`✅ R32 marcado finished`, 'ok');
+      } catch(e) { log(`❌ Error R32: ${e.message}`,'err'); return; }
+
+      // 2. Encontrar la entrada R32_TO_OCTAVOS
+      const entry = R32_TO_OCTAVOS.find(e =>
+        norm(e.r32home) === norm(m.home_team) && norm(e.r32away) === norm(m.away_team)
+      );
+      if (!entry) {
+        log('⚠️ No se encontró mapeo a Octavos para este partido','warn');
+        return;
+      }
+
+      // 3. Buscar partido de Octavos correspondiente
+      // Los Octavos tienen phase/type con 'octavo'
+      const octavos = allMatches.filter(x => {
+        const t = norm(x.type||''); const p = norm(x.phase||'');
+        return t.includes('octavo') || p.includes('octavo');
+      });
+      log(`🔍 Octavos disponibles: ${octavos.length}`);
+
+      // Buscar por cualquier equipo del par
+      let octMatch = octavos.find(x => {
+        const teams = [norm(x.home_team||''), norm(x.away_team||'')];
+        return entry.octPair.some(pair =>
+          pair.split('/').some(t => teams.some(tm => tm.includes(norm(t))))
+        );
+      });
+
+      // Si no tiene equipos aún, buscar el que tenga TBC o vacío
+      // en el rango de fechas esperado para ese cruce
+      if (!octMatch) {
+        log('⚠️ No se encontró partido Octavos con nombre. Se actualizará el slot correcto cuando exista.','warn');
+        log('💡 El ganador quedará guardado en el campo del partido R32 y el bracket lo leerá.','skip');
+        return;
+      }
+
+      // 4. Actualizar slot en Octavos
+      const update = entry.octSlot === 'home'
+        ? { home_team: winner, home_flag: winnerFlag }
+        : { away_team: winner, away_flag: winnerFlag };
+
+      try {
+        await updateDoc(doc(db,'matches',octMatch.id), update);
+        log(`✅ Octavos actualizado: [${entry.octSlot}] = ${winner} en partido ${octMatch.home_team||'?'} vs ${octMatch.away_team||'?'}`, 'ok');
+      } catch(e) { log(`❌ Error Octavos: ${e.message}`,'err'); }
+    });
+
+    await loadMatches();
+    log('📊 Partidos R32 cargados: ' + r32Matches.length);
+  </script>
+</body>
+</html>
