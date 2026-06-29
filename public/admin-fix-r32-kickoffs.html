@@ -32,23 +32,23 @@
       return new Date(Date.UTC(y, mo - 1, d, h + 4, mi));
     }
 
-    // Horarios correctos Bolivia según livescore
+    // aliases: variantes posibles del nombre en Firestore
     const FIXES = [
-      { home: 'Brasil',          away: 'Japón',               y:2026,mo:6,d:29,h:13,mi:0  },
-      { home: 'Alemania',        away: 'Paraguay',            y:2026,mo:6,d:29,h:16,mi:30 },
-      { home: 'Países Bajos',    away: 'Marruecos',           y:2026,mo:6,d:29,h:21,mi:0  },
-      { home: 'Costa de Marfil', away: 'Noruega',             y:2026,mo:6,d:30,h:13,mi:0  },
-      { home: 'Francia',         away: 'Suecia',              y:2026,mo:6,d:30,h:17,mi:0  },
-      { home: 'México',          away: 'Ecuador',             y:2026,mo:6,d:30,h:21,mi:0  },
-      { home: 'Inglaterra',      away: 'RD Congo',            y:2026,mo:7,d:1, h:12,mi:0  },
-      { home: 'Bélgica',         away: 'Senegal',             y:2026,mo:7,d:1, h:16,mi:0  },
-      { home: 'Estados Unidos',  away: 'Bosnia y Herzegovina',y:2026,mo:7,d:1, h:20,mi:0  },
-      { home: 'España',          away: 'Austria',             y:2026,mo:7,d:2, h:15,mi:0  },
-      { home: 'Portugal',        away: 'Croacia',             y:2026,mo:7,d:2, h:19,mi:0  },
-      { home: 'Suiza',           away: 'Argelia',             y:2026,mo:7,d:2, h:23,mi:0  },
-      { home: 'Australia',       away: 'Egipto',              y:2026,mo:7,d:3, h:14,mi:0  },
-      { home: 'Argentina',       away: 'Cabo Verde',          y:2026,mo:7,d:3, h:18,mi:0  },
-      { home: 'Colombia',        away: 'Ghana',               y:2026,mo:7,d:3, h:21,mi:30 },
+      { aliases_home:['brasil'],                        aliases_away:['japon','japan'],                  y:2026,mo:6,d:29,h:13,mi:0  },
+      { aliases_home:['alemania','germany'],            aliases_away:['paraguay'],                       y:2026,mo:6,d:29,h:16,mi:30 },
+      { aliases_home:['paises bajos','netherlands','holanda'], aliases_away:['marruecos','morocco'],     y:2026,mo:6,d:29,h:21,mi:0  },
+      { aliases_home:['costa de marfil','ivory coast'], aliases_away:['noruega','norway'],               y:2026,mo:6,d:30,h:13,mi:0  },
+      { aliases_home:['francia','france'],              aliases_away:['suecia','sweden'],                y:2026,mo:6,d:30,h:17,mi:0  },
+      { aliases_home:['mexico','m\u00e9xico'],          aliases_away:['ecuador'],                        y:2026,mo:6,d:30,h:21,mi:0  },
+      { aliases_home:['inglaterra','england'],          aliases_away:['rd congo','congo','republica democratica'], y:2026,mo:7,d:1,h:12,mi:0 },
+      { aliases_home:['belgica','b\u00e9lgica','belgium'], aliases_away:['senegal'],                     y:2026,mo:7,d:1, h:16,mi:0  },
+      { aliases_home:['estados unidos','usa','united states','ee.uu.'], aliases_away:['bosnia','herzegovina'], y:2026,mo:7,d:1,h:20,mi:0 },
+      { aliases_home:['espa\u00f1a','spain'],           aliases_away:['austria'],                        y:2026,mo:7,d:2, h:15,mi:0  },
+      { aliases_home:['portugal'],                     aliases_away:['croacia','croatia'],               y:2026,mo:7,d:2, h:19,mi:0  },
+      { aliases_home:['suiza','switzerland'],          aliases_away:['argelia','algeria'],               y:2026,mo:7,d:2, h:23,mi:0  },
+      { aliases_home:['australia'],                    aliases_away:['egipto','egypt'],                  y:2026,mo:7,d:3, h:14,mi:0  },
+      { aliases_home:['argentina'],                    aliases_away:['cabo verde','cape verde'],         y:2026,mo:7,d:3, h:18,mi:0  },
+      { aliases_home:['colombia'],                     aliases_away:['ghana'],                           y:2026,mo:7,d:3, h:21,mi:30 },
     ];
 
     const logEl = document.getElementById('log');
@@ -59,8 +59,13 @@
       logEl.scrollTop = logEl.scrollHeight;
     }
 
-    function normalize(str) {
-      return (str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+    function norm(str) {
+      return (str||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+    }
+
+    function matchesAny(val, aliases) {
+      const v = norm(val);
+      return aliases.some(a => v.includes(norm(a)) || norm(a).includes(v));
     }
 
     btn.addEventListener('click', async () => {
@@ -72,20 +77,33 @@
       const allMatches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       log(`📊 ${allMatches.length} partidos cargados`);
 
+      // Solo Ronda de 32
+      const r32 = allMatches.filter(m =>
+        (m.phase||'').toLowerCase().includes('32') ||
+        (m.type||'').toLowerCase().includes('32') ||
+        (m.phase||'').toLowerCase().includes('ronda')
+      );
+      log(`🎯 Partidos Ronda de 32 detectados: ${r32.length}`);
+
       let fixed = 0, skipped = 0, notFound = 0, errors = 0;
 
       for (const fix of FIXES) {
-        const fh = normalize(fix.home);
-        const fa = normalize(fix.away);
+        // Buscar primero en R32, si no en todos
+        let match = r32.find(m =>
+          matchesAny(m.home_team, fix.aliases_home) &&
+          matchesAny(m.away_team, fix.aliases_away)
+        );
+        if (!match) {
+          match = allMatches.find(m =>
+            matchesAny(m.home_team, fix.aliases_home) &&
+            matchesAny(m.away_team, fix.aliases_away)
+          );
+        }
 
-        const match = allMatches.find(m => {
-          const ht = normalize(m.home_team);
-          const at = normalize(m.away_team);
-          return (ht.includes(fh) || fh.includes(ht)) && (at.includes(fa) || fa.includes(at));
-        });
+        const label = `${fix.aliases_home[0]} vs ${fix.aliases_away[0]}`;
 
         if (!match) {
-          log(`⚠️ NO ENCONTRADO: ${fix.home} vs ${fix.away}`, 'skip');
+          log(`⚠️ NO ENCONTRADO: ${label}`, 'skip');
           notFound++;
           continue;
         }
