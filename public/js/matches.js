@@ -10,6 +10,11 @@ const params   = new URLSearchParams(window.location.search);
 const GROUP_ID = params.get('gid');
 const TZ       = 'America/La_Paz';
 
+// Offset de corrección para partidos de eliminatorias (guardados sin UTC real)
+// Los kickoffs de fase de grupos estaban bien (UTC real).
+// Los de eliminatorias fueron guardados como hora local → hay que sumar 4h para obtener el UTC correcto.
+const ELIM_OFFSET_MS = 4 * 60 * 60 * 1000; // +4 horas en ms
+
 let myPreds      = {};
 let unsub        = null;
 let activeFilter = 'all';
@@ -32,6 +37,17 @@ function matchBelongsToGroup(m) {
   const matchIsGroup = isGroupPhase(m.phase);
   const gIsGroup     = groupIsGroupStage();
   return matchIsGroup === gIsGroup;
+}
+
+/**
+ * Devuelve el kickoff corregido según la fase del partido.
+ * - Fase de grupos: kickoff tal cual (estaban bien en UTC).
+ * - Eliminatorias: kickoff + 4h (fueron guardados como hora local Bolivia sin offset UTC).
+ */
+function getKickoff(m) {
+  const raw = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+  if (isGroupPhase(m.phase)) return raw;
+  return new Date(raw.getTime() + ELIM_OFFSET_MS);
 }
 
 // ── Helper: armar badge de score final (ET/penales) ──────────────────────
@@ -244,7 +260,7 @@ function renderMatches(snap) {
   snap.forEach(d => {
     const m = d.data();
     if (!matchBelongsToGroup(m)) return;
-    const kickoff = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+    const kickoff = getKickoff(m);
     const key     = toLocalDateKey(kickoff);
     if (!byDate[key]) byDate[key] = [];
     byDate[key].push({ id: d.id, ...m, _kickoff: kickoff });
@@ -293,7 +309,6 @@ function renderMatches(snap) {
       const badge    = deadlineBadge(kickoff, isFinal, hasScore, !!myPred);
       const phaseChip = m.phase ? '<span style="background:rgba(245,158,11,0.12);color:var(--gold);font-size:9px;font-weight:700;padding:1px 7px;border-radius:20px;letter-spacing:1px">'+m.phase+'</span>' : '';
 
-      // Score 90' + badge score final (ET/pen)
       const score90 = hasScore ? (m.home_score + ' – ' + m.away_score) : null;
       const scoreFinalBadge = isFinal ? finalScoreBadge(m) : '';
 
