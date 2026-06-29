@@ -81,7 +81,6 @@
     .oct-slot .oct-team .flag { font-size: 14px; flex-shrink: 0; }
     .oct-slot .oct-team .name { overflow: hidden; text-overflow: ellipsis; }
     .oct-slot .oct-team.winner .name { color: var(--gold); font-weight: 800; }
-    .oct-slot .oct-score { font-size: 10px; font-weight: 700; color: var(--text-muted); text-align: center; }
     @media (max-width: 600px) { .team-row .name { max-width: 70px; } }
   </style>
 </head>
@@ -152,8 +151,14 @@ function getKickoff(m) {
 const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
 function makeKey(h, a) { return [h,a].map(norm).sort().join('|'); }
 
-// R32 en orden de bracket: 8 lado L, 8 lado R
-// Cada par de slots consecutivos (1+2, 3+4, 5+6, 7+8) alimenta un partido de Octavos
+// Detecta si un nombre de equipo es un placeholder de template (no un equipo real)
+function isPlaceholder(name) {
+  if (!name) return true;
+  const n = norm(name);
+  return n === '' || n === 'tbc' || n.includes('grup') || n.includes('mejor') ||
+         n.includes('ganador') || n.includes('por definir') || n.startsWith('1') || n.startsWith('2');
+}
+
 const R32_ORDER = [
   { side:'L', slot:1, homeHint:'Alemania',       awayHint:'Paraguay' },
   { side:'L', slot:2, homeHint:'Francia',         awayHint:'Suecia' },
@@ -173,17 +178,22 @@ const R32_ORDER = [
   { side:'R', slot:8, homeHint:'Colombia',        awayHint:'Ghana' },
 ];
 
-// Para cada partido de Octavos (4 lado L, 4 lado R),
-// el slot home viene del R32 impar (slot 1,3,5,7) y away del par (2,4,6,8)
-// Mapa: índice octavos 0..3 lado L → slots R32 L [1,2],[3,4],[5,6],[7,8]
-//       índice octavos 0..3 lado R → slots R32 R [1,2],[3,4],[5,6],[7,8]
-// Función que dado un par de índices R32 devuelve el ganador
+const R32_PAIRS = {
+  'L0': [ R32_ORDER[0],  R32_ORDER[1]  ],
+  'L1': [ R32_ORDER[2],  R32_ORDER[3]  ],
+  'L2': [ R32_ORDER[4],  R32_ORDER[5]  ],
+  'L3': [ R32_ORDER[6],  R32_ORDER[7]  ],
+  'R0': [ R32_ORDER[8],  R32_ORDER[9]  ],
+  'R1': [ R32_ORDER[10], R32_ORDER[11] ],
+  'R2': [ R32_ORDER[12], R32_ORDER[13] ],
+  'R3': [ R32_ORDER[14], R32_ORDER[15] ],
+};
+
 function getWinnerFromR32(m) {
   if (!m || !m.finished) return null;
   if (m.home_score == null) return null;
   if (m.home_score > m.away_score) return { team: m.home_team, flag: m.home_flag || '' };
   if (m.away_score > m.home_score) return { team: m.away_team, flag: m.away_flag || '' };
-  // Empate: si hay penales
   if (m.pen_home_score !== undefined) {
     return m.pen_home_score > m.pen_away_score
       ? { team: m.home_team, flag: m.home_flag || '' }
@@ -196,8 +206,7 @@ let currentUser = null;
 let allMatches  = [];
 let predictions = {};
 let matchMap    = {};
-// Mapa de partidos de Octavos por slot_key
-let octavosMap  = {}; // key: 'L0','L1','L2','L3','R0','R1','R2','R3'
+let octavosMap  = {};
 
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
@@ -209,7 +218,6 @@ async function loadBracket() {
   const snap = await getDocs(collection(db, 'matches'));
   allMatches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
-  // Separar R32 y Octavos
   const r32 = allMatches.filter(m => {
     const t = norm(m.type||''); const p = norm(m.phase||'');
     return t.includes('ronda_32')||t.includes('ronda32')||p.includes('32');
@@ -219,53 +227,28 @@ async function loadBracket() {
     return t.includes('octavo') || p.includes('octavo') || p === '8vos';
   });
 
-  // Construir matchMap para R32
   for (const m of r32) {
     const key = makeKey(m.home_team, m.away_team);
     matchMap[key] = m;
   }
 
-  // Asignar octavos a slots por slot_key (si existe) o por orden de kickoff
-  // Si los partidos tienen campo slot_key: 'L0'..'L3','R0'..'R3' lo usamos
-  // Si no, los asignamos por orden de kickoff a L0..L3 y R0..R3
+  // Asignar octavos por slot_key propio, o por side+orden de kickoff, o mitad/mitad
   const octL = octavos
-    .filter(m => norm(m.side||'') === 'l' || (m.slot_key && m.slot_key.startsWith('L')))
+    .filter(m => norm(m.side||'') === 'l' || (m.slot_key||'').startsWith('L'))
     .sort((a,b) => getKickoff(a) - getKickoff(b));
   const octR = octavos
-    .filter(m => norm(m.side||'') === 'r' || (m.slot_key && m.slot_key.startsWith('R')))
+    .filter(m => norm(m.side||'') === 'r' || (m.slot_key||'').startsWith('R'))
     .sort((a,b) => getKickoff(a) - getKickoff(b));
 
-  // Si no tienen campo side, repartir mitad/mitad por kickoff
   if (!octL.length && !octR.length && octavos.length) {
     const sorted = [...octavos].sort((a,b) => getKickoff(a) - getKickoff(b));
     const half   = Math.ceil(sorted.length / 2);
     sorted.slice(0, half).forEach((m,i) => { octavosMap['L'+i] = m; });
-    sorted.slice(half).forEach((m,i) => { octavosMap['R'+i] = m; });
+    sorted.slice(half).forEach((m,i)  => { octavosMap['R'+i] = m; });
   } else {
     octL.forEach((m,i) => { octavosMap['L'+i] = m; });
     octR.forEach((m,i) => { octavosMap['R'+i] = m; });
   }
-
-  // Fallback: derivar ganador de R32 directamente si Octavos no tiene equipos aún
-  // Para cada octavos slot, los equipos vienen del par R32:
-  // Lado L: oct L0 = R32 slots 1+2 (Alemania/Paraguay + Francia/Suecia)
-  //         oct L1 = R32 slots 3+4 (Sudáfrica/Canadá + Países Bajos/Marruecos)
-  //         oct L2 = R32 slots 5+6 (Portugal/Croacia + España/Austria)
-  //         oct L3 = R32 slots 7+8 (EEUU/Bosnia + Bélgica/Senegal)
-  // Lado R: oct R0 = R32 slots 1+2 (Brasil/Japón + CDM/Noruega)
-  //         oct R1 = R32 slots 3+4 (México/Ecuador + Inglaterra/RD Congo)
-  //         oct R2 = R32 slots 5+6 (Argentina/Cabo Verde + Australia/Egipto)
-  //         oct R3 = R32 slots 7+8 (Suiza/Argelia + Colombia/Ghana)
-  const R32_PAIRS = {
-    'L0': [ R32_ORDER[0], R32_ORDER[1] ],
-    'L1': [ R32_ORDER[2], R32_ORDER[3] ],
-    'L2': [ R32_ORDER[4], R32_ORDER[5] ],
-    'L3': [ R32_ORDER[6], R32_ORDER[7] ],
-    'R0': [ R32_ORDER[8], R32_ORDER[9]  ],
-    'R1': [ R32_ORDER[10],R32_ORDER[11] ],
-    'R2': [ R32_ORDER[12],R32_ORDER[13] ],
-    'R3': [ R32_ORDER[14],R32_ORDER[15] ],
-  };
 
   if (currentUser && GID) {
     const pSnap = await getDocs(query(collection(db,'predictions'),
@@ -275,24 +258,22 @@ async function loadBracket() {
     pSnap.forEach(d => { predictions[d.data().match_id] = d.data(); });
   }
 
-  renderBracket(R32_PAIRS);
+  renderBracket();
   document.getElementById('loadMsg').style.display = 'none';
   document.getElementById('bracketWrap').style.display = '';
   document.getElementById('legend').style.display = '';
 }
 
-function renderBracket(R32_PAIRS) {
+function renderBracket() {
   const grid = document.getElementById('bracketGrid');
   grid.innerHTML = '';
 
-  // ── R32 lado L ──
+  // R32 lado L
   R32_ORDER.filter(e => e.side==='L').forEach(entry => {
-    const col  = 1;
     const row  = (entry.slot - 1) * 2 + 1;
     const key  = makeKey(entry.homeHint, entry.awayHint);
-    const m    = matchMap[key];
-    const card = buildMatchCard(m, entry.homeHint, entry.awayHint);
-    card.style.gridColumn = col;
+    const card = buildMatchCard(matchMap[key], entry.homeHint, entry.awayHint);
+    card.style.gridColumn = 1;
     card.style.gridRow    = `${row} / span 2`;
     grid.appendChild(card);
   });
@@ -314,15 +295,12 @@ function renderBracket(R32_PAIRS) {
     });
   }
 
-  // 8VOS lado L — ahora con ganadores reales
+  // 8VOS lado L
   for (let i = 0; i < 4; i++) {
-    const slotKey = 'L' + i;
-    const octMatch  = octavosMap[slotKey];
-    const pairs     = R32_PAIRS[slotKey];
-    const ph = buildOctSlot(octMatch, pairs, slotKey);
-    ph.style.gridColumn = 3;
-    ph.style.gridRow    = `${i*4+2} / span 2`;
-    grid.appendChild(ph);
+    const sl = buildOctSlot(octavosMap['L'+i], R32_PAIRS['L'+i]);
+    sl.style.gridColumn = 3;
+    sl.style.gridRow    = `${i*4+2} / span 2`;
+    grid.appendChild(sl);
   }
 
   for (let i = 0; i < 2; i++) {
@@ -339,7 +317,7 @@ function renderBracket(R32_PAIRS) {
     grid.appendChild(ph);
   }
 
-  // Semi / Final centro
+  // Centro
   const vSemiL = document.createElement('div');
   vSemiL.className = 'connector-v';
   vSemiL.style.gridColumn = 6;
@@ -369,15 +347,12 @@ function renderBracket(R32_PAIRS) {
     grid.appendChild(v);
   }
 
-  // 8VOS lado R — ahora con ganadores reales
+  // 8VOS lado R
   for (let i = 0; i < 4; i++) {
-    const slotKey = 'R' + i;
-    const octMatch  = octavosMap[slotKey];
-    const pairs     = R32_PAIRS[slotKey];
-    const ph = buildOctSlot(octMatch, pairs, slotKey);
-    ph.style.gridColumn = 7;
-    ph.style.gridRow    = `${i*4+2} / span 2`;
-    grid.appendChild(ph);
+    const sl = buildOctSlot(octavosMap['R'+i], R32_PAIRS['R'+i]);
+    sl.style.gridColumn = 7;
+    sl.style.gridRow    = `${i*4+2} / span 2`;
+    grid.appendChild(sl);
   }
 
   for (let i = 0; i < 2; i++) {
@@ -394,65 +369,58 @@ function renderBracket(R32_PAIRS) {
     grid.appendChild(ph);
   }
 
-  // ── R32 lado R ──
+  // R32 lado R
   R32_ORDER.filter(e => e.side==='R').forEach(entry => {
-    const col  = 9;
     const row  = (entry.slot - 1) * 2 + 1;
     const key  = makeKey(entry.homeHint, entry.awayHint);
-    const m    = matchMap[key];
-    const card = buildMatchCard(m, entry.homeHint, entry.awayHint);
-    card.style.gridColumn = col;
+    const card = buildMatchCard(matchMap[key], entry.homeHint, entry.awayHint);
+    card.style.gridColumn = 9;
     card.style.gridRow    = `${row} / span 2`;
     grid.appendChild(card);
   });
 }
 
 /**
- * Construye el slot de 8VOS.
- * Si hay partido de Octavos en Firestore con equipos definidos → lo muestra.
- * Si no, deriva los ganadores directamente de los R32 ya terminados.
- * Si ningún R32 terminó → placeholder "8VOS".
+ * buildOctSlot: muestra ganadores reales de R32.
+ * SIEMPRE deriva el equipo del R32 terminado, ignorando cualquier
+ * texto placeholder que tenga el partido de Octavos en Firestore.
  */
-function buildOctSlot(octMatch, pairs, slotKey) {
+function buildOctSlot(octMatch, pairs) {
   const el = document.createElement('div');
 
-  // Intentar obtener equipos desde el partido de Octavos de Firestore
-  let homeTeam = octMatch?.home_team || null;
-  let awayTeam = octMatch?.away_team || null;
-  let homeFlag = octMatch?.home_flag || '';
-  let awayFlag = octMatch?.away_flag || '';
+  // Siempre derivar equipos desde R32 terminados (ignora placeholders de Firestore)
+  let homeTeam = null, homeFlag = '';
+  let awayTeam = null, awayFlag = '';
+
+  if (pairs && pairs[0]) {
+    const r32m = matchMap[makeKey(pairs[0].homeHint, pairs[0].awayHint)];
+    const w = getWinnerFromR32(r32m);
+    if (w) { homeTeam = w.team; homeFlag = w.flag; }
+  }
+  if (pairs && pairs[1]) {
+    const r32m = matchMap[makeKey(pairs[1].homeHint, pairs[1].awayHint)];
+    const w = getWinnerFromR32(r32m);
+    if (w) { awayTeam = w.team; awayFlag = w.flag; }
+  }
+
+  // Si el partido de Octavos ya está jugado con equipos reales (no placeholder), usarlos
   const isFinished = octMatch?.finished === true;
-  const homeScore  = octMatch?.home_score;
-  const awayScore  = octMatch?.away_score;
-  let homeWinner = false, awayWinner = false;
-  if (isFinished && homeScore != null) {
-    homeWinner = homeScore > awayScore;
-    awayWinner = awayScore > homeScore;
+  if (isFinished && octMatch?.home_score != null && !isPlaceholder(octMatch?.home_team)) {
+    homeTeam = octMatch.home_team; homeFlag = octMatch.home_flag || homeFlag;
+    awayTeam = octMatch.away_team; awayFlag = octMatch.away_flag || awayFlag;
   }
 
-  // Si los campos de Octavos están vacíos/TBC, derivar de R32
-  const tbcNorm = ['', 'tbc', 'por definir', 'por definir'];
-  if (!homeTeam || tbcNorm.includes(norm(homeTeam))) {
-    if (pairs && pairs[0]) {
-      const r32m = matchMap[makeKey(pairs[0].homeHint, pairs[0].awayHint)];
-      const w = getWinnerFromR32(r32m);
-      if (w) { homeTeam = w.team; homeFlag = w.flag; }
-    }
-  }
-  if (!awayTeam || tbcNorm.includes(norm(awayTeam))) {
-    if (pairs && pairs[1]) {
-      const r32m = matchMap[makeKey(pairs[1].homeHint, pairs[1].awayHint)];
-      const w = getWinnerFromR32(r32m);
-      if (w) { awayTeam = w.team; awayFlag = w.flag; }
-    }
-  }
-
-  const hasHome = homeTeam && !tbcNorm.includes(norm(homeTeam));
-  const hasAway = awayTeam && !tbcNorm.includes(norm(awayTeam));
+  const hasHome = !!homeTeam;
+  const hasAway = !!awayTeam;
   const hasBoth = hasHome && hasAway;
 
+  let homeWinner = false, awayWinner = false;
+  if (isFinished && octMatch?.home_score != null) {
+    homeWinner = octMatch.home_score > octMatch.away_score;
+    awayWinner = octMatch.away_score > octMatch.home_score;
+  }
+
   if (!hasHome && !hasAway) {
-    // Placeholder puro
     el.style.cssText = `
       background: var(--bg-card); border: 1.5px dashed var(--border);
       border-radius: 10px; display: flex; align-items: center; justify-content: center;
@@ -463,36 +431,35 @@ function buildOctSlot(octMatch, pairs, slotKey) {
     return el;
   }
 
-  el.className = 'oct-slot' + (hasBoth ? ' has-team' : '') + (isFinished ? ' finished-oct' : '');
+  el.className = 'oct-slot' + (hasBoth ? ' has-team' : '') + (isFinished && !isPlaceholder(octMatch?.home_team) ? ' finished-oct' : '');
 
-  // Si el partido de Octavos está en Firestore con kickoff, permitir pronosticar
-  const kickoff = getKickoff(octMatch);
-  const now = new Date();
-  const canPredict = octMatch && hasBoth && kickoff && kickoff > now && !isFinished && currentUser;
+  const kickoff   = getKickoff(octMatch);
+  const now       = new Date();
+  const canPredict = octMatch && hasBoth && !isPlaceholder(octMatch?.home_team) && kickoff && kickoff > now && !isFinished && currentUser;
 
   el.innerHTML = `
     ${!hasBoth ? '<div class="oct-label">8VOS</div>' : ''}
-    <div class="oct-team ${homeWinner?'winner':''}">
+    <div class="oct-team ${homeWinner?' winner':''}">
       <span class="flag">${homeFlag||'🏳️'}</span>
-      <span class="name">${hasHome ? homeTeam : '?'}</span>
-      ${isFinished ? `<span style="font-size:11px;font-weight:800;margin-left:auto">${homeScore}</span>` : ''}
+      <span class="name">${homeTeam || '?'}</span>
+      ${isFinished && !isPlaceholder(octMatch?.home_team) ? `<span style="font-size:11px;font-weight:800;margin-left:auto">${octMatch.home_score}</span>` : ''}
     </div>
-    <div class="oct-team ${awayWinner?'winner':''}">
+    <div class="oct-team ${awayWinner?' winner':''}">
       <span class="flag">${awayFlag||'🏳️'}</span>
-      <span class="name">${hasAway ? awayTeam : '?'}</span>
-      ${isFinished ? `<span style="font-size:11px;font-weight:800;margin-left:auto">${awayScore}</span>` : ''}
+      <span class="name">${awayTeam || '?'}</span>
+      ${isFinished && !isPlaceholder(octMatch?.home_team) ? `<span style="font-size:11px;font-weight:800;margin-left:auto">${octMatch.away_score}</span>` : ''}
     </div>
-    ${kickoff && hasBoth && !isFinished ? `<div style="font-size:9px;color:var(--text-muted);margin-top:1px">${kickoff.toLocaleString('es-BO',{timeZone:'America/La_Paz',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>` : ''}
+    ${kickoff && hasBoth && !isFinished && !isPlaceholder(octMatch?.home_team) ? `<div style="font-size:9px;color:var(--text-muted);margin-top:1px">${kickoff.toLocaleString('es-BO',{timeZone:'America/La_Paz',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>` : ''}
   `;
 
   if (canPredict) {
     el.style.cursor = 'pointer';
     el.addEventListener('click', () => openModal(octMatch));
     const hasPred = !!predictions[octMatch.id];
-    if (hasPred) el.style.borderColor = '#22c55e';
-    else { el.style.borderColor = 'rgba(74,175,212,0.5)'; el.style.transition = 'border-color .2s'; }
-    el.addEventListener('mouseenter', () => { if(!isFinished) el.style.borderColor = 'var(--gold)'; });
-    el.addEventListener('mouseleave', () => { if(!isFinished) el.style.borderColor = hasPred ? '#22c55e' : 'rgba(74,175,212,0.5)'; });
+    el.style.borderColor = hasPred ? '#22c55e' : 'rgba(74,175,212,0.5)';
+    el.style.transition  = 'border-color .2s';
+    el.addEventListener('mouseenter', () => { el.style.borderColor = 'var(--gold)'; });
+    el.addEventListener('mouseleave', () => { el.style.borderColor = hasPred ? '#22c55e' : 'rgba(74,175,212,0.5)'; });
   }
 
   return el;
@@ -621,7 +588,7 @@ document.getElementById('modalSave').addEventListener('click', async () => {
     predictions[activeMatch.id] = { home_score: hs, away_score: as };
     document.getElementById('modalMsg').innerHTML = '<span style="color:#86efac">✅ ¡Pronóstico guardado!</span>';
     btn.textContent = '✏️ Actualizar'; btn.disabled = false;
-    setTimeout(() => { renderBracket({}); closeModal(); }, 800);
+    setTimeout(() => { renderBracket(); closeModal(); }, 800);
   } catch(err) {
     document.getElementById('modalMsg').innerHTML = `<span style="color:#fca5a5">❌ ${err.message}</span>`;
     btn.textContent = '💾 Guardar'; btn.disabled = false;
