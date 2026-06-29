@@ -17,6 +17,8 @@ const modalCancel  = document.getElementById('modalCancel');
 let allMatches  = [];
 let activeGroup = 'all';
 
+const TZ = 'America/La_Paz';
+
 function confirm(msg) {
   return new Promise(resolve => {
     modalMsg.textContent = msg;
@@ -33,31 +35,43 @@ function confirm(msg) {
   });
 }
 
+/**
+ * Convierte un Timestamp/Date de Firestore (UTC) al valor
+ * "YYYY-MM-DDTHH:MM" en hora Bolivia para usar en <input datetime-local>.
+ */
 function toLocalInput(ts) {
   const d = ts?.toDate ? ts.toDate() : (ts instanceof Date ? ts : new Date(ts));
-  const local = new Date(d.getTime() + (-4 * 60) * 60000);
-  return [
-    local.getUTCFullYear(),
-    String(local.getUTCMonth()+1).padStart(2,'0'),
-    String(local.getUTCDate()).padStart(2,'0')
-  ].join('-') + 'T' + [
-    String(local.getUTCHours()).padStart(2,'0'),
-    String(local.getUTCMinutes()).padStart(2,'0')
-  ].join(':');
+  // Formateamos usando Intl con la zona Bolivia
+  const fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TZ,
+    year:     'numeric',
+    month:    '2-digit',
+    day:      '2-digit',
+    hour:     '2-digit',
+    minute:   '2-digit',
+    hour12:   false
+  });
+  const parts = Object.fromEntries(fmt.formatToParts(d).map(p => [p.type, p.value]));
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
 }
 
+/**
+ * Convierte el valor "YYYY-MM-DDTHH:MM" (hora Bolivia) a un Date UTC real.
+ * Usa el offset fijo UTC-4 de Bolivia (sin DST).
+ */
 function fromLocalInput(val) {
   if (!val) return null;
   const [date, time] = val.split('T');
   const [y, mo, day] = date.split('-').map(Number);
   const [h, mi]      = time.split(':').map(Number);
+  // Bolivia es UTC-4 siempre, sin cambio de horario de verano
   return new Date(Date.UTC(y, mo - 1, day, h + 4, mi));
 }
 
 function fmtDateHeader(ts) {
   const d = ts?.toDate ? ts.toDate() : new Date(ts);
   return d.toLocaleDateString('es-BO', {
-    timeZone: 'America/La_Paz',
+    timeZone: TZ,
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
   });
 }
@@ -65,7 +79,7 @@ function fmtDateHeader(ts) {
 function fmtDisplay(ts) {
   const d = ts?.toDate ? ts.toDate() : new Date(ts);
   return d.toLocaleString('es-BO', {
-    timeZone: 'America/La_Paz',
+    timeZone: TZ,
     weekday: 'short', day: '2-digit', month: 'short',
     hour: 'numeric', minute: '2-digit', hour12: true
   });
@@ -73,8 +87,7 @@ function fmtDisplay(ts) {
 
 function dayKey(ts) {
   const d = ts?.toDate ? ts.toDate() : new Date(ts);
-  const local = new Date(d.getTime() + (-4 * 60) * 60000);
-  return `${local.getUTCFullYear()}-${String(local.getUTCMonth()+1).padStart(2,'0')}-${String(local.getUTCDate()).padStart(2,'0')}`;
+  return d.toLocaleDateString('en-CA', { timeZone: TZ });
 }
 
 function showToast(msg, color = '#059669') {
@@ -136,7 +149,6 @@ function renderList() {
           ? '<span class="badge-status badge-live">EN JUEGO</span>'
           : '<span class="badge-status badge-pending">Pendiente</span>';
 
-      // Valores actuales de ET y penales (si existen)
       const etH  = m.et_home_score  ?? '';
       const etA  = m.et_away_score  ?? '';
       const penH = m.pen_home_score ?? '';
@@ -250,7 +262,6 @@ async function saveOne(mid) {
 
   if (!newHomeTeam || !newAwayTeam) { showToast('❌ Nombres de equipo vacíos', '#dc2626'); return; }
 
-  // Scores
   const hs90Raw = document.getElementById('hs90-' + mid)?.value;
   const as90Raw = document.getElementById('as90-' + mid)?.value;
   const hs90 = hs90Raw !== '' && hs90Raw != null ? Number(hs90Raw) : null;

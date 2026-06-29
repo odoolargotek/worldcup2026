@@ -10,11 +10,6 @@ const params   = new URLSearchParams(window.location.search);
 const GROUP_ID = params.get('gid');
 const TZ       = 'America/La_Paz';
 
-// Offset de corrección para partidos de eliminatorias (guardados sin UTC real)
-// Los kickoffs de fase de grupos estaban bien (UTC real).
-// Los de eliminatorias fueron guardados como hora local → hay que sumar 4h para obtener el UTC correcto.
-const ELIM_OFFSET_MS = 4 * 60 * 60 * 1000; // +4 horas en ms
-
 let myPreds      = {};
 let unsub        = null;
 let activeFilter = 'all';
@@ -39,15 +34,9 @@ function matchBelongsToGroup(m) {
   return matchIsGroup === gIsGroup;
 }
 
-/**
- * Devuelve el kickoff corregido según la fase del partido.
- * - Fase de grupos: kickoff tal cual (estaban bien en UTC).
- * - Eliminatorias: kickoff + 4h (fueron guardados como hora local Bolivia sin offset UTC).
- */
+/** Devuelve el kickoff como Date desde Firestore Timestamp o string */
 function getKickoff(m) {
-  const raw = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
-  if (isGroupPhase(m.phase)) return raw;
-  return new Date(raw.getTime() + ELIM_OFFSET_MS);
+  return m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
 }
 
 // ── Helper: armar badge de score final (ET/penales) ──────────────────────
