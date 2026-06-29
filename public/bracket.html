@@ -132,6 +132,9 @@
   </div>
 </div>
 
+<!-- Chat flotante -->
+<script type="module" src="js/chat-widget.js"></script>
+
 <script type="module">
 import { auth, db } from './js/firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
@@ -151,7 +154,6 @@ function getKickoff(m) {
 const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
 function makeKey(h, a) { return [h,a].map(norm).sort().join('|'); }
 
-// Detecta si un nombre de equipo es un placeholder de template (no un equipo real)
 function isPlaceholder(name) {
   if (!name) return true;
   const n = norm(name);
@@ -232,7 +234,6 @@ async function loadBracket() {
     matchMap[key] = m;
   }
 
-  // Asignar octavos por slot_key propio, o por side+orden de kickoff, o mitad/mitad
   const octL = octavos
     .filter(m => norm(m.side||'') === 'l' || (m.slot_key||'').startsWith('L'))
     .sort((a,b) => getKickoff(a) - getKickoff(b));
@@ -268,7 +269,6 @@ function renderBracket() {
   const grid = document.getElementById('bracketGrid');
   grid.innerHTML = '';
 
-  // R32 lado L
   R32_ORDER.filter(e => e.side==='L').forEach(entry => {
     const row  = (entry.slot - 1) * 2 + 1;
     const key  = makeKey(entry.homeHint, entry.awayHint);
@@ -278,7 +278,6 @@ function renderBracket() {
     grid.appendChild(card);
   });
 
-  // Conectores lado L
   for (let i = 0; i < 4; i++) {
     const row = i * 4 + 1;
     const vLine = document.createElement('div');
@@ -295,7 +294,6 @@ function renderBracket() {
     });
   }
 
-  // 8VOS lado L
   for (let i = 0; i < 4; i++) {
     const sl = buildOctSlot(octavosMap['L'+i], R32_PAIRS['L'+i]);
     sl.style.gridColumn = 3;
@@ -317,7 +315,6 @@ function renderBracket() {
     grid.appendChild(ph);
   }
 
-  // Centro
   const vSemiL = document.createElement('div');
   vSemiL.className = 'connector-v';
   vSemiL.style.gridColumn = 6;
@@ -338,7 +335,6 @@ function renderBracket() {
   finalPh.style.margin     = '0 2px';
   grid.appendChild(finalPh);
 
-  // Conectores lado R
   for (let i = 0; i < 4; i++) {
     const v = document.createElement('div');
     v.className = 'connector-v';
@@ -347,7 +343,6 @@ function renderBracket() {
     grid.appendChild(v);
   }
 
-  // 8VOS lado R
   for (let i = 0; i < 4; i++) {
     const sl = buildOctSlot(octavosMap['R'+i], R32_PAIRS['R'+i]);
     sl.style.gridColumn = 7;
@@ -369,7 +364,6 @@ function renderBracket() {
     grid.appendChild(ph);
   }
 
-  // R32 lado R
   R32_ORDER.filter(e => e.side==='R').forEach(entry => {
     const row  = (entry.slot - 1) * 2 + 1;
     const key  = makeKey(entry.homeHint, entry.awayHint);
@@ -380,15 +374,9 @@ function renderBracket() {
   });
 }
 
-/**
- * buildOctSlot: muestra ganadores reales de R32.
- * SIEMPRE deriva el equipo del R32 terminado, ignorando cualquier
- * texto placeholder que tenga el partido de Octavos en Firestore.
- */
 function buildOctSlot(octMatch, pairs) {
   const el = document.createElement('div');
 
-  // Siempre derivar equipos desde R32 terminados (ignora placeholders de Firestore)
   let homeTeam = null, homeFlag = '';
   let awayTeam = null, awayFlag = '';
 
@@ -403,7 +391,6 @@ function buildOctSlot(octMatch, pairs) {
     if (w) { awayTeam = w.team; awayFlag = w.flag; }
   }
 
-  // Si el partido de Octavos ya está jugado con equipos reales (no placeholder), usarlos
   const isFinished = octMatch?.finished === true;
   if (isFinished && octMatch?.home_score != null && !isPlaceholder(octMatch?.home_team)) {
     homeTeam = octMatch.home_team; homeFlag = octMatch.home_flag || homeFlag;
@@ -433,8 +420,8 @@ function buildOctSlot(octMatch, pairs) {
 
   el.className = 'oct-slot' + (hasBoth ? ' has-team' : '') + (isFinished && !isPlaceholder(octMatch?.home_team) ? ' finished-oct' : '');
 
-  const kickoff   = getKickoff(octMatch);
-  const now       = new Date();
+  const kickoff    = getKickoff(octMatch);
+  const now        = new Date();
   const canPredict = octMatch && hasBoth && !isPlaceholder(octMatch?.home_team) && kickoff && kickoff > now && !isFinished && currentUser;
 
   el.innerHTML = `

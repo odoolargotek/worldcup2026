@@ -49,7 +49,6 @@
       line-height: 1.3;
     }
 
-    /* Penalty selector */
     #penaltyWinnerWrap {
       display: none;
       margin-bottom: 20px;
@@ -132,14 +131,11 @@
           </div>
         </div>
 
-        <!-- Selector ganador por penales (solo visible si hay empate) -->
         <div id="penaltyWinnerWrap">
           <div style="font-size:11px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">
             🥅 ¿Quién gana en penales?
           </div>
-          <div style="display:flex;gap:8px;" id="penaltyBtns">
-            <!-- Botones se generan dinámicamente con los nombres de los equipos -->
-          </div>
+          <div style="display:flex;gap:8px;" id="penaltyBtns"></div>
           <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Obligatorio si pronosticas empate</div>
         </div>
 
@@ -181,5 +177,7 @@
     import { injectSponsor } from './js/sponsor-config.js';
     injectSponsor();
   </script>
+  <!-- Chat flotante -->
+  <script type="module" src="js/chat-widget.js"></script>
 </body>
 </html>
