@@ -8,10 +8,7 @@
   <script src="js/theme.js"></script>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    .bracket-wrap {
-      overflow-x: auto;
-      padding: 12px 8px 24px;
-    }
+    .bracket-wrap { overflow-x: auto; padding: 12px 8px 24px; }
     .bracket-grid {
       display: grid;
       grid-template-columns: 200px 140px 100px 80px 60px 80px 100px 140px 200px;
@@ -26,10 +23,7 @@
       padding: 4px 8px;
       cursor: pointer;
       transition: border-color .2s, transform .15s;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      gap: 2px;
+      display: flex; flex-direction: column; justify-content: center; gap: 2px;
       margin: 2px 4px;
     }
     .match-card:hover { border-color: var(--gold); transform: scale(1.02); }
@@ -37,86 +31,41 @@
     .match-card.has-pred { border-color: #22c55e; }
     .match-card.finished { border-color: var(--gold); }
     .team-row {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--text);
-      white-space: nowrap;
-      overflow: hidden;
+      display: flex; align-items: center; gap: 5px;
+      font-size: 11px; font-weight: 600; color: var(--text);
+      white-space: nowrap; overflow: hidden;
     }
     .team-row .flag { font-size: 15px; flex-shrink: 0; }
     .team-row .name { overflow: hidden; text-overflow: ellipsis; flex: 1; }
     .team-row .score-box {
-      background: rgba(255,255,255,.08);
-      border-radius: 4px;
-      padding: 1px 5px;
-      font-size: 12px;
-      font-weight: 800;
-      min-width: 20px;
-      text-align: center;
-      flex-shrink: 0;
+      background: rgba(255,255,255,.08); border-radius: 4px;
+      padding: 1px 5px; font-size: 12px; font-weight: 800;
+      min-width: 20px; text-align: center; flex-shrink: 0;
     }
     .team-row.winner .name { color: var(--gold); }
     .team-row.winner .score-box { background: rgba(250,189,0,.2); color: var(--gold); }
-    .connector-v {
-      width: 2px;
-      background: var(--border);
-      margin: 0 auto;
-      height: 100%;
-    }
-    .connector-h {
-      height: 2px;
-      background: var(--border);
-      width: 100%;
-      align-self: center;
-    }
-    /* Modal */
+    .connector-v { width: 2px; background: var(--border); margin: 0 auto; height: 100%; }
+    .connector-h { height: 2px; background: var(--border); width: 100%; align-self: center; }
     .pred-modal-bg {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.65);
-      z-index: 1000;
-      display: flex; align-items: center; justify-content: center;
+      position: fixed; inset: 0; background: rgba(0,0,0,.65);
+      z-index: 1000; display: flex; align-items: center; justify-content: center;
     }
     .pred-modal {
-      background: var(--bg-card);
-      border: 1.5px solid var(--border);
-      border-radius: 16px;
-      padding: 28px 24px;
-      width: 320px;
-      max-width: 95vw;
+      background: var(--bg-card); border: 1.5px solid var(--border);
+      border-radius: 16px; padding: 28px 24px; width: 320px; max-width: 95vw;
     }
     .score-input {
-      width: 60px;
-      text-align: center;
-      font-size: 1.5rem;
-      font-weight: 800;
-      background: var(--bg);
-      border: 1.5px solid var(--border);
-      border-radius: 10px;
-      color: var(--text);
-      padding: 6px;
+      width: 60px; text-align: center; font-size: 1.5rem; font-weight: 800;
+      background: var(--bg); border: 1.5px solid var(--border);
+      border-radius: 10px; color: var(--text); padding: 6px;
     }
     .score-input:focus { outline: none; border-color: var(--gold); }
     .round-label {
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--text-muted);
-      text-align: center;
-      padding: 4px 0 8px;
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--text-muted); text-align: center; padding: 4px 0 8px;
     }
-    .trophy-cell {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.5rem;
-    }
-    @media (max-width: 600px) {
-      .team-row .name { max-width: 70px; }
-    }
+    .trophy-cell { display: flex; align-items: center; justify-content: center; font-size: 2.5rem; }
+    @media (max-width: 600px) { .team-row .name { max-width: 70px; } }
   </style>
 </head>
 <body>
@@ -125,16 +74,12 @@
     <a id="backLink" href="group.html" class="btn btn-sm" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text)">← Grupo</a>
     <h5 class="mb-0 fw-800" style="color:var(--gold)">🏆 Bracket Mundial 2026</h5>
   </div>
-
   <div id="authMsg" class="text-center py-4" style="color:var(--text-muted);display:none">🔒 Iniciá sesión para pronosticar</div>
   <div id="loadMsg" class="text-center py-4" style="color:var(--text-muted)">⏳ Cargando bracket...</div>
-
   <div id="bracketWrap" class="bracket-wrap" style="display:none">
     <div class="round-label mb-2" style="text-align:left;padding-left:8px">← Presioná cualquier partido para pronosticar</div>
     <div id="bracketGrid" class="bracket-grid"></div>
   </div>
-
-  <!-- Leyenda -->
   <div id="legend" style="display:none" class="d-flex gap-3 flex-wrap px-2 mt-3">
     <span style="font-size:12px;color:var(--text-muted)"><span style="display:inline-block;width:12px;height:12px;border:1.5px solid #22c55e;border-radius:3px;margin-right:4px"></span>Ya pronosticaste</span>
     <span style="font-size:12px;color:var(--text-muted)"><span style="display:inline-block;width:12px;height:12px;border:1.5px solid var(--gold);border-radius:3px;margin-right:4px"></span>Partido terminado</span>
@@ -175,39 +120,36 @@
 import { auth, db } from './js/firebase-config.js';
 import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
 import {
-  collection, getDocs, doc, getDoc, setDoc, query, where, orderBy
+  collection, getDocs, doc, setDoc, query, where
 } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
-const params  = new URLSearchParams(location.search);
-const GID     = params.get('gid') || '';
+const params = new URLSearchParams(location.search);
+const GID    = params.get('gid') || '';
 document.getElementById('backLink').href = `group.html?gid=${GID}`;
 
-// Todos los partidos del bracket son eliminatorias → offset +4h
-const ELIM_OFFSET_MS = 4 * 60 * 60 * 1000;
+// Kickoff ya está en UTC correcto — sin offset adicional
 function getKickoff(m) {
-  const raw = m?.kickoff?.toDate ? m.kickoff.toDate() : (m?.kickoff ? new Date(m.kickoff) : null);
-  if (!raw) return null;
-  return new Date(raw.getTime() + ELIM_OFFSET_MS);
+  if (!m?.kickoff) return null;
+  return m.kickoff.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
 }
 
-// ─── Orden fijo de los 16 cruces R32
 const R32_ORDER = [
-  { side:'L', slot:1, homeHint:'Alemania',       awayHint:'Paraguay' },
-  { side:'L', slot:2, homeHint:'Francia',         awayHint:'Suecia' },
-  { side:'L', slot:3, homeHint:'Sudáfrica',       awayHint:'Canadá' },
-  { side:'L', slot:4, homeHint:'Países Bajos',    awayHint:'Marruecos' },
-  { side:'L', slot:5, homeHint:'Portugal',        awayHint:'Croacia' },
-  { side:'L', slot:6, homeHint:'España',          awayHint:'Austria' },
-  { side:'L', slot:7, homeHint:'USA',             awayHint:'Bosnia y Herzegovina' },
-  { side:'L', slot:8, homeHint:'Bélgica',         awayHint:'Senegal' },
-  { side:'R', slot:1, homeHint:'Brasil',          awayHint:'Japón' },
-  { side:'R', slot:2, homeHint:'Costa de Marfil', awayHint:'Noruega' },
-  { side:'R', slot:3, homeHint:'México',          awayHint:'Ecuador' },
-  { side:'R', slot:4, homeHint:'Inglaterra',      awayHint:'RD Congo' },
-  { side:'R', slot:5, homeHint:'Argentina',       awayHint:'Cabo Verde' },
-  { side:'R', slot:6, homeHint:'Australia',       awayHint:'Egipto' },
-  { side:'R', slot:7, homeHint:'Suiza',           awayHint:'Argelia' },
-  { side:'R', slot:8, homeHint:'Colombia',        awayHint:'Ghana' },
+  { side:'L', slot:1, homeHint:'Alemania',        awayHint:'Paraguay' },
+  { side:'L', slot:2, homeHint:'Francia',          awayHint:'Suecia' },
+  { side:'L', slot:3, homeHint:'Sudáfrica',        awayHint:'Canadá' },
+  { side:'L', slot:4, homeHint:'Países Bajos',     awayHint:'Marruecos' },
+  { side:'L', slot:5, homeHint:'Portugal',         awayHint:'Croacia' },
+  { side:'L', slot:6, homeHint:'España',           awayHint:'Austria' },
+  { side:'L', slot:7, homeHint:'Estados Unidos',   awayHint:'Bosnia y Herzegovina' },
+  { side:'L', slot:8, homeHint:'Bélgica',          awayHint:'Senegal' },
+  { side:'R', slot:1, homeHint:'Brasil',           awayHint:'Japón' },
+  { side:'R', slot:2, homeHint:'Costa de Marfil',  awayHint:'Noruega' },
+  { side:'R', slot:3, homeHint:'México',           awayHint:'Ecuador' },
+  { side:'R', slot:4, homeHint:'Inglaterra',       awayHint:'RD Congo' },
+  { side:'R', slot:5, homeHint:'Argentina',        awayHint:'Cabo Verde' },
+  { side:'R', slot:6, homeHint:'Australia',        awayHint:'Egipto' },
+  { side:'R', slot:7, homeHint:'Suiza',            awayHint:'Argelia' },
+  { side:'R', slot:8, homeHint:'Colombia',         awayHint:'Ghana' },
 ];
 
 let currentUser = null;
@@ -215,18 +157,29 @@ let allMatches  = [];
 let predictions = {};
 let matchMap    = {};
 
+const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+function makeKey(h, a) {
+  return [h, a].map(norm).sort().join('|');
+}
+
 onAuthStateChanged(auth, async (user) => {
   currentUser = user;
-  if (!user) {
-    document.getElementById('authMsg').style.display = '';
-    document.getElementById('loadMsg').style.display = 'none';
-  }
+  if (!user) document.getElementById('authMsg').style.display = '';
   await loadBracket();
 });
 
 async function loadBracket() {
-  const snap = await getDocs(query(collection(db, 'matches'), where('type','==','eliminacion')));
-  allMatches  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  // Cargar TODOS los partidos de eliminatorias (varios valores de type)
+  const snap = await getDocs(collection(db, 'matches'));
+  allMatches = snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .filter(m => {
+      const t = norm(m.type || '');
+      const p = norm(m.phase || '');
+      return t.includes('eliminacion') || t.includes('ronda_32') || t.includes('ronda32') ||
+             t.includes('octavo') || t.includes('cuarto') || t.includes('semi') || t.includes('final') ||
+             p.includes('32') || p.includes('octavo') || p.includes('cuarto') || p.includes('semi') || p.includes('final');
+    });
 
   if (currentUser && GID) {
     const pSnap = await getDocs(query(collection(db,'predictions'),
@@ -247,19 +200,9 @@ async function loadBracket() {
   document.getElementById('legend').style.display = '';
 }
 
-function makeKey(h, a) {
-  return [h,a].map(s => s?.toLowerCase().trim()).sort().join('|');
-}
-
 function renderBracket() {
   const grid = document.getElementById('bracketGrid');
   grid.innerHTML = '';
-
-  function cell(el, col, row, rowspan=1) {
-    el.style.gridColumn = col;
-    el.style.gridRow = `${row} / span ${rowspan}`;
-    grid.appendChild(el);
-  }
 
   R32_ORDER.forEach(entry => {
     const col  = entry.side === 'L' ? 1 : 9;
@@ -272,6 +215,7 @@ function renderBracket() {
     grid.appendChild(card);
   });
 
+  // Conectores y placeholders lado izquierdo
   for (let i = 0; i < 4; i++) {
     const row = i * 4 + 1;
     const vLine = document.createElement('div');
@@ -279,55 +223,40 @@ function renderBracket() {
     vLine.style.gridColumn = 2;
     vLine.style.gridRow    = `${row} / span 4`;
     grid.appendChild(vLine);
-    const hLine1 = document.createElement('div');
-    hLine1.className = 'connector-h';
-    hLine1.style.gridColumn = 2;
-    hLine1.style.gridRow = row;
-    grid.appendChild(hLine1);
-    const hLine2 = document.createElement('div');
-    hLine2.className = 'connector-h';
-    hLine2.style.gridColumn = 2;
-    hLine2.style.gridRow = row + 2;
-    grid.appendChild(hLine2);
+    [row, row+2].forEach(r => {
+      const h = document.createElement('div');
+      h.className = 'connector-h';
+      h.style.gridColumn = 2;
+      h.style.gridRow = r;
+      grid.appendChild(h);
+    });
   }
-
   for (let i = 0; i < 4; i++) {
-    const row  = i * 4 + 2;
-    const ph   = buildPlaceholder('8vos');
+    const ph = buildPlaceholder('8vos');
     ph.style.gridColumn = 3;
-    ph.style.gridRow    = `${row} / span 2`;
+    ph.style.gridRow    = `${i*4+2} / span 2`;
     grid.appendChild(ph);
   }
-
   for (let i = 0; i < 2; i++) {
-    const row = i * 8 + 2;
     const v = document.createElement('div');
     v.className = 'connector-v';
     v.style.gridColumn = 4;
-    v.style.gridRow    = `${row} / span 8`;
+    v.style.gridRow    = `${i*8+2} / span 8`;
     grid.appendChild(v);
   }
-
   for (let i = 0; i < 2; i++) {
-    const row = i * 8 + 5;
-    const ph  = buildPlaceholder('Cuartos');
+    const ph = buildPlaceholder('Cuartos');
     ph.style.gridColumn = 5;
-    ph.style.gridRow    = `${row} / span 4`;
+    ph.style.gridRow    = `${i*8+5} / span 4`;
     grid.appendChild(ph);
   }
 
+  // Semi / Final centro
   const vSemiL = document.createElement('div');
   vSemiL.className = 'connector-v';
   vSemiL.style.gridColumn = 6;
   vSemiL.style.gridRow    = '5 / span 8';
   grid.appendChild(vSemiL);
-
-  const finalPh = buildPlaceholder('FINAL', true);
-  finalPh.style.gridColumn = '5';
-  finalPh.style.gridRow    = '7 / span 4';
-  finalPh.style.zIndex     = '2';
-  finalPh.style.margin     = '0 2px';
-  grid.appendChild(finalPh);
 
   const trophy = document.createElement('div');
   trophy.className = 'trophy-cell';
@@ -336,37 +265,38 @@ function renderBracket() {
   trophy.style.gridRow    = '5 / span 2';
   grid.appendChild(trophy);
 
-  for (let i = 0; i < 4; i++) {
-    const row = i * 4 + 1;
-    const vLine = document.createElement('div');
-    vLine.className = 'connector-v';
-    vLine.style.gridColumn = 8;
-    vLine.style.gridRow    = `${row} / span 4`;
-    grid.appendChild(vLine);
-  }
+  const finalPh = buildPlaceholder('FINAL', true);
+  finalPh.style.gridColumn = '5';
+  finalPh.style.gridRow    = '7 / span 4';
+  finalPh.style.zIndex     = '2';
+  finalPh.style.margin     = '0 2px';
+  grid.appendChild(finalPh);
 
+  // Conectores y placeholders lado derecho
   for (let i = 0; i < 4; i++) {
-    const row = i * 4 + 2;
-    const ph  = buildPlaceholder('8vos');
+    const v = document.createElement('div');
+    v.className = 'connector-v';
+    v.style.gridColumn = 8;
+    v.style.gridRow    = `${i*4+1} / span 4`;
+    grid.appendChild(v);
+  }
+  for (let i = 0; i < 4; i++) {
+    const ph = buildPlaceholder('8vos');
     ph.style.gridColumn = 7;
-    ph.style.gridRow    = `${row} / span 2`;
+    ph.style.gridRow    = `${i*4+2} / span 2`;
     grid.appendChild(ph);
   }
-
   for (let i = 0; i < 2; i++) {
-    const row = i * 8 + 2;
     const v = document.createElement('div');
     v.className = 'connector-v';
     v.style.gridColumn = 6;
-    v.style.gridRow    = `${row} / span 8`;
+    v.style.gridRow    = `${i*8+2} / span 8`;
     grid.appendChild(v);
   }
-
   for (let i = 0; i < 2; i++) {
-    const row = i * 8 + 5;
-    const ph  = buildPlaceholder('Cuartos');
+    const ph = buildPlaceholder('Cuartos');
     ph.style.gridColumn = 5;
-    ph.style.gridRow    = `${row} / span 4`;
+    ph.style.gridRow    = `${i*8+5} / span 4`;
     grid.appendChild(ph);
   }
 }
@@ -375,12 +305,12 @@ function buildMatchCard(m, homeHint, awayHint) {
   const card = document.createElement('div');
   card.className = 'match-card';
 
-  const now         = new Date();
-  const kickoff     = getKickoff(m); // con offset +4h
-  const isLocked    = !m || !kickoff || kickoff <= now || m.home_score !== undefined;
-  const isFinished  = m?.finished === true;
-  const hasPred     = m && !!predictions[m.id];
-  const pred        = hasPred ? predictions[m.id] : null;
+  const now        = new Date();
+  const kickoff    = getKickoff(m);
+  const isLocked   = !m || !kickoff || kickoff <= now || m.home_score !== undefined;
+  const isFinished = m?.finished === true;
+  const hasPred    = m && !!predictions[m.id];
+  const pred       = hasPred ? predictions[m.id] : null;
 
   if (isFinished) card.classList.add('finished');
   else if (hasPred) card.classList.add('has-pred');
@@ -392,12 +322,12 @@ function buildMatchCard(m, homeHint, awayHint) {
   const awayFlag = m?.away_flag || '🏳️';
 
   let homeWinner = false, awayWinner = false;
-  if (isFinished && m.home_score !== null && m.away_score !== null) {
+  if (isFinished && m.home_score != null && m.away_score != null) {
     if (m.home_score > m.away_score) homeWinner = true;
     else if (m.away_score > m.home_score) awayWinner = true;
     else if (m.pen_home_score !== undefined) {
       homeWinner = m.pen_home_score > m.pen_away_score;
-      awayWinner = m.pen_away_score > m.pen_home_score;
+      awayWinner = !homeWinner;
     }
   }
 
@@ -420,38 +350,26 @@ function buildMatchCard(m, homeHint, awayHint) {
   if (!isLocked && currentUser && m) {
     card.addEventListener('click', () => openModal(m));
   }
-
   return card;
 }
 
 function buildPlaceholder(label, isFinal = false) {
   const el = document.createElement('div');
   el.style.cssText = `
-    background: var(--bg-card);
-    border: 1.5px dashed var(--border);
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: ${isFinal ? '13px' : '10px'};
-    font-weight: 700;
-    color: var(--text-muted);
-    margin: 2px 4px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    opacity: .6;
+    background: var(--bg-card); border: 1.5px dashed var(--border);
+    border-radius: 10px; display: flex; align-items: center; justify-content: center;
+    font-size: ${isFinal?'13px':'10px'}; font-weight: 700; color: var(--text-muted);
+    margin: 2px 4px; text-transform: uppercase; letter-spacing: 1px; opacity: .6;
   `;
   el.textContent = isFinal ? '🏆 FINAL' : label;
   return el;
 }
 
-// ── MODAL
 let activeMatch = null;
 
 function openModal(m) {
   activeMatch = m;
-  const kickoff = getKickoff(m); // con offset +4h
-
+  const kickoff = getKickoff(m);
   document.getElementById('modalPhase').textContent    = m.phase || 'Ronda de 32';
   document.getElementById('modalHomeFlag').textContent = m.home_flag || '🏳️';
   document.getElementById('modalAwayFlag').textContent = m.away_flag || '🏳️';
@@ -460,13 +378,11 @@ function openModal(m) {
   document.getElementById('modalKickoff').textContent  = kickoff
     ? kickoff.toLocaleString('es-BO',{timeZone:'America/La_Paz',dateStyle:'long',timeStyle:'short'})
     : '';
-  document.getElementById('modalCity').textContent     = m.city ? '📍 ' + m.city : '';
-  document.getElementById('modalMsg').innerHTML        = '';
-
+  document.getElementById('modalCity').textContent  = m.city ? '📍 ' + m.city : '';
+  document.getElementById('modalMsg').innerHTML     = '';
   const pred = predictions[m.id];
   document.getElementById('modalHomeScore').value = pred ? pred.home_score : '';
   document.getElementById('modalAwayScore').value = pred ? pred.away_score : '';
-
   document.getElementById('predModalBg').style.display = 'flex';
   document.getElementById('modalHomeScore').focus();
 }
@@ -475,7 +391,6 @@ document.getElementById('modalCancel').addEventListener('click', closeModal);
 document.getElementById('predModalBg').addEventListener('click', e => {
   if (e.target === document.getElementById('predModalBg')) closeModal();
 });
-
 function closeModal() {
   document.getElementById('predModalBg').style.display = 'none';
   activeMatch = null;
@@ -489,20 +404,16 @@ document.getElementById('modalSave').addEventListener('click', async () => {
     document.getElementById('modalMsg').innerHTML = '<span style="color:#fca5a5">⚠️ Ingresá un marcador válido</span>';
     return;
   }
-
-  const kickoff = getKickoff(activeMatch); // con offset +4h
+  const kickoff = getKickoff(activeMatch);
   if (!kickoff || kickoff <= new Date()) {
     document.getElementById('modalMsg').innerHTML = '<span style="color:#94a3b8">🔒 Plazo vencido</span>';
     return;
   }
-
   const btn = document.getElementById('modalSave');
-  btn.disabled = true;
-  btn.textContent = 'Guardando...';
-
+  btn.disabled = true; btn.textContent = 'Guardando...';
   try {
     const predId = `${GID}_${activeMatch.id}_${currentUser.uid}`;
-    await setDoc(doc(db, 'predictions', predId), {
+    await setDoc(doc(db,'predictions',predId), {
       group_id:   GID,
       match_id:   activeMatch.id,
       user_uid:   currentUser.uid,
@@ -512,13 +423,11 @@ document.getElementById('modalSave').addEventListener('click', async () => {
     });
     predictions[activeMatch.id] = { home_score: hs, away_score: as };
     document.getElementById('modalMsg').innerHTML = '<span style="color:#86efac">✅ ¡Pronóstico guardado!</span>';
-    btn.textContent = '✏️ Actualizar';
-    btn.disabled = false;
+    btn.textContent = '✏️ Actualizar'; btn.disabled = false;
     setTimeout(() => { renderBracket(); closeModal(); }, 800);
   } catch(err) {
     document.getElementById('modalMsg').innerHTML = `<span style="color:#fca5a5">❌ ${err.message}</span>`;
-    btn.textContent = '💾 Guardar';
-    btn.disabled = false;
+    btn.textContent = '💾 Guardar'; btn.disabled = false;
   }
 });
 </script>
