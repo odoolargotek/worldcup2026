@@ -20,6 +20,88 @@ document.querySelectorAll('[data-atab]').forEach(btn => {
 });
 
 // =============================================
+// MAPA R32 → OCTAVOS
+// =============================================
+const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+
+const R32_TO_OCTAVOS = [
+  { r32home:'Alemania',        r32away:'Paraguay',              octSlot:'home' },
+  { r32home:'Francia',         r32away:'Suecia',                octSlot:'away', octPeer:'Alemania' },
+  { r32home:'Sudáfrica',       r32away:'Canadá',                octSlot:'home' },
+  { r32home:'Países Bajos',    r32away:'Marruecos',             octSlot:'away', octPeer:'Sudáfrica' },
+  { r32home:'Portugal',        r32away:'Croacia',               octSlot:'home' },
+  { r32home:'España',          r32away:'Austria',               octSlot:'away', octPeer:'Portugal' },
+  { r32home:'Estados Unidos',  r32away:'Bosnia y Herzegovina',  octSlot:'home' },
+  { r32home:'Bélgica',         r32away:'Senegal',               octSlot:'away', octPeer:'Estados Unidos' },
+  { r32home:'Brasil',          r32away:'Japón',                 octSlot:'home' },
+  { r32home:'Costa de Marfil', r32away:'Noruega',               octSlot:'away', octPeer:'Brasil' },
+  { r32home:'México',          r32away:'Ecuador',               octSlot:'home' },
+  { r32home:'Inglaterra',      r32away:'RD Congo',              octSlot:'away', octPeer:'México' },
+  { r32home:'Argentina',       r32away:'Cabo Verde',            octSlot:'home' },
+  { r32home:'Australia',       r32away:'Egipto',                octSlot:'away', octPeer:'Argentina' },
+  { r32home:'Suiza',           r32away:'Argelia',               octSlot:'home' },
+  { r32home:'Colombia',        r32away:'Ghana',                 octSlot:'away', octPeer:'Suiza' },
+];
+
+/**
+ * Después de cerrar un partido R32, intenta propagar el ganador
+ * al partido de Octavos correspondiente en Firestore.
+ * Busca partidos con phase = 'Octavos' y type = 'octavos'/'ronda_16'/etc.
+ * Retorna un mensaje de log.
+ */
+async function propagateWinnerToOctavos(matchData, mid) {
+  const hs = matchData.home_score;
+  const as_ = matchData.away_score;
+  if (hs == null || as_ == null) return null;
+
+  const entry = R32_TO_OCTAVOS.find(e =>
+    norm(e.r32home) === norm(matchData.home_team) &&
+    norm(e.r32away) === norm(matchData.away_team)
+  );
+  if (!entry) return null; // No es partido R32 conocido
+
+  const winner     = hs > as_ ? matchData.home_team : matchData.away_team;
+  const winnerFlag = hs > as_ ? matchData.home_flag : matchData.away_flag;
+
+  // Buscar partidos de Octavos en Firestore
+  const snap = await getDocs(collection(db, 'matches'));
+  const octavos = snap.docs
+    .map(d => ({ id: d.id, ...d.data() }))
+    .filter(m => {
+      const t = norm(m.type || ''); const p = norm(m.phase || '');
+      return t.includes('octavo') || t.includes('ronda_16') || t.includes('ronda16') ||
+             p.includes('octavo') || p === '8vos';
+    });
+
+  if (!octavos.length) return '⚠️ No hay partidos de Octavos en Firestore aún';
+
+  // Buscar el partido de octavos que ya tiene al "peer" o está vacío/TBC
+  let octMatch = null;
+  if (entry.octPeer) {
+    // Este equipo va como 'away', el peer ya está como 'home'
+    octMatch = octavos.find(m => norm(m.home_team||'').includes(norm(entry.octPeer)));
+  } else {
+    // Este equipo va como 'home' — buscar partido sin home o con TBC
+    octMatch = octavos.find(m => {
+      const ht = norm(m.home_team || '');
+      return !ht || ht === 'tbc' || ht === 'por definir';
+    });
+  }
+
+  if (!octMatch) {
+    // Fallback: buscar cualquier slot vacío del lado correcto
+    return `⚠️ No se encontró partido de Octavos para ${winner} — agregalo manualmente`;
+  }
+
+  const update = entry.octSlot === 'home'
+    ? { home_team: winner, home_flag: winnerFlag || '' }
+    : { away_team: winner, away_flag: winnerFlag || '' };
+
+  await updateDoc(doc(db, 'matches', octMatch.id), update);
+  return `✅ ${winner} asignado a Octavos (${entry.octSlot === 'home' ? 'local' : 'visitante'} en partido ${octMatch.id})`;
+}
+
+// =============================================
 // TAB RESULTADOS
 // =============================================
 onAuthStateChanged(auth, async (user) => {
@@ -89,7 +171,6 @@ async function loadMatchesDone() {
       : '<option>Sin partidos con marcador</option>';
   }
 
-  // Selector para recalc-favs
   const selFavs = document.getElementById('matchSelectRecalcFavs');
   if (selFavs) {
     const withScore = snap.docs.filter(d => {
@@ -115,17 +196,12 @@ function calcPoints(actualH, actualA, predH, predA) {
   return predOut === actualOut ? 3 : 0;
 }
 
-/**
- * FIX: Calcula puntos de favorito normalizando nombres (trim + lowercase).
- * Evita que diferencias de espacios o tildes rompan el match.
- * Retorna 0, 1 o 3.
- */
 function calcFavPts(favTeam, homeTeam, awayTeam, hs, as_) {
   if (!favTeam) return 0;
-  const norm = s => String(s).trim().toLowerCase();
-  const fav  = norm(favTeam);
-  const home = norm(homeTeam);
-  const away = norm(awayTeam);
+  const normL = s => String(s).trim().toLowerCase();
+  const fav  = normL(favTeam);
+  const home = normL(homeTeam);
+  const away = normL(awayTeam);
   if (fav === home) return hs > as_ ? 3 : hs === as_ ? 1 : 0;
   if (fav === away) return as_ > hs ? 3 : hs === as_ ? 1 : 0;
   return 0;
@@ -158,7 +234,6 @@ document.getElementById('saveResultBtn')?.addEventListener('click', async () => 
 });
 
 // ── CERRAR PARTIDO (finished = true) ──
-// FIX: ahora usa recalcFavoritesForMatch() que es idempotente — nunca suma doble.
 document.getElementById('closeMatchBtn')?.addEventListener('click', async () => {
   const mid = document.getElementById('matchSelectClose').value;
   const msg = document.getElementById('closeMatchMsg');
@@ -180,29 +255,31 @@ document.getElementById('closeMatchBtn')?.addEventListener('click', async () => 
     batch.update(predDoc.ref, { points: pts, points_synced: true });
   });
 
-  // ✅ FIX: recalcular favoritos de forma IDEMPOTENTE
   const { favCount } = await recalcFavoritesForMatch(matchData, mid, batch);
   await batch.commit();
 
+  // ── NUEVO: propagar ganador a Octavos si es partido R32 ──
+  let octMsg = '';
+  try {
+    const result = await propagateWinnerToOctavos(matchData, mid);
+    if (result) octMsg = '<br><span style="font-size:12px;color:#86efac">' + result + '</span>';
+  } catch(e) {
+    octMsg = '<br><span style="font-size:12px;color:#fca5a5">⚠️ No se pudo propagar a Octavos: ' + e.message + '</span>';
+  }
+
   msg.innerHTML = '<div class="mt-2 p-2 rounded" style="background:rgba(22,163,74,0.15);border:1px solid var(--green);color:var(--green-light)">' +
-    '✅ Partido cerrado — ' + predsSnap.size + ' pronósticos calculados — ' + favCount + ' favoritos actualizados</div>';
+    '✅ Partido cerrado — ' + predsSnap.size + ' pronósticos calculados — ' + favCount + ' favoritos actualizados' +
+    octMsg + '</div>';
   await loadMatchesAdmin();
   await loadMatchesInProgress();
   await loadMatchesDone();
 });
 
-/**
- * FIX PRINCIPAL: Recalcula favorites_pts[phase] de forma IDEMPOTENTE.
- * - Guarda los puntos por partido en favorites_pts_by_match[matchId]
- * - Recalcula el total del grupo sumando TODOS los partidos con resultado
- * - Nunca acumula doble aunque se llame varias veces
- */
 async function recalcFavoritesForMatch(matchData, mid, existingBatch) {
   const hs    = matchData.home_score;
   const as_   = matchData.away_score;
   const phase = matchData.phase || '';
 
-  // Todos los partidos del mismo grupo con resultado para recalcular el acumulado
   const allMatchesSnap = await getDocs(query(collection(db, 'matches'), orderBy('kickoff')));
   const phaseMatches   = allMatchesSnap.docs
     .filter(d => d.data().phase === phase && d.data().home_score != null)
@@ -218,12 +295,9 @@ async function recalcFavoritesForMatch(matchData, mid, existingBatch) {
     if (!favTeam) return;
 
     const byMatch = { ...(m.favorites_pts_by_match || {}) };
-
-    // Puntos del partido actual
     const ptsThisMatch = calcFavPts(favTeam, matchData.home_team, matchData.away_team, hs, as_);
     byMatch[mid] = ptsThisMatch;
 
-    // Total del grupo = suma de TODOS los partidos del grupo con resultado
     let phaseTotal = 0;
     phaseMatches.forEach(pm => {
       if (pm.id === mid) {
@@ -283,7 +357,7 @@ document.getElementById('recalcPtsBtn')?.addEventListener('click', async () => {
   await loadMatchesDone();
 });
 
-// ── RECALCULAR FAVORITOS (botón nuevo) ──
+// ── RECALCULAR FAVORITOS ──
 document.getElementById('recalcFavsBtn')?.addEventListener('click', async () => {
   const mid = document.getElementById('matchSelectRecalcFavs').value;
   const msg = document.getElementById('recalcFavsMsg');
@@ -332,7 +406,6 @@ document.getElementById('resetResultBtn')?.addEventListener('click', async () =>
 
   predsSnap.forEach(predDoc => batch.update(predDoc.ref, { points: 0, points_synced: false }));
 
-  // FIX: usar el valor guardado en favorites_pts_by_match para restar exactamente lo correcto
   allMembersSnap.forEach(mDoc => {
     const m       = mDoc.data();
     const favTeam = (m.favorites || {})[phase];
