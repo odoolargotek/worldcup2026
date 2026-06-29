@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Fix R32 Final</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body{background:#0f1a2d;color:#f1f5f9;font-family:monospace;padding:30px}
+    h2{color:#4aafd4}
+    .log{background:#1a2d4a;border-radius:10px;padding:20px;margin-top:20px;max-height:70vh;overflow-y:auto}
+    .ok{color:#34d399}.err{color:#f87171}.skip{color:#94a3b8}
+    button{background:#059669;color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:16px;font-weight:700;cursor:pointer;margin-top:20px}
+    button:disabled{opacity:.5;cursor:not-allowed}
+  </style>
+</head>
+<body>
+  <h2>🔧 Fix R32 Final — 3 partidos faltantes</h2>
+  <p style="color:#94a3b8">Corrige nombre, bandera y hora de México-Ecuador, Bélgica-Senegal y Colombia-Ghana buscando por ciudad+fecha.</p>
+  <button id="btn">▶️ Corregir ahora</button>
+  <div class="log" id="log"><em style="color:#94a3b8">Esperando...</em></div>
+
+  <script type="module">
+    import { db } from './js/firebase-config.js';
+    import { collection, getDocs, updateDoc, doc, Timestamp }
+      from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+    const bUTC = (y,mo,d,h,mi) => new Date(Date.UTC(y,mo-1,d,h+4,mi));
+    const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+    const anyMatch = (val, list) => list.some(a => norm(val).includes(norm(a)) || norm(a).includes(norm(val)));
+
+    // Los 3 que faltan — buscar por ciudad + ventana de fecha ±16h
+    const FIXES = [
+      {
+        home_team:'M\u00e9xico',   home_flag:'🇲🇽',
+        away_team:'Ecuador',    away_flag:'🇪🇨',
+        kickoff: bUTC(2026,6,30,21,0),
+        city_aliases:['ciudad de mexico','ciudad de m\u00e9xico','mexico city','guadalajara','azteca'],
+        windowH:16
+      },
+      {
+        home_team:'B\u00e9lgica',   home_flag:'🇧🇪',
+        away_team:'Senegal',    away_flag:'🇸🇳',
+        kickoff: bUTC(2026,7,1,16,0),
+        city_aliases:['seattle','lumen'],
+        windowH:16
+      },
+      {
+        home_team:'Colombia',   home_flag:'🇨🇴',
+        away_team:'Ghana',      away_flag:'🇬🇭',
+        kickoff: bUTC(2026,7,3,21,30),
+        city_aliases:['kansas city','kansas'],
+        windowH:16
+      },
+    ];
+
+    const logEl = document.getElementById('log');
+    const btn   = document.getElementById('btn');
+    const log = (m,c='') => { logEl.innerHTML+=`<div class="${c}">${m}</div>`; logEl.scrollTop=logEl.scrollHeight; };
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      logEl.innerHTML = '';
+      log('🔍 Cargando partidos...');
+      const snap = await getDocs(collection(db,'matches'));
+      const all  = snap.docs.map(d=>({id:d.id,...d.data()}));
+      log(`📊 ${all.length} partidos cargados`);
+
+      let fixed=0, skipped=0, notFound=0;
+
+      for (const fix of FIXES) {
+        const winMs = fix.windowH*3600000;
+
+        // Buscar por ciudad + fecha cercana (en R32 primero, luego en todos)
+        const find = pool => pool.find(m => {
+          if (!anyMatch(m.city||'', fix.city_aliases)) return false;
+          const ko = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+          return Math.abs(ko - fix.kickoff) < winMs;
+        });
+
+        const r32 = all.filter(m=>(m.phase||'').toLowerCase().includes('32')||(m.type||'').toLowerCase().includes('32'));
+        let match = find(r32) || find(all);
+
+        // Si no encontró por hora, buscar solo por ciudad en R32 (para TBC sin hora correcta)
+        if (!match) {
+          match = r32.find(m => {
+            const ht = norm(m.home_team||'');
+            const isEmpty = !ht || ht==='tbc' || ht==='';
+            return isEmpty && anyMatch(m.city||'', fix.city_aliases);
+          });
+        }
+
+        if (!match) {
+          log(`⚠️ NO ENCONTRADO: ${fix.home_team} vs ${fix.away_team}`, 'skip');
+          notFound++; continue;
+        }
+
+        try {
+          await updateDoc(doc(db,'matches',match.id), {
+            home_team: fix.home_team,
+            home_flag: fix.home_flag,
+            away_team: fix.away_team,
+            away_flag: fix.away_flag,
+            kickoff:   Timestamp.fromDate(fix.kickoff),
+          });
+          const fmt = { timeZone:'America/La_Paz', hour12:true, day:'2-digit', month:'short', hour:'numeric', minute:'2-digit' };
+          log(`✅ ${fix.home_team} vs ${fix.away_team} • ${match.city}<br>&nbsp;&nbsp;&nbsp;🕑 ${fix.kickoff.toLocaleString('es-BO',fmt)}`, 'ok');
+          fixed++;
+        } catch(e) {
+          log(`❌ ERROR ${fix.home_team} vs ${fix.away_team}: ${e.message}`, 'err');
+        }
+      }
+
+      log(`<br>🏁 <strong>${fixed} corregidos • ${skipped} sin cambio • ${notFound} no encontrados</strong>`);
+      btn.disabled = false;
+      btn.textContent = '🔄 Volver a ejecutar';
+    });
+  </script>
+</body>
+</html>
