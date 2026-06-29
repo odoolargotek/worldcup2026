@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Fix Delete Bad Octavos</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body{background:#0f1a2d;color:#f1f5f9;font-family:monospace;padding:30px}
+    h2{color:#e74c3c}
+    .log{background:#1a2d4a;border-radius:10px;padding:20px;margin-top:20px;max-height:70vh;overflow-y:auto}
+    .ok{color:#34d399}.err{color:#f87171}.skip{color:#94a3b8}.warn{color:#fbbf24}
+    button{background:#dc2626;color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:16px;font-weight:700;cursor:pointer;margin-top:20px}
+    button:disabled{opacity:.5;cursor:not-allowed}
+    .preview{background:#1e3a5f;border-radius:8px;padding:16px;margin-top:16px;border:1px solid #dc2626}
+  </style>
+</head>
+<body>
+  <h2>🗑️ Borrar Octavos mal fechados</h2>
+  <p style="color:#94a3b8">Busca y elimina partidos de Octavos que tienen fecha entre 28-jun y 3-jul (deben ser 4-8 jul). También verifica Suiza vs Argelia.</p>
+  <div class="preview">
+    <strong>🔍 Va a buscar:</strong> phase=Octavos con kickoff entre 28-jun-2026 y 3-jul-2026 (fechas incorrectas)<br>
+    <strong>✓ Va a verificar:</strong> Suiza vs Argelia — debe ser 02-jul 23:00 Bolivia
+  </div>
+  <button id="btn">🗑️ Ejecutar</button>
+  <div class="log" id="log"><em style="color:#94a3b8">Esperando...</em></div>
+
+  <script type="module">
+    import { db } from './js/firebase-config.js';
+    import { collection, getDocs, deleteDoc, doc, Timestamp }
+      from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+    const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+    const bUTC = (y,mo,d,h,mi) => new Date(Date.UTC(y,mo-1,d,h+4,mi));
+    const fmt  = d => d.toLocaleString('es-BO',{timeZone:'America/La_Paz',hour12:true,day:'2-digit',month:'short',hour:'numeric',minute:'2-digit'});
+
+    const logEl = document.getElementById('log');
+    const btn   = document.getElementById('btn');
+    const log = (m,c='') => { logEl.innerHTML+=`<div class="${c}">${m}</div>`; logEl.scrollTop=logEl.scrollHeight; };
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      logEl.innerHTML = '';
+      log('🔍 Cargando partidos...');
+      const snap = await getDocs(collection(db,'matches'));
+      const all  = snap.docs.map(d=>({id:d.id,...d.data()}));
+      log(`📊 ${all.length} partidos cargados`);
+
+      // Ventana incorrecta: Octavos con fecha 28-jun a 3-jul
+      const wrongStart = new Date(Date.UTC(2026,5,28,0,0));
+      const wrongEnd   = new Date(Date.UTC(2026,6,4,0,0));
+
+      const badOctavos = all.filter(m => {
+        const phase = norm(m.phase||m.type||'');
+        if (!phase.includes('octavo') && !phase.includes('16') && !phase.includes('r16')) return false;
+        const ko = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+        return ko >= wrongStart && ko < wrongEnd;
+      });
+
+      log(`<br>⚠️ Partidos Octavos con fecha incorrecta encontrados: ${badOctavos.length}`, 'warn');
+
+      for (const m of badOctavos) {
+        const ko = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+        log(`🗑️ Borrando: ${m.home_team||'TBC'} vs ${m.away_team||'TBC'} • ${m.city||''} • ${fmt(ko)}`, 'warn');
+        try {
+          await deleteDoc(doc(db,'matches',m.id));
+          log(`  ✅ Borrado OK`, 'ok');
+        } catch(e) {
+          log(`  ❌ Error: ${e.message}`, 'err');
+        }
+      }
+
+      // Verificar Suiza vs Argelia
+      log(`<br>🔍 Verificando Suiza vs Argelia...`);
+      const suiza = all.find(m =>
+        norm(m.home_team||'').includes('suiza') &&
+        norm(m.away_team||'').includes('argelia')
+      );
+      if (!suiza) {
+        log('⚠️ Suiza vs Argelia NO encontrado en Firestore', 'warn');
+      } else {
+        const ko = suiza.kickoff?.toDate ? suiza.kickoff.toDate() : new Date(suiza.kickoff);
+        const expected = bUTC(2026,7,2,23,0);
+        const diffMin  = Math.round((ko - expected) / 60000);
+        if (Math.abs(diffMin) < 2) {
+          log(`✅ Suiza vs Argelia — ${fmt(ko)} — CORRECTO`, 'ok');
+        } else {
+          log(`⚠️ Suiza vs Argelia — tiene ${fmt(ko)} pero debería ser ${fmt(expected)} (diferencia: ${diffMin} min)`, 'warn');
+        }
+      }
+
+      log(`<br>🏁 <strong>Listo. Recarga el dashboard.</strong>`);
+      btn.disabled = false;
+      btn.textContent = '🔄 Volver a ejecutar';
+    });
+  </script>
+</body>
+</html>
