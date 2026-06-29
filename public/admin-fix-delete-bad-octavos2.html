@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Fix Delete Bad Octavos 2</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body{background:#0f1a2d;color:#f1f5f9;font-family:monospace;padding:30px}
+    h2{color:#e74c3c}
+    .log{background:#1a2d4a;border-radius:10px;padding:20px;margin-top:20px;max-height:70vh;overflow-y:auto}
+    .ok{color:#34d399}.err{color:#f87171}.warn{color:#fbbf24}
+    button{background:#dc2626;color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:16px;font-weight:700;cursor:pointer;margin-top:20px}
+    button:disabled{opacity:.5;cursor:not-allowed}
+  </style>
+</head>
+<body>
+  <h2>🗑️ Borrar Octavos mal fechados (todos)</h2>
+  <p style="color:#94a3b8">Elimina cualquier partido de Octavos con kickoff antes del 4 de julio de 2026.</p>
+  <button id="btn">🗑️ Ejecutar</button>
+  <div class="log" id="log"><em style="color:#94a3b8">Esperando...</em></div>
+  <script type="module">
+    import { db } from './js/firebase-config.js';
+    import { collection, getDocs, deleteDoc, doc }
+      from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+    const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+    const fmt  = d => d.toLocaleString('es-BO',{timeZone:'America/La_Paz',hour12:true,day:'2-digit',month:'short',hour:'numeric',minute:'2-digit'});
+    const cutoff = new Date(Date.UTC(2026,6,4,0,0)); // 4 jul 00:00 UTC
+
+    const logEl = document.getElementById('log');
+    const btn   = document.getElementById('btn');
+    const log = (m,c='') => { logEl.innerHTML+=`<div class="${c}">${m}</div>`; logEl.scrollTop=logEl.scrollHeight; };
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      logEl.innerHTML = '';
+      log('🔍 Cargando partidos...');
+      const snap = await getDocs(collection(db,'matches'));
+      const all  = snap.docs.map(d=>({id:d.id,...d.data()}));
+      log(`📊 ${all.length} partidos`);
+
+      const bad = all.filter(m => {
+        const p = norm(m.phase||m.type||'');
+        const isOctavo = p.includes('octavo') || p.includes('16') || p.includes('r16');
+        if (!isOctavo) return false;
+        const ko = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+        return ko < cutoff;
+      });
+
+      log(`⚠️ Octavos con fecha incorrecta: ${bad.length}`, 'warn');
+
+      if (bad.length === 0) {
+        log('✅ Nada que borrar, todo está limpio.', 'ok');
+      }
+
+      for (const m of bad) {
+        const ko = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+        log(`🗑️ ${m.home_team||'TBC'} vs ${m.away_team||'TBC'} • ${m.city||''} • ${fmt(ko)}`, 'warn');
+        try {
+          await deleteDoc(doc(db,'matches',m.id));
+          log('  ✅ Borrado', 'ok');
+        } catch(e) { log(`  ❌ ${e.message}`, 'err'); }
+      }
+
+      log(`<br>🏁 <strong>Listo. Recarga el dashboard.</strong>`);
+      btn.disabled = false;
+      btn.textContent = '🔄 Volver a ejecutar';
+    });
+  </script>
+</body>
+</html>
