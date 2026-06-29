@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Fix Suiza vs Argelia</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body{background:#0f1a2d;color:#f1f5f9;font-family:monospace;padding:30px}
+    h2{color:#4aafd4}
+    .log{background:#1a2d4a;border-radius:10px;padding:20px;margin-top:20px;max-height:70vh;overflow-y:auto}
+    .ok{color:#34d399}.err{color:#f87171}.warn{color:#fbbf24}.skip{color:#94a3b8}
+    button{background:#059669;color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:16px;font-weight:700;cursor:pointer;margin-top:20px}
+    button:disabled{opacity:.5;cursor:not-allowed}
+  </style>
+</head>
+<body>
+  <h2>🔧 Fix Suiza vs Argelia</h2>
+  <p style="color:#94a3b8">Busca el partido de Vancouver 2-jul en R32 y lo corrige. Si no existe, lo crea.</p>
+  <button id="btn">▶️ Ejecutar</button>
+  <div class="log" id="log"><em style="color:#94a3b8">Esperando...</em></div>
+
+  <script type="module">
+    import { db } from './js/firebase-config.js';
+    import { collection, getDocs, addDoc, updateDoc, doc, Timestamp }
+      from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+    const bUTC = (y,mo,d,h,mi) => new Date(Date.UTC(y,mo-1,d,h+4,mi));
+    const norm = s => (s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+    const fmt  = d => d.toLocaleString('es-BO',{timeZone:'America/La_Paz',hour12:true,day:'2-digit',month:'short',hour:'numeric',minute:'2-digit'});
+
+    const TARGET = {
+      home_team: 'Suiza',    home_flag: '🇨🇭',
+      away_team: 'Argelia',  away_flag: '🇩🇿',
+      kickoff:   bUTC(2026,7,2,23,0),
+      phase: 'Ronda de 32', type: 'ronda_32',
+      city: 'Vancouver',
+    };
+
+    const logEl = document.getElementById('log');
+    const btn   = document.getElementById('btn');
+    const log = (m,c='') => { logEl.innerHTML+=`<div class="${c}">${m}</div>`; logEl.scrollTop=logEl.scrollHeight; };
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      logEl.innerHTML = '';
+      log('🔍 Cargando partidos...');
+      const snap = await getDocs(collection(db,'matches'));
+      const all  = snap.docs.map(d=>({id:d.id,...d.data()}));
+      log(`📊 ${all.length} partidos`);
+
+      // Mostrar todos los partidos de Vancouver en R32 para debug
+      const vanR32 = all.filter(m => {
+        const p = norm(m.phase||m.type||'');
+        const isR32 = p.includes('32') || p.includes('ronda');
+        return isR32 && norm(m.city||'').includes('vancouver');
+      });
+      log(`📍 Partidos R32 en Vancouver: ${vanR32.length}`);
+      vanR32.forEach(m => {
+        const ko = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+        log(`  • [${m.id.slice(0,8)}] ${m.home_team||'?'} vs ${m.away_team||'?'} • ${fmt(ko)}`, 'skip');
+      });
+
+      // Buscar con aliases amplios
+      const aliases_h = ['suiza','switzerland','suisse'];
+      const aliases_a = ['argelia','algeria','algerie'];
+      const winMs = 20*3600000; // ±20h
+
+      let match = all.find(m =>
+        aliases_h.some(a => norm(m.home_team||'').includes(a)) &&
+        aliases_a.some(a => norm(m.away_team||'').includes(a))
+      );
+
+      // Si no por nombre, buscar por Vancouver + fecha ±20h
+      if (!match) {
+        match = all.find(m => {
+          if (!norm(m.city||'').includes('vancouver')) return false;
+          const ko = m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
+          return Math.abs(ko - TARGET.kickoff) < winMs;
+        });
+      }
+
+      if (match) {
+        const ko = match.kickoff?.toDate ? match.kickoff.toDate() : new Date(match.kickoff);
+        log(`🔍 Encontrado: ${match.home_team||'?'} vs ${match.away_team||'?'} • ${match.city} • ${fmt(ko)}`);
+        try {
+          await updateDoc(doc(db,'matches',match.id), {
+            home_team: TARGET.home_team, home_flag: TARGET.home_flag,
+            away_team: TARGET.away_team, away_flag: TARGET.away_flag,
+            kickoff:   Timestamp.fromDate(TARGET.kickoff),
+            phase: TARGET.phase, type: TARGET.type,
+          });
+          log(`✅ Actualizado: Suiza vs Argelia • Vancouver • ${fmt(TARGET.kickoff)}`, 'ok');
+        } catch(e) { log(`❌ Error: ${e.message}`, 'err'); }
+      } else {
+        log('⚠️ No encontrado. Creando nuevo...', 'warn');
+        try {
+          await addDoc(collection(db,'matches'), {
+            home_team: TARGET.home_team, home_flag: TARGET.home_flag,
+            away_team: TARGET.away_team, away_flag: TARGET.away_flag,
+            kickoff:   Timestamp.fromDate(TARGET.kickoff),
+            phase: TARGET.phase, type: TARGET.type,
+            city: TARGET.city,
+          });
+          log(`✅ Creado: Suiza vs Argelia • Vancouver • ${fmt(TARGET.kickoff)}`, 'ok');
+        } catch(e) { log(`❌ Error: ${e.message}`, 'err'); }
+      }
+
+      log(`<br>🏁 <strong>Listo. Recarga el dashboard.</strong>`);
+      btn.disabled = false;
+      btn.textContent = '🔄 Volver a ejecutar';
+    });
+  </script>
+</body>
+</html>
