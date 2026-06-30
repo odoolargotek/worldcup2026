@@ -39,15 +39,32 @@ function getKickoff(m) {
   return m.kickoff?.toDate ? m.kickoff.toDate() : new Date(m.kickoff);
 }
 
-// ── Helper: armar badge de score final (ET/penales) ──────────────────────
+// ── Helper: badge de resultado extra (ET / Penales) ──
 function finalScoreBadge(m) {
-  const hasET  = m.et_home_score != null && m.et_away_score != null;
-  const hasPen = m.pen_home_score != null && m.pen_away_score != null;
+  const hasET  = m.extra_time  && m.et_home_score != null && m.et_away_score != null;
+  const hasPen = m.penalties   && m.penalties_winner;
   if (!hasET && !hasPen) return '';
+
   let parts = [];
-  if (hasET)  parts.push(`ET ${m.et_home_score}–${m.et_away_score}`);
-  if (hasPen) parts.push(`Pen ${m.pen_home_score}–${m.pen_away_score}`);
-  return `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;letter-spacing:0.3px">⏱ Final: ${parts.join(' · ')}</div>`;
+
+  if (hasET) {
+    parts.push(
+      '<span style="background:rgba(251,146,60,0.15);color:#fb923c;border:1px solid rgba(251,146,60,0.3);' +
+      'border-radius:20px;padding:1px 8px;font-size:10px;font-weight:700;white-space:nowrap">' +
+      '⏱️ ET ' + m.et_home_score + '–' + m.et_away_score + '</span>'
+    );
+  }
+
+  if (hasPen) {
+    parts.push(
+      '<span style="background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);' +
+      'border-radius:20px;padding:1px 8px;font-size:10px;font-weight:700;white-space:nowrap">' +
+      '🎯 Pen → ' + m.penalties_winner + '</span>'
+    );
+  }
+
+  return '<div style="display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-top:5px">' +
+    parts.join('') + '</div>';
 }
 
 onAuthStateChanged(auth, async (user) => {
@@ -299,7 +316,14 @@ function renderMatches(snap) {
       const phaseChip = m.phase ? '<span style="background:rgba(245,158,11,0.12);color:var(--gold);font-size:9px;font-weight:700;padding:1px 7px;border-radius:20px;letter-spacing:1px">'+m.phase+'</span>' : '';
 
       const score90 = hasScore ? (m.home_score + ' – ' + m.away_score) : null;
+
+      // Badge ET/Penales (solo en partidos finales)
       const scoreFinalBadge = isFinal ? finalScoreBadge(m) : '';
+
+      // Label debajo del marcador: FT / AET / PEN
+      let finalLabel = '90\' FINAL';
+      if (isFinal && m.penalties)  finalLabel = 'PEN FINAL';
+      else if (isFinal && m.extra_time) finalLabel = 'AET FINAL';
 
       let predBadge = '';
       if (myPred) {
@@ -315,7 +339,7 @@ function renderMatches(snap) {
         actionArea =
           '<div style="text-align:center;min-width:64px">'+
             '<div style="font-size:1.4rem;font-weight:800;color:var(--gold);line-height:1">'+(score90||'–')+'</div>'+
-            '<div style="font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-top:2px">90\' FINAL</div>'+
+            '<div style="font-size:9px;color:var(--text-muted);letter-spacing:1px;margin-top:2px">'+finalLabel+'</div>'+
             scoreFinalBadge+
           '</div>';
       } else if (isLive) {
