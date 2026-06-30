@@ -147,6 +147,23 @@
       'predict.deadline_passed': '⛔ El plazo de pronóstico ha cerrado.',
       'predict.deadline_closes': '⏰ Cierra en',
 
+      // ── BRACKET (bracket.html) ──
+      'bracket.title':             '🏆 Bracket Mundial 2026',
+      'bracket.back':              '← Grupo',
+      'bracket.auth_msg':          '🔒 Iniciá sesión para pronosticar',
+      'bracket.loading':           '⏳ Cargando bracket...',
+      'bracket.hint':              '← Presioná cualquier partido para pronosticar',
+      'bracket.legend.predicted':  'Ya pronosticaste',
+      'bracket.legend.finished':   'Partido terminado',
+      'bracket.legend.locked':     'Bloqueado',
+      'bracket.modal.cancel':      'Cancelar',
+      'bracket.modal.save':        '💾 Guardar',
+      'bracket.modal.saving':      'Guardando...',
+      'bracket.modal.saved':       '✅ ¡Pronóstico guardado!',
+      'bracket.modal.update':      '✏️ Actualizar',
+      'bracket.modal.invalid':     '⚠️ Ingresá un marcador válido',
+      'bracket.modal.deadline':    '🔒 Plazo vencido',
+
       // ── MATCHES ──
       'matches.title':           '⚽ Partidos',
       'matches.filter.all':      'Todos',
@@ -455,6 +472,23 @@
       'predict.pts_wrong':       'Miss',
       'predict.deadline_passed': '⛔ The prediction window has closed.',
       'predict.deadline_closes': '⏰ Closes in',
+
+      // ── BRACKET (bracket.html) ──
+      'bracket.title':             '🏆 World Cup 2026 Bracket',
+      'bracket.back':              '← Group',
+      'bracket.auth_msg':          '🔒 Log in to predict',
+      'bracket.loading':           '⏳ Loading bracket...',
+      'bracket.hint':              '← Tap any match to predict',
+      'bracket.legend.predicted':  'Already predicted',
+      'bracket.legend.finished':   'Match finished',
+      'bracket.legend.locked':     'Locked',
+      'bracket.modal.cancel':      'Cancel',
+      'bracket.modal.save':        '💾 Save',
+      'bracket.modal.saving':      'Saving...',
+      'bracket.modal.saved':       '✅ Prediction saved!',
+      'bracket.modal.update':      '✏️ Update',
+      'bracket.modal.invalid':     '⚠️ Enter a valid score',
+      'bracket.modal.deadline':    '🔒 Deadline passed',
 
       // ── MATCHES ──
       'matches.title':           '⚽ Matches',

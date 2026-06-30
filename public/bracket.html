@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Bracket Mundial 2026</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <script src="js/i18n.js"></script>
   <script src="js/theme.js"></script>
   <link rel="stylesheet" href="css/style.css">
   <style>
@@ -87,19 +88,20 @@
 <body>
 <div class="container-fluid py-3">
   <div class="d-flex align-items-center gap-3 mb-3 px-2">
-    <a id="backLink" href="group.html" class="btn btn-sm" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text)">← Grupo</a>
-    <h5 class="mb-0 fw-800" style="color:var(--gold)">🏆 Bracket Mundial 2026</h5>
+    <a id="backLink" href="group.html" class="btn btn-sm" style="background:var(--bg-card);border:1px solid var(--border);color:var(--text)" data-i18n="bracket.back">← Grupo</a>
+    <h5 class="mb-0 fw-800" style="color:var(--gold)" data-i18n="bracket.title">🏆 Bracket Mundial 2026</h5>
+    <button id="langToggleBtn" class="btn btn-sm btn-outline-secondary ms-auto">🇺🇸 EN</button>
   </div>
-  <div id="authMsg" class="text-center py-4" style="color:var(--text-muted);display:none">🔒 Iniciá sesión para pronosticar</div>
-  <div id="loadMsg" class="text-center py-4" style="color:var(--text-muted)">⏳ Cargando bracket...</div>
+  <div id="authMsg" class="text-center py-4" style="color:var(--text-muted);display:none" data-i18n="bracket.auth_msg">🔒 Iniciá sesión para pronosticar</div>
+  <div id="loadMsg" class="text-center py-4" style="color:var(--text-muted)" data-i18n="bracket.loading">⏳ Cargando bracket...</div>
   <div id="bracketWrap" class="bracket-wrap" style="display:none">
-    <div class="round-label mb-2" style="text-align:left;padding-left:8px">← Presioná cualquier partido para pronosticar</div>
+    <div class="round-label mb-2" style="text-align:left;padding-left:8px" data-i18n="bracket.hint">← Presioná cualquier partido para pronosticar</div>
     <div id="bracketGrid" class="bracket-grid"></div>
   </div>
   <div id="legend" style="display:none" class="d-flex gap-3 flex-wrap px-2 mt-3">
-    <span style="font-size:12px;color:var(--text-muted)"><span style="display:inline-block;width:12px;height:12px;border:1.5px solid #22c55e;border-radius:3px;margin-right:4px"></span>Ya pronosticaste</span>
-    <span style="font-size:12px;color:var(--text-muted)"><span style="display:inline-block;width:12px;height:12px;border:1.5px solid var(--gold);border-radius:3px;margin-right:4px"></span>Partido terminado</span>
-    <span style="font-size:12px;color:var(--text-muted)"><span style="display:inline-block;width:12px;height:12px;border:1.5px solid var(--border);border-radius:3px;opacity:.5;margin-right:4px"></span>Bloqueado</span>
+    <span style="font-size:12px;color:var(--text-muted)"><span style="display:inline-block;width:12px;height:12px;border:1.5px solid #22c55e;border-radius:3px;margin-right:4px"></span><span data-i18n="bracket.legend.predicted">Ya pronosticaste</span></span>
+    <span style="font-size:12px;color:var(--text-muted)"><span style="display:inline-block;width:12px;height:12px;border:1.5px solid var(--gold);border-radius:3px;margin-right:4px"></span><span data-i18n="bracket.legend.finished">Partido terminado</span></span>
+    <span style="font-size:12px;color:var(--text-muted)"><span style="display:inline-block;width:12px;height:12px;border:1.5px solid var(--border);border-radius:3px;opacity:.5;margin-right:4px"></span><span data-i18n="bracket.legend.locked">Bloqueado</span></span>
   </div>
 </div>
 
@@ -126,8 +128,8 @@
     <div id="modalCity" style="font-size:11px;color:var(--text-muted);text-align:center;margin-bottom:12px"></div>
     <div id="modalMsg" style="min-height:20px;text-align:center;font-size:13px;margin-bottom:8px"></div>
     <div class="d-flex gap-2">
-      <button id="modalCancel" class="btn btn-sm flex-fill" style="background:var(--bg);border:1px solid var(--border);color:var(--text)">Cancelar</button>
-      <button id="modalSave" class="btn btn-sm fw-bold flex-fill" style="background:var(--gold);color:#000">💾 Guardar</button>
+      <button id="modalCancel" class="btn btn-sm flex-fill" style="background:var(--bg);border:1px solid var(--border);color:var(--text)" data-i18n="bracket.modal.cancel">Cancelar</button>
+      <button id="modalSave" class="btn btn-sm fw-bold flex-fill" style="background:var(--gold);color:#000" data-i18n="bracket.modal.save">💾 Guardar</button>
     </div>
   </div>
 </div>
@@ -521,13 +523,13 @@ let activeMatch = null;
 function openModal(m) {
   activeMatch = m;
   const kickoff = getKickoff(m);
-  document.getElementById('modalPhase').textContent    = m.phase || 'Octavos';
+  document.getElementById('modalPhase').textContent    = m.phase || t('matches.phase.r16');
   document.getElementById('modalHomeFlag').textContent = m.home_flag || '🏳️';
   document.getElementById('modalAwayFlag').textContent = m.away_flag || '🏳️';
   document.getElementById('modalHomeName').textContent = m.home_team;
   document.getElementById('modalAwayName').textContent = m.away_team;
   document.getElementById('modalKickoff').textContent  = kickoff
-    ? kickoff.toLocaleString('es-BO',{timeZone:'America/La_Paz',dateStyle:'long',timeStyle:'short'})
+    ? kickoff.toLocaleString(window.getLang() === 'en' ? 'en-US' : 'es-BO',{timeZone:'America/La_Paz',dateStyle:'long',timeStyle:'short'})
     : '';
   document.getElementById('modalCity').textContent  = m.city ? '📍 ' + m.city : '';
   document.getElementById('modalMsg').innerHTML     = '';
@@ -552,16 +554,17 @@ document.getElementById('modalSave').addEventListener('click', async () => {
   const hs = parseInt(document.getElementById('modalHomeScore').value);
   const as = parseInt(document.getElementById('modalAwayScore').value);
   if (isNaN(hs) || isNaN(as) || hs < 0 || as < 0) {
-    document.getElementById('modalMsg').innerHTML = '<span style="color:#fca5a5">⚠️ Ingresá un marcador válido</span>';
+    document.getElementById('modalMsg').innerHTML = `<span style="color:#fca5a5">${window.t('bracket.modal.invalid')}</span>`;
     return;
   }
   const kickoff = getKickoff(activeMatch);
   if (!kickoff || kickoff <= new Date()) {
-    document.getElementById('modalMsg').innerHTML = '<span style="color:#94a3b8">🔒 Plazo vencido</span>';
+    document.getElementById('modalMsg').innerHTML = `<span style="color:#94a3b8">${window.t('bracket.modal.deadline')}</span>`;
     return;
   }
   const btn = document.getElementById('modalSave');
-  btn.disabled = true; btn.textContent = 'Guardando...';
+  btn.disabled = true;
+  btn.textContent = window.t('bracket.modal.saving');
   try {
     const predId = `${GID}_${activeMatch.id}_${currentUser.uid}`;
     await setDoc(doc(db,'predictions',predId), {
@@ -573,14 +576,19 @@ document.getElementById('modalSave').addEventListener('click', async () => {
       created_at: new Date()
     });
     predictions[activeMatch.id] = { home_score: hs, away_score: as };
-    document.getElementById('modalMsg').innerHTML = '<span style="color:#86efac">✅ ¡Pronóstico guardado!</span>';
-    btn.textContent = '✏️ Actualizar'; btn.disabled = false;
+    document.getElementById('modalMsg').innerHTML = `<span style="color:#86efac">${window.t('bracket.modal.saved')}</span>`;
+    btn.textContent = window.t('bracket.modal.update');
+    btn.disabled = false;
     setTimeout(() => { renderBracket(); closeModal(); }, 800);
   } catch(err) {
     document.getElementById('modalMsg').innerHTML = `<span style="color:#fca5a5">❌ ${err.message}</span>`;
-    btn.textContent = '💾 Guardar'; btn.disabled = false;
+    btn.textContent = window.t('bracket.modal.save');
+    btn.disabled = false;
   }
 });
+
+// Re-render texto dinámico al cambiar idioma
+document.addEventListener('langchange', () => renderBracket());
 </script>
 </body>
 </html>
