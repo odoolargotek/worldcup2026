@@ -47,7 +47,7 @@
     #dashTabs .nav-link{color:var(--text-muted,#94a3b8);font-size:14px;font-weight:600;border:none;padding:8px 16px;border-radius:8px}
     #dashTabs .nav-link.active{background:rgba(29,144,198,0.15);color:#4aafd4}
     #dashTabs .nav-link:hover:not(.active){background:rgba(255,255,255,0.05);color:var(--text,#e2e8f0)}
-    /* --- Screen share en dashboard --- */
+    /* --- Screen share --- */
     .screen-share-card{background:var(--bg-card,#1c2333);border:1px solid rgba(29,144,198,0.2);border-radius:14px;padding:18px;margin-top:20px}
     .screen-share-card h6{font-weight:800;color:var(--primary-light,#4aafd4);margin-bottom:12px;font-size:0.95rem}
     .status-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:14px}
@@ -61,17 +61,20 @@
     .dash-join-input{background:rgba(255,255,255,0.05);border:1px solid var(--border,rgba(255,255,255,0.12));border-radius:10px;padding:10px 14px;font-size:1.1rem;font-weight:800;letter-spacing:4px;color:inherit;text-transform:uppercase;text-align:center;width:170px}
     .dash-join-input:focus{outline:none;border-color:rgba(29,144,198,0.6)}
     .ss-log{background:rgba(0,0,0,0.25);border-radius:8px;padding:8px 12px;font-size:11px;color:var(--text-muted,#94a3b8);font-family:monospace;max-height:70px;overflow-y:auto;margin-top:10px}
-    /* Bloque de código de sesión (emisor) */
     .session-code-block{display:none;background:rgba(29,144,198,0.08);border:1px solid rgba(29,144,198,0.35);border-radius:10px;padding:14px 18px;margin-bottom:14px}
     .session-code-val{font-size:1.5rem;font-weight:900;letter-spacing:4px;color:#4aafd4;font-family:monospace}
     .copy-code-btn{background:rgba(29,144,198,0.18);border:1px solid rgba(29,144,198,0.45);border-radius:8px;padding:5px 13px;font-size:12px;font-weight:700;color:#4aafd4;cursor:pointer}
     .copy-code-btn:hover{background:rgba(29,144,198,0.32)}
     .ss-action-btn{font-weight:700;font-size:13px;border-radius:10px;padding:8px 18px;cursor:pointer;border:none;transition:opacity 0.15s}
     .ss-action-btn:disabled{opacity:0.4;cursor:default}
-    .btn-share{background:rgba(52,211,153,0.18);color:#34d399;border:1px solid rgba(52,211,153,0.45)!important}
-    .btn-stop {background:rgba(201,52,75,0.18);color:#f5a0ac;border:1px solid rgba(201,52,75,0.45)!important}
-    .btn-watch{background:rgba(29,144,198,0.18);color:#4aafd4;border:1px solid rgba(29,144,198,0.45)!important}
-    .btn-leave{background:rgba(245,158,11,0.18);color:#f59e0b;border:1px solid rgba(245,158,11,0.45)!important}
+    .btn-share {background:rgba(52,211,153,0.18);color:#34d399;border:1px solid rgba(52,211,153,0.45)!important}
+    .btn-stop  {background:rgba(201,52,75,0.18);color:#f5a0ac;border:1px solid rgba(201,52,75,0.45)!important}
+    .btn-watch {background:rgba(29,144,198,0.18);color:#4aafd4;border:1px solid rgba(29,144,198,0.45)!important}
+    .btn-leave {background:rgba(245,158,11,0.18);color:#f59e0b;border:1px solid rgba(245,158,11,0.45)!important}
+    .btn-fs    {background:rgba(148,163,184,0.12);color:#e2e8f0;border:1px solid rgba(148,163,184,0.3)!important}
+    .btn-cast  {background:rgba(234,179,8,0.14);color:#fbbf24;border:1px solid rgba(234,179,8,0.4)!important}
+    /* Barra de controles del video */
+    #dashVideoControls{display:none;gap:8px;flex-wrap:wrap;margin-top:10px;margin-bottom:4px}
   </style>
 </head>
 <body>
@@ -186,17 +189,13 @@
         <button onclick="retryTvLoad()" style="background:rgba(29,144,198,0.2);color:#4aafd4;border:1px solid rgba(29,144,198,0.4);border-radius:8px;padding:7px 18px;font-size:13px;font-weight:700;cursor:pointer">🔄 Reintentar</button>
       </div>
 
-      <!-- ═══════════════════════════════════════════════════════════
-           BLOQUE DE PANTALLA COMPARTIDA (WebRTC)
-           ═══════════════════════════════════════════════════════════ -->
+      <!-- BLOQUE DE PANTALLA COMPARTIDA (WebRTC) -->
       <div class="screen-share-card">
         <h6>📡 Pantalla compartida en vivo</h6>
 
-        <!-- EMISOR: solo visible para tv_access + is_host -->
+        <!-- EMISOR: solo para is_host:true -->
         <div id="hostControls" style="display:none">
-          <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Comparte tu pantalla con todos los que están en este tab.</p>
-
-          <!-- El código se muestra ANTES de abrir el selector de Chrome -->
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Comparte tu pantalla. El audio del sistema se incluye si lo activas en el selector de Chrome.</p>
           <div class="session-code-block" id="dashEmitCodeBlock">
             <p style="font-size:11px;color:var(--text-muted);margin-bottom:6px">📋 Copia este código <strong>ahora</strong> y compártelo, <em>luego</em> elige la ventana:</p>
             <div style="display:flex;align-items:center;gap:12px">
@@ -204,10 +203,9 @@
                 <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">CÓDIGO DE SESIÓN</div>
                 <div class="session-code-val session-code-display" id="dashEmitCodeVal">——</div>
               </div>
-              <button class="copy-code-btn copy-code-btn" onclick="copyCode()">📋 Copiar</button>
+              <button class="copy-code-btn" onclick="copyCode()">📋 Copiar</button>
             </div>
           </div>
-
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
             <button class="ss-action-btn btn-share" id="startShareBtn" onclick="startSharing()">🖥️ Compartir mi pantalla</button>
             <button class="ss-action-btn btn-stop"  id="stopShareBtn"  onclick="stopSharing()" disabled>⏹️ Detener</button>
@@ -221,7 +219,7 @@
           <hr style="border-color:rgba(255,255,255,0.07);margin:16px 0">
         </div>
 
-        <!-- RECEPTOR: visible para todos con tv_access -->
+        <!-- RECEPTOR: todos con tv_access -->
         <div id="dashJoinBlock">
           <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">¿Alguien está compartiendo su pantalla? Ingresa el código para verla aquí:</p>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -229,13 +227,25 @@
             <button class="ss-action-btn btn-watch" onclick="joinSession()">📺 Ver pantalla</button>
           </div>
         </div>
-        <div id="dashLeaveBlock" style="display:none;margin-bottom:12px">
+
+        <div id="dashLeaveBlock" style="display:none;margin-bottom:4px">
           <button class="ss-action-btn btn-leave" onclick="leaveSession()">🚪 Salir de la pantalla</button>
         </div>
+
         <div id="dashWatchStatus" class="status-badge idle" style="margin-top:10px"><span class="status-dot"></span>Inactivo</div>
+
         <div id="dashRemotePreview" style="display:none;margin-top:12px">
           <video id="dashRemoteVideo" autoplay playsinline></video>
+          <!-- Controles: pantalla completa + enviar a TV -->
+          <div id="dashVideoControls">
+            <button class="ss-action-btn btn-fs"   onclick="toggleFullscreen('dashRemoteVideo')">⛶ Pantalla completa</button>
+            <button class="ss-action-btn btn-cast" onclick="castToTV('dashRemoteVideo')">📺 Enviar a TV</button>
+          </div>
+          <p style="font-size:10px;color:var(--text-muted);margin-top:6px;margin-bottom:0">
+            📺 <strong>Enviar a TV:</strong> Chrome → menú ⋮ → "Transmitir..." · Android → Duplicar pantalla · iOS → AirPlay desde Centro de control
+          </p>
         </div>
+
         <div id="dashWatchLog" class="ss-log"></div>
       </div>
       <!-- /pantalla compartida -->
@@ -319,10 +329,7 @@
         if (!(data.display_name||'').trim()) document.getElementById('nicknameBanner').style.display='block';
         if (data.tv_access === true) {
           document.getElementById('tv-nav-item').style.display='block';
-          // Mostrar controles de emisión solo si el usuario es host (is_host: true)
-          if (data.is_host === true) {
-            document.getElementById('hostControls').style.display='block';
-          }
+          if (data.is_host === true) document.getElementById('hostControls').style.display='block';
         }
       } catch(e){}
     });
