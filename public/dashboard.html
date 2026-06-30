@@ -73,8 +73,22 @@
     .btn-leave {background:rgba(245,158,11,0.18);color:#f59e0b;border:1px solid rgba(245,158,11,0.45)!important}
     .btn-fs    {background:rgba(148,163,184,0.12);color:#e2e8f0;border:1px solid rgba(148,163,184,0.3)!important}
     .btn-cast  {background:rgba(234,179,8,0.14);color:#fbbf24;border:1px solid rgba(234,179,8,0.4)!important}
-    /* Barra de controles del video */
     #dashVideoControls{display:none;gap:8px;flex-wrap:wrap;margin-top:10px;margin-bottom:4px}
+    /* Banner página independiente */
+    .stream-view-banner{
+      display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+      background:rgba(29,144,198,0.07);border:1px solid rgba(29,144,198,0.25);
+      border-radius:12px;padding:12px 16px;margin-bottom:14px;
+    }
+    .stream-view-banner .svb-text{font-size:12px;color:var(--text-muted,#94a3b8);line-height:1.5}
+    .stream-view-banner .svb-text strong{color:#4aafd4}
+    .btn-open-viewer{
+      display:inline-flex;align-items:center;gap:6px;
+      background:rgba(29,144,198,0.2);border:1px solid rgba(29,144,198,0.5);
+      border-radius:10px;padding:9px 18px;font-size:13px;font-weight:800;
+      color:#4aafd4;text-decoration:none;white-space:nowrap;transition:background 0.15s;
+    }
+    .btn-open-viewer:hover{background:rgba(29,144,198,0.35);color:#4aafd4;text-decoration:none}
   </style>
 </head>
 <body>
@@ -221,11 +235,27 @@
 
         <!-- RECEPTOR: todos con tv_access -->
         <div id="dashJoinBlock">
-          <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">¿Alguien está compartiendo su pantalla? Ingresa el código para verla aquí:</p>
+
+          <!-- Banner: abrir página independiente -->
+          <div class="stream-view-banner">
+            <div class="svb-text">
+              <strong>📺 Ver en pantalla completa o en tu TV</strong><br>
+              Abre el visor en una página dedicada con más controles.
+            </div>
+            <a id="openViewerBtn" href="stream-view.html" target="_blank" class="btn-open-viewer">
+              🔗 Abrir visor independiente
+            </a>
+          </div>
+
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">¿Alguien está compartiendo su pantalla? Ingresa el código para verla aquí mismo:</p>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
             <input type="text" id="dashJoinCodeInput" class="dash-join-input" maxlength="6" placeholder="ABC123" autocomplete="off" autocorrect="off" spellcheck="false">
-            <button class="ss-action-btn btn-watch" onclick="joinSession()">📺 Ver pantalla</button>
+            <button class="ss-action-btn btn-watch" onclick="joinSession()">📺 Ver aquí</button>
+            <button class="ss-action-btn btn-watch" style="background:rgba(29,144,198,0.1);border-color:rgba(29,144,198,0.3)!important" onclick="openViewerWithCode()">🔗 Abrir en visor</button>
           </div>
+          <p style="font-size:10px;color:var(--text-muted);margin-top:8px;margin-bottom:0">
+            ℹ️ <strong>Ver aquí</strong> muestra el video en este mismo dashboard &nbsp;·&nbsp; <strong>Abrir en visor</strong> abre la página completa en una nueva pestaña
+          </p>
         </div>
 
         <div id="dashLeaveBlock" style="display:none;margin-bottom:4px">
@@ -236,7 +266,6 @@
 
         <div id="dashRemotePreview" style="display:none;margin-top:12px">
           <video id="dashRemoteVideo" autoplay playsinline></video>
-          <!-- Controles: pantalla completa + enviar a TV -->
           <div id="dashVideoControls">
             <button class="ss-action-btn btn-fs"   onclick="toggleFullscreen('dashRemoteVideo')">⛶ Pantalla completa</button>
             <button class="ss-action-btn btn-cast" onclick="castToTV('dashRemoteVideo')">📺 Enviar a TV</button>
@@ -333,6 +362,15 @@
         }
       } catch(e){}
     });
+
+    // Abre el visor independiente pasando el código en la URL si fue escrito
+    window.openViewerWithCode = function() {
+      const code = (document.getElementById('dashJoinCodeInput')?.value || '').trim().toUpperCase();
+      const url = code.length === 6
+        ? `stream-view.html?code=${code}`
+        : 'stream-view.html';
+      window.open(url, '_blank');
+    };
 
     document.getElementById('saveNicknameBtn').addEventListener('click', async () => {
       const input=document.getElementById('nicknameInput'),msg=document.getElementById('nicknameMsg'),btn=document.getElementById('saveNicknameBtn');
