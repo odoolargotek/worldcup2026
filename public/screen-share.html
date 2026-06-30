@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compartir Pantalla — WC2026</title>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-6W7JNJCG36"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-6W7JNJCG36');
+  </script>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/sponsor.css">
+  <style>
+    .share-card {
+      background: var(--bg-card, #1c2333);
+      border: 1px solid var(--border, rgba(255,255,255,0.07));
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .share-card h6 {
+      font-weight: 800;
+      color: var(--primary-light, #4aafd4);
+      margin-bottom: 14px;
+      font-size: 1rem;
+    }
+    #localVideo, #remoteVideo {
+      width: 100%;
+      max-height: 480px;
+      border-radius: 12px;
+      background: #0a0f1a;
+      border: 1px solid var(--border, rgba(255,255,255,0.10));
+      display: block;
+    }
+    .session-code-box {
+      background: rgba(29,144,198,0.08);
+      border: 1px solid rgba(29,144,198,0.35);
+      border-radius: 10px;
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .session-code-box .code-val {
+      font-size: 1.5rem;
+      font-weight: 900;
+      letter-spacing: 4px;
+      color: #4aafd4;
+      font-family: monospace;
+    }
+    .copy-btn {
+      background: rgba(29,144,198,0.18);
+      border: 1px solid rgba(29,144,198,0.45);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #4aafd4;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .copy-btn:hover { background: rgba(29,144,198,0.32); }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 16px;
+    }
+    .status-badge.idle    { background: rgba(148,163,184,0.12); color: #94a3b8; }
+    .status-badge.active  { background: rgba(52,211,153,0.12);  color: #34d399; }
+    .status-badge.waiting { background: rgba(245,158,11,0.12);  color: #f59e0b; }
+    .status-badge.error   { background: rgba(201,52,75,0.12);   color: #f5a0ac; }
+    .status-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: currentColor;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.35} }
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted, #94a3b8);
+      font-size: 14px;
+      font-weight: 700;
+      padding: 8px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .tab-btn.active {
+      background: rgba(29,144,198,0.15);
+      color: #4aafd4;
+    }
+    .tab-btn:hover:not(.active) {
+      background: rgba(255,255,255,0.05);
+      color: var(--text, #e2e8f0);
+    }
+    .action-btn {
+      font-weight: 700;
+      font-size: 14px;
+      border-radius: 10px;
+      padding: 10px 20px;
+      border: none;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+    .action-btn:disabled { opacity: 0.45; cursor: default; }
+    .btn-share  { background: rgba(52,211,153,0.18); color: #34d399; border: 1px solid rgba(52,211,153,0.45); }
+    .btn-stop   { background: rgba(201,52,75,0.18);  color: #f5a0ac; border: 1px solid rgba(201,52,75,0.45);  }
+    .btn-watch  { background: rgba(29,144,198,0.18); color: #4aafd4; border: 1px solid rgba(29,144,198,0.45); }
+    .btn-leave  { background: rgba(245,158,11,0.18); color: #f59e0b; border: 1px solid rgba(245,158,11,0.45); }
+    #joinCodeInput {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border, rgba(255,255,255,0.12));
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 4px;
+      color: inherit;
+      text-transform: uppercase;
+      text-align: center;
+    }
+    #joinCodeInput:focus { outline: none; border-color: rgba(29,144,198,0.6); }
+    .log-area {
+      background: rgba(0,0,0,0.25);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 11px;
+      color: var(--text-muted, #94a3b8);
+      font-family: monospace;
+      max-height: 80px;
+      overflow-y: auto;
+      margin-top: 12px;
+    }
+    .access-gate {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    .access-gate .icon { font-size: 3rem; margin-bottom: 14px; }
+    .access-gate .msg { color: var(--text-muted); font-size: 0.9rem; }
+  </style>
+</head>
+<body>
+  <div class="field-pattern"></div>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek" style="height:34px;object-fit:contain;cursor:pointer;flex-shrink:0" onclick="window.open('https://www.largotek.com','_blank')">
+      <div>
+        <div style="font-weight:800">📡 Compartir Pantalla — WC2026</div>
+        <div class="navbar-powered">by Largotek</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="themeToggleBtn">☀️ Claro</button>
+      <button id="logoutBtn" class="btn btn-outline-light btn-sm">Salir</button>
+    </div>
+  </nav>
+
+  <div style="background:rgba(201,52,75,0.07);border-bottom:1px solid rgba(201,52,75,0.2);padding:6px 16px;text-align:center;font-size:11px;color:#f5a0ac">
+    ⚠️ Juego de entretenimiento privado. No es un sitio de apuestas.
+    <a href="legal.html" target="_blank" style="color:#f5a0ac;text-decoration:underline;margin-left:6px">Aviso legal completo</a>
+  </div>
+
+  <div class="sponsor-banner" style="cursor:pointer" onclick="window.open('https://www.largotek.com','_blank')">
+    <div class="sponsor-banner-accent" style="background:#1D90C6"></div>
+    <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
+    <div class="sponsor-banner-body"><span class="sponsor-banner-name">Largotek</span><span class="sponsor-banner-tagline">Soluciones Digitales</span></div>
+    <div class="sponsor-banner-dot" style="background:#1D90C6"></div>
+  </div>
+
+  <div class="container py-4">
+
+    <!-- Acceso denegado -->
+    <div id="accessDenied" class="access-gate" style="display:none">
+      <div class="icon">🔒</div>
+      <h5 style="font-weight:800;margin-bottom:8px">Acceso restringido</h5>
+      <p class="msg">Esta función está disponible solo para usuarios con acceso especial.<br>Contacta al administrador si crees que deberías tener acceso.</p>
+      <a href="dashboard.html" class="btn btn-outline-light btn-sm mt-3">← Volver al dashboard</a>
+    </div>
+
+    <!-- Contenido principal -->
+    <div id="mainContent" style="display:none">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0" style="font-weight:800">📡 Pantalla compartida</h5>
+        <a href="dashboard.html" style="font-size:13px;color:var(--text-muted);text-decoration:none">← Dashboard</a>
+      </div>
+
+      <!-- Tabs -->
+      <div class="mb-4" style="display:flex;gap:6px">
+        <button class="tab-btn active" id="tabEmitBtn" onclick="switchTab('emit')">📤 Compartir mi pantalla</button>
+        <button class="tab-btn" id="tabWatchBtn" onclick="switchTab('watch')">👁️ Ver pantalla remota</button>
+      </div>
+
+      <!-- TAB EMITIR -->
+      <div id="tabEmit">
+        <div class="share-card">
+          <h6>📤 Compartir mi escritorio</h6>
+          <div id="emitStatus" class="status-badge idle"><span class="status-dot"></span>Inactivo</div>
+          <div id="sessionCodeBlock" style="display:none">
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Comparte este código con quien quiera ver tu pantalla:</p>
+            <div class="session-code-box">
+              <div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">CÓDIGO DE SESIÓN</div>
+                <div class="code-val" id="sessionCodeDisplay">——</div>
+              </div>
+              <button class="copy-btn" onclick="copyCode()">📋 Copiar</button>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+            <button class="action-btn btn-share" id="startShareBtn" onclick="startSharing()">🖥️ Empezar a compartir</button>
+            <button class="action-btn btn-stop" id="stopShareBtn" onclick="stopSharing()" disabled>⏹️ Detener</button>
+          </div>
+          <div id="localPreview" style="display:none">
+            <p style="font-size:11px;color:var(--text-muted);margin-bottom:6px">Vista previa (lo que están viendo):</p>
+            <video id="localVideo" autoplay playsinline muted></video>
+          </div>
+          <div id="emitLog" class="log-area"></div>
+        </div>
+      </div>
+
+      <!-- TAB VER -->
+      <div id="tabWatch" style="display:none">
+        <div class="share-card">
+          <h6>👁️ Ver pantalla remota</h6>
+          <div id="watchStatus" class="status-badge idle"><span class="status-dot"></span>Inactivo</div>
+          <div id="joinBlock">
+            <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Ingresa el código que te dio el emisor:</p>
+            <input type="text" id="joinCodeInput" maxlength="6" placeholder="ABC123" autocomplete="off" autocorrect="off" spellcheck="false" style="width:180px;display:block;margin-bottom:12px">
+            <button class="action-btn btn-watch" id="watchBtn" onclick="joinSession()">📺 Conectar y ver</button>
+          </div>
+          <div id="leaveBlock" style="display:none;margin-bottom:14px">
+            <button class="action-btn btn-leave" id="leaveBtn" onclick="leaveSession()">🚪 Salir de la sesión</button>
+          </div>
+          <div id="remotePreview" style="display:none;margin-top:16px">
+            <p style="font-size:11px;color:var(--text-muted);margin-bottom:6px">Pantalla del emisor:</p>
+            <video id="remoteVideo" autoplay playsinline></video>
+          </div>
+          <div id="watchLog" class="log-area"></div>
+        </div>
+      </div>
+
+    </div><!-- /mainContent -->
+  </div><!-- /container -->
+
+  <div class="footer-brand">
+    ⚽ WC2026 &nbsp;— Desarrollado por <strong style="color:var(--primary-light)">Largotek</strong>
+    <div style="margin-top:6px;font-size:10px;color:rgba(148,163,184,0.4)">
+      Juego de entretenimiento privado — No es un sitio de apuestas —
+      <a href="legal.html" target="_blank" style="color:rgba(148,163,184,0.4);text-decoration:underline">Términos de uso</a>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module" src="js/firebase-config.js"></script>
+  <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/screen-share.js"></script>
+</body>
+</html>
