@@ -1,322 +1,233 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Panel Admin — WC2026</title>
-  <script src="js/theme.js"></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Hub · WC2026</title>
+  <link rel="stylesheet" href="css/styles.css" />
   <style>
-    body { min-height: 100vh; }
-
-    .hub-hero {
-      text-align: center;
-      padding: 36px 20px 24px;
-    }
-    .hub-hero-title {
-      font-size: 2rem;
-      font-weight: 900;
-      background: linear-gradient(135deg, #f59e0b, #fbbf24, #34d399);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 6px;
-    }
-    .hub-hero-sub {
-      font-size: 13px;
-      color: var(--text-muted, #94a3b8);
-    }
-    .hub-user-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(245,158,11,0.1);
-      border: 1px solid rgba(245,158,11,0.25);
-      border-radius: 20px;
-      padding: 6px 16px;
-      font-size: 13px;
-      font-weight: 700;
-      color: #f59e0b;
-      margin-top: 10px;
-    }
-
-    .section-label {
-      font-size: 11px;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: var(--text-muted, #94a3b8);
-      margin: 28px 0 12px;
-      padding-left: 4px;
-    }
-
-    .tool-card {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.07);
-      border-radius: 16px;
-      padding: 18px 20px;
-      text-decoration: none;
-      color: inherit;
-      transition: all 0.18s ease;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-    }
-    .tool-card::before {
-      content: '';
-      position: absolute;
-      left: 0; top: 0; bottom: 0;
-      width: 3px;
-      background: var(--card-accent, #4aafd4);
-      border-radius: 3px 0 0 3px;
-      opacity: 0;
-      transition: opacity 0.18s;
-    }
-    .tool-card:hover {
-      background: rgba(255,255,255,0.06);
-      border-color: var(--card-accent, #4aafd4);
-      color: inherit;
-      text-decoration: none;
-      transform: translateY(-1px);
-    }
-    .tool-card:hover::before { opacity: 1; }
-
-    .tool-icon {
-      font-size: 1.8rem;
-      flex-shrink: 0;
-      width: 48px;
-      height: 48px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--icon-bg, rgba(74,175,212,0.1));
+    body { background: var(--bg, #0f172a); color: var(--text, #f1f5f9); font-family: system-ui, sans-serif; padding: 20px; }
+    h1  { font-size: 1.6rem; font-weight: 900; color: var(--gold, #f59e0b); margin-bottom: 4px; }
+    .subtitle { font-size: 0.85rem; color: var(--text-muted, #94a3b8); margin-bottom: 28px; }
+    h2  { font-size: 0.75rem; font-weight: 800; letter-spacing: 2px; text-transform: uppercase;
+          color: var(--text-muted, #94a3b8); margin: 28px 0 10px; border-bottom: 1px solid rgba(255,255,255,0.07); padding-bottom: 6px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; }
+    .card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
       border-radius: 12px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transition: background 0.15s, border-color 0.15s;
     }
-    .tool-info { flex: 1; min-width: 0; }
-    .tool-title {
-      font-weight: 800;
-      font-size: 0.95rem;
-      color: #f1f5f9;
-      margin-bottom: 3px;
-    }
-    .tool-desc {
-      font-size: 12px;
-      color: var(--text-muted, #94a3b8);
-      line-height: 1.4;
-    }
-    .tool-arrow {
-      font-size: 1.1rem;
-      color: var(--text-muted, #94a3b8);
-      flex-shrink: 0;
-      transition: transform 0.15s;
-    }
-    .tool-card:hover .tool-arrow { transform: translateX(4px); }
-
-    .tool-badge {
-      font-size: 10px;
-      font-weight: 800;
+    .card:hover { background: rgba(255,255,255,0.08); border-color: rgba(245,158,11,0.4); }
+    .card .icon { font-size: 1.6rem; line-height: 1; }
+    .card .label { font-size: 0.9rem; font-weight: 700; color: var(--text, #f1f5f9); }
+    .card .desc  { font-size: 0.75rem; color: var(--text-muted, #94a3b8); line-height: 1.4; }
+    .card a {
+      display: inline-block;
+      margin-top: 6px;
+      background: rgba(245,158,11,0.15);
+      border: 1px solid rgba(245,158,11,0.35);
+      color: var(--gold, #f59e0b);
       border-radius: 20px;
-      padding: 2px 9px;
-      flex-shrink: 0;
+      padding: 4px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      text-decoration: none;
+      width: fit-content;
     }
-    .badge-new  { background: rgba(52,211,153,0.15); color: #34d399; border: 1px solid rgba(52,211,153,0.3); }
-    .badge-tool { background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
-
-    #accessDenied {
-      display: none;
-      text-align: center;
-      padding: 80px 20px;
-    }
+    .card a:hover { background: rgba(245,158,11,0.28); }
+    .card.danger  { border-color: rgba(239,68,68,0.2); }
+    .card.danger a { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.35); color: #f87171; }
+    .card.danger a:hover { background: rgba(239,68,68,0.25); }
+    .card.muted a  { background: rgba(100,116,139,0.15); border-color: rgba(100,116,139,0.3); color: #94a3b8; }
   </style>
 </head>
 <body>
-  <nav class="navbar" style="background: linear-gradient(135deg,#0d1117,#1a1a2e) !important; border-color: rgba(245,158,11,0.3)">
-    <div class="navbar-brand">
-      <div>
-        <div style="font-weight:900;font-size:1.05rem">🏆 WC2026 — Panel Admin</div>
-        <div class="navbar-powered">by Largotek</div>
-      </div>
-    </div>
-    <div class="d-flex gap-2 align-items-center">
-      <button id="themeToggleBtn">☀️ Claro</button>
-      <a href="dashboard.html" class="btn btn-outline-light btn-sm">🏠 Inicio</a>
-      <button id="logoutBtn" class="btn btn-outline-danger btn-sm d-none">Salir</button>
-    </div>
-  </nav>
 
-  <!-- ACCESO DENEGADO -->
-  <div id="accessDenied">
-    <div style="font-size:3rem;margin-bottom:16px">🔒</div>
-    <div style="font-weight:800;font-size:1.2rem;color:#f87171;margin-bottom:8px">Acceso restringido</div>
-    <div style="font-size:13px;color:var(--text-muted)">Esta página es solo para administradores.</div>
-    <a href="dashboard.html" class="btn btn-outline-light mt-4">← Volver al inicio</a>
+<h1>⚙️ Admin Hub</h1>
+<p class="subtitle">Panel central de administración · World Cup 2026</p>
+
+<!-- ── PRINCIPAL ─────────────────────────────────── -->
+<h2>🏠 Principal</h2>
+<div class="grid">
+
+  <div class="card">
+    <div class="icon">🎛️</div>
+    <div class="label">Panel General</div>
+    <div class="desc">Carga resultados, gestiona partidos, TV y streams en vivo.</div>
+    <a href="admin.html" target="_blank">Abrir</a>
   </div>
 
-  <!-- CONTENIDO ADMIN -->
-  <div id="adminContent" style="display:none">
-    <div class="hub-hero">
-      <div class="hub-hero-title">🛠️ Panel de Administración</div>
-      <div class="hub-hero-sub">Todas las herramientas de gestión en un solo lugar</div>
-      <div class="hub-user-badge">👑 Super Admin &nbsp;<span id="adminName" style="font-weight:600;color:#fbbf24"></span></div>
-    </div>
-
-    <div class="container pb-5" style="max-width:780px">
-
-      <!-- PARTIDOS -->
-      <div class="section-label">⚽ Partidos y resultados</div>
-      <div class="d-flex flex-column gap-3">
-
-        <a href="admin.html" class="tool-card" style="--card-accent:#4aafd4;--icon-bg:rgba(74,175,212,0.1)">
-          <div class="tool-icon">⚙️</div>
-          <div class="tool-info">
-            <div class="tool-title">Administrador principal</div>
-            <div class="tool-desc">Gestionar partidos, resultados, grupos de usuarios, configuración general</div>
-          </div>
-          <div class="tool-arrow">→</div>
-        </a>
-
-        <a href="admin-kickoffs.html" class="tool-card" style="--card-accent:#f59e0b;--icon-bg:rgba(245,158,11,0.1)">
-          <div class="tool-icon">⏰</div>
-          <div class="tool-info">
-            <div class="tool-title">Horarios y kickoffs</div>
-            <div class="tool-desc">Actualizar fechas y horas de inicio de los partidos masivamente</div>
-          </div>
-          <div class="tool-arrow">→</div>
-        </a>
-
-        <a href="load-matches.html" class="tool-card" style="--card-accent:#a78bfa;--icon-bg:rgba(167,139,250,0.1)">
-          <div class="tool-icon">📥</div>
-          <div class="tool-info">
-            <div class="tool-title">Cargar partidos</div>
-            <div class="tool-desc">Importar partidos desde JSON o carga masiva inicial</div>
-          </div>
-          <div class="tool-arrow">→</div>
-        </a>
-
-      </div>
-
-      <!-- PRONOSTICOS -->
-      <div class="section-label">📊 Pronósticos y puntaje</div>
-      <div class="d-flex flex-column gap-3">
-
-        <a href="admin-predictions.html" class="tool-card" style="--card-accent:#34d399;--icon-bg:rgba(52,211,153,0.1)">
-          <div class="tool-icon">✏️</div>
-          <div class="tool-info">
-            <div class="tool-title">Editor de pronósticos</div>
-            <div class="tool-desc">Ver y editar los pronósticos de cada jugador por grupo y partido</div>
-          </div>
-          <div class="tool-arrow">→</div>
-        </a>
-
-        <a href="admin-report.html" class="tool-card" style="--card-accent:#f87171;--icon-bg:rgba(248,113,113,0.1)">
-          <div class="tool-icon">📊</div>
-          <div class="tool-info">
-            <div class="tool-title">Reporte de puntos</div>
-            <div class="tool-desc">Ver tabla de posiciones y puntos acumulados por grupo</div>
-          </div>
-          <div class="tool-arrow">→</div>
-        </a>
-
-        <a href="admin-fix-predictions.html" class="tool-card" style="--card-accent:#fb923c;--icon-bg:rgba(251,146,60,0.1)">
-          <div class="tool-icon">🔧</div>
-          <div class="tool-info">
-            <div class="tool-title">Migrar pronósticos</div>
-            <div class="tool-desc">Detectar y corregir pronósticos con ID incorrecto (autogenerado por Firestore)</div>
-          </div>
-          <span class="tool-badge badge-tool">🛠️ Utilidad</span>
-          <div class="tool-arrow">→</div>
-        </a>
-
-      </div>
-
-      <!-- COMUNICACION -->
-      <div class="section-label">💬 Comunicación</div>
-      <div class="d-flex flex-column gap-3">
-
-        <a href="admin-messages.html" class="tool-card" style="--card-accent:#c084fc;--icon-bg:rgba(192,132,252,0.1)">
-          <div class="tool-icon">💬</div>
-          <div class="tool-info">
-            <div class="tool-title">Mensajes de bienvenida</div>
-            <div class="tool-desc">Crear mensajes que aparecen al usuario al ingresar — globales o personalizados</div>
-          </div>
-          <span class="tool-badge badge-new">✨ Nuevo</span>
-          <div class="tool-arrow">→</div>
-        </a>
-
-      </div>
-
-      <!-- ACCESOS RAPIDOS -->
-      <div class="section-label">🔗 Accesos rápidos externos</div>
-      <div class="d-flex flex-column gap-3">
-
-        <a href="https://console.firebase.google.com" target="_blank" class="tool-card" style="--card-accent:#f59e0b;--icon-bg:rgba(245,158,11,0.08)">
-          <div class="tool-icon">🔥</div>
-          <div class="tool-info">
-            <div class="tool-title">Firebase Console</div>
-            <div class="tool-desc">Firestore, Auth, Hosting, Reglas — consola oficial de Google Firebase</div>
-          </div>
-          <div class="tool-arrow">↗</div>
-        </a>
-
-        <a href="https://github.com/odoolargotek/worldcup2026" target="_blank" class="tool-card" style="--card-accent:#94a3b8;--icon-bg:rgba(148,163,184,0.08)">
-          <div class="tool-icon">💙</div>
-          <div class="tool-info">
-            <div class="tool-title">Repositorio GitHub</div>
-            <div class="tool-desc">Código fuente, commits, historial de cambios</div>
-          </div>
-          <div class="tool-arrow">↗</div>
-        </a>
-
-      </div>
-
-    </div>
+  <div class="card">
+    <div class="icon">📊</div>
+    <div class="label">Reporte</div>
+    <div class="desc">Resumen de grupos, pronósticos y puntuaciones globales.</div>
+    <a href="admin-report.html" target="_blank">Abrir</a>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script type="module" src="js/firebase-config.js"></script>
-  <script type="module">
-    import { auth, db } from './js/firebase-config.js';
-    import { onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
-    import { doc, getDoc } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+  <div class="card">
+    <div class="icon">💬</div>
+    <div class="label">Mensajes</div>
+    <div class="desc">Envía mensajes y notificaciones a los usuarios.</div>
+    <a href="admin-messages.html" target="_blank">Abrir</a>
+  </div>
 
-    const SUPER_ADMIN_UID = 'j4nrnj5mFfYkwXSbXYs46MqFf2p2';
+  <div class="card">
+    <div class="icon">🔮</div>
+    <div class="label">Pronósticos</div>
+    <div class="desc">Vista completa de todos los pronósticos por partido y grupo.</div>
+    <a href="admin-predictions.html" target="_blank">Abrir</a>
+  </div>
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) { window.location.href = 'index.html'; return; }
+</div>
 
-      if (user.uid !== SUPER_ADMIN_UID) {
-        document.getElementById('accessDenied').style.display = 'block';
-        return;
-      }
+<!-- ── PARTIDOS ─────────────────────────────────── -->
+<h2>⚽ Partidos</h2>
+<div class="grid">
 
-      document.getElementById('adminContent').style.display = 'block';
-      document.getElementById('logoutBtn').classList.remove('d-none');
+  <div class="card">
+    <div class="icon">⏰</div>
+    <div class="label">Kickoffs</div>
+    <div class="desc">Ajusta horarios y kickoffs de los partidos.</div>
+    <a href="admin-kickoffs.html" target="_blank">Abrir</a>
+  </div>
 
-      const snap = await getDoc(doc(db, 'users', user.uid));
-      const name = snap.exists() ? (snap.data().display_name || user.email) : user.email;
-      document.getElementById('adminName').textContent = name;
-    });
+  <div class="card">
+    <div class="icon">🏆</div>
+    <div class="label">Set Winner</div>
+    <div class="desc">Asigna el equipo ganador de la quiniela al cierre del torneo.</div>
+    <a href="admin-set-winner.html" target="_blank">Abrir</a>
+  </div>
 
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      await signOut(auth);
-      window.location.href = 'index.html';
-    });
+  <div class="card">
+    <div class="icon">📋</div>
+    <div class="label">Carga masiva</div>
+    <div class="desc">Sube partidos en bloque desde JSON o formulario.</div>
+    <a href="load-matches.html" target="_blank">Abrir</a>
+  </div>
 
-    // Theme toggle
-    const btn = document.getElementById('themeToggleBtn');
-    if (btn) {
-      const updateLabel = () => { btn.textContent = document.body.classList.contains('theme-light') ? '🌙 Oscuro' : '☀️ Claro'; };
-      updateLabel();
-      btn.addEventListener('click', () => {
-        document.body.classList.toggle('theme-light');
-        localStorage.setItem('theme', document.body.classList.contains('theme-light') ? 'light' : 'dark');
-        updateLabel();
-      });
-    }
-  </script>
+  <div class="card">
+    <div class="icon">🔍</div>
+    <div class="label">Auditoría partidos</div>
+    <div class="desc">Verifica integridad y consistencia de los partidos cargados.</div>
+    <a href="audit-matches.html" target="_blank">Abrir</a>
+  </div>
+
+</div>
+
+<!-- ── HERRAMIENTAS DE FIX ──────────────────────── -->
+<h2>🔧 Herramientas de Fix</h2>
+<div class="grid">
+
+  <div class="card">
+    <div class="icon">🩹</div>
+    <div class="label">Fix Pronósticos</div>
+    <div class="desc">Recalcula o corrige pronósticos mal registrados.</div>
+    <a href="admin-fix-predictions.html" target="_blank">Abrir</a>
+  </div>
+
+  <div class="card">
+    <div class="icon">🗓️</div>
+    <div class="label">Fix R32 · Kickoffs</div>
+    <div class="desc">Corrige los horarios de los partidos de R32.</div>
+    <a href="admin-fix-r32-kickoffs.html" target="_blank">Abrir</a>
+  </div>
+
+  <div class="card">
+    <div class="icon">➕</div>
+    <div class="label">Fix R32 · Faltantes</div>
+    <div class="desc">Agrega partidos de R32 que faltan en Firestore.</div>
+    <a href="admin-fix-r32-missing.html" target="_blank">Abrir</a>
+  </div>
+
+  <div class="card">
+    <div class="icon">✅</div>
+    <div class="label">Fix R32 · Final</div>
+    <div class="desc">Revisión final de datos de R32 antes del cierre.</div>
+    <a href="admin-fix-r32-final.html" target="_blank">Abrir</a>
+  </div>
+
+  <div class="card">
+    <div class="icon">🇨🇭</div>
+    <div class="label">Fix Suiza-Argelia</div>
+    <div class="desc">Corrección específica del partido Suiza vs Argelia.</div>
+    <a href="admin-fix-suiza-argelia.html" target="_blank">Abrir</a>
+  </div>
+
+  <div class="card">
+    <div class="icon">🗑️</div>
+    <div class="label">Eliminar Octavos ×1</div>
+    <div class="desc">Borra partidos de octavos duplicados o incorrectos (v1).</div>
+    <a href="admin-fix-delete-bad-octavos.html" target="_blank">Abrir</a>
+  </div>
+
+  <div class="card">
+    <div class="icon">🗑️</div>
+    <div class="label">Eliminar Octavos ×2</div>
+    <div class="desc">Segunda pasada de limpieza de octavos incorrectos (v2).</div>
+    <a href="admin-fix-delete-bad-octavos2.html" target="_blank">Abrir</a>
+  </div>
+
+  <div class="card">
+    <div class="icon">🕐</div>
+    <div class="label">Fix Timezone</div>
+    <div class="desc">Normaliza zonas horarias de los kickoffs en Firestore.</div>
+    <a href="fix-kickoff-timezone.html" target="_blank">Abrir</a>
+  </div>
+
+  <div class="card">
+    <div class="icon">🏳️</div>
+    <div class="label">Fix Equipos R32</div>
+    <div class="desc">Actualiza nombres de equipos en partidos de R32.</div>
+    <a href="fix-r32-teams.html" target="_blank">Abrir</a>
+  </div>
+
+  <div class="card">
+    <div class="icon">🧹</div>
+    <div class="label">Cleanup general</div>
+    <div class="desc">Limpieza de documentos huérfanos o corruptos.</div>
+    <a href="admin-cleanup.html" target="_blank">Abrir</a>
+  </div>
+
+  <div class="card">
+    <div class="icon">🐛</div>
+    <div class="label">Debug Nueva York</div>
+    <div class="desc">Diagnóstico de partidos con sede en Nueva York.</div>
+    <a href="admin-debug-nueva-york.html" target="_blank">Abrir</a>
+  </div>
+
+</div>
+
+<!-- ── MIGRACIONES ──────────────────────────────── -->
+<h2>🔄 Migraciones</h2>
+<div class="grid">
+
+  <div class="card muted">
+    <div class="icon">📦</div>
+    <div class="label">Migrar Grupos Stage</div>
+    <div class="desc">Migra el campo <code>stage</code> en la colección de grupos.</div>
+    <a href="migrate-groups-stage.html" target="_blank">Abrir</a>
+  </div>
+
+  <div class="card muted">
+    <div class="icon">🔀</div>
+    <div class="label">Migrar Match Types</div>
+    <div class="desc">Agrega el tipo de partido a documentos existentes.</div>
+    <a href="migrate-match-types.html" target="_blank">Abrir</a>
+  </div>
+
+  <div class="card muted">
+    <div class="icon">⭐</div>
+    <div class="label">Recalc Favoritos</div>
+    <div class="desc">Recalcula puntos de todos los grupos con favorito.</div>
+    <a href="recalc-all-favorites.html" target="_blank">Abrir</a>
+  </div>
+
+</div>
+
 </body>
 </html>
