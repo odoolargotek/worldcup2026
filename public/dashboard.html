@@ -11,6 +11,7 @@
     gtag('js', new Date());
     gtag('config', 'G-6W7JNJCG36');
   </script>
+  <script src="js/i18n.js"></script>
   <script src="js/theme.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="css/style.css">
@@ -47,7 +48,6 @@
     #dashTabs .nav-link{color:var(--text-muted,#94a3b8);font-size:14px;font-weight:600;border:none;padding:8px 16px;border-radius:8px}
     #dashTabs .nav-link.active{background:rgba(29,144,198,0.15);color:#4aafd4}
     #dashTabs .nav-link:hover:not(.active){background:rgba(255,255,255,0.05);color:var(--text,#e2e8f0)}
-    /* --- Screen share --- */
     .screen-share-card{background:var(--bg-card,#1c2333);border:1px solid rgba(29,144,198,0.2);border-radius:14px;padding:18px;margin-top:20px}
     .screen-share-card h6{font-weight:800;color:var(--primary-light,#4aafd4);margin-bottom:12px;font-size:0.95rem}
     .status-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:4px 12px;border-radius:20px;margin-bottom:14px}
@@ -74,7 +74,6 @@
     .btn-fs    {background:rgba(148,163,184,0.12);color:#e2e8f0;border:1px solid rgba(148,163,184,0.3)!important}
     .btn-cast  {background:rgba(234,179,8,0.14);color:#fbbf24;border:1px solid rgba(234,179,8,0.4)!important}
     #dashVideoControls{display:none;gap:8px;flex-wrap:wrap;margin-top:10px;margin-bottom:4px}
-    /* Banner página independiente */
     .stream-view-banner{
       display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
       background:rgba(29,144,198,0.07);border:1px solid rgba(29,144,198,0.25);
@@ -97,75 +96,117 @@
     <div class="navbar-brand">
       <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek" style="height:34px;object-fit:contain;cursor:pointer;flex-shrink:0" onclick="window.open('https://www.largotek.com','_blank')">
       <div>
-        <div style="font-weight:800">⚽ WC2026 — Mis Grupos</div>
+        <div style="font-weight:800">⚽ WC2026 — <span data-i18n="nav.dashboard">Mis Grupos</span></div>
         <div class="navbar-powered">by Largotek</div>
       </div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
-      <button id="themeToggleBtn">☀️ Claro</button>
-      <button id="logoutBtn" class="btn btn-outline-light btn-sm">Salir</button>
+      <button id="langToggleBtn" class="btn btn-outline-light btn-sm">🇺🇸 EN</button>
+      <button id="themeToggleBtn" class="btn btn-outline-light btn-sm">☀️ Claro</button>
+      <button id="logoutBtn" class="btn btn-outline-light btn-sm" data-i18n="nav.logout">Salir</button>
     </div>
   </nav>
+
   <div style="background:rgba(201,52,75,0.07);border-bottom:1px solid rgba(201,52,75,0.2);padding:6px 16px;text-align:center;font-size:11px;color:#f5a0ac">
-    ⚠️ Juego de entretenimiento privado. No es un sitio de apuestas. No se administra ni garantiza premios.
-    <a href="legal.html" target="_blank" style="color:#f5a0ac;text-decoration:underline;margin-left:6px">Aviso legal completo</a>
+    <span data-i18n="legal.disclaimer">⚠️ Juego de entretenimiento privado. No es un sitio de apuestas. No se administra ni garantiza premios.</span>
+    <a href="legal.html" target="_blank" style="color:#f5a0ac;text-decoration:underline;margin-left:6px" data-i18n="legal.full_notice">Aviso legal completo</a>
   </div>
+
   <div class="sponsor-banner" style="cursor:pointer" onclick="window.open('https://www.largotek.com','_blank')">
     <div class="sponsor-banner-accent" style="background:#1D90C6"></div>
     <img src="https://www.largotek.com/web/image/website/2/logo/www.largotek.com?unique=276cda1" alt="Largotek">
-    <div class="sponsor-banner-body"><span class="sponsor-banner-name">Largotek</span><span class="sponsor-banner-tagline">Soluciones Digitales</span></div>
+    <div class="sponsor-banner-body">
+      <span class="sponsor-banner-name">Largotek</span>
+      <span class="sponsor-banner-tagline" data-i18n="sponsor.tagline">Soluciones Digitales</span>
+    </div>
     <div class="sponsor-banner-dot" style="background:#1D90C6"></div>
   </div>
 
   <div class="container py-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h5 class="mb-0" style="font-weight:800">🏆 Mis grupos</h5>
+      <h5 class="mb-0" style="font-weight:800">🏆 <span data-i18n="dash.my_groups">Mis grupos</span></h5>
       <span id="userEmail" style="color:var(--text-muted);font-size:0.85rem"></span>
     </div>
+
     <ul class="nav" id="dashTabs">
-      <li class="nav-item"><button class="nav-link active" id="tab-comparsas-btn" onclick="switchDashTab('comparsas')">🏆 Grupos</button></li>
-      <li class="nav-item" id="tv-nav-item"><button class="nav-link" id="tab-tv-btn" onclick="switchDashTab('tv')">📺 Ver en vivo</button></li>
+      <li class="nav-item">
+        <button class="nav-link active" id="tab-comparsas-btn" onclick="switchDashTab('comparsas')">
+          🏆 <span data-i18n="dash.tab.groups">Grupos</span>
+        </button>
+      </li>
+      <li class="nav-item" id="tv-nav-item">
+        <button class="nav-link" id="tab-tv-btn" onclick="switchDashTab('tv')">
+          📺 <span data-i18n="dash.tab.tv">Ver en vivo</span>
+        </button>
+      </li>
     </ul>
 
     <!-- TAB: Grupos -->
     <div id="tab-comparsas">
       <div id="nicknameBanner">
-        <div class="nick-title">👤 ¡Pónle tu nombre o apodo!</div>
-        <div class="nick-sub">Apareces como "Sin nombre" en los grupos. Escribe cómo quieres que te vean los demás.</div>
+        <div class="nick-title">👤 <span data-i18n="dash.nickname_title">¡Pónle tu nombre o apodo!</span></div>
+        <div class="nick-sub" data-i18n="dash.nickname_desc">Apareces como "Sin nombre" en los grupos. Escribe cómo quieres que te vean los demás.</div>
         <div class="nick-row">
-          <input type="text" id="nicknameInput" maxlength="30" placeholder="Tu apodo o nombre..." autocomplete="off" autocorrect="off" spellcheck="false">
-          <button id="saveNicknameBtn">✅ Guardar</button>
+          <input type="text" id="nicknameInput" maxlength="30"
+                 data-i18n="dash.your_name" data-i18n-attr="placeholder"
+                 placeholder="Tu apodo o nombre..." autocomplete="off" autocorrect="off" spellcheck="false">
+          <button id="saveNicknameBtn">✅ <span data-i18n="dash.save_name">Guardar</span></button>
         </div>
         <div id="nicknameMsg"></div>
       </div>
+
       <div id="groupLoadingState">
-        <div class="loading-label"><span class="dot"></span><span class="dot"></span><span class="dot"></span>Cargando tus grupos, espera un momento...</div>
+        <div class="loading-label">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span data-i18n="dash.loading_groups">Cargando tus grupos, espera un momento...</span>
+        </div>
         <div class="skeleton-card"><div class="skeleton-line title"></div><div class="skeleton-line sub"></div><div class="skeleton-line badge"></div><div class="skeleton-line btn"></div></div>
         <div class="skeleton-card"><div class="skeleton-line title" style="width:45%"></div><div class="skeleton-line sub" style="width:30%"></div><div class="skeleton-line badge"></div><div class="skeleton-line btn"></div></div>
       </div>
+
       <div id="groupList" class="row g-3 mb-4" style="display:none"></div>
+
       <div class="row g-3">
+        <!-- Crear grupo -->
         <div class="col-md-6"><div class="card p-4">
-          <h6 style="color:var(--primary-light);font-weight:700" class="mb-3">➕ Crear grupo</h6>
-          <input type="text" id="newGroupName" class="form-control mb-2" placeholder="Nombre del grupo">
+          <h6 style="color:var(--primary-light);font-weight:700" class="mb-3">➕ <span data-i18n="dash.create_group">Crear grupo</span></h6>
+          <input type="text" id="newGroupName" class="form-control mb-2"
+                 data-i18n="dash.group_name" data-i18n-attr="placeholder" placeholder="Nombre del grupo">
           <select id="newGroupStage" class="form-select mb-2">
-            <option value="">-- Etapa de inicio --</option>
-            <option value="Grupos">Fase de Grupos</option>
-            <option value="Ronda de 32">🆕 Ronda de 32 (actual)</option>
-            <option value="Octavos">Desde Octavos</option>
-            <option value="Cuartos">Desde Cuartos</option>
-            <option value="Semifinal">Desde Semifinal</option>
-            <option value="Final">Solo Final</option>
+            <option value="" data-i18n="dash.stage_placeholder">-- Etapa de inicio --</option>
+            <option value="Grupos" data-i18n="phase.Grupos">Fase de Grupos</option>
+            <option value="Ronda de 32" data-i18n="phase.R32">Ronda de 32 (actual)</option>
+            <option value="Octavos" data-i18n="phase.Octavos">Desde Octavos</option>
+            <option value="Cuartos" data-i18n="phase.Cuartos">Desde Cuartos</option>
+            <option value="Semifinal" data-i18n="phase.Semifinales">Desde Semifinal</option>
+            <option value="Final" data-i18n="phase.Final">Solo Final</option>
           </select>
-          <select id="newGroupCurrency" class="form-select mb-2"><option value="USD">💵 USD — Dólares americanos ($)</option><option value="BOB">🇧🇴 BOB — Bolivianos (Bs.)</option></select>
-          <select id="newGroupType" class="form-select mb-2"><option value="open">🌐 Abierta — Pozo acumulable</option><option value="closed">🔒 Cerrada — Premio fijo</option></select>
-          <div id="openFields"><input type="number" id="newGroupFeeOpen" class="form-control mb-2" placeholder="Cuota por participante"></div>
-          <div id="closedFields" class="d-none">
-            <input type="number" id="newGroupPrizeClosed" class="form-control mb-2" placeholder="Premio total fijo">
-            <input type="number" id="newGroupFee" class="form-control mb-2" placeholder="Cuota por participante (opcional)">
-            <input type="number" id="newGroupMax" class="form-control mb-2" placeholder="Máx. participantes" min="2">
+          <select id="newGroupCurrency" class="form-select mb-2">
+            <option value="USD">💵 USD — <span data-i18n="dash.usd_label">Dólares americanos ($)</span></option>
+            <option value="BOB">🇧🇴 BOB — <span data-i18n="dash.bob_label">Bolivianos (Bs.)</span></option>
+          </select>
+          <select id="newGroupType" class="form-select mb-2">
+            <option value="open">🌐 <span data-i18n="dash.type.open">Abierta — Pozo acumulable</span></option>
+            <option value="closed">🔒 <span data-i18n="dash.type.closed">Cerrada — Premio fijo</span></option>
+          </select>
+          <div id="openFields">
+            <input type="number" id="newGroupFeeOpen" class="form-control mb-2"
+                   data-i18n="dash.fee" data-i18n-attr="placeholder" placeholder="Cuota por participante">
           </div>
-          <select id="newGroupDist" class="form-select mb-2"><option value="winner">🥇 Todo al 1° lugar (100%)</option><option value="top2">🥇🥈 Top 2: 70% / 30%</option><option value="top3">🥇🥈🥉 Top 3: 60% / 30% / 10%</option><option value="custom">⚙️ Personalizado</option></select>
+          <div id="closedFields" class="d-none">
+            <input type="number" id="newGroupPrizeClosed" class="form-control mb-2"
+                   data-i18n="dash.prize" data-i18n-attr="placeholder" placeholder="Premio total fijo">
+            <input type="number" id="newGroupFee" class="form-control mb-2"
+                   data-i18n="dash.fee_optional" data-i18n-attr="placeholder" placeholder="Cuota por participante (opcional)">
+            <input type="number" id="newGroupMax" class="form-control mb-2"
+                   data-i18n="dash.max_members" data-i18n-attr="placeholder" placeholder="Máx. participantes" min="2">
+          </div>
+          <select id="newGroupDist" class="form-select mb-2">
+            <option value="winner">🥇 <span data-i18n="dash.dist.winner">Todo al 1° lugar (100%)</span></option>
+            <option value="top2">🥇🥈 <span data-i18n="dash.dist.top2">Top 2: 70% / 30%</span></option>
+            <option value="top3">🥇🥈🥉 <span data-i18n="dash.dist.top3">Top 3: 60% / 30% / 10%</span></option>
+            <option value="custom">⚙️ <span data-i18n="dash.dist.custom">Personalizado</span></option>
+          </select>
           <div id="customDistFields" class="d-none mb-2">
             <div class="d-flex gap-2">
               <div class="flex-fill"><label style="font-size:11px;color:var(--text-muted)">🥇 1° %</label><input type="number" id="distP1" class="form-control" placeholder="60"></div>
@@ -174,14 +215,18 @@
             </div>
             <div id="distError" style="font-size:11px;color:var(--accent);margin-top:4px"></div>
           </div>
-          <button id="createGroupBtn" class="btn btn-success w-100 mt-1">⚽ Crear grupo</button>
+          <button id="createGroupBtn" class="btn btn-success w-100 mt-1">⚽ <span data-i18n="dash.btn.create">Crear grupo</span></button>
           <div id="createMsg" class="mt-2"></div>
         </div></div>
+
+        <!-- Unirse a grupo -->
         <div class="col-md-6"><div class="card p-4">
-          <h6 style="color:var(--gold);font-weight:700" class="mb-3">🔗 Unirse a un grupo</h6>
-          <p style="font-size:0.83rem;color:var(--text-muted)">Pide el código de 6 letras al dueño e ingrésalo aquí.</p>
-          <input type="text" id="joinCode" class="form-control mb-3" placeholder="Código (ej: AB3X7Z)" style="letter-spacing:3px;font-weight:700;text-transform:uppercase">
-          <button id="joinGroupBtn" class="btn btn-warning w-100">🔗 Unirse</button>
+          <h6 style="color:var(--gold);font-weight:700" class="mb-3">🔗 <span data-i18n="dash.join_group">Unirse a un grupo</span></h6>
+          <p style="font-size:0.83rem;color:var(--text-muted)" data-i18n="dash.join_desc">Pide el código de 6 letras al dueño e ingrésalo aquí.</p>
+          <input type="text" id="joinCode" class="form-control mb-3"
+                 data-i18n="dash.code_placeholder" data-i18n-attr="placeholder"
+                 placeholder="Código (ej: AB3X7Z)" style="letter-spacing:3px;font-weight:700;text-transform:uppercase">
+          <button id="joinGroupBtn" class="btn btn-warning w-100">🔗 <span data-i18n="dash.btn.join">Unirse</span></button>
           <div id="joinMsg" class="mt-2"></div>
         </div></div>
       </div>
@@ -190,43 +235,50 @@
     <!-- TAB: Ver en vivo -->
     <div id="tab-tv" style="display:none">
       <div style="margin-bottom:16px">
-        <h6 style="font-weight:800;margin-bottom:4px">📺 Partidos en vivo</h6>
-        <p style="font-size:12px;color:var(--text-muted);margin:0">Haz clic en el link de tu idioma preferido para abrir el stream en una nueva pestaña.</p>
+        <h6 style="font-weight:800;margin-bottom:4px">📺 <span data-i18n="dash.tv_title">Partidos en vivo</span></h6>
+        <p style="font-size:12px;color:var(--text-muted);margin:0" data-i18n="dash.tv_desc">Haz clic en el link de tu idioma preferido para abrir el stream en una nueva pestaña.</p>
       </div>
       <div id="tvMatchesLoading" style="text-align:center;padding:40px 0;color:var(--text-muted);font-size:13px">
-        <div class="loading-label" style="justify-content:center"><span class="dot"></span><span class="dot"></span><span class="dot"></span>Cargando transmisiones...</div>
+        <div class="loading-label" style="justify-content:center">
+          <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+          <span data-i18n="dash.tv_loading">Cargando transmisiones...</span>
+        </div>
       </div>
       <div id="tvMatchesGrid"></div>
       <div id="tvMatchesError" style="display:none;text-align:center;padding:30px 0">
-        <div style="color:#f5a0ac;font-size:13px;margin-bottom:8px">⚠️ No se pudo cargar la lista de transmisiones.</div>
+        <div style="color:#f5a0ac;font-size:13px;margin-bottom:8px" data-i18n="dash.tv_error">⚠️ No se pudo cargar la lista de transmisiones.</div>
         <div id="tvErrorDetail" style="color:var(--text-muted);font-size:11px;margin-bottom:16px"></div>
-        <button onclick="retryTvLoad()" style="background:rgba(29,144,198,0.2);color:#4aafd4;border:1px solid rgba(29,144,198,0.4);border-radius:8px;padding:7px 18px;font-size:13px;font-weight:700;cursor:pointer">🔄 Reintentar</button>
+        <button onclick="retryTvLoad()" style="background:rgba(29,144,198,0.2);color:#4aafd4;border:1px solid rgba(29,144,198,0.4);border-radius:8px;padding:7px 18px;font-size:13px;font-weight:700;cursor:pointer">
+          🔄 <span data-i18n="btn.retry">Reintentar</span>
+        </button>
       </div>
 
       <!-- BLOQUE DE PANTALLA COMPARTIDA (WebRTC) -->
       <div class="screen-share-card">
-        <h6>📡 Pantalla compartida en vivo</h6>
+        <h6>📡 <span data-i18n="stream.section_title">Pantalla compartida en vivo</span></h6>
 
         <!-- EMISOR: solo para is_host:true -->
         <div id="hostControls" style="display:none">
-          <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Comparte tu pantalla. El audio del sistema se incluye si lo activas en el selector de Chrome.</p>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px" data-i18n="stream.host_desc">Comparte tu pantalla. El audio del sistema se incluye si lo activas en el selector de Chrome.</p>
           <div class="session-code-block" id="dashEmitCodeBlock">
-            <p style="font-size:11px;color:var(--text-muted);margin-bottom:6px">📋 Copia este código <strong>ahora</strong> y compártelo, <em>luego</em> elige la ventana:</p>
+            <p style="font-size:11px;color:var(--text-muted);margin-bottom:6px">
+              <span data-i18n="stream.code_copy_hint">📋 Copia este código <strong>ahora</strong> y compártelo, <em>luego</em> elige la ventana:</span>
+            </p>
             <div style="display:flex;align-items:center;gap:12px">
               <div>
-                <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px">CÓDIGO DE SESIÓN</div>
+                <div style="font-size:10px;color:var(--text-muted);margin-bottom:3px" data-i18n="stream.session_code_label">CÓDIGO DE SESIÓN</div>
                 <div class="session-code-val session-code-display" id="dashEmitCodeVal">——</div>
               </div>
-              <button class="copy-code-btn" onclick="copyCode()">📋 Copiar</button>
+              <button class="copy-code-btn" onclick="copyCode()">📋 <span data-i18n="btn.copy">Copiar</span></button>
             </div>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
-            <button class="ss-action-btn btn-share" id="startShareBtn" onclick="startSharing()">🖥️ Compartir mi pantalla</button>
-            <button class="ss-action-btn btn-stop"  id="stopShareBtn"  onclick="stopSharing()" disabled>⏹️ Detener</button>
+            <button class="ss-action-btn btn-share" id="startShareBtn" onclick="startSharing()">🖥️ <span data-i18n="stream.btn.share">Compartir mi pantalla</span></button>
+            <button class="ss-action-btn btn-stop"  id="stopShareBtn"  onclick="stopSharing()" disabled>⏹️ <span data-i18n="stream.btn.stop">Detener</span></button>
           </div>
-          <div id="emitStatus" class="status-badge idle"><span class="status-dot"></span>Inactivo</div>
+          <div id="emitStatus" class="status-badge idle"><span class="status-dot"></span><span data-i18n="stream.status.idle">Inactivo</span></div>
           <div id="localPreview" style="display:none;margin-top:10px">
-            <p style="font-size:11px;color:var(--text-muted);margin-bottom:5px">Tu vista previa:</p>
+            <p style="font-size:11px;color:var(--text-muted);margin-bottom:5px" data-i18n="stream.local_preview">Tu vista previa:</p>
             <video id="localVideo" autoplay playsinline muted style="width:100%;max-height:220px;border-radius:10px;background:#0a0f1a"></video>
           </div>
           <div id="emitLog" class="ss-log"></div>
@@ -235,50 +287,48 @@
 
         <!-- RECEPTOR: todos con tv_access -->
         <div id="dashJoinBlock">
-
-          <!-- Banner: abrir página independiente -->
           <div class="stream-view-banner">
             <div class="svb-text">
-              <strong>📺 Ver en pantalla completa o en tu TV</strong><br>
-              Abre el visor en una página dedicada con más controles.
+              <strong data-i18n="stream.viewer_banner_title">📺 Ver en pantalla completa o en tu TV</strong><br>
+              <span data-i18n="stream.viewer_banner_desc">Abre el visor en una página dedicada con más controles.</span>
             </div>
             <a id="openViewerBtn" href="stream-view.html" target="_blank" class="btn-open-viewer">
-              🔗 Abrir visor independiente
+              🔗 <span data-i18n="stream.btn.open_viewer">Abrir visor independiente</span>
             </a>
           </div>
-
-          <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px">¿Alguien está compartiendo su pantalla? Ingresa el código para verla aquí mismo:</p>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:10px" data-i18n="stream.join_desc">¿Alguien está compartiendo su pantalla? Ingresa el código para verla aquí mismo:</p>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-            <input type="text" id="dashJoinCodeInput" class="dash-join-input" maxlength="6" placeholder="ABC123" autocomplete="off" autocorrect="off" spellcheck="false">
-            <button class="ss-action-btn btn-watch" onclick="joinSession()">📺 Ver aquí</button>
-            <button class="ss-action-btn btn-watch" style="background:rgba(29,144,198,0.1);border-color:rgba(29,144,198,0.3)!important" onclick="openViewerWithCode()">🔗 Abrir en visor</button>
+            <input type="text" id="dashJoinCodeInput" class="dash-join-input" maxlength="6"
+                   placeholder="ABC123" autocomplete="off" autocorrect="off" spellcheck="false">
+            <button class="ss-action-btn btn-watch" onclick="joinSession()">📺 <span data-i18n="stream.btn.watch_here">Ver aquí</span></button>
+            <button class="ss-action-btn btn-watch" style="background:rgba(29,144,198,0.1);border-color:rgba(29,144,198,0.3)!important" onclick="openViewerWithCode()">🔗 <span data-i18n="stream.btn.open_in_viewer">Abrir en visor</span></button>
           </div>
-          <p style="font-size:10px;color:var(--text-muted);margin-top:8px;margin-bottom:0">
+          <p style="font-size:10px;color:var(--text-muted);margin-top:8px;margin-bottom:0" data-i18n="stream.watch_hint">
             ℹ️ <strong>Ver aquí</strong> muestra el video en este mismo dashboard &nbsp;·&nbsp; <strong>Abrir en visor</strong> abre la página completa en una nueva pestaña
           </p>
         </div>
 
         <div id="dashLeaveBlock" style="display:none;margin-bottom:4px">
-          <button class="ss-action-btn btn-leave" onclick="leaveSession()">🚪 Salir de la pantalla</button>
+          <button class="ss-action-btn btn-leave" onclick="leaveSession()">🚪 <span data-i18n="stream.btn.leave">Salir de la pantalla</span></button>
         </div>
 
-        <div id="dashWatchStatus" class="status-badge idle" style="margin-top:10px"><span class="status-dot"></span>Inactivo</div>
+        <div id="dashWatchStatus" class="status-badge idle" style="margin-top:10px">
+          <span class="status-dot"></span><span data-i18n="stream.status.idle">Inactivo</span>
+        </div>
 
         <div id="dashRemotePreview" style="display:none;margin-top:12px">
           <video id="dashRemoteVideo" autoplay playsinline></video>
           <div id="dashVideoControls">
-            <button class="ss-action-btn btn-fs"   onclick="toggleFullscreen('dashRemoteVideo')">⛶ Pantalla completa</button>
-            <button class="ss-action-btn btn-cast" onclick="castToTV('dashRemoteVideo')">📺 Enviar a TV</button>
+            <button class="ss-action-btn btn-fs" onclick="toggleFullscreen('dashRemoteVideo')">⛶ <span data-i18n="stream.btn.fullscreen">Pantalla completa</span></button>
+            <button class="ss-action-btn btn-cast" onclick="castToTV('dashRemoteVideo')">📺 <span data-i18n="stream.btn.sendtv">Enviar a TV</span></button>
           </div>
-          <p style="font-size:10px;color:var(--text-muted);margin-top:6px;margin-bottom:0">
+          <p style="font-size:10px;color:var(--text-muted);margin-top:6px;margin-bottom:0" data-i18n="stream.cast_hint">
             📺 <strong>Enviar a TV:</strong> Chrome → menú ⋮ → "Transmitir..." · Android → Duplicar pantalla · iOS → AirPlay desde Centro de control
           </p>
         </div>
 
         <div id="dashWatchLog" class="ss-log"></div>
       </div>
-      <!-- /pantalla compartida -->
-
     </div><!-- /tab-tv -->
   </div><!-- /container -->
 
@@ -286,17 +336,21 @@
   <div id="favoriteOverlay" class="native-overlay">
     <div class="ov-box">
       <div class="ov-header">
-        <div><div style="font-weight:700;font-size:1.05rem">🏆 Elige tu equipo favorito</div><div style="font-size:12px;color:var(--text-muted)">Puedes cambiarlo luego (con penalidad de -3 pts)</div></div>
+        <div>
+          <div style="font-weight:700;font-size:1.05rem">🏆 <span data-i18n="fav.pick_title">Elige tu equipo favorito</span></div>
+          <div style="font-size:12px;color:var(--text-muted)" data-i18n="fav.change_warn">Puedes cambiarlo luego (con penalidad de -3 pts)</div>
+        </div>
         <button class="ov-close" id="closeFavoriteOverlay">×</button>
       </div>
       <div class="ov-body">
-        <input type="text" id="favoriteSearch" class="form-control mb-3" placeholder="🔍 Buscar equipo..." autocomplete="off">
+        <input type="text" id="favoriteSearch" class="form-control mb-3"
+               data-i18n="fav.search" data-i18n-attr="placeholder" placeholder="🔍 Buscar equipo..." autocomplete="off">
         <div id="teamGrid" class="row g-2" style="max-height:300px;overflow-y:auto"></div>
         <input type="hidden" id="selectedTeam">
       </div>
       <div class="ov-footer">
-        <button id="saveFavoriteBtn" class="btn btn-warning w-100" disabled style="font-weight:700">✅ Confirmar favorito</button>
-        <button id="skipFavoriteBtn" class="btn btn-outline-light w-100" style="font-size:13px">⏩ Saltar por ahora — elegir después</button>
+        <button id="saveFavoriteBtn" class="btn btn-warning w-100" disabled style="font-weight:700">✅ <span data-i18n="fav.btn.save">Confirmar favorito</span></button>
+        <button id="skipFavoriteBtn" class="btn btn-outline-light w-100" style="font-size:13px">⏩ <span data-i18n="fav.btn.skip">Saltar por ahora — elegir después</span></button>
       </div>
     </div>
   </div>
@@ -305,34 +359,42 @@
   <div id="deleteOverlay" class="native-overlay">
     <div class="ov-box" style="border-color:rgba(201,52,75,0.4)">
       <div class="ov-header" style="border-color:rgba(201,52,75,0.3);background:rgba(201,52,75,0.08)">
-        <h5 style="color:#f5a0ac;margin:0">🗑️ Eliminar grupo</h5>
+        <h5 style="color:#f5a0ac;margin:0">🗑️ <span data-i18n="dash.delete_group_title">Eliminar grupo</span></h5>
         <button class="ov-close" id="closeDeleteOverlay">×</button>
       </div>
       <div class="ov-body">
         <div style="background:rgba(201,52,75,0.12);border:1px solid rgba(201,52,75,0.3);border-radius:10px;padding:14px;margin-bottom:16px">
-          <div style="font-weight:700;color:#f5a0ac;margin-bottom:6px">⚠️ Esta acción es irreversible</div>
+          <div style="font-weight:700;color:#f5a0ac;margin-bottom:6px">⚠️ <span data-i18n="dash.delete_irreversible">Esta acción es irreversible</span></div>
           <ul style="color:#f5a0ac;font-size:0.85rem;margin:0;padding-left:18px">
-            <li>Se eliminarán todos los miembros y sus pronósticos</li>
-            <li>El código de invitación dejará de funcionar</li>
-            <li>No se puede recuperar después</li>
+            <li data-i18n="dash.delete_warn1">Se eliminarán todos los miembros y sus pronósticos</li>
+            <li data-i18n="dash.delete_warn2">El código de invitación dejará de funcionar</li>
+            <li data-i18n="dash.delete_warn3">No se puede recuperar después</li>
           </ul>
         </div>
-        <div style="margin-bottom:12px;font-size:0.9rem">Vas a eliminar el grupo:<br><strong id="deleteGroupName" style="color:var(--gold);font-size:1rem"></strong></div>
-        <label style="font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;display:block">Para confirmar, escribe exactamente el nombre:</label>
-        <input type="text" id="deleteConfirmInput" class="form-control" placeholder="Escribe el nombre aquí..." autocomplete="off" autocorrect="off" spellcheck="false">
+        <div style="margin-bottom:12px;font-size:0.9rem">
+          <span data-i18n="dash.delete_confirm_label">Vas a eliminar el grupo:</span><br>
+          <strong id="deleteGroupName" style="color:var(--gold);font-size:1rem"></strong>
+        </div>
+        <label style="font-size:0.85rem;color:var(--text-muted);margin-bottom:6px;display:block" data-i18n="dash.delete_type_name">Para confirmar, escribe exactamente el nombre:</label>
+        <input type="text" id="deleteConfirmInput" class="form-control"
+               data-i18n="dash.delete_type_placeholder" data-i18n-attr="placeholder"
+               placeholder="Escribe el nombre aquí..." autocomplete="off" autocorrect="off" spellcheck="false">
       </div>
       <div class="ov-footer" style="border-color:rgba(201,52,75,0.3)">
-        <button id="confirmDeleteBtn" class="btn w-100" disabled style="background:rgba(201,52,75,0.2);color:#f5a0ac;border:1px solid rgba(201,52,75,0.5);font-weight:700">🗑️ Sí, eliminar definitivamente</button>
-        <button id="cancelDeleteBtn" class="btn btn-outline-light w-100" style="font-size:13px">Cancelar</button>
+        <button id="confirmDeleteBtn" class="btn w-100" disabled style="background:rgba(201,52,75,0.2);color:#f5a0ac;border:1px solid rgba(201,52,75,0.5);font-weight:700">
+          🗑️ <span data-i18n="dash.delete_confirm_btn">Sí, eliminar definitivamente</span>
+        </button>
+        <button id="cancelDeleteBtn" class="btn btn-outline-light w-100" style="font-size:13px" data-i18n="btn.cancel">Cancelar</button>
       </div>
     </div>
   </div>
 
   <div class="footer-brand">
-    ⚽ WC2026 &nbsp;— Desarrollado por <strong style="color:var(--primary-light)">Largotek</strong>
+    ⚽ WC2026 &nbsp;— <span data-i18n="footer.developed_by">Desarrollado por</span>
+    <strong style="color:var(--primary-light)">Largotek</strong>
     <div style="margin-top:6px;font-size:10px;color:rgba(148,163,184,0.4)">
-      Juego de entretenimiento privado — No es un sitio de apuestas —
-      <a href="legal.html" target="_blank" style="color:rgba(148,163,184,0.4);text-decoration:underline">Términos de uso</a>
+      <span data-i18n="footer.disclaimer">Juego de entretenimiento privado — No es un sitio de apuestas —</span>
+      <a href="legal.html" target="_blank" style="color:rgba(148,163,184,0.4);text-decoration:underline" data-i18n="footer.terms">Términos de uso</a>
     </div>
   </div>
 
@@ -363,28 +425,25 @@
       } catch(e){}
     });
 
-    // Abre el visor independiente pasando el código en la URL si fue escrito
     window.openViewerWithCode = function() {
       const code = (document.getElementById('dashJoinCodeInput')?.value || '').trim().toUpperCase();
-      const url = code.length === 6
-        ? `stream-view.html?code=${code}`
-        : 'stream-view.html';
+      const url = code.length === 6 ? `stream-view.html?code=${code}` : 'stream-view.html';
       window.open(url, '_blank');
     };
 
     document.getElementById('saveNicknameBtn').addEventListener('click', async () => {
       const input=document.getElementById('nicknameInput'),msg=document.getElementById('nicknameMsg'),btn=document.getElementById('saveNicknameBtn');
       const name=input.value.trim();
-      if(!name){msg.innerHTML='<span style="color:#f5a0ac">⚠️ Escribe un nombre o apodo primero.</span>';return;}
-      btn.disabled=true;btn.textContent='Guardando...';
+      if(!name){msg.innerHTML=`<span style="color:#f5a0ac">⚠️ ${window.t ? t('dash.nickname_required') : 'Escribe un nombre o apodo primero.'}</span>`;return;}
+      btn.disabled=true;btn.innerHTML=`✅ ${window.t ? t('btn.loading') : 'Guardando...'}`;
       try{
         const user=auth.currentUser;if(!user)throw new Error('no user');
         const ref=doc(db,'users',user.uid),snap=await getDoc(ref);
         if(snap.exists())await updateDoc(ref,{display_name:name,email:user.email});
         else await setDoc(ref,{uid:user.uid,display_name:name,email:user.email,created_at:new Date()});
-        msg.innerHTML='<span style="color:#34d399">✅ ¡Listo! Ya aparecerás como <strong>'+name+'</strong>.</span>';
+        msg.innerHTML=`<span style="color:#34d399">✅ ${window.t ? t('dash.nickname_saved') : '¡Listo! Ya aparecerás como'} <strong>${name}</strong>.</span>`;
         setTimeout(()=>{document.getElementById('nicknameBanner').style.display='none';},2500);
-      }catch(e){msg.innerHTML='<span style="color:#f5a0ac">⚠️ Error al guardar.</span>';btn.disabled=false;btn.textContent='✅ Guardar';}
+      }catch(e){msg.innerHTML=`<span style="color:#f5a0ac">⚠️ ${window.t ? t('msg.error') : 'Error al guardar.'}</span>`;btn.disabled=false;btn.innerHTML=`✅ ${window.t ? t('dash.save_name') : 'Guardar'}`;}
     });
     document.getElementById('nicknameInput').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('saveNicknameBtn').click();});
   </script>
@@ -392,6 +451,7 @@
   <script type="module">
     import { getLiveStreams } from './js/live-streams.js';
     let tvLoaded = false;
+
     window.switchDashTab = function(tab) {
       document.getElementById('tab-comparsas').style.display = tab==='comparsas' ? 'block' : 'none';
       document.getElementById('tab-tv').style.display        = tab==='tv'         ? 'block' : 'none';
@@ -399,6 +459,7 @@
       document.getElementById('tab-tv-btn').classList.toggle('active', tab==='tv');
       if (tab==='tv' && !tvLoaded) loadTvMatches();
     };
+
     window.retryTvLoad = function() {
       tvLoaded = false;
       document.getElementById('tvMatchesError').style.display = 'none';
@@ -406,6 +467,7 @@
       document.getElementById('tvMatchesGrid').innerHTML = '';
       loadTvMatches();
     };
+
     async function loadTvMatches() {
       tvLoaded = true;
       const grid=document.getElementById('tvMatchesGrid'),loading=document.getElementById('tvMatchesLoading'),errDiv=document.getElementById('tvMatchesError'),errDetail=document.getElementById('tvErrorDetail');
@@ -413,20 +475,31 @@
         const streams = await getLiveStreams();
         loading.style.display = 'none';
         if (!streams || streams.length === 0) {
-          grid.innerHTML=`<div style="text-align:center;padding:60px 20px;color:var(--text-muted)"><div style="font-size:3rem;margin-bottom:16px">📺</div><div style="font-weight:700;font-size:1rem;margin-bottom:8px;color:var(--text)">Sin transmisiones disponibles</div><div style="font-size:0.85rem">El administrador aún no ha cargado links para hoy.<br>Vuelve a revisar cuando comiencen los partidos.</div></div>`;
+          grid.innerHTML=`<div style="text-align:center;padding:60px 20px;color:var(--text-muted)"><div style="font-size:3rem;margin-bottom:16px">📺</div><div style="font-weight:700;font-size:1rem;margin-bottom:8px;color:var(--text)">${window.t ? t('dash.tv_no_streams') : 'Sin transmisiones disponibles'}</div><div style="font-size:0.85rem">${window.t ? t('dash.tv_no_streams_desc') : 'El administrador aún no ha cargado links para hoy.'}</div></div>`;
           return;
         }
         const totalLinks=streams.reduce((acc,m)=>acc+(m.streams?.length||0),0);
-        const header=`<div style="margin-bottom:14px"><span style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">📡 ${streams.length} partido(s) · ${totalLinks} link(s) disponibles</span></div>`;
+        const matchLabel = window.t ? t('dash.tv_matches_count', { count: streams.length, links: totalLinks }) : `${streams.length} partido(s) · ${totalLinks} link(s) disponibles`;
+        const header=`<div style="margin-bottom:14px"><span style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">📡 ${matchLabel}</span></div>`;
+        const watchStream = window.t ? t('dash.tv_watch_stream') : 'Ver stream';
         const cards=streams.map(item=>{
-          const links=(item.streams||[]).map(s=>`<a href="${s.url}" target="_blank" rel="noopener noreferrer" class="stream-link-btn">${s.label||'Ver stream'}<span style="font-size:10px;opacity:0.55">↗</span></a>`).join('');
-          return `<div class="stream-match-card"><div class="stream-match-title">⚽ ${item.match||'Partido'}</div><div class="stream-links-row">${links||'<span style="font-size:12px;color:var(--text-muted)">Sin links disponibles</span>'}</div></div>`;
+          const links=(item.streams||[]).map(s=>`<a href="${s.url}" target="_blank" rel="noopener noreferrer" class="stream-link-btn">${s.label||watchStream}<span style="font-size:10px;opacity:0.55">↗</span></a>`).join('');
+          return `<div class="stream-match-card"><div class="stream-match-title">⚽ ${item.match||'Partido'}</div><div class="stream-links-row">${links||`<span style="font-size:12px;color:var(--text-muted)">${window.t ? t('msg.no_data') : 'Sin links disponibles'}</span>`}</div></div>`;
         }).join('');
         grid.innerHTML=header+cards;
       } catch(e) {
         loading.style.display='none';errDiv.style.display='block';errDetail.textContent=e.message||'Error desconocido';
       }
     }
+
+    // Re-render TV tab cuando cambia idioma
+    document.addEventListener('langchange', () => {
+      if (document.getElementById('tab-tv').style.display !== 'none') {
+        tvLoaded = false;
+        loadTvMatches();
+      }
+    });
+
     window.hideGroupsLoading=function(){var l=document.getElementById('groupLoadingState'),g=document.getElementById('groupList');if(l)l.style.display='none';if(g)g.style.display='';};
     setTimeout(function(){var l=document.getElementById('groupLoadingState');if(l&&l.style.display!=='none')window.hideGroupsLoading();},5000);
     document.getElementById('newGroupType').addEventListener('change',function(){var c=this.value==='closed';document.getElementById('openFields').classList.toggle('d-none',c);document.getElementById('closedFields').classList.toggle('d-none',!c);});
