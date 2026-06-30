@@ -701,18 +701,37 @@
       penRow.classList.toggle('d-none', !chkPEN.checked);
     });
 
-    // Actualizar opciones del select "Ganador en penales" cuando cambia el partido seleccionado
+    // Actualizar opciones del select "Ganador en penales" cuando cambia el partido
+    // FIX: el regex anterior usaba \w que no captura tildes ni caracteres especiales.
+    // Nueva estrategia: buscar el patron SCORE (N-N) y dividir desde ahí.
     function updatePenOptions() {
       const opt = selClose.options[selClose.selectedIndex];
       if (!opt) return;
-      const txt = opt.text; // "🇦🇷 Argentina 1-1 Francia 🇫🇷 — Cuartos"
-      const m = txt.match(/^\S+\s+([\w\s]+?)\s+\d+-\d+\s+([\w\s]+?)\s+\S+\s+—/);
-      if (m) {
-        const home = m[1].trim(), away = m[2].trim();
-        penSel.innerHTML = `<option value="">— Seleccionar —</option><option value="${home}">${home}</option><option value="${away}">${away}</option>`;
+      const txt = opt.text;
+      // El texto tiene forma: "🇳🇱 Países Bajos 1-1 Marruecos 🇲🇦 — Ronda de 32"
+      // Buscamos el score N-N y lo usamos como pivote
+      const scoreMatch = txt.match(/(\d+)-(\d+)/);
+      if (!scoreMatch) return;
+      const scoreIdx  = scoreMatch.index;
+      const afterScore = txt.slice(scoreIdx + scoreMatch[0].length).trim();
+      // Antes del score: quitamos el emoji inicial (primer token no-espacio)
+      const beforeScore = txt.slice(0, scoreIdx).trim();
+      const homeRaw = beforeScore.replace(/^\S+\s*/, '').trim(); // quitar flag emoji
+      // Después del score: hasta el separador " — " o hasta el último emoji de bandera
+      const awayRaw = afterScore.replace(/^(.*?)\s+\S*\s*—.*$/, '$1')
+                                .replace(/\s+\S+$/, '').trim(); // quitar flag emoji del final
+      if (homeRaw && awayRaw) {
+        penSel.innerHTML =
+          `<option value="">— Seleccionar —</option>` +
+          `<option value="${homeRaw}">${homeRaw}</option>` +
+          `<option value="${awayRaw}">${awayRaw}</option>`;
       }
     }
     selClose.addEventListener('change', updatePenOptions);
+    // También actualizar al cargar la página (por si ya hay un partido seleccionado)
+    selClose.addEventListener('load', updatePenOptions);
+    // Llamar cuando admin.js termina de poblar el select
+    window.updatePenOptions = updatePenOptions;
   </script>
 
 </body>
