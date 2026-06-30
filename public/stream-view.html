@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Ver Pantalla — WC2026</title>
+  <script src="js/theme.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      min-height: 100dvh;
+      background: #080d18;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ---- Navbar ---- */
+    .top-bar {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: rgba(8,13,24,0.95);
+      border-bottom: 1px solid rgba(255,255,255,0.07);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      gap: 10px;
+    }
+    .top-bar .brand { font-weight: 800; font-size: 1rem; color: #4aafd4; }
+    .top-bar .sub   { font-size: 11px; color: #94a3b8; }
+    .btn-back {
+      background: rgba(29,144,198,0.12);
+      border: 1px solid rgba(29,144,198,0.35);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #4aafd4;
+      cursor: pointer;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .btn-back:hover { background: rgba(29,144,198,0.22); }
+
+    /* ---- Main layout ---- */
+    .page-wrap {
+      width: 100%;
+      max-width: 1100px;
+      padding: 20px 16px 40px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ---- Join card ---- */
+    .join-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(29,144,198,0.2);
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .join-card h2 { font-size: 1.1rem; font-weight: 800; margin-bottom: 6px; color: #4aafd4; }
+    .join-card p  { font-size: 12px; color: #94a3b8; margin-bottom: 14px; }
+    .join-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .code-input {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 10px;
+      padding: 12px 18px;
+      font-size: 1.3rem;
+      font-weight: 900;
+      letter-spacing: 6px;
+      color: #e2e8f0;
+      text-transform: uppercase;
+      text-align: center;
+      width: 200px;
+    }
+    .code-input:focus { outline: none; border-color: #4aafd4; }
+    .btn-connect {
+      background: linear-gradient(135deg, rgba(29,144,198,0.3), rgba(29,144,198,0.15));
+      border: 1px solid rgba(29,144,198,0.5);
+      border-radius: 10px;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #4aafd4;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .btn-connect:hover { background: rgba(29,144,198,0.35); }
+
+    /* ---- Status badge ---- */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 5px 14px;
+      border-radius: 20px;
+    }
+    .status-badge.idle    { background: rgba(148,163,184,0.12); color: #94a3b8; }
+    .status-badge.waiting { background: rgba(245,158,11,0.12);  color: #f59e0b; }
+    .status-badge.active  { background: rgba(52,211,153,0.12);  color: #34d399; }
+    .status-badge.error   { background: rgba(201,52,75,0.12);   color: #f5a0ac; }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pulse 1.4s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+    /* ---- Video area ---- */
+    .video-wrap {
+      position: relative;
+      width: 100%;
+      background: #000;
+      border-radius: 16px;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+      display: none;
+    }
+    .video-wrap video {
+      width: 100%;
+      display: block;
+      max-height: 80vh;
+      background: #000;
+    }
+    /* Overlay controles sobre el video */
+    .video-controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 12px 14px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: linear-gradient(transparent, rgba(0,0,0,0.7));
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .video-wrap:hover .video-controls,
+    .video-wrap:focus-within .video-controls { opacity: 1; }
+    .vc-btn {
+      font-size: 12px;
+      font-weight: 700;
+      border-radius: 8px;
+      padding: 6px 14px;
+      cursor: pointer;
+      border: 1px solid rgba(255,255,255,0.25);
+      background: rgba(0,0,0,0.55);
+      color: #fff;
+      backdrop-filter: blur(4px);
+      transition: background 0.15s;
+    }
+    .vc-btn:hover { background: rgba(255,255,255,0.18); }
+    .vc-btn.cast  { border-color: rgba(234,179,8,0.5); color: #fbbf24; }
+
+    /* ---- Controls row (below video) ---- */
+    .controls-row {
+      display: none;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .btn-leave {
+      background: rgba(245,158,11,0.14);
+      border: 1px solid rgba(245,158,11,0.4);
+      border-radius: 10px;
+      padding: 9px 20px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #f59e0b;
+      cursor: pointer;
+    }
+    .btn-leave:hover { background: rgba(245,158,11,0.25); }
+
+    /* ---- Log ---- */
+    .log-box {
+      background: rgba(0,0,0,0.3);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 11px;
+      color: #64748b;
+      font-family: monospace;
+      max-height: 80px;
+      overflow-y: auto;
+    }
+
+    /* ---- Hint cards ---- */
+    .hint-card {
+      background: rgba(255,255,255,0.02);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+    .hint-card strong { color: #94a3b8; }
+
+    /* ---- Access denied / loading ---- */
+    #accessDenied {
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+    }
+    #loadingAuth {
+      text-align: center;
+      padding: 80px 20px;
+      color: #94a3b8;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <div>
+      <div class="brand">📡 Ver Pantalla Compartida</div>
+      <div class="sub">⚽ WC2026 — by Largotek</div>
+    </div>
+    <a href="dashboard.html" class="btn-back">← Dashboard</a>
+  </div>
+
+  <div class="page-wrap">
+
+    <!-- Loading auth -->
+    <div id="loadingAuth">
+      <div style="font-size:2rem;margin-bottom:12px">⏳</div>
+      Verificando acceso...
+    </div>
+
+    <!-- Acceso denegado -->
+    <div id="accessDenied">
+      <div style="font-size:3rem;margin-bottom:16px">🔒</div>
+      <div style="font-size:1.1rem;font-weight:800;color:#f5a0ac;margin-bottom:8px">Acceso no autorizado</div>
+      <div style="font-size:13px;color:#94a3b8;margin-bottom:20px">No tienes permiso para ver esta sección.</div>
+      <a href="dashboard.html" class="btn-back">Volver al inicio</a>
+    </div>
+
+    <!-- Contenido principal -->
+    <div id="mainContent" style="display:none;display:flex;flex-direction:column;gap:16px">
+
+      <!-- Tarjeta de conexión -->
+      <div class="join-card" id="joinCard">
+        <h2>📺 Conectar a una pantalla compartida</h2>
+        <p>Ingresa el código de 6 caracteres que te compartó el emisor.</p>
+        <div class="join-row">
+          <input type="text" id="codeInput" class="code-input" maxlength="6"
+            placeholder="ABC123" autocomplete="off" autocorrect="off"
+            spellcheck="false" autofocus>
+          <button class="btn-connect" onclick="connectToSession()">&#128247; Conectar</button>
+        </div>
+      </div>
+
+      <!-- Estado -->
+      <div>
+        <span id="statusBadge" class="status-badge idle"><span class="status-dot"></span>Inactivo</span>
+      </div>
+
+      <!-- Video -->
+      <div class="video-wrap" id="videoWrap">
+        <video id="remoteVideo" autoplay playsinline></video>
+        <div class="video-controls">
+          <button class="vc-btn" onclick="doFullscreen()">⛶ Pantalla completa</button>
+          <button class="vc-btn cast" onclick="doCast()">📺 Enviar a TV</button>
+        </div>
+      </div>
+
+      <!-- Botones debajo del video -->
+      <div class="controls-row" id="controlsRow">
+        <button class="btn-leave" onclick="leaveSession()">🚪 Salir de la sesión</button>
+      </div>
+
+      <!-- Log -->
+      <div class="log-box" id="logBox"></div>
+
+      <!-- Hints TV -->
+      <div class="hint-card">
+        <strong>📺 Cómo ver en tu televisor:</strong><br>
+        • <strong>Chrome / PC:</strong> Menú ⋮ → "Transmitir..." → elige tu Chromecast o Smart TV<br>
+        • <strong>Android:</strong> Baja el panel de notificaciones → "Transmitir" o "Duplicar pantalla"<br>
+        • <strong>iPhone / iPad:</strong> Centro de control → "Duplicar pantalla" → elige tu Apple TV o AirPlay<br>
+        • <strong>Smart TV con navegador:</strong> Abre directamente esta URL en el browser del TV
+      </div>
+
+    </div><!-- /mainContent -->
+  </div><!-- /page-wrap -->
+
+  <script type="module" src="js/firebase-config.js"></script>
+
+  <script type="module">
+    import { auth, db } from './js/firebase-config.js';
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
+    import {
+      doc, collection, getDoc, updateDoc, onSnapshot, addDoc
+    } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+    const ICE = { iceServers: [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+    ]};
+
+    let pcView      = null;
+    let unsubOffer  = null;
+    let unsubIce    = null;
+    let currentCode = null;
+
+    // ─ helpers ───────────────────────────────────────────────────────────────
+    function addLog(msg) {
+      const box = document.getElementById('logBox');
+      if (!box) return;
+      const d = document.createElement('div');
+      d.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      box.appendChild(d);
+      box.scrollTop = box.scrollHeight;
+    }
+    function setStatus(type, text) {
+      const el = document.getElementById('statusBadge');
+      if (!el) return;
+      el.className = `status-badge ${type}`;
+      el.innerHTML = `<span class="status-dot"></span>${text}`;
+    }
+
+    // ─ connect ─────────────────────────────────────────────────────────────
+    window.connectToSession = async function() {
+      const code = (document.getElementById('codeInput')?.value || '').trim().toUpperCase();
+      if (code.length !== 6) { alert('El código debe tener 6 caracteres.'); return; }
+
+      try {
+        setStatus('waiting', '⏳ Conectando...');
+        addLog(`Conectando a sesión ${code}...`);
+
+        const sessionRef = doc(db, 'screen_sessions', code);
+        const snap = await getDoc(sessionRef);
+        if (!snap.exists())                  throw new Error('Sesión no encontrada.');
+        if (snap.data().status === 'ended')  throw new Error('Esta sesión ya finalizó.');
+        if (!snap.data().offer)              throw new Error('El emisor aún no publicó oferta. Intenta en unos segundos.');
+
+        pcView = new RTCPeerConnection(ICE);
+
+        pcView.onicecandidate = async (e) => {
+          if (e.candidate) {
+            await addDoc(collection(db, 'screen_sessions', code, 'guestCandidates'), e.candidate.toJSON());
+          }
+        };
+
+        pcView.onconnectionstatechange = () => {
+          const s = pcView.connectionState;
+          addLog(`Estado: ${s}`);
+          if (s === 'connected')                     setStatus('active',  '🟢 Conectado — viendo en vivo');
+          if (s === 'disconnected' || s === 'failed') setStatus('error',   '⚠️ Conexión perdida');
+        };
+
+        pcView.ontrack = (e) => {
+          const vid = document.getElementById('remoteVideo');
+          if (vid) vid.srcObject = e.streams[0];
+          document.getElementById('videoWrap').style.display = 'block';
+          document.getElementById('controlsRow').style.display = 'flex';
+          document.getElementById('joinCard').style.display = 'none';
+          addLog('Stream recibido — ¡ya lo ves!');
+        };
+
+        await pcView.setRemoteDescription(new RTCSessionDescription(snap.data().offer));
+        const answer = await pcView.createAnswer();
+        await pcView.setLocalDescription(answer);
+        await updateDoc(sessionRef, { answer: { type: answer.type, sdp: answer.sdp } });
+        addLog('Respuesta enviada al emisor.');
+
+        unsubIce = onSnapshot(collection(db, 'screen_sessions', code, 'hostCandidates'), (snap) => {
+          snap.docChanges().forEach(async (ch) => {
+            if (ch.type === 'added') {
+              try { await pcView.addIceCandidate(new RTCIceCandidate(ch.doc.data())); } catch(e) {}
+            }
+          });
+        });
+
+        unsubOffer = onSnapshot(sessionRef, (snap) => {
+          if (snap.data()?.status === 'ended') {
+            addLog('El emisor detuvo la transmisión.');
+            setStatus('idle', 'Sesión terminada');
+            leaveSession(true);
+          }
+        });
+
+        currentCode = code;
+
+      } catch(err) {
+        addLog(`Error: ${err.message}`);
+        setStatus('error', `⚠️ ${err.message}`);
+        if (pcView) { pcView.close(); pcView = null; }
+      }
+    };
+
+    // ─ leave ────────────────────────────────────────────────────────────────
+    window.leaveSession = function(silent = false) {
+      if (unsubOffer) { unsubOffer(); unsubOffer = null; }
+      if (unsubIce)   { unsubIce();   unsubIce   = null; }
+      if (pcView)     { pcView.close(); pcView = null; }
+      const vid = document.getElementById('remoteVideo');
+      if (vid) vid.srcObject = null;
+      document.getElementById('videoWrap').style.display = 'none';
+      document.getElementById('controlsRow').style.display = 'none';
+      document.getElementById('joinCard').style.display = 'block';
+      if (!silent) setStatus('idle', 'Inactivo');
+      currentCode = null;
+      if (!silent) addLog('Saliste de la sesión.');
+    };
+
+    // ─ fullscreen ─────────────────────────────────────────────────────────
+    window.doFullscreen = function() {
+      const wrap = document.getElementById('videoWrap');
+      if (!document.fullscreenElement) {
+        (wrap.requestFullscreen || wrap.webkitRequestFullscreen || wrap.mozRequestFullScreen).call(wrap);
+      } else {
+        (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+      }
+    };
+
+    // ─ cast ────────────────────────────────────────────────────────────────
+    window.doCast = function() {
+      const vid = document.getElementById('remoteVideo');
+      if (vid?.webkitShowPlaybackTargetPicker) {
+        vid.webkitShowPlaybackTargetPicker();
+        return;
+      }
+      if (window.PresentationRequest) {
+        new PresentationRequest([location.href]).start().catch(() => {});
+        return;
+      }
+      alert(
+        '📺 Para ver en tu TV:\n\n' +
+        '• Chrome: menú ⋮ → Transmitir...\n' +
+        '• Android: duplicar pantalla desde notificaciones\n' +
+        '• iOS: Centro de control → Duplicar pantalla'
+      );
+    };
+
+    // ─ Enter para conectar ───────────────────────────────────────────────
+    document.getElementById('codeInput')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter') window.connectToSession();
+    });
+
+    // ─ URL param: ?code=XXXXXX ───────────────────────────────────────────
+    // Permite compartir el link directo: stream-view.html?code=VW2NMR
+    function loadCodeFromURL() {
+      const params = new URLSearchParams(location.search);
+      const code = (params.get('code') || '').toUpperCase();
+      if (code.length === 6) {
+        const inp = document.getElementById('codeInput');
+        if (inp) inp.value = code;
+        setTimeout(() => window.connectToSession(), 600);
+      }
+    }
+
+    // ─ Auth guard ──────────────────────────────────────────────────────────
+    onAuthStateChanged(auth, async (user) => {
+      document.getElementById('loadingAuth').style.display = 'none';
+      if (!user) { window.location.href = 'index.html'; return; }
+      try {
+        const snap = await getDoc(doc(db, 'users', user.uid));
+        const data = snap.exists() ? snap.data() : {};
+        if (data.tv_access === true) {
+          document.getElementById('mainContent').style.display = 'flex';
+          loadCodeFromURL();
+        } else {
+          document.getElementById('accessDenied').style.display = 'block';
+        }
+      } catch(e) {
+        document.getElementById('accessDenied').style.display = 'block';
+      }
+    });
+  </script>
+</body>
+</html>
