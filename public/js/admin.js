@@ -43,12 +43,6 @@ const R32_TO_OCTAVOS = [
   { r32home:'Colombia',        r32away:'Ghana',                 octSlot:'away', octPeer:'Suiza' },
 ];
 
-/**
- * Después de cerrar un partido R32, intenta propagar el ganador
- * al partido de Octavos correspondiente en Firestore.
- * Busca partidos con phase = 'Octavos' y type = 'octavos'/'ronda_16'/etc.
- * Retorna un mensaje de log.
- */
 async function propagateWinnerToOctavos(matchData, mid) {
   const hs = matchData.home_score;
   const as_ = matchData.away_score;
@@ -58,12 +52,15 @@ async function propagateWinnerToOctavos(matchData, mid) {
     norm(e.r32home) === norm(matchData.home_team) &&
     norm(e.r32away) === norm(matchData.away_team)
   );
-  if (!entry) return null; // No es partido R32 conocido
+  if (!entry) return null;
 
-  const winner     = hs > as_ ? matchData.home_team : matchData.away_team;
-  const winnerFlag = hs > as_ ? matchData.home_flag : matchData.away_flag;
+  // Si hay penales, el ganador viene de penalties_winner
+  const penWinner = matchData.penalties_winner || null;
+  const winner     = penWinner || (hs > as_ ? matchData.home_team : matchData.away_team);
+  const winnerFlag = penWinner
+    ? (norm(penWinner) === norm(matchData.home_team) ? matchData.home_flag : matchData.away_flag)
+    : (hs > as_ ? matchData.home_flag : matchData.away_flag);
 
-  // Buscar partidos de Octavos en Firestore
   const snap = await getDocs(collection(db, 'matches'));
   const octavos = snap.docs
     .map(d => ({ id: d.id, ...d.data() }))
@@ -75,13 +72,10 @@ async function propagateWinnerToOctavos(matchData, mid) {
 
   if (!octavos.length) return '⚠️ No hay partidos de Octavos en Firestore aún';
 
-  // Buscar el partido de octavos que ya tiene al "peer" o está vacío/TBC
   let octMatch = null;
   if (entry.octPeer) {
-    // Este equipo va como 'away', el peer ya está como 'home'
     octMatch = octavos.find(m => norm(m.home_team||'').includes(norm(entry.octPeer)));
   } else {
-    // Este equipo va como 'home' — buscar partido sin home o con TBC
     octMatch = octavos.find(m => {
       const ht = norm(m.home_team || '');
       return !ht || ht === 'tbc' || ht === 'por definir';
@@ -89,8 +83,7 @@ async function propagateWinnerToOctavos(matchData, mid) {
   }
 
   if (!octMatch) {
-    // Fallback: buscar cualquier slot vacío del lado correcto
-    return `⚠️ No se encontró partido de Octavos para ${winner} — agregalo manualmente`;
+    return `⚠️ No se encontró partido de Octavos para ${winner} — agégalo manualmente`;
   }
 
   const update = entry.octSlot === 'home'
@@ -140,6 +133,9 @@ async function loadMatchesInProgress() {
         return '<option value="' + d.id + '">' + (m.home_flag||'') + ' ' + m.home_team + ' ' + m.home_score + '-' + m.away_score + ' ' + m.away_team + ' ' + (m.away_flag||'') + ' — ' + m.phase + '</option>';
       }).join('')
     : '<option value="">Sin partidos listos para cerrar</option>';
+
+  // Actualizar opciones de penales con el partido seleccionado por defecto
+  if (typeof updatePenOptions === 'function') updatePenOptions();
 }
 
 async function loadMatchesDone() {
@@ -245,8 +241,41 @@ document.getElementById('closeMatchBtn')?.addEventListener('click', async () => 
   const hs    = matchData.home_score;
   const as_   = matchData.away_score;
 
-  await updateDoc(doc(db, 'matches', mid), { finished: true, match_status: 'FT' });
+  // ── Leer campos ET / Penales ──
+  const hasET  = document.getElementById('chkET')?.checked  || false;
+  const hasPEN = document.getElementById('chkPEN')?.checked || false;
+  const etHome = hasET ? (parseInt(document.getElementById('etHome')?.value) || null) : null;
+  const etAway = hasET ? (parseInt(document.getElementById('etAway')?.value) || null) : null;
+  const penWinner = hasPEN ? (document.getElementById('penWinner')?.value || null) : null;
 
+  // Validaciones
+  if (hasET && (etHome === null || etAway === null)) {
+    msg.innerHTML = badge('⚠️ Completa el marcador de Tiempo Extra', 'warning');
+    return;
+  }
+  if (hasPEN && !penWinner) {
+    msg.innerHTML = badge('⚠️ Selecciona el equipo ganador en penales', 'warning');
+    return;
+  }
+
+  // Construir objeto de actualización
+  const updateData = {
+    finished: true,
+    match_status: hasPEN ? 'PEN' : (hasET ? 'AET' : 'FT'),
+  };
+  if (hasET) {
+    updateData.extra_time      = true;
+    updateData.et_home_score   = etHome;
+    updateData.et_away_score   = etAway;
+  }
+  if (hasPEN) {
+    updateData.penalties         = true;
+    updateData.penalties_winner  = penWinner;
+  }
+
+  await updateDoc(doc(db, 'matches', mid), updateData);
+
+  // Calcular puntos de pronósticos
   const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id', '==', mid)));
   const batch = writeBatch(db);
   predsSnap.forEach(predDoc => {
@@ -255,21 +284,35 @@ document.getElementById('closeMatchBtn')?.addEventListener('click', async () => 
     batch.update(predDoc.ref, { points: pts, points_synced: true });
   });
 
-  const { favCount } = await recalcFavoritesForMatch(matchData, mid, batch);
+  // Enriquecer matchData para favoritos (agregar penales_winner si aplica)
+  const enrichedMatch = { ...matchData, ...updateData };
+  const { favCount } = await recalcFavoritesForMatch(enrichedMatch, mid, batch);
   await batch.commit();
 
-  // ── NUEVO: propagar ganador a Octavos si es partido R32 ──
+  // Propagar ganador a Octavos si aplica
   let octMsg = '';
   try {
-    const result = await propagateWinnerToOctavos(matchData, mid);
+    const result = await propagateWinnerToOctavos(enrichedMatch, mid);
     if (result) octMsg = '<br><span style="font-size:12px;color:#86efac">' + result + '</span>';
   } catch(e) {
     octMsg = '<br><span style="font-size:12px;color:#fca5a5">⚠️ No se pudo propagar a Octavos: ' + e.message + '</span>';
   }
 
+  // Resumen del cierre
+  let extra = '';
+  if (hasET)  extra += ' ⏱️ ET ' + etHome + '–' + etAway;
+  if (hasPEN) extra += ' 🎯 Penales → ' + penWinner;
+
   msg.innerHTML = '<div class="mt-2 p-2 rounded" style="background:rgba(22,163,74,0.15);border:1px solid var(--green);color:var(--green-light)">' +
-    '✅ Partido cerrado — ' + predsSnap.size + ' pronósticos calculados — ' + favCount + ' favoritos actualizados' +
+    '✅ Partido cerrado' + extra + ' — ' + predsSnap.size + ' pronósticos calculados — ' + favCount + ' favoritos actualizados' +
     octMsg + '</div>';
+
+  // Reset checkboxes
+  const chkET  = document.getElementById('chkET');
+  const chkPEN = document.getElementById('chkPEN');
+  if (chkET)  { chkET.checked  = false; document.getElementById('etScoreRow')?.classList.add('d-none'); }
+  if (chkPEN) { chkPEN.checked = false; document.getElementById('penWinnerRow')?.classList.add('d-none'); }
+
   await loadMatchesAdmin();
   await loadMatchesInProgress();
   await loadMatchesDone();
@@ -422,7 +465,11 @@ document.getElementById('resetResultBtn')?.addEventListener('click', async () =>
   });
 
   await batch.commit();
-  await updateDoc(doc(db, 'matches', mid), { home_score: null, away_score: null, finished: false, match_status: '' });
+  await updateDoc(doc(db, 'matches', mid), {
+    home_score: null, away_score: null, finished: false, match_status: '',
+    extra_time: false, et_home_score: null, et_away_score: null,
+    penalties: false, penalties_winner: null,
+  });
 
   msg.innerHTML = '<div style="color:#fbbf24">🔄 Resultado reseteado — partido vuelve a pendiente</div>';
   await loadMatchesAdmin();
@@ -451,8 +498,10 @@ async function loadAllMatchesList() {
       timeZone: 'America/La_Paz', day:'2-digit', month:'short', hour:'numeric', minute:'2-digit', hour12: true
     });
     const safeLabel = (m.home_team + ' vs ' + m.away_team).replace(/'/g, "\\'");
+    const etTag = m.extra_time  ? ' <span style="font-size:10px;color:#fb923c">(ET)</span>'  : '';
+    const penTag = m.penalties  ? ' <span style="font-size:10px;color:#f59e0b">(PEN)</span>' : '';
     const statusBadge = isDone
-      ? '<span style="font-size:0.75rem;background:rgba(52,211,153,0.12);color:#34d399;border-radius:20px;padding:2px 8px;font-weight:700">FINAL ' + m.home_score + '-' + m.away_score + '</span>'
+      ? '<span style="font-size:0.75rem;background:rgba(52,211,153,0.12);color:#34d399;border-radius:20px;padding:2px 8px;font-weight:700">FINAL ' + m.home_score + '-' + m.away_score + etTag + penTag + '</span>'
       : hasScore
         ? '<span style="font-size:0.75rem;background:rgba(74,175,212,0.12);color:#4aafd4;border-radius:20px;padding:2px 8px;font-weight:700">EN JUEGO ' + m.home_score + '-' + m.away_score + '</span>'
         : '<span style="font-size:0.75rem;color:var(--text-muted)">Pendiente</span>';
