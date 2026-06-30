@@ -44,6 +44,12 @@
     .card.danger a { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.35); color: #f87171; }
     .card.danger a:hover { background: rgba(239,68,68,0.25); }
     .card.muted a  { background: rgba(100,116,139,0.15); border-color: rgba(100,116,139,0.3); color: #94a3b8; }
+    /* Estilo especial para tarjetas de stream (azul) */
+    .card.stream { border-color: rgba(29,144,198,0.25); }
+    .card.stream:hover { border-color: rgba(29,144,198,0.55); }
+    .card.stream a { background: rgba(29,144,198,0.15); border-color: rgba(29,144,198,0.45); color: #4aafd4; }
+    .card.stream a + a { margin-left: 6px; }
+    .card.stream a:hover { background: rgba(29,144,198,0.30); }
   </style>
 </head>
 <body>
@@ -51,7 +57,7 @@
 <h1>⚙️ Admin Hub</h1>
 <p class="subtitle">Panel central de administración · World Cup 2026</p>
 
-<!-- ── PRINCIPAL ─────────────────────────────────── -->
+<!-- ── PRINCIPAL ───────────────────────────────────── -->
 <h2>🏠 Principal</h2>
 <div class="grid">
 
@@ -85,7 +91,34 @@
 
 </div>
 
-<!-- ── PARTIDOS ─────────────────────────────────── -->
+<!-- ── PANTALLA COMPARTIDA ───────────────────────── -->
+<h2>📡 Pantalla Compartida (WebRTC)</h2>
+<div class="grid">
+
+  <div class="card stream">
+    <div class="icon">🖥️</div>
+    <div class="label">Emisor — Compartir pantalla</div>
+    <div class="desc">Página para el host: comparte tu pantalla con audio al grupo. Genera el código de sesión.</div>
+    <a href="screen-share.html" target="_blank">Abrir emisor</a>
+  </div>
+
+  <div class="card stream">
+    <div class="icon">📺</div>
+    <div class="label">Visor independiente</div>
+    <div class="desc">Página dedicada para ver la pantalla compartida. Soporta pantalla completa, Chromecast y AirPlay.</div>
+    <a href="stream-view.html" target="_blank">Abrir visor</a>
+  </div>
+
+  <div class="card stream">
+    <div class="icon">👥</div>
+    <div class="label">Dashboard jugador (tab TV)</div>
+    <div class="desc">Vista del jugador con el bloque de pantalla compartida integrado dentro del tab “Ver en vivo”.</div>
+    <a href="dashboard.html" target="_blank">Abrir dashboard</a>
+  </div>
+
+</div>
+
+<!-- ── PARTIDOS ───────────────────────────────────── -->
 <h2>⚽ Partidos</h2>
 <div class="grid">
 
@@ -202,7 +235,7 @@
 
 </div>
 
-<!-- ── MIGRACIONES ──────────────────────────────── -->
+<!-- ── MIGRACIONES ────────────────────────────────── -->
 <h2>🔄 Migraciones</h2>
 <div class="grid">
 
