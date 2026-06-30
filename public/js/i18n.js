@@ -109,6 +109,44 @@
       'dash.delete_type_placeholder': 'Escribe el nombre aquí...',
       'dash.delete_confirm_btn': 'Sí, eliminar definitivamente',
 
+      // ── GROUP (group.html) ──
+      'group.code':              'Código',
+      'group.prize':             'Premio',
+      'group.my_points':         'Mis puntos',
+      'group.my_favs':           'Mis favoritos',
+      'group.manage_favs':       'Ver / cambiar favoritos',
+      'group.bracket_title':     'Bracket Ronda de 32',
+      'group.bracket_desc':      'Ver todos los cruces y hacer tus pronósticos de eliminación',
+      'group.tab.groups':        'Fase de Grupos',
+      'group.tab.rules':         'Cómo jugar',
+      'group.scroll_hint':       'Desliza para ver más opciones',
+      'group.pot':               'Pozo',
+      'group.no_fee':            'Sin cuota',
+      'group.no_prize':          'Sin definir',
+      'group.fee_label':         'Cuota',
+      'group.code_copied':       'Código copiado',
+      'group.of':                'de',
+      'group.toward':            'Hacia',
+      'group.max_level':         '🔥 ¡Nivel máximo!',
+
+      // ── PREDICT (predict.html) ──
+      'predict.title':           '⚽ WC2026 — Pronóstico',
+      'predict.back':            '← Volver',
+      'predict.loading':         'cargando...',
+      'predict.prev':            '← Anterior',
+      'predict.next':            'Siguiente →',
+      'predict.local':           'Local',
+      'predict.visit':           'Visita',
+      'predict.penalty_q':       '🥅 ¿Quién gana en penales?',
+      'predict.penalty_hint':    'Obligatorio si pronosticas empate',
+      'predict.save':            '💾 Guardar pronóstico',
+      'predict.back_dash':       '🏠 Volver al Dashboard',
+      'predict.pts_exact':       'Score exacto',
+      'predict.pts_correct':     'Resultado correcto',
+      'predict.pts_wrong':       'Fallo',
+      'predict.deadline_passed': '⛔ El plazo de pronóstico ha cerrado.',
+      'predict.deadline_closes': '⏰ Cierra en',
+
       // ── MATCHES ──
       'matches.title':           '⚽ Partidos',
       'matches.filter.all':      'Todos',
@@ -380,6 +418,44 @@
       'dash.delete_type_placeholder': 'Type the name here...',
       'dash.delete_confirm_btn': 'Yes, delete permanently',
 
+      // ── GROUP (group.html) ──
+      'group.code':              'Code',
+      'group.prize':             'Prize',
+      'group.my_points':         'My points',
+      'group.my_favs':           'My favorites',
+      'group.manage_favs':       'View / change favorites',
+      'group.bracket_title':     'Round of 32 Bracket',
+      'group.bracket_desc':      'View all matchups and make your knockout predictions',
+      'group.tab.groups':        'Group Stage',
+      'group.tab.rules':         'How to play',
+      'group.scroll_hint':       'Swipe to see more options',
+      'group.pot':               'Pot',
+      'group.no_fee':            'No entry fee',
+      'group.no_prize':          'Not defined',
+      'group.fee_label':         'Fee',
+      'group.code_copied':       'Code copied',
+      'group.of':                'of',
+      'group.toward':            'Toward',
+      'group.max_level':         '🔥 Max level!',
+
+      // ── PREDICT (predict.html) ──
+      'predict.title':           '⚽ WC2026 — Prediction',
+      'predict.back':            '← Back',
+      'predict.loading':         'loading...',
+      'predict.prev':            '← Previous',
+      'predict.next':            'Next →',
+      'predict.local':           'Home',
+      'predict.visit':           'Away',
+      'predict.penalty_q':       '🥅 Who wins on penalties?',
+      'predict.penalty_hint':    'Required if you predict a draw',
+      'predict.save':            '💾 Save prediction',
+      'predict.back_dash':       '🏠 Back to Dashboard',
+      'predict.pts_exact':       'Exact score',
+      'predict.pts_correct':     'Correct result',
+      'predict.pts_wrong':       'Miss',
+      'predict.deadline_passed': '⛔ The prediction window has closed.',
+      'predict.deadline_closes': '⏰ Closes in',
+
       // ── MATCHES ──
       'matches.title':           '⚽ Matches',
       'matches.filter.all':      'All',
@@ -555,19 +631,11 @@
   let currentLang = localStorage.getItem(STORAGE_KEY) || 'es';
 
   // ─── API PÚBLICA ─────────────────────────────────────────────────────────────
-
-  /**
-   * Traduce una clave. Soporta interpolación: t('key', { name: 'Juan' })
-   * donde la clave contiene {{name}}.
-   */
   window.t = function(key, vars) {
     const dict = translations[currentLang] || translations['es'];
     let text = dict[key];
-    if (text === undefined) {
-      // fallback: intenta en español
-      text = translations['es'][key];
-    }
-    if (text === undefined) return key; // último fallback: la propia clave
+    if (text === undefined) text = translations['es'][key];
+    if (text === undefined) return key;
     if (vars) {
       Object.keys(vars).forEach(k => {
         text = text.replace(new RegExp(`{{${k}}}`, 'g'), vars[k]);
@@ -576,17 +644,14 @@
     return text;
   };
 
-  /** Retorna el idioma actual ('es' | 'en') */
   window.getLang = function() { return currentLang; };
 
-  /** Cambia el idioma y re-renderiza todos los elementos data-i18n */
   window.setLang = function(lang) {
     if (!translations[lang]) return;
     currentLang = lang;
     localStorage.setItem(STORAGE_KEY, lang);
     applyTranslations();
     updateLangBtn();
-    // Dispara evento para que los módulos JS puedan reaccionar
     document.dispatchEvent(new CustomEvent('langchange', { detail: { lang } }));
   };
 
@@ -594,7 +659,7 @@
   function applyTranslations() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.getAttribute('data-i18n');
-      const attr = el.getAttribute('data-i18n-attr'); // e.g. 'placeholder'
+      const attr = el.getAttribute('data-i18n-attr');
       const translation = window.t(key);
       if (attr) {
         el.setAttribute(attr, translation);
@@ -602,14 +667,12 @@
         el.textContent = translation;
       }
     });
-    // Actualiza lang del <html> para accesibilidad
     document.documentElement.lang = currentLang;
   }
 
   function updateLangBtn() {
     const btn = document.getElementById('langToggleBtn');
     if (!btn) return;
-    // Muestra la bandera del idioma ALTERNATIVO (el que puedes cambiar)
     btn.textContent = currentLang === 'es' ? '🇺🇸 EN' : '🇧🇴 ES';
     btn.title = currentLang === 'es' ? 'Switch to English' : 'Cambiar a Español';
   }
@@ -618,8 +681,6 @@
   document.addEventListener('DOMContentLoaded', () => {
     applyTranslations();
     updateLangBtn();
-
-    // Conectar botón si existe
     document.getElementById('langToggleBtn')?.addEventListener('click', () => {
       window.setLang(currentLang === 'es' ? 'en' : 'es');
     });

@@ -11,6 +11,7 @@
     gtag('js', new Date());
     gtag('config', 'G-6W7JNJCG36');
   </script>
+  <script src="js/i18n.js"></script>
   <script src="js/theme.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="css/style.css">
@@ -21,7 +22,6 @@
       50%      { opacity:0.6; }
     }
     .pulse-red { animation: pulse-red 1.2s infinite; }
-
     .match-nav {
       display: flex;
       align-items: center;
@@ -48,7 +48,6 @@
       text-align: center;
       line-height: 1.3;
     }
-
     #penaltyWinnerWrap {
       display: none;
       margin-bottom: 20px;
@@ -83,20 +82,23 @@
   <nav class="navbar">
     <div class="navbar-brand">
       <div>
-        <div>⚽ WC2026 — Pronóstico</div>
+        <div>⚽ WC2026 — <span data-i18n="predict.title">Pronóstico</span></div>
         <div class="navbar-powered">by Largotek</div>
       </div>
     </div>
-    <a id="backLink" href="group.html" class="btn btn-outline-light btn-sm">← Volver</a>
+    <div class="d-flex gap-2 align-items-center">
+      <button id="langToggleBtn" class="btn btn-outline-light btn-sm">🇺🇸 EN</button>
+      <a id="backLink" href="group.html" class="btn btn-outline-light btn-sm" data-i18n="predict.back">← Volver</a>
+    </div>
   </nav>
 
   <div class="container py-4" style="max-width:500px">
     <div id="deadlineBanner" class="d-none mb-3"></div>
 
     <div class="match-nav" id="matchNav">
-      <a id="navPrev" href="#" class="btn btn-outline-secondary btn-sm disabled">&#8592; Anterior</a>
-      <div class="nav-counter" id="navCounter">cargando...</div>
-      <a id="navNext" href="#" class="btn btn-outline-primary btn-sm disabled">Siguiente &#8594;</a>
+      <a id="navPrev" href="#" class="btn btn-outline-secondary btn-sm disabled" data-i18n="predict.prev">← Anterior</a>
+      <div class="nav-counter" id="navCounter" data-i18n="predict.loading">cargando...</div>
+      <a id="navNext" href="#" class="btn btn-outline-primary btn-sm disabled" data-i18n="predict.next">Siguiente →</a>
     </div>
 
     <div class="card p-4 text-center">
@@ -106,7 +108,7 @@
           <div id="homeFlag" style="font-size:3.5rem;line-height:1"></div>
           <div id="homeName" style="font-weight:700;font-size:1rem;margin-top:6px"></div>
         </div>
-        <div style="color:var(--text-muted);font-size:1.1rem;font-weight:500">vs</div>
+        <div style="color:var(--text-muted);font-size:1.1rem;font-weight:500" data-i18n="lbl.vs">vs</div>
         <div class="text-center">
           <div id="awayFlag" style="font-size:3.5rem;line-height:1"></div>
           <div id="awayName" style="font-weight:700;font-size:1rem;margin-top:6px"></div>
@@ -121,25 +123,25 @@
       <form id="predictForm">
         <div class="d-flex justify-content-center gap-4 mb-3">
           <div class="text-center">
-            <label class="form-label">Local</label>
+            <label class="form-label" data-i18n="predict.local">Local</label>
             <input type="number" id="homeScore" min="0" max="20" class="form-control score-input" required>
           </div>
           <div class="d-flex align-items-end pb-2" style="color:var(--text-muted);font-size:1.5rem">-</div>
           <div class="text-center">
-            <label class="form-label">Visita</label>
+            <label class="form-label" data-i18n="predict.visit">Visita</label>
             <input type="number" id="awayScore" min="0" max="20" class="form-control score-input" required>
           </div>
         </div>
 
         <div id="penaltyWinnerWrap">
-          <div style="font-size:11px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">
+          <div style="font-size:11px;color:var(--gold);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px" data-i18n="predict.penalty_q">
             🥅 ¿Quién gana en penales?
           </div>
           <div style="display:flex;gap:8px;" id="penaltyBtns"></div>
-          <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Obligatorio si pronosticas empate</div>
+          <div style="font-size:11px;color:var(--text-muted);margin-top:6px" data-i18n="predict.penalty_hint">Obligatorio si pronosticas empate</div>
         </div>
 
-        <button type="submit" id="submitPrediction" class="btn btn-success w-100 py-2" style="font-size:1rem;font-weight:700">
+        <button type="submit" id="submitPrediction" class="btn btn-success w-100 py-2" style="font-size:1rem;font-weight:700" data-i18n="predict.save">
           💾 Guardar pronóstico
         </button>
       </form>
@@ -147,26 +149,26 @@
     </div>
 
     <div class="text-center mt-3">
-      <a id="dashboardLink" href="group.html" class="btn btn-outline-light btn-sm" style="font-size:0.8rem;opacity:0.7">
+      <a id="dashboardLink" href="group.html" class="btn btn-outline-light btn-sm" style="font-size:0.8rem;opacity:0.7" data-i18n="predict.back_dash">
         🏠 Volver al Dashboard
       </a>
     </div>
 
     <div class="text-center mt-2" style="color:var(--text-muted);font-size:12px">
-      🔮 Score exacto = <strong style="color:var(--gold)">6pts</strong>
+      🔮 <span data-i18n="predict.pts_exact">Score exacto</span> = <strong style="color:var(--gold)">6pts</strong>
       &nbsp;·&nbsp;
-      ✅ Resultado correcto = <strong style="color:var(--green-light)">3pts</strong>
+      ✅ <span data-i18n="predict.pts_correct">Resultado correcto</span> = <strong style="color:var(--green-light)">3pts</strong>
       &nbsp;·&nbsp;
-      ❌ Fallo = 0pts
+      ❌ <span data-i18n="predict.pts_wrong">Fallo</span> = 0pts
     </div>
   </div>
 
   <div class="footer-brand">
-    ⚽ WC2026 &nbsp;— Desarrollado por
+    ⚽ WC2026 &nbsp;— <span data-i18n="footer.developed_by">Desarrollado por</span>
     <strong style="color:var(--primary-light)">Largotek</strong>
     <div style="margin-top:6px;font-size:10px;color:rgba(148,163,184,0.4)">
-      Juego de entretenimiento privado — No es un sitio de apuestas —
-      <a href="legal.html" target="_blank" style="color:rgba(148,163,184,0.4);text-decoration:underline">Términos de uso</a>
+      <span data-i18n="footer.disclaimer">Juego de entretenimiento privado — No es un sitio de apuestas —</span>
+      <a href="legal.html" target="_blank" style="color:rgba(148,163,184,0.4);text-decoration:underline" data-i18n="footer.terms">Términos de uso</a>
     </div>
   </div>
 
@@ -177,7 +179,6 @@
     import { injectSponsor } from './js/sponsor-config.js';
     injectSponsor();
   </script>
-  <!-- Chat flotante -->
   <script type="module" src="js/chat-widget.js"></script>
 </body>
 </html>
