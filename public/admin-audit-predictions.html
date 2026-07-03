@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Auditoría de Pronósticos — WC2026</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .audit-card {
+      background: var(--card-bg, rgba(30,41,59,0.95));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .audit-card h2 { margin-top: 0; font-size: 1.1rem; color: #f1f5f9; }
+    .filter-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .filter-row input, .filter-row select {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      color: #f1f5f9;
+      padding: 8px 12px;
+      font-size: 13px;
+      flex: 1;
+      min-width: 160px;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th {
+      text-align: left;
+      padding: 10px 12px;
+      color: #94a3b8;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    td { padding: 10px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
+    tr:hover td { background: rgba(255,255,255,0.03); }
+    .edit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .form-group label { display:block; font-size:11px; color:#94a3b8; margin-bottom:5px; }
+    .form-group input, .form-group textarea {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 8px;
+      color: #f1f5f9;
+      padding: 10px 12px;
+      font-size: 14px;
+      box-sizing: border-box;
+    }
+    .form-group textarea { resize: vertical; min-height: 60px; font-size:13px; }
+    .btn-primary {
+      background: linear-gradient(135deg,#6366f1,#8b5cf6);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 11px 22px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-primary:hover { opacity: .88; }
+    .btn-primary:disabled { opacity: .45; cursor: not-allowed; }
+    .btn-sec {
+      background: rgba(255,255,255,0.07);
+      color: #cbd5e1;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 11px 22px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .current-box {
+      background: rgba(0,0,0,0.25);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    pre#editLog {
+      background: #0f172a;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 12px;
+      white-space: pre-wrap;
+      max-height: 180px;
+      overflow-y: auto;
+      display: none;
+      margin-top: 12px;
+    }
+    #auditStatus { font-size: 12px; margin-top: 8px; min-height: 18px; }
+    .back-link { color: #6366f1; text-decoration: none; font-size: 13px; }
+    .back-link:hover { text-decoration: underline; }
+    .section-divider {
+      border: none;
+      border-top: 1px solid rgba(255,255,255,0.08);
+      margin: 28px 0;
+    }
+  </style>
+</head>
+<body>
+<div style="max-width:1100px;margin:0 auto;padding:24px 16px">
+
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
+    <a href="admin-hub.html" class="back-link">← Admin Hub</a>
+    <h1 style="margin:0;font-size:1.4rem">🕵️ Auditoría de Pronósticos</h1>
+  </div>
+
+  <!-- ═══ SECCIÓN 1: CORRECCIÓN MANUAL ════════════════════════════════════ -->
+  <div class="audit-card">
+    <h2>✏️ Corrección Manual con Trazabilidad</h2>
+    <p style="color:#94a3b8;font-size:13px;margin-top:-6px">Edita el pronóstico de un usuario. El valor anterior queda registrado automáticamente en el historial antes de aplicar el cambio.</p>
+
+    <div style="display:flex;gap:10px;align-items:flex-end;margin-bottom:16px">
+      <div style="flex:1">
+        <label style="display:block;font-size:11px;color:#94a3b8;margin-bottom:5px">ID del pronóstico (formato: groupId_uid_matchId)</label>
+        <input type="text" id="editPredId" placeholder="ej: abc123_xYzUid_match_R32_01" style="width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#f1f5f9;padding:10px 12px;font-size:13px;font-family:monospace;box-sizing:border-box">
+      </div>
+      <button id="btnLoadPred" class="btn-sec">🔍 Cargar</button>
+    </div>
+
+    <div id="editForm" style="display:none">
+      <div id="editCurrent" class="current-box"></div>
+
+      <div class="edit-grid">
+        <div class="form-group">
+          <label>Nuevo marcador — Local</label>
+          <input type="number" id="editHome" min="0" max="30" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>Nuevo marcador — Visitante</label>
+          <input type="number" id="editAway" min="0" max="30" placeholder="0">
+        </div>
+        <div class="form-group" style="grid-column:span 2">
+          <label>Motivo de la corrección (opcional)</label>
+          <textarea id="editReason" placeholder="ej: Error de dedo, se ingresó al usuario equivocado"></textarea>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button id="btnSavePred" class="btn-primary">💾 Guardar corrección</button>
+        <span style="font-size:12px;color:#f59e0b;align-self:center">⚠️ Acción irreversible — el anterior queda en el historial</span>
+      </div>
+    </div>
+    <pre id="editLog"></pre>
+  </div>
+
+  <hr class="section-divider">
+
+  <!-- ═══ SECCIÓN 2: HISTORIAL ════════════════════════════════════════════ -->
+  <div class="audit-card">
+    <h2>📋 Historial de cambios</h2>
+
+    <div class="filter-row">
+      <select id="filterGroup"><option value="">Todas las comparsas</option></select>
+      <input type="text" id="filterUser"  placeholder="🔎 Filtrar por usuario...">
+      <input type="text" id="filterMatch" placeholder="🔎 Filtrar por partido...">
+    </div>
+
+    <div style="margin-bottom:14px">
+      <button id="btnLoadAudit" class="btn-primary">🔍 Cargar historial</button>
+      <div id="auditStatus"></div>
+    </div>
+
+    <div style="overflow-x:auto">
+      <table id="auditTable" style="display:none">
+        <thead>
+          <tr>
+            <th>Fecha/hora</th>
+            <th>Comparsa</th>
+            <th>Usuario</th>
+            <th>Partido</th>
+            <th>Antes</th>
+            <th>Después</th>
+            <th>Motivo / Admin</th>
+          </tr>
+        </thead>
+        <tbody id="auditBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script type="module" src="js/theme.js"></script>
+<script type="module" src="js/admin-audit-predictions.js"></script>
+</body>
+</html>
