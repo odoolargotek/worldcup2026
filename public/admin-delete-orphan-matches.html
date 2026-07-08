@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Borrar Partidos Huérfanos — Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body { background: var(--bg-dark,#0f172a); color: var(--text,#e2e8f0); font-family:'Inter',sans-serif; padding:20px; }
+    h1 { font-size:1.4rem; font-weight:800; color:#f59e0b; margin-bottom:4px; }
+    .subtitle { color:#64748b; font-size:0.85rem; margin-bottom:20px; }
+    .warn-box { background:rgba(239,68,68,0.10); border:1px solid rgba(239,68,68,0.3); border-radius:8px; padding:12px; color:#fca5a5; font-size:0.82rem; margin-bottom:14px; }
+    .info-box { background:rgba(99,102,241,0.1); border:1px solid rgba(99,102,241,0.3); border-radius:8px; padding:12px; color:#a5b4fc; font-size:0.82rem; margin-bottom:14px; }
+    #logBox { background:rgba(0,0,0,0.3); border:1px solid rgba(255,255,255,0.1); border-radius:8px; padding:12px; font-size:12px; font-family:monospace; min-height:80px; max-height:450px; overflow-y:auto; color:#86efac; margin-top:16px; }
+    .btn-a { font-weight:700; border:none; border-radius:8px; padding:8px 20px; cursor:pointer; }
+    .btn-scan { background:linear-gradient(135deg,#6366f1,#4f46e5); color:#fff; }
+    .btn-del  { background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; }
+    .btn-a:disabled { opacity:0.5; cursor:not-allowed; }
+    a.back-link { color:#94a3b8; font-size:0.82rem; text-decoration:none; display:inline-block; margin-bottom:16px; }
+    a.back-link:hover { color:#f59e0b; }
+    table.t { width:100%; border-collapse:collapse; font-size:11.5px; margin-top:10px; }
+    table.t th { color:#94a3b8; font-weight:600; padding:4px 8px; border-bottom:1px solid rgba(255,255,255,0.1); text-align:left; }
+    table.t td { padding:5px 8px; border-bottom:1px solid rgba(255,255,255,0.05); }
+    .del-row { background:rgba(239,68,68,0.08); }
+  </style>
+</head>
+<body>
+  <a href="admin-hub.html" class="back-link">← Volver al Admin Hub</a>
+  <h1>🗑️ Borrar Partidos Huérfanos ("Mejor 3°")</h1>
+  <p class="subtitle">Elimina los partidos de Octavos con equipos placeholder tipo "Mejor 3° (E/F/G/H)" que quedaron sin resolver.</p>
+
+  <div class="info-box">
+    ℹ️ Estos partidos aparecen en la vista de usuarios porque tienen <code>finished: false</code> y su kickoff ya pasó o está hoy.
+    No corresponden a ningún partido real del torneo y deben eliminarse.
+  </div>
+
+  <div class="warn-box" id="warnBox" style="display:none">
+    ⚠️ Los partidos encontrados <strong>serán eliminados permanentemente</strong> junto a sus pronósticos. Esta acción no se puede deshacer.
+  </div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+    <button class="btn-a btn-scan" id="scanBtn">🔍 Escanear partidos huérfanos</button>
+    <button class="btn-a btn-del"  id="delBtn" disabled>🗑️ Eliminar todos</button>
+  </div>
+
+  <div id="logBox">Presiona "🔍 Escanear" para detectar los partidos huérfanos.</div>
+
+  <script type="module">
+    import { auth, db } from './js/firebase-config.js';
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
+    import {
+      collection, getDocs, doc, deleteDoc, query, where
+    } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+    // Criterio: cualquier partido cuyo home_team O away_team contiene "Mejor 3"
+    // (cubre "Mejor 3°", "Mejor 3º", "Mejor 3 restante", etc.)
+    function isMejor3(m) {
+      return (m.home_team || '').includes('Mejor 3') || (m.away_team || '').includes('Mejor 3');
+    }
+
+    let orphans = []; // { id, label, kickoffLabel, city, preds }
+
+    async function scan() {
+      const log     = document.getElementById('logBox');
+      const delBtn  = document.getElementById('delBtn');
+      const warnBox = document.getElementById('warnBox');
+      log.innerHTML = '🔍 Leyendo colección matches...<br>';
+      orphans = [];
+      warnBox.style.display = 'none';
+      delBtn.disabled = true;
+
+      const snap = await getDocs(collection(db, 'matches'));
+      const all  = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      const found = all.filter(isMejor3);
+
+      log.innerHTML += `📄 Total matches: ${all.length} · Huérfanos encontrados: <strong>${found.length}</strong><br><br>`;
+
+      if (!found.length) {
+        log.innerHTML += '<span style="color:#86efac">✔ No hay partidos huérfanos. Nada que eliminar.</span>';
+        return;
+      }
+
+      let tableHtml = `<table class="t">
+        <tr><th>Doc ID</th><th>Phase</th><th>Equipos</th><th>Kickoff (BO)</th><th>Ciudad</th><th>Finished</th></tr>`;
+
+      for (const m of found) {
+        const kickoffLabel = m.kickoff
+          ? (m.kickoff.toDate ? m.kickoff.toDate() : new Date(m.kickoff))
+              .toLocaleString('es-BO', { timeZone:'America/La_Paz', weekday:'short', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', hour12:true })
+          : '— sin fecha';
+
+        // contar pronósticos
+        const predsSnap = await getDocs(query(collection(db,'predictions'), where('match_id','==',m.id)));
+        orphans.push({ id: m.id, label: `${m.home_team} vs ${m.away_team} (${m.phase})`, kickoffLabel, preds: predsSnap.size });
+
+        tableHtml += `<tr class="del-row">
+          <td style="font-size:10px;color:#64748b">${m.id.substring(0,14)}…</td>
+          <td>${m.phase || '—'}</td>
+          <td>${m.home_flag||''} ${m.home_team} vs ${m.away_team} ${m.away_flag||''}</td>
+          <td>${kickoffLabel}</td>
+          <td>${m.city || '—'}</td>
+          <td>${m.finished ? '✅' : '❌ pendiente'}</td>
+        </tr>`;
+      }
+
+      tableHtml += '</table>';
+      log.innerHTML += tableHtml;
+
+      const totalPreds = orphans.reduce((s,o) => s + o.preds, 0);
+      log.innerHTML += `<br><span style="color:#fca5a5">⚠️ ${orphans.length} partido(s) a eliminar · ${totalPreds} pronóstico(s) asociados serán borrados también.</span>`;
+
+      warnBox.style.display = 'block';
+      delBtn.disabled = false;
+    }
+
+    async function deleteAll() {
+      const log    = document.getElementById('logBox');
+      const delBtn = document.getElementById('delBtn');
+      const scanBtn = document.getElementById('scanBtn');
+      if (!orphans.length) return;
+
+      const ok = window.confirm(
+        `⚠️ Se eliminarán ${orphans.length} partido(s):\n` +
+        orphans.map(o => `  • ${o.label}  [${o.kickoffLabel}]  (${o.preds} pronósticos)`).join('\n') +
+        '\n\n¿Confirmar eliminación?'
+      );
+      if (!ok) return;
+
+      delBtn.disabled = true; delBtn.textContent = '⏳ Eliminando...';
+      scanBtn.disabled = true;
+      log.innerHTML += '<br>🗑️ Eliminando...<br>';
+
+      let done = 0, errs = 0;
+      for (const o of orphans) {
+        try {
+          // borrar pronósticos
+          const predsSnap = await getDocs(query(collection(db,'predictions'), where('match_id','==',o.id)));
+          for (const p of predsSnap.docs) await deleteDoc(p.ref);
+          await deleteDoc(doc(db,'matches', o.id));
+          log.innerHTML += `✅ Eliminado: ${o.label} (${predsSnap.size} pronósticos borrados)<br>`;
+          done++;
+        } catch(e) {
+          log.innerHTML += `❌ Error: ${o.id} — ${e.message}<br>`;
+          errs++;
+        }
+      }
+
+      log.innerHTML += `<br><strong style="color:#f59e0b">✔ ${done} eliminados · ${errs} errores.</strong>`;
+      log.innerHTML += `<br><span style="color:#94a3b8;font-size:11px">Recarga la app para confirmar que ya no aparecen.</span>`;
+      delBtn.textContent = '🗑️ Eliminar todos';
+      scanBtn.disabled = false;
+      orphans = [];
+      document.getElementById('warnBox').style.display = 'none';
+      delBtn.disabled = true;
+    }
+
+    onAuthStateChanged(auth, user => {
+      if (!user) { window.location.href = 'index.html'; return; }
+      document.getElementById('scanBtn').addEventListener('click', scan);
+      document.getElementById('delBtn').addEventListener('click', deleteAll);
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
