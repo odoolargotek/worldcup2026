@@ -10,48 +10,60 @@
     body { background: var(--bg-dark, #0f172a); color: var(--text, #e2e8f0); font-family: 'Inter', sans-serif; padding: 20px; }
     h1 { font-size: 1.4rem; font-weight: 800; color: #f59e0b; margin-bottom: 4px; }
     .subtitle { color: #64748b; font-size: 0.85rem; margin-bottom: 20px; }
-    .info-box { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); border-radius: 8px; padding: 12px; color: #a5b4fc; font-size: 0.82rem; margin-bottom: 16px; }
-    #logBox { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; font-size: 12px; font-family: monospace; min-height: 80px; max-height: 400px; overflow-y: auto; color: #86efac; margin-top: 16px; }
+    .info-box  { background: rgba(99,102,241,0.1);  border: 1px solid rgba(99,102,241,0.3);  border-radius: 8px; padding: 12px; color: #a5b4fc; font-size: 0.82rem; margin-bottom: 10px; }
+    .warn-box  { background: rgba(239,68,68,0.10);  border: 1px solid rgba(239,68,68,0.3);   border-radius: 8px; padding: 12px; color: #fca5a5; font-size: 0.82rem; margin-bottom: 10px; }
+    #logBox { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; font-size: 12px; font-family: monospace; min-height: 80px; max-height: 500px; overflow-y: auto; color: #86efac; margin-top: 16px; }
     .btn-action { font-weight: 700; border: none; border-radius: 8px; padding: 8px 20px; cursor: pointer; }
-    .btn-scan  { background: linear-gradient(135deg,#6366f1,#4f46e5); color: #fff; }
-    .btn-patch { background: linear-gradient(135deg,#f59e0b,#d97706); color: #000; }
+    .btn-scan   { background: linear-gradient(135deg,#6366f1,#4f46e5); color: #fff; }
+    .btn-patch  { background: linear-gradient(135deg,#f59e0b,#d97706); color: #000; }
+    .btn-danger { background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; }
     .btn-action:disabled { opacity: 0.5; cursor: not-allowed; }
     a.back-link { color: #94a3b8; font-size: 0.82rem; text-decoration: none; display: inline-block; margin-bottom: 16px; }
     a.back-link:hover { color: #f59e0b; }
-    #previewTable { width:100%; border-collapse:collapse; font-size:12px; margin-top:12px; }
-    #previewTable th { color:#94a3b8; font-weight:600; padding:4px 8px; border-bottom:1px solid rgba(255,255,255,0.1); text-align:left; }
-    #previewTable td { padding:5px 8px; border-bottom:1px solid rgba(255,255,255,0.05); }
-    .tag-ok   { color:#86efac; } .tag-warn { color:#fbbf24; } .tag-err { color:#fca5a5; }
+    table.ptable { width:100%; border-collapse:collapse; font-size:11.5px; margin-top:10px; }
+    table.ptable th { color:#94a3b8; font-weight:600; padding:4px 8px; border-bottom:1px solid rgba(255,255,255,0.1); text-align:left; }
+    table.ptable td { padding:5px 8px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle; }
+    .tag-ok   { color:#86efac; } .tag-warn { color:#fbbf24; } .tag-err { color:#fca5a5; } .tag-fix { color:#60a5fa; }
+    .sep { border-top: 1px solid rgba(255,255,255,0.12); margin: 18px 0 12px; }
   </style>
 </head>
 <body>
   <a href="admin-hub.html" class="back-link">← Volver al Admin Hub</a>
-  <h1>🔧 Parchear campo <code>slot</code> en partidos eliminatorios</h1>
-  <p class="subtitle">Asigna el campo <code>slot</code> (QF1–QF4, SF1, SF2, 3P, FIN) a los partidos que fueron cargados sin él.</p>
+  <h1>🔧 Parchear campo <code>slot</code> — Partidos eliminatorios</h1>
+  <p class="subtitle">Asigna el campo <code>slot</code> (QF1–QF4, SF1, SF2, 3P, FIN) y limpia documentos duplicados o con slot incorrecto.</p>
 
   <div class="info-box">
-    ℹ️ Este script <strong>no crea ni borra</strong> partidos. Solo agrega el campo <code>slot</code> a documentos que ya existen en Firestore y que no lo tienen.
-    El mapeo se hace por <strong>phase + kickoff</strong> (fecha y hora exacta).
+    ℹ️ El mapeo usa <strong>phase + kickoff</strong> para identificar cada partido. El botón “Aplicar todo” realiza en orden:
+    <ol style="margin:6px 0 0 16px;padding:0">
+      <li>Elimina documentos <strong>duplicados / legacy</strong> marcados en rojo</li>
+      <li>Normaliza slots incorrectos (ej. <code>"3er Puesto"</code> → <code>"3P"</code>)</li>
+      <li>Agrega <code>slot</code> a partidos que no lo tienen</li>
+    </ol>
   </div>
 
-  <div style="display:flex;gap:10px;flex-wrap:wrap">
-    <button class="btn-action btn-scan"  id="scanBtn">🔍 Escanear partidos sin slot</button>
-    <button class="btn-action btn-patch" id="patchBtn" disabled>⚡ Aplicar slots</button>
+  <div class="warn-box" id="dupWarning" style="display:none">
+    ⚠️ Se detectó al menos un documento <strong>duplicado o legacy</strong> (marcado en rojo). Será eliminado al aplicar. Sus pronósticos también serán borrados.
   </div>
 
-  <div id="logBox">Presiona "🔍 Escanear" para ver qué partidos necesitan el campo slot.</div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px">
+    <button class="btn-action btn-scan"  id="scanBtn">🔍 Escanear</button>
+    <button class="btn-action btn-patch" id="patchBtn" disabled>⚡ Aplicar todo</button>
+  </div>
+
+  <div id="logBox">Presiona "🔍 Escanear" para analizar los partidos eliminatorios.</div>
 
   <script type="module">
     import { auth, db } from './js/firebase-config.js';
     import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
-    import { collection, getDocs, doc, updateDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+    import {
+      collection, getDocs, doc, updateDoc, deleteDoc, query, where
+    } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
 
-    // Bolivia = UTC-4
     function boToUtc(y, mo, d, h, mi) {
       return new Date(Date.UTC(y, mo - 1, d, h + 4, mi));
     }
 
-    // Tabla maestra: slot -> kickoff UTC esperado (ms) + phase
+    // Mapa canónico: slot -> phase + kickoff esperado
     const SLOT_MAP = [
       { slot:'QF1', phase:'Cuartos de Final', kickoff: boToUtc(2026,7,9,16,0)  },
       { slot:'QF2', phase:'Cuartos de Final', kickoff: boToUtc(2026,7,10,15,0) },
@@ -63,110 +75,178 @@
       { slot:'FIN', phase:'Final',            kickoff: boToUtc(2026,7,19,17,0) },
     ];
 
-    let patchQueue = []; // { docId, slot, label }
+    // Slots válidos canónicos
+    const VALID_SLOTS = new Set(SLOT_MAP.map(s => s.slot));
 
-    function tsToMs(kickoff) {
-      if (!kickoff) return 0;
-      if (kickoff.toDate) return kickoff.toDate().getTime();
-      if (kickoff instanceof Date) return kickoff.getTime();
-      return new Date(kickoff).getTime();
+    function tsToMs(k) {
+      if (!k) return 0;
+      if (k.toDate) return k.toDate().getTime();
+      return new Date(k).getTime();
     }
+
+    // queue de acciones
+    let actions = []; // { type:'patch'|'normalize'|'delete', docId, slot?, label }
 
     async function scan() {
       const log = document.getElementById('logBox');
       const patchBtn = document.getElementById('patchBtn');
+      const dupWarn  = document.getElementById('dupWarning');
       log.innerHTML = '🔍 Leyendo colección matches...<br>';
-      patchQueue = [];
+      actions = [];
+      dupWarn.style.display = 'none';
 
       const snap = await getDocs(collection(db, 'matches'));
-      const allMatches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-
-      // Solo partidos de fases eliminatorias tardias
+      const all = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       const phases = new Set(['Cuartos de Final','Semifinales','Tercer Puesto','Final']);
-      const knockout = allMatches.filter(m => phases.has(m.phase));
+      const knockout = all.filter(m => phases.has(m.phase));
 
-      log.innerHTML += `📄 Partidos eliminatorios encontrados: <strong>${knockout.length}</strong><br><br>`;
+      log.innerHTML += `📄 Partidos eliminatorios: <strong>${knockout.length}</strong><br><br>`;
 
-      let tableHtml = `<table id="previewTable">
-        <tr><th>Doc ID</th><th>Phase</th><th>Equipos</th><th>Kickoff (BO)</th><th>Slot actual</th><th>Slot asignado</th></tr>`;
+      // Detectar qué slots canónicos ya tienen un doc válido
+      const claimedSlots = new Set();
+      // Primer paso: marcar los que tienen slot válido
+      knockout.forEach(m => {
+        if (m.slot && VALID_SLOTS.has(m.slot)) claimedSlots.add(m.slot);
+      });
+
+      let tableHtml = `<table class="ptable">
+        <tr><th>Doc ID</th><th>Phase</th><th>Equipos</th><th>Kickoff (BO)</th><th>Slot actual</th><th>Acción</th></tr>`;
+
+      let hasDups = false;
 
       knockout.forEach(m => {
-        const mMs = tsToMs(m.kickoff);
-        const match = SLOT_MAP.find(s => s.phase === m.phase && Math.abs(s.kickoff.getTime() - mMs) < 60000);
-        const hasSlot = !!m.slot;
-        const assignedSlot = match ? match.slot : null;
-
-        let rowClass = '', statusTag = '';
-        if (hasSlot) {
-          rowClass = 'tag-ok';
-          statusTag = `<span class="tag-ok">✅ ya tiene: ${m.slot}</span>`;
-        } else if (assignedSlot) {
-          rowClass = 'tag-warn';
-          statusTag = `<span class="tag-warn">⚠️ asignar: <strong>${assignedSlot}</strong></span>`;
-          patchQueue.push({ docId: m.id, slot: assignedSlot, label: `${m.home_team} vs ${m.away_team}` });
-        } else {
-          rowClass = 'tag-err';
-          statusTag = `<span class="tag-err">❌ no mapeado</span>`;
-        }
+        const mMs  = tsToMs(m.kickoff);
+        const entry = SLOT_MAP.find(s => s.phase === m.phase && Math.abs(s.kickoff.getTime() - mMs) < 90000);
+        const canonSlot = entry ? entry.slot : null;
 
         const kickoffLabel = m.kickoff
           ? (m.kickoff.toDate ? m.kickoff.toDate() : new Date(m.kickoff))
               .toLocaleString('es-BO', { timeZone:'America/La_Paz', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', hour12:true })
           : '—';
 
-        tableHtml += `<tr class="${rowClass}">
-          <td style="font-size:10px;color:#64748b">${m.id.substring(0,10)}…</td>
+        let actionTag = '', rowStyle = '';
+
+        if (m.slot && VALID_SLOTS.has(m.slot)) {
+          // Slot correcto ya asignado
+          actionTag = `<span class="tag-ok">✅ OK — ${m.slot}</span>`;
+        } else if (m.slot && !VALID_SLOTS.has(m.slot) && canonSlot) {
+          // Slot incorrecto (ej: "3er Puesto", "Final") → normalizar
+          actionTag = `<span class="tag-fix">🔄 Normalizar: <strong>${m.slot}</strong> → <strong>${canonSlot}</strong></span>`;
+          actions.push({ type:'normalize', docId: m.id, slot: canonSlot, label: `${m.home_team} vs ${m.away_team} (${m.phase})` });
+        } else if (!m.slot && canonSlot && !claimedSlots.has(canonSlot)) {
+          // Sin slot y el slot canónico está libre
+          actionTag = `<span class="tag-warn">⚠️ Asignar: <strong>${canonSlot}</strong></span>`;
+          claimedSlots.add(canonSlot);
+          actions.push({ type:'patch', docId: m.id, slot: canonSlot, label: `${m.home_team} vs ${m.away_team} (${m.phase})` });
+        } else if (!canonSlot || (canonSlot && claimedSlots.has(canonSlot) && m.slot !== canonSlot)) {
+          // No mapeado O su slot ya fue reclamado por otro doc → duplicado/legacy
+          hasDups = true;
+          rowStyle = 'background:rgba(239,68,68,0.08);';
+          actionTag = `<span class="tag-err">🗑️ ELIMINAR (duplicado/legacy)</span>`;
+          actions.push({ type:'delete', docId: m.id, label: `${m.home_team} vs ${m.away_team} [${m.kickoff ? kickoffLabel : 'sin fecha'}] (${m.phase})` });
+        } else {
+          actionTag = `<span style="color:#64748b">— sin cambio</span>`;
+        }
+
+        tableHtml += `<tr style="${rowStyle}">
+          <td style="font-size:10px;color:#64748b">${m.id.substring(0,12)}…</td>
           <td>${m.phase}</td>
           <td>${m.home_flag||''} ${m.home_team} vs ${m.away_team} ${m.away_flag||''}</td>
           <td>${kickoffLabel}</td>
-          <td>${m.slot || '<span style="color:#64748b">— sin slot</span>'}</td>
-          <td>${statusTag}</td>
+          <td>${m.slot || '<span style="color:#64748b">—</span>'}</td>
+          <td>${actionTag}</td>
         </tr>`;
       });
 
       tableHtml += '</table>';
       log.innerHTML += tableHtml;
 
-      if (patchQueue.length > 0) {
-        log.innerHTML += `<br><span style="color:#fbbf24">⚠️ ${patchQueue.length} partido(s) sin slot — presiona "Aplicar slots" para parchear.</span>`;
+      if (hasDups) dupWarn.style.display = 'block';
+
+      if (actions.length > 0) {
+        const dels     = actions.filter(a => a.type==='delete').length;
+        const norms    = actions.filter(a => a.type==='normalize').length;
+        const patches  = actions.filter(a => a.type==='patch').length;
+        log.innerHTML += `<br><span style="color:#fbbf24">⚠️ Acciones pendientes: ${dels} eliminaciones · ${norms} normalizaciones · ${patches} asignaciones</span>`;
         patchBtn.disabled = false;
       } else {
-        log.innerHTML += `<br><span style="color:#86efac">✔ Todos los partidos ya tienen su slot. Nada que parchear.</span>`;
+        log.innerHTML += `<br><span style="color:#86efac">✔ Todo limpio. Nada que hacer.</span>`;
         patchBtn.disabled = true;
       }
     }
 
-    async function patch() {
+    async function applyAll() {
       const log = document.getElementById('logBox');
       const patchBtn = document.getElementById('patchBtn');
       const scanBtn  = document.getElementById('scanBtn');
-      if (!patchQueue.length) return;
-      patchBtn.disabled = true; patchBtn.textContent = '⏳ Parcheando...';
+      if (!actions.length) return;
+
+      const dels = actions.filter(a => a.type==='delete');
+      if (dels.length) {
+        const confirm = window.confirm(
+          `⚠️ Se eliminarán ${dels.length} documento(s):\n` +
+          dels.map(d => '  • ' + d.label).join('\n') +
+          '\n\n¿Continuar?'
+        );
+        if (!confirm) return;
+      }
+
+      patchBtn.disabled = true; patchBtn.textContent = '⏳ Aplicando...';
       scanBtn.disabled = true;
-      log.innerHTML += '<br>⚡ Aplicando slots...<br>';
+      log.innerHTML += '<br>⚡ Ejecutando acciones...<br>';
 
       let ok = 0, err = 0;
-      for (const item of patchQueue) {
+
+      // 1. Eliminar duplicados primero
+      for (const item of actions.filter(a => a.type==='delete')) {
         try {
-          await updateDoc(doc(db, 'matches', item.docId), { slot: item.slot });
-          log.innerHTML += `✅ [${item.slot}] ${item.label}<br>`;
+          // Borrar pronósticos asociados
+          const predsSnap = await getDocs(query(collection(db,'predictions'), where('match_id','==',item.docId)));
+          for (const p of predsSnap.docs) await deleteDoc(p.ref);
+          await deleteDoc(doc(db,'matches',item.docId));
+          log.innerHTML += `🗑️ Eliminado [legacy]: ${item.label} (${predsSnap.size} pronósticos borrados)<br>`;
           ok++;
         } catch(e) {
-          log.innerHTML += `❌ Error en ${item.docId}: ${e.message}<br>`;
+          log.innerHTML += `❌ Error eliminando ${item.docId}: ${e.message}<br>`;
           err++;
         }
       }
 
-      log.innerHTML += `<br><strong style="color:#f59e0b">✔ ${ok} parcheados · ${err} errores.</strong>`;
-      patchBtn.textContent = '⚡ Aplicar slots';
+      // 2. Normalizar slots incorrectos
+      for (const item of actions.filter(a => a.type==='normalize')) {
+        try {
+          await updateDoc(doc(db,'matches',item.docId), { slot: item.slot });
+          log.innerHTML += `🔄 Normalizado → [${item.slot}]: ${item.label}<br>`;
+          ok++;
+        } catch(e) {
+          log.innerHTML += `❌ Error normalizando ${item.docId}: ${e.message}<br>`;
+          err++;
+        }
+      }
+
+      // 3. Asignar slots faltantes
+      for (const item of actions.filter(a => a.type==='patch')) {
+        try {
+          await updateDoc(doc(db,'matches',item.docId), { slot: item.slot });
+          log.innerHTML += `✅ Asignado [${item.slot}]: ${item.label}<br>`;
+          ok++;
+        } catch(e) {
+          log.innerHTML += `❌ Error asignando ${item.docId}: ${e.message}<br>`;
+          err++;
+        }
+      }
+
+      log.innerHTML += `<br><strong style="color:#f59e0b">✔ ${ok} acciones completadas · ${err} errores.</strong>`;
+      log.innerHTML += `<br><span style="color:#94a3b8;font-size:11px">Presiona Escanear para verificar el resultado final.</span>`;
+      patchBtn.disabled = false; patchBtn.textContent = '⚡ Aplicar todo';
       scanBtn.disabled = false;
-      patchQueue = [];
+      actions = [];
     }
 
     onAuthStateChanged(auth, user => {
       if (!user) { window.location.href = 'index.html'; return; }
       document.getElementById('scanBtn').addEventListener('click', scan);
-      document.getElementById('patchBtn').addEventListener('click', patch);
+      document.getElementById('patchBtn').addEventListener('click', applyAll);
     });
   </script>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
