@@ -1,5 +1,5 @@
 # 📄 Documento Técnico — WC2026 Polla Mundialera
-> Versión: Junio 2026 (actualizado 30-Jun-2026) · Repositorio: `odoolargotek/worldcup2026`
+> Versión: Julio 2026 (actualizado 08-Jul-2026) · Repositorio: `odoolargotek/worldcup2026`
 
 Este documento es el punto de entrada técnico completo del proyecto. Sirve para retomar el desarrollo en una nueva conversación sin perder contexto.
 
@@ -21,20 +21,22 @@ Aplicación web de **polla deportiva privada** para el Mundial 2026. Permite a u
 ```
 worldcup2026/
 ├── public/
-│   ├── index.html            ← Login / Registro / Recuperar contraseña
-│   ├── dashboard.html        ← Mis grupos + crear/unirse + tab "Ver en vivo"
-│   ├── stream-view.html      ← ★ Visor independiente de pantalla compartida
-│   ├── standings.html        ← Ranking de una comparsa (param ?gid=)
-│   ├── admin.html            ← Panel admin (resultados, partidos, TV, streams)
-│   ├── admin-hub.html        ← Hub central de links a todas las páginas admin
-│   ├── screen-share.html     ← ★ Página emisor WebRTC (solo is_host:true)
-│   ├── matches.html          ← Ver partidos y hacer pronósticos
-│   ├── groups.html           ← Tabla de grupos del torneo
-│   ├── group-detail.html     ← Detalle de un grupo del torneo
-│   ├── rules.html            ← Instrucciones del juego
-│   ├── news.html             ← Noticias
-│   ├── profile.html          ← Perfil de usuario (ruta protegida)
-│   ├── legal.html            ← Aviso legal
+│   ├── index.html                 ← Login / Registro / Recuperar contraseña
+│   ├── dashboard.html             ← Mis grupos + crear/unirse + tab "Ver en vivo"
+│   ├── stream-view.html           ← ★ Visor independiente de pantalla compartida
+│   ├── standings.html             ← Ranking de una comparsa (param ?gid=)
+│   ├── admin.html                 ← Panel admin (resultados, partidos, TV, streams)
+│   ├── admin-hub.html             ← Hub central de links a todas las páginas admin
+│   ├── admin-load-knockout.html   ← ★ Carga de Cuartos / Semis / 3P / Final
+│   ├── admin-patch-slots.html     ← ★ Parchea / normaliza `slot` y elimina legacy duplicates
+│   ├── screen-share.html          ← ★ Página emisor WebRTC (solo is_host:true)
+│   ├── matches.html               ← Ver partidos y hacer pronósticos
+│   ├── groups.html                ← Tabla de grupos del torneo
+│   ├── group-detail.html          ← Detalle de un grupo del torneo
+│   ├── rules.html                 ← Instrucciones del juego
+│   ├── news.html                  ← Noticias
+│   ├── profile.html               ← Perfil de usuario (ruta protegida)
+│   ├── legal.html                 ← Aviso legal
 │   ├── css/
 │   │   ├── style.css
 │   │   └── sponsor.css
@@ -61,7 +63,7 @@ worldcup2026/
 │   │   ├── payment.js               ← Vista de pagos de comparsa + resolución de usuarios
 │   │   ├── news.js                  ← Noticias desde Firestore
 │   │   ├── notifications.js         ← Notificaciones in-app
-│   │   ├── perplexity-suggest.js    ← Sugerencia de pronósticos con IA (Perplexity API)
+│   │   ├── perplexity-suggest.js    ← Sugerencia de pronóstico con IA (Perplexity API)
 │   │   ├── sponsor-config.js        ← Configuración del banner de sponsor
 │   │   ├── theme.js                 ← Toggle claro/oscuro
 │   │   ├── time.js                  ← Utilidades de tiempo/zona horaria
@@ -79,10 +81,10 @@ Creado al registrarse **o** al guardar nombre desde el banner del dashboard.
 ```js
 {
   uid: string,
-  display_name: string,   // nombre o apodo visible en rankings
+  display_name: string,
   email: string,
-  tv_access: boolean,     // acceso al tab "Ver en Vivo" y a stream-view.html
-  is_host: boolean,       // ★ acceso al bloque emisor de pantalla compartida
+  tv_access: boolean,
+  is_host: boolean,
   created_at: Timestamp
 }
 ```
@@ -94,17 +96,17 @@ Creado al registrarse **o** al guardar nombre desde el banner del dashboard.
 ```js
 {
   name: string,
-  code: string,           // código de 6 letras para invitar
+  code: string,
   owner_uid: string,
   type: 'open' | 'closed',
   currency: 'USD' | 'BOB',
-  fee: number,            // cuota por participante
-  prize: number,          // premio fijo (solo type=closed)
-  prize_pct: { p1, p2, p3 },  // % distribución del pozo
-  stage: string,          // etapa de inicio (Grupos, Octavos, etc.)
-  is_open: boolean,       // si acepta nuevos miembros
+  fee: number,
+  prize: number,
+  prize_pct: { p1, p2, p3 },
+  stage: string,
+  is_open: boolean,
   description: string,
-  payment_qr: string,     // base64 de imagen QR de pago
+  payment_qr: string,
   payment_instructions: string,
   created_at: Timestamp
 }
@@ -150,7 +152,7 @@ Creado al registrarse **o** al guardar nombre desde el banner del dashboard.
 ```js
 {
   home_team, away_team, home_flag, away_flag,
-  phase, kickoff, city,
+  phase, type, slot, kickoff, city,
   home_score, away_score,
   finished: boolean,
   match_status: 'FT' | 'AET' | 'PEN' | 'LIVE' | '',
@@ -162,6 +164,27 @@ Creado al registrarse **o** al guardar nombre desde el banner del dashboard.
   channels_synced_at, last_synced
 }
 ```
+
+### ★ Slots canónicos para fase eliminatoria tardía
+
+Se introdujo el campo `slot` para identificar de manera estable los partidos de fases avanzadas, evitar duplicados cuando los equipos aún están “Por definir”, y soportar futura propagación automática de ganadores.
+
+| Slot | Fase | Kickoff Bolivia |
+|---|---|---|
+| `QF1` | Cuartos de Final | Jue 09/07 4:00 p. m. |
+| `QF2` | Cuartos de Final | Vie 10/07 3:00 p. m. |
+| `QF3` | Cuartos de Final | Sáb 11/07 5:00 p. m. |
+| `QF4` | Cuartos de Final | Sáb 11/07 9:00 p. m. |
+| `SF1` | Semifinales | Mar 14/07 3:00 p. m. |
+| `SF2` | Semifinales | Mié 15/07 3:00 p. m. |
+| `3P` | Tercer Puesto | Sáb 18/07 5:00 p. m. |
+| `FIN` | Final | Dom 19/07 5:00 p. m. |
+
+### Estado operativo al 08-Jul-2026
+
+- Ya están cargados en Firestore los **4 Cuartos**, las **2 Semifinales**, el partido por **Tercer Puesto** y la **Final**.
+- Se eliminó un documento legacy duplicado `final_01` con fecha vieja (26/07) y equipos placeholder incompatibles.
+- Se normalizaron slots legacy como `Final` → `FIN` y `3er Puesto` → `3P`.
 
 ---
 
@@ -201,11 +224,11 @@ Colección creada dinámicamente cuando el host inicia una sesión de pantalla c
 
 ```js
 {
-  code: string,          // 6 caracteres aleatorios (mismo que el doc ID)
+  code: string,
   host_uid: string,
   status: 'active' | 'ended',
-  offer: RTCSessionDescriptionInit,   // SDP del emisor
-  answer: RTCSessionDescriptionInit,  // SDP del receptor (lo escribe el guest)
+  offer: RTCSessionDescriptionInit,
+  answer: RTCSessionDescriptionInit,
   created_at: Timestamp
 }
 ```
@@ -307,8 +330,8 @@ Página de acceso rápido a todas las herramientas de administración. Secciones
 |---|---|
 | 🏠 Principal | `admin.html`, `admin-report.html`, `admin-messages.html`, `admin-predictions.html` |
 | 📡 Pantalla Compartida | `screen-share.html`, `stream-view.html`, `dashboard.html` |
-| ⚽ Partidos | `admin-kickoffs.html`, `admin-set-winner.html`, `load-matches.html`, `audit-matches.html` |
-| 🔧 Herramientas de Fix | (11 páginas de fix y debug) |
+| ⚽ Partidos | `admin-kickoffs.html`, `admin-set-winner.html`, `load-matches.html`, `audit-matches.html`, `admin-load-knockout.html` |
+| 🔧 Herramientas de Fix | `admin-patch-slots.html` + herramientas legacy/fix/debug |
 | 🔄 Migraciones | `migrate-groups-stage.html`, `migrate-match-types.html`, `recalc-all-favorites.html` |
 
 ---
@@ -337,17 +360,27 @@ total = Σ(prediction.points) + Σ(favorites_pts[phase]) - Σ(penalties[phase])
 
 ---
 
-## 🏆 Fase Eliminatoria — Ronda de 32 y Octavos
+## 🏆 Fase Eliminatoria — Estado actual
 
-### Flujo de cierre de partido eliminatorio
+### Implementado
 
-1. **Guardar marcador** (sin cerrar)
-2. **Cerrar partido** → toggles ET (`chkET`) y Penales (`chkPEN`)
+1. **Cierre de partido eliminatorio** con toggles de ET (`chkET`) y Penales (`chkPEN`)
    - `match_status`: `FT` / `AET` / `PEN`
    - Si Penales: `<select id="penWinner">` con los dos equipos
-3. **Propagación automática** a Octavos via `propagateWinnerToOctavos()`
-   - Mapa `R32_TO_OCTAVOS` (16 entradas hardcoded)
+2. **Propagación automática** a Octavos via `propagateWinnerToOctavos()`
+   - Usa el mapa hardcoded `R32_TO_OCTAVOS`
    - Si hay `penalties_winner` → ese es el ganador; si no, el que marcó más goles en 90'
+3. **Carga admin de Cuartos / Semis / 3P / Final** con `admin-load-knockout.html`
+4. **Migración y normalización de slots** con `admin-patch-slots.html`
+   - Detecta duplicados/legacy
+   - Normaliza slots no canónicos
+   - Borra duplicados como `final_01`
+
+### Pendiente inmediato
+
+- Agregar propagación automática **Cuartos → Semifinales**
+- Agregar propagación automática **Semifinales → Final / Tercer Puesto**
+- Decidir naming final del mapa (`QF_TO_SF`, `SF_TO_FINAL_AND_3P` o similar)
 
 ---
 
@@ -419,6 +452,8 @@ Solo para usuarios con `tv_access: true`. Dos fuentes:
 | Jun 27 | `favorites_pts_by_match` no inicializado → puntos duplicados | `recalcFavoritesForMatch()` parchea por partido |
 | Jun 29 | Propagación a Octavos lanzaba error si el partido no existía | Retorna advertencia en lugar de error |
 | Jun 30 | `updatePenOptions()` con regex `\w` no capturaba tildes → select de penales vacío para equipos como "Países Bajos" | Nuevo algoritmo extrae nombres antes/después del score `N-N` |
+| Jul 08 | Segunda semifinal no cargaba porque ambas semis eran `Por definir vs Por definir` | Nueva deduplicación por `slot` en `admin-load-knockout.html` |
+| Jul 08 | Existían slots legacy (`Final`, `3er Puesto`) y un duplicado `final_01` | `admin-patch-slots.html` normaliza slots y elimina legacy duplicates |
 
 ---
 
@@ -431,7 +466,8 @@ Solo para usuarios con `tv_access: true`. Dos fuentes:
 - Página `profile.html` dedicada
 - Export de ranking a PDF/imagen
 - Integración de pagos automáticos
-- Partidos de Cuartos, Semifinales, Final — agregar al mapa de propagación
+- **Propagación automática Cuartos → Semifinales**
+- **Propagación automática Semifinales → Final y 3er Puesto**
 - **Migración pantalla compartida a SFU** (Jitsi iframe o LiveKit) si el grupo supera 4–5 espectadores simultáneos
 
 ---
