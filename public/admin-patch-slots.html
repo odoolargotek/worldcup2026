@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parchear Slots — Admin</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body { background: var(--bg-dark, #0f172a); color: var(--text, #e2e8f0); font-family: 'Inter', sans-serif; padding: 20px; }
+    h1 { font-size: 1.4rem; font-weight: 800; color: #f59e0b; margin-bottom: 4px; }
+    .subtitle { color: #64748b; font-size: 0.85rem; margin-bottom: 20px; }
+    .info-box { background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.3); border-radius: 8px; padding: 12px; color: #a5b4fc; font-size: 0.82rem; margin-bottom: 16px; }
+    #logBox { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; font-size: 12px; font-family: monospace; min-height: 80px; max-height: 400px; overflow-y: auto; color: #86efac; margin-top: 16px; }
+    .btn-action { font-weight: 700; border: none; border-radius: 8px; padding: 8px 20px; cursor: pointer; }
+    .btn-scan  { background: linear-gradient(135deg,#6366f1,#4f46e5); color: #fff; }
+    .btn-patch { background: linear-gradient(135deg,#f59e0b,#d97706); color: #000; }
+    .btn-action:disabled { opacity: 0.5; cursor: not-allowed; }
+    a.back-link { color: #94a3b8; font-size: 0.82rem; text-decoration: none; display: inline-block; margin-bottom: 16px; }
+    a.back-link:hover { color: #f59e0b; }
+    #previewTable { width:100%; border-collapse:collapse; font-size:12px; margin-top:12px; }
+    #previewTable th { color:#94a3b8; font-weight:600; padding:4px 8px; border-bottom:1px solid rgba(255,255,255,0.1); text-align:left; }
+    #previewTable td { padding:5px 8px; border-bottom:1px solid rgba(255,255,255,0.05); }
+    .tag-ok   { color:#86efac; } .tag-warn { color:#fbbf24; } .tag-err { color:#fca5a5; }
+  </style>
+</head>
+<body>
+  <a href="admin-hub.html" class="back-link">← Volver al Admin Hub</a>
+  <h1>🔧 Parchear campo <code>slot</code> en partidos eliminatorios</h1>
+  <p class="subtitle">Asigna el campo <code>slot</code> (QF1–QF4, SF1, SF2, 3P, FIN) a los partidos que fueron cargados sin él.</p>
+
+  <div class="info-box">
+    ℹ️ Este script <strong>no crea ni borra</strong> partidos. Solo agrega el campo <code>slot</code> a documentos que ya existen en Firestore y que no lo tienen.
+    El mapeo se hace por <strong>phase + kickoff</strong> (fecha y hora exacta).
+  </div>
+
+  <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <button class="btn-action btn-scan"  id="scanBtn">🔍 Escanear partidos sin slot</button>
+    <button class="btn-action btn-patch" id="patchBtn" disabled>⚡ Aplicar slots</button>
+  </div>
+
+  <div id="logBox">Presiona "🔍 Escanear" para ver qué partidos necesitan el campo slot.</div>
+
+  <script type="module">
+    import { auth, db } from './js/firebase-config.js';
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-auth.js';
+    import { collection, getDocs, doc, updateDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/11.0.0/firebase-firestore.js';
+
+    // Bolivia = UTC-4
+    function boToUtc(y, mo, d, h, mi) {
+      return new Date(Date.UTC(y, mo - 1, d, h + 4, mi));
+    }
+
+    // Tabla maestra: slot -> kickoff UTC esperado (ms) + phase
+    const SLOT_MAP = [
+      { slot:'QF1', phase:'Cuartos de Final', kickoff: boToUtc(2026,7,9,16,0)  },
+      { slot:'QF2', phase:'Cuartos de Final', kickoff: boToUtc(2026,7,10,15,0) },
+      { slot:'QF3', phase:'Cuartos de Final', kickoff: boToUtc(2026,7,11,17,0) },
+      { slot:'QF4', phase:'Cuartos de Final', kickoff: boToUtc(2026,7,11,21,0) },
+      { slot:'SF1', phase:'Semifinales',      kickoff: boToUtc(2026,7,14,15,0) },
+      { slot:'SF2', phase:'Semifinales',      kickoff: boToUtc(2026,7,15,15,0) },
+      { slot:'3P',  phase:'Tercer Puesto',    kickoff: boToUtc(2026,7,18,17,0) },
+      { slot:'FIN', phase:'Final',            kickoff: boToUtc(2026,7,19,17,0) },
+    ];
+
+    let patchQueue = []; // { docId, slot, label }
+
+    function tsToMs(kickoff) {
+      if (!kickoff) return 0;
+      if (kickoff.toDate) return kickoff.toDate().getTime();
+      if (kickoff instanceof Date) return kickoff.getTime();
+      return new Date(kickoff).getTime();
+    }
+
+    async function scan() {
+      const log = document.getElementById('logBox');
+      const patchBtn = document.getElementById('patchBtn');
+      log.innerHTML = '🔍 Leyendo colección matches...<br>';
+      patchQueue = [];
+
+      const snap = await getDocs(collection(db, 'matches'));
+      const allMatches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      // Solo partidos de fases eliminatorias tardias
+      const phases = new Set(['Cuartos de Final','Semifinales','Tercer Puesto','Final']);
+      const knockout = allMatches.filter(m => phases.has(m.phase));
+
+      log.innerHTML += `📄 Partidos eliminatorios encontrados: <strong>${knockout.length}</strong><br><br>`;
+
+      let tableHtml = `<table id="previewTable">
+        <tr><th>Doc ID</th><th>Phase</th><th>Equipos</th><th>Kickoff (BO)</th><th>Slot actual</th><th>Slot asignado</th></tr>`;
+
+      knockout.forEach(m => {
+        const mMs = tsToMs(m.kickoff);
+        const match = SLOT_MAP.find(s => s.phase === m.phase && Math.abs(s.kickoff.getTime() - mMs) < 60000);
+        const hasSlot = !!m.slot;
+        const assignedSlot = match ? match.slot : null;
+
+        let rowClass = '', statusTag = '';
+        if (hasSlot) {
+          rowClass = 'tag-ok';
+          statusTag = `<span class="tag-ok">✅ ya tiene: ${m.slot}</span>`;
+        } else if (assignedSlot) {
+          rowClass = 'tag-warn';
+          statusTag = `<span class="tag-warn">⚠️ asignar: <strong>${assignedSlot}</strong></span>`;
+          patchQueue.push({ docId: m.id, slot: assignedSlot, label: `${m.home_team} vs ${m.away_team}` });
+        } else {
+          rowClass = 'tag-err';
+          statusTag = `<span class="tag-err">❌ no mapeado</span>`;
+        }
+
+        const kickoffLabel = m.kickoff
+          ? (m.kickoff.toDate ? m.kickoff.toDate() : new Date(m.kickoff))
+              .toLocaleString('es-BO', { timeZone:'America/La_Paz', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit', hour12:true })
+          : '—';
+
+        tableHtml += `<tr class="${rowClass}">
+          <td style="font-size:10px;color:#64748b">${m.id.substring(0,10)}…</td>
+          <td>${m.phase}</td>
+          <td>${m.home_flag||''} ${m.home_team} vs ${m.away_team} ${m.away_flag||''}</td>
+          <td>${kickoffLabel}</td>
+          <td>${m.slot || '<span style="color:#64748b">— sin slot</span>'}</td>
+          <td>${statusTag}</td>
+        </tr>`;
+      });
+
+      tableHtml += '</table>';
+      log.innerHTML += tableHtml;
+
+      if (patchQueue.length > 0) {
+        log.innerHTML += `<br><span style="color:#fbbf24">⚠️ ${patchQueue.length} partido(s) sin slot — presiona "Aplicar slots" para parchear.</span>`;
+        patchBtn.disabled = false;
+      } else {
+        log.innerHTML += `<br><span style="color:#86efac">✔ Todos los partidos ya tienen su slot. Nada que parchear.</span>`;
+        patchBtn.disabled = true;
+      }
+    }
+
+    async function patch() {
+      const log = document.getElementById('logBox');
+      const patchBtn = document.getElementById('patchBtn');
+      const scanBtn  = document.getElementById('scanBtn');
+      if (!patchQueue.length) return;
+      patchBtn.disabled = true; patchBtn.textContent = '⏳ Parcheando...';
+      scanBtn.disabled = true;
+      log.innerHTML += '<br>⚡ Aplicando slots...<br>';
+
+      let ok = 0, err = 0;
+      for (const item of patchQueue) {
+        try {
+          await updateDoc(doc(db, 'matches', item.docId), { slot: item.slot });
+          log.innerHTML += `✅ [${item.slot}] ${item.label}<br>`;
+          ok++;
+        } catch(e) {
+          log.innerHTML += `❌ Error en ${item.docId}: ${e.message}<br>`;
+          err++;
+        }
+      }
+
+      log.innerHTML += `<br><strong style="color:#f59e0b">✔ ${ok} parcheados · ${err} errores.</strong>`;
+      patchBtn.textContent = '⚡ Aplicar slots';
+      scanBtn.disabled = false;
+      patchQueue = [];
+    }
+
+    onAuthStateChanged(auth, user => {
+      if (!user) { window.location.href = 'index.html'; return; }
+      document.getElementById('scanBtn').addEventListener('click', scan);
+      document.getElementById('patchBtn').addEventListener('click', patch);
+    });
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
