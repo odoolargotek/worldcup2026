@@ -54,7 +54,6 @@ async function propagateWinnerToOctavos(matchData, mid) {
   );
   if (!entry) return null;
 
-  // Si hay penales, el ganador viene de penalties_winner
   const penWinner = matchData.penalties_winner || null;
   const winner     = penWinner || (hs > as_ ? matchData.home_team : matchData.away_team);
   const winnerFlag = penWinner
@@ -83,7 +82,7 @@ async function propagateWinnerToOctavos(matchData, mid) {
   }
 
   if (!octMatch) {
-    return `⚠️ No se encontró partido de Octavos para ${winner} — agégalo manualmente`;
+    return `⚠️ No se encontró partido de Octavos para ${winner} — agrégalo manualmente`;
   }
 
   const update = entry.octSlot === 'home'
@@ -92,6 +91,111 @@ async function propagateWinnerToOctavos(matchData, mid) {
 
   await updateDoc(doc(db, 'matches', octMatch.id), update);
   return `✅ ${winner} asignado a Octavos (${entry.octSlot === 'home' ? 'local' : 'visitante'} en partido ${octMatch.id})`;
+}
+
+// =============================================
+// MAPA CUARTOS → SEMIFINALES (por slot)
+// QF1 local  → SF1 local
+// QF2 local  → SF1 visitante
+// QF3 local  → SF2 local
+// QF4 local  → SF2 visitante
+// =============================================
+const QF_TO_SF = {
+  QF1: { targetSlot: 'SF1', side: 'home' },
+  QF2: { targetSlot: 'SF1', side: 'away' },
+  QF3: { targetSlot: 'SF2', side: 'home' },
+  QF4: { targetSlot: 'SF2', side: 'away' },
+};
+
+async function propagateWinnerToSemis(matchData) {
+  const slot = matchData.slot;
+  if (!slot || !QF_TO_SF[slot]) return null;
+
+  const hs  = matchData.home_score;
+  const as_ = matchData.away_score;
+  if (hs == null || as_ == null) return null;
+
+  const penWinner  = matchData.penalties_winner || null;
+  const winner     = penWinner || (hs > as_ ? matchData.home_team : matchData.away_team);
+  const winnerFlag = penWinner
+    ? (norm(penWinner) === norm(matchData.home_team) ? matchData.home_flag : matchData.away_flag)
+    : (hs > as_ ? matchData.home_flag : matchData.away_flag);
+
+  const { targetSlot, side } = QF_TO_SF[slot];
+
+  const snap = await getDocs(collection(db, 'matches'));
+  const target = snap.docs.map(d => ({ id: d.id, ...d.data() }))
+                          .find(m => m.slot === targetSlot);
+
+  if (!target) return `⚠️ No se encontró el partido ${targetSlot} en Firestore`;
+
+  const update = side === 'home'
+    ? { home_team: winner, home_flag: winnerFlag || '' }
+    : { away_team: winner, away_flag: winnerFlag || '' };
+
+  await updateDoc(doc(db, 'matches', target.id), update);
+  return `🏆 ${winner} asignado a ${targetSlot} (${side === 'home' ? 'local' : 'visitante'})`;
+}
+
+// =============================================
+// MAPA SEMIFINALES → FINAL + TERCER PUESTO
+// SF1 ganador → FIN local   | SF1 perdedor → 3P local
+// SF2 ganador → FIN visitante | SF2 perdedor → 3P visitante
+// =============================================
+const SF_TO_FINAL = {
+  SF1: { winnerSlot: 'FIN', winnerSide: 'home', loserSlot: '3P', loserSide: 'home' },
+  SF2: { winnerSlot: 'FIN', winnerSide: 'away', loserSlot: '3P', loserSide: 'away' },
+};
+
+async function propagateWinnerToFinal(matchData) {
+  const slot = matchData.slot;
+  if (!slot || !SF_TO_FINAL[slot]) return null;
+
+  const hs  = matchData.home_score;
+  const as_ = matchData.away_score;
+  if (hs == null || as_ == null) return null;
+
+  const penWinner   = matchData.penalties_winner || null;
+  const winner      = penWinner || (hs > as_ ? matchData.home_team : matchData.away_team);
+  const winnerFlag  = penWinner
+    ? (norm(penWinner) === norm(matchData.home_team) ? matchData.home_flag : matchData.away_flag)
+    : (hs > as_ ? matchData.home_flag : matchData.away_flag);
+
+  // Perdedor = el que no es el ganador
+  const loser      = norm(winner) === norm(matchData.home_team) ? matchData.away_team : matchData.home_team;
+  const loserFlag  = norm(winner) === norm(matchData.home_team) ? matchData.away_flag : matchData.home_flag;
+
+  const { winnerSlot, winnerSide, loserSlot, loserSide } = SF_TO_FINAL[slot];
+
+  const snap = await getDocs(collection(db, 'matches'));
+  const allMatches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  const finalMatch = allMatches.find(m => m.slot === winnerSlot);
+  const thirdMatch = allMatches.find(m => m.slot === loserSlot);
+
+  const msgs = [];
+
+  if (finalMatch) {
+    const upd = winnerSide === 'home'
+      ? { home_team: winner, home_flag: winnerFlag || '' }
+      : { away_team: winner, away_flag: winnerFlag || '' };
+    await updateDoc(doc(db, 'matches', finalMatch.id), upd);
+    msgs.push(`🥇 ${winner} → Final (${winnerSide === 'home' ? 'local' : 'visitante'})`);
+  } else {
+    msgs.push(`⚠️ No se encontró partido ${winnerSlot}`);
+  }
+
+  if (thirdMatch) {
+    const upd = loserSide === 'home'
+      ? { home_team: loser, home_flag: loserFlag || '' }
+      : { away_team: loser, away_flag: loserFlag || '' };
+    await updateDoc(doc(db, 'matches', thirdMatch.id), upd);
+    msgs.push(`🥉 ${loser} → 3er Puesto (${loserSide === 'home' ? 'local' : 'visitante'})`);
+  } else {
+    msgs.push(`⚠️ No se encontró partido ${loserSlot}`);
+  }
+
+  return msgs.join(' · ');
 }
 
 // =============================================
@@ -134,7 +238,6 @@ async function loadMatchesInProgress() {
       }).join('')
     : '<option value="">Sin partidos listos para cerrar</option>';
 
-  // Actualizar opciones de penales con el partido seleccionado por defecto
   if (typeof updatePenOptions === 'function') updatePenOptions();
 }
 
@@ -162,7 +265,7 @@ async function loadMatchesDone() {
       ? withScore.map(d => {
           const m = d.data();
           const badge = m.finished ? ' ✅' : ' 🔴';
-          return '<option value="' + d.id + '">' + (m.home_flag||'') + ' ' + m.home_team + ' ' + m.home_score + '-' + m.away_score + ' ' + m.away_team + ' ' + (m.away_flag||'') + badge + ' — ' + m.phase + '</option>';
+          return '<option value="' + d.id + '">' + (m.home_flag||'') + ' ' + m.home_team + ' ' + m.home_score + '-' + m.away_score + ' ' + m.away_team + badge + ' — ' + m.phase + '</option>';
         }).join('')
       : '<option>Sin partidos con marcador</option>';
   }
@@ -177,7 +280,7 @@ async function loadMatchesDone() {
       ? withScore.map(d => {
           const m = d.data();
           const badge2 = m.finished ? ' ✅' : ' 🔴';
-          return '<option value="' + d.id + '">' + (m.home_flag||'') + ' ' + m.home_team + ' ' + m.home_score + '-' + m.away_score + ' ' + m.away_team + ' ' + (m.away_flag||'') + badge2 + ' — ' + m.phase + '</option>';
+          return '<option value="' + d.id + '">' + (m.home_flag||'') + ' ' + m.home_team + ' ' + m.home_score + '-' + m.away_score + ' ' + m.away_team + badge2 + ' — ' + m.phase + '</option>';
         }).join('')
       : '<option>Sin partidos con marcador</option>';
   }
@@ -248,7 +351,6 @@ document.getElementById('closeMatchBtn')?.addEventListener('click', async () => 
   const etAway = hasET ? (parseInt(document.getElementById('etAway')?.value) || null) : null;
   const penWinner = hasPEN ? (document.getElementById('penWinner')?.value || null) : null;
 
-  // Validaciones
   if (hasET && (etHome === null || etAway === null)) {
     msg.innerHTML = badge('⚠️ Completa el marcador de Tiempo Extra', 'warning');
     return;
@@ -258,7 +360,6 @@ document.getElementById('closeMatchBtn')?.addEventListener('click', async () => 
     return;
   }
 
-  // Construir objeto de actualización
   const updateData = {
     finished: true,
     match_status: hasPEN ? 'PEN' : (hasET ? 'AET' : 'FT'),
@@ -275,7 +376,6 @@ document.getElementById('closeMatchBtn')?.addEventListener('click', async () => 
 
   await updateDoc(doc(db, 'matches', mid), updateData);
 
-  // Calcular puntos de pronósticos
   const predsSnap = await getDocs(query(collection(db, 'predictions'), where('match_id', '==', mid)));
   const batch = writeBatch(db);
   predsSnap.forEach(predDoc => {
@@ -284,30 +384,49 @@ document.getElementById('closeMatchBtn')?.addEventListener('click', async () => 
     batch.update(predDoc.ref, { points: pts, points_synced: true });
   });
 
-  // Enriquecer matchData para favoritos (agregar penales_winner si aplica)
   const enrichedMatch = { ...matchData, ...updateData };
   const { favCount } = await recalcFavoritesForMatch(enrichedMatch, mid, batch);
   await batch.commit();
 
-  // Propagar ganador a Octavos si aplica
-  let octMsg = '';
+  // ── Propagación en cadena: R32→Octavos, QF→SF, SF→Final+3P ──
+  const propagMsgs = [];
+
   try {
-    const result = await propagateWinnerToOctavos(enrichedMatch, mid);
-    if (result) octMsg = '<br><span style="font-size:12px;color:#86efac">' + result + '</span>';
+    const r = await propagateWinnerToOctavos(enrichedMatch, mid);
+    if (r) propagMsgs.push(r);
   } catch(e) {
-    octMsg = '<br><span style="font-size:12px;color:#fca5a5">⚠️ No se pudo propagar a Octavos: ' + e.message + '</span>';
+    propagMsgs.push('⚠️ Octavos: ' + e.message);
   }
 
-  // Resumen del cierre
+  try {
+    const r = await propagateWinnerToSemis(enrichedMatch);
+    if (r) propagMsgs.push(r);
+  } catch(e) {
+    propagMsgs.push('⚠️ Semis: ' + e.message);
+  }
+
+  try {
+    const r = await propagateWinnerToFinal(enrichedMatch);
+    if (r) propagMsgs.push(r);
+  } catch(e) {
+    propagMsgs.push('⚠️ Final/3P: ' + e.message);
+  }
+
+  let propagHtml = '';
+  if (propagMsgs.length) {
+    propagHtml = '<br>' + propagMsgs.map(m =>
+      '<span style="font-size:12px;color:#86efac;display:block;margin-top:2px">' + m + '</span>'
+    ).join('');
+  }
+
   let extra = '';
   if (hasET)  extra += ' ⏱️ ET ' + etHome + '–' + etAway;
   if (hasPEN) extra += ' 🎯 Penales → ' + penWinner;
 
   msg.innerHTML = '<div class="mt-2 p-2 rounded" style="background:rgba(22,163,74,0.15);border:1px solid var(--green);color:var(--green-light)">' +
     '✅ Partido cerrado' + extra + ' — ' + predsSnap.size + ' pronósticos calculados — ' + favCount + ' favoritos actualizados' +
-    octMsg + '</div>';
+    propagHtml + '</div>';
 
-  // Reset checkboxes
   const chkET  = document.getElementById('chkET');
   const chkPEN = document.getElementById('chkPEN');
   if (chkET)  { chkET.checked  = false; document.getElementById('etScoreRow')?.classList.add('d-none'); }
@@ -498,7 +617,8 @@ async function loadAllMatchesList() {
       timeZone: 'America/La_Paz', day:'2-digit', month:'short', hour:'numeric', minute:'2-digit', hour12: true
     });
     const safeLabel = (m.home_team + ' vs ' + m.away_team).replace(/'/g, "\\'");
-    const etTag = m.extra_time  ? ' <span style="font-size:10px;color:#fb923c">(ET)</span>'  : '';
+    const slotTag = m.slot ? ' <span style="font-size:10px;color:#a5b4fc;background:rgba(99,102,241,0.15);border-radius:20px;padding:1px 6px">' + m.slot + '</span>' : '';
+    const etTag  = m.extra_time ? ' <span style="font-size:10px;color:#fb923c">(ET)</span>'  : '';
     const penTag = m.penalties  ? ' <span style="font-size:10px;color:#f59e0b">(PEN)</span>' : '';
     const statusBadge = isDone
       ? '<span style="font-size:0.75rem;background:rgba(52,211,153,0.12);color:#34d399;border-radius:20px;padding:2px 8px;font-weight:700">FINAL ' + m.home_score + '-' + m.away_score + etTag + penTag + '</span>'
@@ -508,7 +628,7 @@ async function loadAllMatchesList() {
     html +=
       '<div id="matchrow-' + d.id + '" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">' +
         '<span style="font-size:1.2rem">' + (m.home_flag||'⚽') + '</span>' +
-        '<span style="flex:1;font-size:0.85rem;font-weight:600">' + m.home_team + ' vs ' + m.away_team + ' ' + (m.away_flag||'') + '</span>' +
+        '<span style="flex:1;font-size:0.85rem;font-weight:600">' + m.home_team + ' vs ' + m.away_team + ' ' + (m.away_flag||'') + slotTag + '</span>' +
         '<span style="font-size:0.78rem;color:var(--text-muted)">' + m.phase + '</span>' +
         '<span style="font-size:0.78rem;color:var(--gold)">' + label + '</span>' +
         statusBadge +
